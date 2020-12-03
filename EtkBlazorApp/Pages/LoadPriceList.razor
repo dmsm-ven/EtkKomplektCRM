@@ -6,7 +6,7 @@
 
 <h1>Загрузка прайс-листа</h1>
 <hr />
-<InputFile OnChange="HandleFileSelected" disabled="@loadFileButtonDisabled" />
+<InputFile OnChange="HandleFileSelected" />
 <hr />
 
 @if (isFileLoading)
@@ -31,13 +31,17 @@
 <div class="row">
     @foreach (var template in templates)
     {
-    <div class="col-md-3 col-xs-12 col-sm-6 brand-template-box ">
-        <img class="brand-template-logo" src="@($"/image/logotips/{template.GetType().Name}-logo.png")" />
-        <div>
-            <input type="radio" id="@template" value="@template" @onchange="TemplateSelectionChanged" checked=@(selectedTemplate == template)) />
-            <label for="@template" style="font-size: 11px; margin-left: 2px;">@template</label>
+        <div class="col-md-3 col-xs-12 col-sm-6 brand-template-box ">
+            <img class="brand-template-logo" src="@($"./image/logotips/{template.GetType().Name}-logo.png")" />
+            <div>
+                <input type="radio"
+                       id="@template.GetType().Name"
+                       value="@template"
+                       @onchange="SelectedTemplateChanged"
+                       checked=@(selectedTemplate == template) ) />
+                <label for="@template.GetType().Name" style="font-size: 11px; margin-left: 2px;">@template.GetType().Name</label>
+            </div>
         </div>
-    </div>
     }
 </div>
 
@@ -50,29 +54,33 @@
     IFileListEntry selectedFile = null;
     List<LoadedFileData> loadedFiles = null;
     bool isFileLoading = false;
-    bool loadFileButtonDisabled = true;
 
     protected override Task OnInitializedAsync()
     {
         loadedFiles = new List<LoadedFileData>();
         templates = new List<IPriceListTemplate>(new[] { new SymmetronPriceListTemplate() });
-
+        selectedTemplate = templates.First();
         return Task.CompletedTask;
     }
 
-    async Task HandleFileSelected(IFileListEntry[] newFiles)
+    private async Task HandleFileSelected(IFileListEntry[] newFiles)
     {
         selectedFile = newFiles.FirstOrDefault();
         await LoadSelectedFile();
     }
 
-    async Task LoadSelectedFile()
+    private void SelectedTemplateChanged(ChangeEventArgs e)
+    {
+        selectedTemplate = (IPriceListTemplate)e.Value;
+    }
+
+    private async Task LoadSelectedFile()
     {
         isFileLoading = true;
 
         if (selectedFile != null)
         {
-            string tempFilePath = Path.GetTempPath() + Guid.NewGuid().ToString().Substring(0, 12) + Path.GetExtension(selectedFile.Name);
+            string tempFilePath = Path.GetTempPath() + Guid.NewGuid().ToString() + Path.GetExtension(selectedFile.Name);
 
             //Загрузили файл
             using (var fileStream = File.Create(tempFilePath))
@@ -82,28 +90,24 @@
                 fileStream.Write(bytes, 0, bytes.Length);
             }
 
-            var records = selectedTemplate.ReadPriceLines();
+            selectedTemplate.FileName = tempFilePath;
+            var records = await Task.Run(() => selectedTemplate.ReadPriceLines());
 
-            loadedFiles.Add(new LoadedFileData()
+            var fileData = new LoadedFileData()
             {
                 FileName = selectedFile.Name,
                 RecordsInFile = records.Count,
                 TemplateName = selectedTemplate.GetType().Name,
                 TempFilePath = tempFilePath
-            });
+            };
+
+            loadedFiles.Add(fileData);
 
             File.Delete(tempFilePath);
         }
 
         isFileLoading = false;
-        loadFileButtonDisabled = true;
         selectedFile = null;
         selectedTemplate = null;
-    }
-
-    void TemplateSelectionChanged(ChangeEventArgs args)
-    {
-        selectedTemplate = (IPriceListTemplate)args.Value;
-        loadFileButtonDisabled = false;
     }
 }
