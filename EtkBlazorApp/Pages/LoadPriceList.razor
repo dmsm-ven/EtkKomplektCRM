@@ -1,0 +1,109 @@
+﻿@page "/load-price-list"
+
+@using EtkBlazorApp.Data
+@using EtkBlazorApp.BL
+@using System.IO;
+
+<h1>Загрузка прайс-листа</h1>
+<hr />
+<InputFile OnChange="HandleFileSelected" disabled="@loadFileButtonDisabled" />
+<hr />
+
+@if (isFileLoading)
+{
+    <progress style="width: 100%; height: 24px;"></progress>
+    <hr />
+}
+
+@if (loadedFiles.Any())
+{
+    <h3>Загруженные прайс-листы</h3>
+    <ul>
+        @foreach (var data in loadedFiles)
+        {
+            <li style="margin: 4px 8px;color: red;"><strong style="color:black">@data.TemplateName</strong> @data.FileName<span style="color: navy"> (@data.RecordsInFile записей считано)</span></li>
+        }
+    </ul>
+    <hr />
+}
+
+<h2>Выберите шаблон загружаемого файла</h2>
+<div class="row">
+    @foreach (var template in templates)
+    {
+    <div class="col-md-3 col-xs-12 col-sm-6 brand-template-box ">
+        <img class="brand-template-logo" src="@($"/image/logotips/{template.GetType().Name}-logo.png")" />
+        <div>
+            <input type="radio" id="@template" value="@template" @onchange="TemplateSelectionChanged" checked=@(selectedTemplate == template)) />
+            <label for="@template" style="font-size: 11px; margin-left: 2px;">@template</label>
+        </div>
+    </div>
+    }
+</div>
+
+<hr />
+
+@code
+{
+    List<IPriceListTemplate> templates = null;
+    IPriceListTemplate selectedTemplate = null;
+    IFileListEntry selectedFile = null;
+    List<LoadedFileData> loadedFiles = null;
+    bool isFileLoading = false;
+    bool loadFileButtonDisabled = true;
+
+    protected override Task OnInitializedAsync()
+    {
+        loadedFiles = new List<LoadedFileData>();
+        templates = new List<IPriceListTemplate>(new[] { new SymmetronPriceListTemplate() });
+
+        return Task.CompletedTask;
+    }
+
+    async Task HandleFileSelected(IFileListEntry[] newFiles)
+    {
+        selectedFile = newFiles.FirstOrDefault();
+        await LoadSelectedFile();
+    }
+
+    async Task LoadSelectedFile()
+    {
+        isFileLoading = true;
+
+        if (selectedFile != null)
+        {
+            string tempFilePath = Path.GetTempPath() + Guid.NewGuid().ToString().Substring(0, 12) + Path.GetExtension(selectedFile.Name);
+
+            //Загрузили файл
+            using (var fileStream = File.Create(tempFilePath))
+            {
+                var bytes = new byte[selectedFile.Data.Length];
+                await selectedFile.Data.ReadAsync(bytes, 0, bytes.Length);
+                fileStream.Write(bytes, 0, bytes.Length);
+            }
+
+            var records = selectedTemplate.ReadPriceLines();
+
+            loadedFiles.Add(new LoadedFileData()
+            {
+                FileName = selectedFile.Name,
+                RecordsInFile = records.Count,
+                TemplateName = selectedTemplate.GetType().Name,
+                TempFilePath = tempFilePath
+            });
+
+            File.Delete(tempFilePath);
+        }
+
+        isFileLoading = false;
+        loadFileButtonDisabled = true;
+        selectedFile = null;
+        selectedTemplate = null;
+    }
+
+    void TemplateSelectionChanged(ChangeEventArgs args)
+    {
+        selectedTemplate = (IPriceListTemplate)args.Value;
+        loadFileButtonDisabled = false;
+    }
+}

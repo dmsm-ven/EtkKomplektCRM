@@ -1,0 +1,112 @@
+﻿@page "/manufacturers";
+
+@using EtkBlazorApp.DataAccess
+@using Microsoft.Extensions.Configuration;
+@using EtkBlazorApp.Components;
+
+@inject IDatabase _database
+@inject IConfiguration _config
+
+<h1>Производители</h1>
+@if (manufacturers == null)
+{
+    <h3>Загрузка данных ...</h3>
+
+}
+else
+{
+    <DeleteConfirmDialog @ref="DeleteDialog"  
+                         ConfirmationTitle="Удаление"
+                         ConfirmationMessage=@(() => $"Вы действительно хотите удалить производителя \"{deleteManufacturer.name}\" ?")
+                         ConfirmationChanged="ConfirmClicked"></DeleteConfirmDialog>
+
+    <h3>Список производителей на сайте</h3>
+    <div class="row">
+        <table class="table" style="width: 100%">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Производитель</th>
+                    <th>Количество товаров</th>
+                    <th>Срок поставки (дней)</th>
+                    <th>Следующая поставка</th>
+                    <th>Изменить</th>
+                    <th>Удалить</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in manufacturers)
+                {
+                    <tr>
+                        @if (editManufacturer != item)
+                        {
+                            <td>@item.name</td>
+                            <td>@item.productsCount</td>
+                            <td>@item.shipment_period</td>
+                            <td>@item.NextShipmentDate.ToShortDateString()</td>
+                            <td><button class="btn-secondary btn-sm" @onclick="@(e => EditManufacturer(item))">Изменить</button></td>
+                            <td><button class="btn-warning btn-sm" @onclick="@(e => ShowManufacturerDeleteDialog(item))">Удалить</button></td>
+                        }
+                        else
+                        {
+                            <td>@item.name</td>
+                            <td>@item.productsCount</td>
+                            <td><input @bind="item.shipment_period" /></td>
+                            <td>@item.NextShipmentDate.ToShortDateString()</td>
+                            <td><button class="btn-info btn-sm" @onclick="@(e => ConfirmManufacturerChanges(item))">Подтвердить</button></td>
+                            <td><button class="btn-warning btn-sm" @onclick="@(e => ShowManufacturerDeleteDialog(item))">Удалить</button></td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+
+
+@code {
+
+    DeleteConfirmDialog DeleteDialog;
+    List<ManufacturerModel> manufacturers = null;
+    ManufacturerModel editManufacturer = null;
+    ManufacturerModel deleteManufacturer = null;
+
+    private void EditManufacturer(ManufacturerModel manufacturer)
+    {
+        editManufacturer = manufacturer;
+    }
+
+    private void ShowManufacturerDeleteDialog(ManufacturerModel manufacturer)
+    {
+        deleteManufacturer = manufacturer;
+        DeleteDialog.Show();
+    }
+
+    private async Task ConfirmManufacturerChanges(ManufacturerModel manufacturer)
+    {
+        string sql = "UPDATE oc_manufacturer SET shipment_period = @shipment_period WHERE manufacturer_id = @manufacturer_id";
+        await _database.SaveData<ManufacturerModel>(sql, manufacturer, _config.GetConnectionString("openserver_etk_db"));
+        editManufacturer = null;
+
+    }
+
+    protected async Task ConfirmClicked(bool deleteConfirmed)
+    {
+        if (deleteManufacturer != null && deleteConfirmed)
+        {
+
+            string sql = "DELETE FROM oc_manufacturer WHERE manufacturer_id = @manufacturer_id";
+            await _database.SaveData<ManufacturerModel>(sql, deleteManufacturer, _config.GetConnectionString("openserver_etk_db"));
+
+            manufacturers.Remove(deleteManufacturer);
+            deleteManufacturer = null;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        string sql = "SELECT * FROM oc_manufacturer ORDER BY name";
+        manufacturers = await Task.Run(() => _database.LoadData<ManufacturerModel, dynamic>(sql, new { }, _config.GetConnectionString("openserver_etk_db")));
+    }
+
+}
