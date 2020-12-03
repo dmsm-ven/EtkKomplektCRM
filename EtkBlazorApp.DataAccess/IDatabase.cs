@@ -5,7 +5,8 @@ namespace EtkBlazorApp.DataAccess
 {
     public interface IDatabase
     {
-        Task<List<T>> LoadData<T, U>(string sql, U parameters, string connectionString);
-        Task SaveData<T>(string sql, T parameters, string connectionString);
+        Task SaveManufacturer(ManufacturerModel manufacturer);
+        Task<List<ManufacturerModel>> GetManufacturers();
+        Task<string> GetUserPremission(string login, string password);
     }
 }

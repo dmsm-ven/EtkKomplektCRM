@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorApp", "EtkBlazorAp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorApp.BL", "..\EtkBlazorApp.BL\EtkBlazorApp.BL.csproj", "{3D22A977-D8C5-4880-9E44-B4B3BA07EA9A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtkBlazorApp.DataAccess", "..\EtkBlazorApp.DataAccess\EtkBlazorApp.DataAccess.csproj", "{2EDE050B-D2E1-4E8D-8AB9-22B99AEEAEA9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorApp.DataAccess", "..\EtkBlazorApp.DataAccess\EtkBlazorApp.DataAccess.csproj", "{2EDE050B-D2E1-4E8D-8AB9-22B99AEEAEA9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

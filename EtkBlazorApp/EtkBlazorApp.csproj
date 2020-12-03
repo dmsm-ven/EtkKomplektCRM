@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Blazored.SessionStorage" Version="1.0.12" />
     <PackageReference Include="BlazorInputFile" Version="0.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="SSH.NET" Version="2016.1.0" />

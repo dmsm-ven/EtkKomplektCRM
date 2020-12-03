@@ -1,0 +1,47 @@
+﻿@page "/login"
+@inject AuthenticationStateProvider authenticationStateProvider
+@inject NavigationManager navigation
+
+<center style="background: linear-gradient(to right, #4bddc4 0%, #466085); padding: 20px 0px;">
+    <div class="col-12 row">
+        <div class="col-4">
+            <img src="./image/logotips/etk-logo.png" width="250" height="250"/>
+        </div>
+
+        <div class="col-4">
+            <EditForm Model="@user" OnValidSubmit="@ValidateUser">
+                <div>
+                    <h3 style="color: white;">ETK-Комплект - войти в приложение</h3>
+                </div>
+                <div class="col-12 row" style="margin: 10px 20px">
+                    <input class="form-control col-12" @bind="user.Login" placeholder="Логин" />
+                </div>
+                <div class="col-12 row" style="margin: 10px 20px">
+                    <input type="password" class="form-control col-12" @bind="user.Password" placeholder="Пароль" />
+                </div>
+                <div class="col-12 row" style="margin: 10px 20px">
+                    <input type="submit" class="form-control col-12 btn btn-success" value="Войти" />
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</center>
+
+@code {
+
+    private UserModel user;
+
+    protected override void OnInitialized()
+    {
+        user = new UserModel();
+    }
+
+    private async Task<bool> ValidateUser()
+    {
+        ((MyCustomAuthProvider)authenticationStateProvider).AuthenticateUser(user);
+        navigation.NavigateTo("/");
+
+        return await Task.FromResult(true);
+    }
+
+}

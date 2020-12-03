@@ -1,13 +1,11 @@
 ﻿@page "/load-price-list"
-
+@attribute [Authorize]
 @using EtkBlazorApp.Data
 @using EtkBlazorApp.BL
 @using System.IO;
 
-@if (selectedTemplate != null)
-{
-    <InputFile OnChange="HandleFileSelected"></InputFile>
-}
+<InputFile OnChange="HandleFileSelected" disabled="@(selectedTemplate == null)"></InputFile>
+
 <hr />
 @if (isFileLoading)
 {
@@ -37,6 +35,7 @@
                 <input type="radio"
                        id="@template.GetType().Name"
                        value="@template"
+                       @onchange="@(e => selectedTemplate = template)"
                        checked="@(selectedTemplate == template)" />
                 <label for="@template.GetType().Name" style="font-size: 11px; margin-left: 2px;">@template.GetType().Name</label>
             </div>

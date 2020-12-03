@@ -90,6 +90,13 @@ using EtkBlazorApp.Data;
 #line default
 #line hidden
 #nullable disable
+#nullable restore
+#line 12 "D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp\_Imports.razor"
+using EtkBlazorApp.Services;
+
+#line default
+#line hidden
+#nullable disable
     public partial class DeleteConfirmDialog : DeleteConfirmDialogBase
     {
         #pragma warning disable 1998
