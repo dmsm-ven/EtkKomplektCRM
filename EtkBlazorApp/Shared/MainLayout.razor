@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="sidebar">
     <NavMenu />
@@ -8,7 +9,9 @@
     <div class="top-row px-4">
         <AuthorizeView>
             <Authorized>
-                <a>@context.User.Identity.Name (<span style="color: gray;">@context.User.Claims.First(c => c.Type == System.Security.Claims.ClaimTypes.Role).Value</span>)</a>
+                <a href="/Login" @onclick="LogOut">
+                    @context.User.Identity.Name (<span style="color: gray;">@context.User.Claims.First(c => c.Type == System.Security.Claims.ClaimTypes.Role).Value</span>)
+                </a>
             </Authorized>
             <NotAuthorized>
                 <a href="/Login">Войти</a>
@@ -20,3 +23,10 @@
         @Body
     </div>
 </div>
+
+@code {
+    public void LogOut()
+    {
+        ((MyCustomAuthProvider)AuthenticationStateProvider).LogOutUser();
+    }
+}

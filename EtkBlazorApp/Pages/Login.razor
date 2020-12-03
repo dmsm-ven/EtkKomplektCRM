@@ -1,6 +1,7 @@
 ﻿@page "/login"
 @inject AuthenticationStateProvider authenticationStateProvider
 @inject NavigationManager navigation
+@inject Blazored.SessionStorage.ISessionStorageService session
 
 <center style="background: linear-gradient(to right, #4bddc4 0%, #466085); padding: 20px 0px;">
     <div class="col-12 row">
@@ -38,8 +39,11 @@
 
     private async Task<bool> ValidateUser()
     {
-        ((MyCustomAuthProvider)authenticationStateProvider).AuthenticateUser(user);
+        await ((MyCustomAuthProvider)authenticationStateProvider).AuthenticateUser(user);
         navigation.NavigateTo("/");
+
+        await session.SetItemAsync<string>("user_login", user.Login);
+        await session.SetItemAsync<string>("user_password", user.Password);
 
         return await Task.FromResult(true);
     }

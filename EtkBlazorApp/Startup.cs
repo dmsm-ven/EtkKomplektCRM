@@ -25,11 +25,9 @@ namespace EtkBlazorApp
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
-            services.AddSingleton<IDatabase, MySqlDatabase>();
 
-           
+            services.AddSingleton<IDatabase, MySqlDatabase>();       
             services.AddBlazoredSessionStorage();
-
             services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();
         }
 

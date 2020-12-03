@@ -19,21 +19,20 @@ namespace EtkBlazorApp.Services
             this.session = session;
         }
 
-        public override Task<AuthenticationState> GetAuthenticationStateAsync()
+        public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            var identity = new ClaimsIdentity(new[] 
+            var login = await session.GetItemAsync<string>("user_login");
+            var password = await session.GetItemAsync<string>("user_password");
+            if (login != null && password != null)
             {
-                new Claim(ClaimTypes.Name, "Гость")
-            }, "");
-            var user = new ClaimsPrincipal(identity);
+                var state = await AuthenticateUser(new UserModel() { Login = login, Password = password });
+                return state;           
+            }
 
-            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
-
-
-            return Task.FromResult(new AuthenticationState(user));
+            return GetDefaultState();            
         }
 
-        public async Task AuthenticateUser(UserModel userData)
+        public async Task<AuthenticationState> AuthenticateUser(UserModel userData)
         {
             string role = await db.GetUserPremission(userData.Login, userData.Password);
 
@@ -49,7 +48,34 @@ namespace EtkBlazorApp.Services
                 var state = new AuthenticationState(user);
 
                 NotifyAuthenticationStateChanged(Task.FromResult(state));
+                return state;
             }
-        }       
+
+            return GetDefaultState();
+        }  
+        
+        public void LogOutUser()
+        {
+            session.RemoveItemAsync("user_login");
+            session.RemoveItemAsync("user_password");
+
+            var state = GetDefaultState();
+
+
+            NotifyAuthenticationStateChanged(Task.FromResult(state));
+        }
+
+        private AuthenticationState GetDefaultState()
+        {
+            var identity = new ClaimsIdentity(new[]
+{
+                new Claim(ClaimTypes.Name, "Гость")
+            }, authenticationType: string.Empty);
+            var user = new ClaimsPrincipal(identity);
+
+            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
+            var state = new AuthenticationState(user);
+            return state;
+        }
     }
 }
