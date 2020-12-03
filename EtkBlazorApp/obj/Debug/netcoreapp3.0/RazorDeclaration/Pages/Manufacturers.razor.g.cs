@@ -84,6 +84,13 @@ using BlazorInputFile;
 #line hidden
 #nullable disable
 #nullable restore
+#line 11 "D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp\_Imports.razor"
+using EtkBlazorApp.Data;
+
+#line default
+#line hidden
+#nullable disable
+#nullable restore
 #line 3 "D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp\Pages\Manufacturers.razor"
 using EtkBlazorApp.DataAccess;
 

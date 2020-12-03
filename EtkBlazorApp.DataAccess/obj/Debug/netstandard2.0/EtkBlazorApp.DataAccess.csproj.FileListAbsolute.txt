@@ -1,9 +1,9 @@
 D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.DataAccess\bin\Debug\netstandard2.0\EtkBlazorApp.DataAccess.deps.json
 D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.DataAccess\bin\Debug\netstandard2.0\EtkBlazorApp.DataAccess.dll
+D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.DataAccess\bin\Debug\netstandard2.0\EtkBlazorApp.DataAccess.pdb
+D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.DataAccess\obj\Debug\netstandard2.0\EtkBlazorApp.DataAccess.csprojAssemblyReference.cache
 D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.DataAccess\obj\Debug\netstandard2.0\EtkBlazorApp.DataAccess.AssemblyInfoInputs.cache
 D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.DataAccess\obj\Debug\netstandard2.0\EtkBlazorApp.DataAccess.AssemblyInfo.cs
-D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.DataAccess\obj\Debug\netstandard2.0\EtkBlazorApp.DataAccess.csprojAssemblyReference.cache
-D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.DataAccess\bin\Debug\netstandard2.0\EtkBlazorApp.DataAccess.pdb
 D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.DataAccess\obj\Debug\netstandard2.0\EtkBlazorApp.DataAccess.csproj.CoreCompileInputs.cache
 D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.DataAccess\obj\Debug\netstandard2.0\EtkBlazorApp.DataAccess.dll
 D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.DataAccess\obj\Debug\netstandard2.0\EtkBlazorApp.DataAccess.pdb

@@ -4,18 +4,18 @@
 @using EtkBlazorApp.BL
 @using System.IO;
 
-<h1>Загрузка прайс-листа</h1>
+@if (selectedTemplate != null)
+{
+    <InputFile OnChange="HandleFileSelected"></InputFile>
+}
 <hr />
-<InputFile OnChange="HandleFileSelected" />
-<hr />
-
 @if (isFileLoading)
 {
     <progress style="width: 100%; height: 24px;"></progress>
     <hr />
 }
 
-@if (loadedFiles.Any())
+@if (loadedFiles != null && loadedFiles.Any())
 {
     <h3>Загруженные прайс-листы</h3>
     <ul>
@@ -37,8 +37,7 @@
                 <input type="radio"
                        id="@template.GetType().Name"
                        value="@template"
-                       @onchange="SelectedTemplateChanged"
-                       checked=@(selectedTemplate == template) ) />
+                       checked="@(selectedTemplate == template)" />
                 <label for="@template.GetType().Name" style="font-size: 11px; margin-left: 2px;">@template.GetType().Name</label>
             </div>
         </div>
@@ -46,6 +45,7 @@
 </div>
 
 <hr />
+
 
 @code
 {
@@ -55,12 +55,11 @@
     List<LoadedFileData> loadedFiles = null;
     bool isFileLoading = false;
 
-    protected override Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         loadedFiles = new List<LoadedFileData>();
         templates = new List<IPriceListTemplate>(new[] { new SymmetronPriceListTemplate() });
         selectedTemplate = templates.First();
-        return Task.CompletedTask;
     }
 
     private async Task HandleFileSelected(IFileListEntry[] newFiles)
@@ -80,17 +79,17 @@
 
         if (selectedFile != null)
         {
-            string tempFilePath = Path.GetTempPath() + Guid.NewGuid().ToString() + Path.GetExtension(selectedFile.Name);
+            string tempFilePath = Path.GetTempFileName();
 
             //Загрузили файл
-            using (var fileStream = File.Create(tempFilePath))
-            {
-                var bytes = new byte[selectedFile.Data.Length];
-                await selectedFile.Data.ReadAsync(bytes, 0, bytes.Length);
-                fileStream.Write(bytes, 0, bytes.Length);
-            }
+            //using (var fileStream = File.Create(tempFilePath))
+            //{
+            //    var bytes = new byte[selectedFile.Data.Length];
+            //    await selectedFile.Data.ReadAsync(bytes, 0, bytes.Length);
+            //    await fileStream.WriteAsync(bytes, 0, bytes.Length);
+            //}
 
-            selectedTemplate.FileName = tempFilePath;
+            selectedTemplate.FileName = $@"C:\users\user\downloads\{selectedFile.Name}";
             var records = await Task.Run(() => selectedTemplate.ReadPriceLines());
 
             var fileData = new LoadedFileData()
