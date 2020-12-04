@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 
 namespace EtkBlazorApp.BL
 {
@@ -22,7 +23,7 @@ namespace EtkBlazorApp.BL
             return book;
         }
 
-        public abstract List<PriceLine> ReadPriceLines();
+        public abstract List<PriceLine> ReadPriceLines(CancellationToken? token = null);
     
         protected decimal? ParsePrice(string str)
         {

@@ -12,6 +12,7 @@
 {
     <progress style="width: 100%; height: 24px;"></progress>
     <hr />
+    <button @onclick="CancelFileUpload" class="btn btn-outline-dark">Отменить загрузку</button>
 }
 
 @if (loadedFiles != null && loadedFiles.Any())
@@ -57,6 +58,7 @@
     const int MAX_UPLOAD_SIZE = 15_000_000; // 15 мб
     CancellationTokenSource tcs;
 
+
     protected override void OnInitialized()
     {
         tcs = new CancellationTokenSource();
@@ -65,40 +67,52 @@
         selectedTemplate = templates.First();
     }
 
+    private void CancelFileUpload()
+    {
+        tcs.Cancel();
+    }
+
     private async Task UploadFileSelected(InputFileChangeEventArgs e)
     {
         var selectedFile = e.File;
-
+        CancellationToken cancelToken = tcs.Token;
         isFileLoading = true;
-
         string tempFilePath = Path.GetTempFileName();
 
         //Загрузили файл
-        using (var fileStream = File.Create(tempFilePath))
+        try
         {
-            var buffer = new byte[selectedFile.Size];
 
-            await selectedFile.OpenReadStream(MAX_UPLOAD_SIZE, tcs.Token).ReadAsync(buffer, tcs.Token);
-            await fileStream.WriteAsync(buffer, 0, buffer.Length);
+            using (var fileStream = File.Create(tempFilePath))
+            {
+                var buffer = new byte[selectedFile.Size];
+                await selectedFile.OpenReadStream(MAX_UPLOAD_SIZE, cancelToken).ReadAsync(buffer, cancelToken);
+                await fileStream.WriteAsync(buffer, 0, buffer.Length);
+            }
+
+            selectedTemplate.FileName = tempFilePath;
+            var records = await Task.Run(() => selectedTemplate.ReadPriceLines(cancelToken));
+
+            var fileData = new LoadedFileData()
+            {
+                RecordsInFile = records.Count,
+                TemplateName = selectedTemplate.GetType().Name,
+                TempFilePath = tempFilePath
+            };
+
+            loadedFiles.Add(fileData);
         }
-
-        selectedTemplate.FileName = tempFilePath;
-        var records = await Task.Run(() => selectedTemplate.ReadPriceLines());
-
-        var fileData = new LoadedFileData()
+        catch (Exception ex)
         {
-            RecordsInFile = records.Count,
-            TemplateName = selectedTemplate.GetType().Name,
-            TempFilePath = tempFilePath
-        };
 
-        loadedFiles.Add(fileData);
-
-        File.Delete(tempFilePath);
-
-        isFileLoading = false;
-        selectedTemplate = null;
-        selectedFile = null;
+        }
+        finally
+        {
+            File.Delete(tempFilePath);
+            isFileLoading = false;
+            selectedTemplate = null;
+            selectedFile = null;
+        }
     }
 
     private void SelectedTemplateChanged(ChangeEventArgs e)
