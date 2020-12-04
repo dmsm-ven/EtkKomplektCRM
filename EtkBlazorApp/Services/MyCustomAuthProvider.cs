@@ -34,24 +34,18 @@ namespace EtkBlazorApp.Services
 
         public async Task<AuthenticationState> AuthenticateUser(UserModel userData)
         {
-            string role = await db.GetUserPremission(userData.Login, userData.Password);
+            if(!await db.GetUserPremission(userData.Login, userData.Password)) { return GetDefaultState(); }
 
-            if (role != null)
+            var identity = new ClaimsIdentity(new[]
             {
-                var identity = new ClaimsIdentity(new[]
-                {
                 new Claim(ClaimTypes.Name, userData.Login),
-                new Claim(ClaimTypes.Role, role)
-                }, "apiauth_type");
+            }, "apiauth_type");
 
-                var user = new ClaimsPrincipal(identity);
-                var state = new AuthenticationState(user);
+            var user = new ClaimsPrincipal(identity);
+            var state = new AuthenticationState(user);
 
-                NotifyAuthenticationStateChanged(Task.FromResult(state));
-                return state;
-            }
-
-            return GetDefaultState();
+            NotifyAuthenticationStateChanged(Task.FromResult(state));
+            return state;
         }  
         
         public void LogOutUser()

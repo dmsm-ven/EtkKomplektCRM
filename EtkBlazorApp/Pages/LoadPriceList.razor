@@ -3,8 +3,9 @@
 @using EtkBlazorApp.Data
 @using EtkBlazorApp.BL
 @using System.IO;
+@using System.Threading;
 
-<InputFile OnChange="HandleFileSelected" disabled="@(selectedTemplate == null)"></InputFile>
+<InputFile OnChange="@UploadFileSelected" disabled="@(selectedTemplate == null)"></InputFile>
 
 <hr />
 @if (isFileLoading)
@@ -49,22 +50,55 @@
 @code
 {
     List<IPriceListTemplate> templates = null;
-    IPriceListTemplate selectedTemplate = null;
-    IFileListEntry selectedFile = null;
     List<LoadedFileData> loadedFiles = null;
+    IPriceListTemplate selectedTemplate = null;
+
     bool isFileLoading = false;
+    const int MAX_UPLOAD_SIZE = 15_000_000; // 15 мб
+    CancellationTokenSource tcs;
 
     protected override void OnInitialized()
     {
+        tcs = new CancellationTokenSource();
         loadedFiles = new List<LoadedFileData>();
         templates = new List<IPriceListTemplate>(new[] { new SymmetronPriceListTemplate() });
         selectedTemplate = templates.First();
     }
 
-    private async Task HandleFileSelected(IFileListEntry[] newFiles)
+    private async Task UploadFileSelected(InputFileChangeEventArgs e)
     {
-        selectedFile = newFiles.FirstOrDefault();
-        await LoadSelectedFile();
+        var selectedFile = e.File;
+
+        isFileLoading = true;
+
+        string tempFilePath = Path.GetTempFileName();
+
+        //Загрузили файл
+        using (var fileStream = File.Create(tempFilePath))
+        {
+            var buffer = new byte[selectedFile.Size];
+
+            await selectedFile.OpenReadStream(MAX_UPLOAD_SIZE, tcs.Token).ReadAsync(buffer, tcs.Token);
+            await fileStream.WriteAsync(buffer, 0, buffer.Length);
+        }
+
+        selectedTemplate.FileName = tempFilePath;
+        var records = await Task.Run(() => selectedTemplate.ReadPriceLines());
+
+        var fileData = new LoadedFileData()
+        {
+            RecordsInFile = records.Count,
+            TemplateName = selectedTemplate.GetType().Name,
+            TempFilePath = tempFilePath
+        };
+
+        loadedFiles.Add(fileData);
+
+        File.Delete(tempFilePath);
+
+        isFileLoading = false;
+        selectedTemplate = null;
+        selectedFile = null;
     }
 
     private void SelectedTemplateChanged(ChangeEventArgs e)
@@ -72,40 +106,4 @@
         selectedTemplate = (IPriceListTemplate)e.Value;
     }
 
-    private async Task LoadSelectedFile()
-    {
-        isFileLoading = true;
-
-        if (selectedFile != null)
-        {
-            string tempFilePath = Path.GetTempFileName();
-
-            //Загрузили файл
-            //using (var fileStream = File.Create(tempFilePath))
-            //{
-            //    var bytes = new byte[selectedFile.Data.Length];
-            //    await selectedFile.Data.ReadAsync(bytes, 0, bytes.Length);
-            //    await fileStream.WriteAsync(bytes, 0, bytes.Length);
-            //}
-
-            selectedTemplate.FileName = $@"C:\users\user\downloads\{selectedFile.Name}";
-            var records = await Task.Run(() => selectedTemplate.ReadPriceLines());
-
-            var fileData = new LoadedFileData()
-            {
-                FileName = selectedFile.Name,
-                RecordsInFile = records.Count,
-                TemplateName = selectedTemplate.GetType().Name,
-                TempFilePath = tempFilePath
-            };
-
-            loadedFiles.Add(fileData);
-
-            File.Delete(tempFilePath);
-        }
-
-        isFileLoading = false;
-        selectedFile = null;
-        selectedTemplate = null;
-    }
 }

@@ -7,6 +7,6 @@ namespace EtkBlazorApp.DataAccess
     {
         Task SaveManufacturer(ManufacturerModel manufacturer);
         Task<List<ManufacturerModel>> GetManufacturers();
-        Task<string> GetUserPremission(string login, string password);
+        Task<bool> GetUserPremission(string login, string password);
     }
 }
