@@ -1,0 +1,119 @@
+﻿@page "/orders"
+@attribute [Authorize]
+@using EtkBlazorApp.DataAccess
+@using System.Web
+@inject IDatabase _database
+
+<h3>Заказы</h3>
+
+<div class="row">
+    <div class="col-md-3">
+        <label for="orders_per_page">Количество записей на странице</label>
+        <select id="orders_per_page" @bind="@TakeCount" @oninput="@ItemsPerPageChanged">          
+            @foreach (var itemsPerPage in AvailableTakeCountList)
+            {
+                <option value="@itemsPerPage">@itemsPerPage</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label for="city_list">Город</label>
+        <select id="city_list" @bind="@cityFilter" @oninput="@CityChanged">
+            <option value="all">Все</option>
+            @foreach (var city in cityList)
+            {
+                <option value="@city">@city</option>
+            }
+        </select>
+    </div>
+    </div>
+
+    @if (orders == null)
+    {
+        <em>Загрузка ...</em>
+    }
+    else
+    {
+        <div class="row">
+            <table class="table table-hover" style="width: 100%">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>№ заказа</th>
+                        <th>Дата/Время</th>
+                        <th>Завершен</th>
+                        <th>Статус заказа</th>
+                        <th>Заказчик</th>
+                        <th>Город</th>
+                        <th>Сумма</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    @foreach (var order in orders)
+                    {
+                        <tr>
+                            <td>@order.OrderId</td>
+                            <td>@order.DateTime.ToString("f")</td>
+                            <td><input type="checkbox" value="@order.IsDone" disabled /></td>
+                            <td>@order.OrderStatus</td>
+                            <td>@order.Customer</td>
+                            <td>@order.City</td>
+                            <td>@order.TotalPrice.ToString("C0")</td>
+                        </tr>
+                    }
+
+                </tbody>
+            </table>
+        </div>
+    }
+
+    @code {
+        List<OrderViewModel> orders = null;
+        List<int> AvailableTakeCountList = new List<int>(new[] { 10, 50, 100 });
+        List<string> cityList = null;
+        int TakeCount = 50;
+        string cityFilter = string.Empty;
+
+        private async Task ItemsPerPageChanged(ChangeEventArgs e)
+        {
+            orders = null;
+            TakeCount = int.Parse(e.Value.ToString());
+
+            await RefreshOrderList();
+        }
+
+        private async Task CityChanged(ChangeEventArgs e)
+        {
+            orders = null;
+            cityFilter = e.Value.ToString();
+
+            await RefreshOrderList();
+        }
+
+        protected override async Task OnInitializedAsync()
+        {
+            await RefreshOrderList();
+            cityList = orders.Select(o => o.City).Distinct().OrderBy(city => city).ToList();
+        }
+
+        private async Task RefreshOrderList()
+        {
+            var data = (await _database.GetLastOrders(TakeCount))
+                .Select(model => new OrderViewModel()
+                {
+                    City = model.payment_city,
+                    Customer = HttpUtility.HtmlDecode(model.payment_firstname),
+                    DateTime = model.date_added,
+                    OrderId = model.order_id.ToString(),
+                    TotalPrice = model.total,
+                    OrderStatus = model.order_status
+                });
+             
+            if (!string.IsNullOrWhiteSpace(cityFilter) && cityFilter != "all")
+            {
+                data = data.Where(o => o.City == cityFilter);
+            }
+
+            orders = data.ToList();
+        }
+    }

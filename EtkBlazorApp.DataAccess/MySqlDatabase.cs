@@ -1,11 +1,10 @@
 ﻿using Dapper;
+using EtkBlazorApp.DataAccess.Model;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
-using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,6 +13,7 @@ namespace EtkBlazorApp.DataAccess
     public class MySqlDatabase : IDatabase
     {
         private readonly IConfiguration configuration;
+        
         string ConnectionString => configuration.GetConnectionString("openserver_etk_db");
 
         public MySqlDatabase(IConfiguration configuration)
@@ -21,6 +21,55 @@ namespace EtkBlazorApp.DataAccess
             this.configuration = configuration;
         }
 
+        public async Task SaveManufacturer(ManufacturerModel manufacturer)
+        {
+            string sql = "UPDATE oc_manufacturer SET shipment_period = @shipment_period WHERE manufacturer_id = @manufacturer_id";
+            await SaveData(sql, manufacturer);
+        }
+
+        public async Task<List<ManufacturerModel>> GetManufacturers()
+        {
+            string sql = "SELECT m.*, url.keyword FROM oc_manufacturer m LEFT JOIN oc_url_alias url ON CONCAT('manufacturer_id=', m.manufacturer_id) = url.query ORDER BY name";
+            var manufacturers = await LoadData<ManufacturerModel, dynamic>(sql, new { });
+            return manufacturers;
+        }
+
+        public async Task<List<OrderModel>> GetLastOrders(int takeCount)
+        {
+            if(takeCount <= 0 || takeCount >= 500)
+            {
+                return new List<OrderModel>();
+            }
+
+            var sb = new StringBuilder()
+                .AppendLine("SELECT o.*, s.name as order_status")
+                .AppendLine("FROM oc_order o")
+                .AppendLine("LEFT JOIN oc_order_status s ON o.order_status_id = s.order_status_id")
+                .AppendLine("ORDER BY o.date_added DESC")
+                .AppendLine("LIMIT @TakeCount");
+
+            string sql = sb.ToString().Trim();
+            var orders = await LoadData<OrderModel, dynamic>(sql, new { TakeCount = takeCount });
+            return orders;
+        }
+        
+        public async Task<bool> GetUserPremission(string login, string password)
+        {
+            var sb = new StringBuilder()
+                .AppendLine("SELECT COUNT(user_id) FROM oc_user")
+                .AppendLine("WHERE user_group_id = (SELECT user_group_id FROM oc_user_group WHERE name = 'etk_app')")
+                .AppendLine("AND username = @login AND password = @password")
+                .AppendLine("AND status = 1");
+
+            var sql = sb.ToString().Trim();
+
+            string passwordMd5 = CreateFromStringMD5(password);
+            var result = await GetScalar<int, dynamic>(sql, new { login, password = passwordMd5 });
+
+            return result == 1;
+        }
+
+        #region private
         private async Task<List<T>> LoadData<T, U>(string sql, U parameters)
         {
             using (IDbConnection connection = new MySqlConnection(ConnectionString))
@@ -49,35 +98,6 @@ namespace EtkBlazorApp.DataAccess
             }
         }
 
-        public async Task SaveManufacturer(ManufacturerModel manufacturer)
-        {
-            string sql = "UPDATE oc_manufacturer SET shipment_period = @shipment_period WHERE manufacturer_id = @manufacturer_id";
-            await SaveData(sql, manufacturer);
-        }
-
-        public async Task<List<ManufacturerModel>> GetManufacturers()
-        {
-            string sql = "SELECT m.*, url.keyword FROM oc_manufacturer m LEFT JOIN oc_url_alias url ON CONCAT('manufacturer_id=', m.manufacturer_id) = url.query ORDER BY name";
-            var manufacturers = await LoadData<ManufacturerModel, dynamic>(sql, new { });
-            return manufacturers;
-        }
-   
-        public async Task<bool> GetUserPremission(string login, string password)
-        {
-            var sb = new StringBuilder()
-                .AppendLine("SELECT COUNT(user_id) FROM oc_user")
-                .AppendLine("WHERE user_group_id = (SELECT user_group_id FROM oc_user_group WHERE name = 'etk_app')")
-                .AppendLine("AND username = @login AND password = @password")
-                .AppendLine("AND status = 1");
-
-            var sql = sb.ToString().Trim();
-
-            string passwordMd5 = CreateFromStringMD5(password);
-            var result = await GetScalar<int, dynamic>(sql, new { login, password = passwordMd5 });
-
-            return result == 1;
-        }
-
         private string CreateFromStringMD5(string input)
         {
             // Use input string to calculate MD5 hash
@@ -95,5 +115,6 @@ namespace EtkBlazorApp.DataAccess
                 return sb.ToString().ToLower();
             }
         }
+        #endregion
     }
 }

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace EtkBlazorApp.DataAccess
+namespace EtkBlazorApp.DataAccess.Model
 {
     public class ManufacturerModel
     {

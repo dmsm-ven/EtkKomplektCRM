@@ -1,4 +1,5 @@
 ﻿using OfficeOpenXml;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -10,22 +11,27 @@ namespace EtkBlazorApp.BL
     {
         public string FileName { get; set; }
 
-        protected virtual ExcelWorkbook GetWorkbook()
+        protected CancellationToken? CancelToken { get; set; }
+        protected ExcelPackage Excel { get; set; }
+
+        public List<PriceLine> ReadPriceLines(CancellationToken? token = null)
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
-            ExcelWorkbook book;
-            using (var package = new ExcelPackage(new FileInfo(FileName)))
+            using (Excel = new ExcelPackage(new FileInfo(FileName)))
             {
-                book = package.Workbook;
-            }
+                if (token.HasValue && token.Value.IsCancellationRequested)
+                {
+                    throw new OperationCanceledException("Отменено пользователем");
+                }
 
-            return book;
+                return ReadDataFromExcel();
+            }
         }
 
-        public abstract List<PriceLine> ReadPriceLines(CancellationToken? token = null);
+        protected abstract List<PriceLine> ReadDataFromExcel();
     
-        protected decimal? ParsePrice(string str)
+        protected virtual decimal? ParsePrice(string str)
         {
             if(!string.IsNullOrWhiteSpace(str))
             {

@@ -11,7 +11,7 @@
     //TODO: после отладки удалить, - это что бы каждый раз при входе не входить
     protected override async Task OnInitializedAsync()
     {
-        var user = new UserModel() { Login = "painven", Password = "HYFLo7TPAxWL" };
+        var user = new UserViewModel() { Login = "painven", Password = "HYFLo7TPAxWL" };
 
         await ((MyCustomAuthProvider)authenticationStateProvider).AuthenticateUser(user);
         await session.SetItemAsync<string>("user_login", user.Login);

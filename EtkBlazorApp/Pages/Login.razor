@@ -11,6 +11,8 @@
 
         <div class="col-4">
             <EditForm Model="@user" OnValidSubmit="@ValidateUser">
+                <DataAnnotationsValidator/>
+                <ValidationSummary />
                 <div>
                     <h3 style="color: white;">ETK-Комплект - войти в приложение</h3>
                 </div>
@@ -30,11 +32,11 @@
 
 @code {
 
-    private UserModel user;
+    private UserViewModel user;
 
     protected override void OnInitialized()
     {
-        user = new UserModel();
+        user = new UserViewModel();
     }
 
     private async Task<bool> ValidateUser()

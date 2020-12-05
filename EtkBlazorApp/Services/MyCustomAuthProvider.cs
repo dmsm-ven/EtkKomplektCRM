@@ -25,21 +25,22 @@ namespace EtkBlazorApp.Services
             var password = await session.GetItemAsync<string>("user_password");
             if (login != null && password != null)
             {
-                var state = await AuthenticateUser(new UserModel() { Login = login, Password = password });
+                var state = await AuthenticateUser(new UserViewModel() { Login = login, Password = password });
                 return state;           
             }
 
             return GetDefaultState();            
         }
 
-        public async Task<AuthenticationState> AuthenticateUser(UserModel userData)
+        public async Task<AuthenticationState> AuthenticateUser(UserViewModel userData)
         {
             if(!await db.GetUserPremission(userData.Login, userData.Password)) { return GetDefaultState(); }
 
             var identity = new ClaimsIdentity(new[]
             {
                 new Claim(ClaimTypes.Name, userData.Login),
-            }, "apiauth_type");
+                new Claim(ClaimTypes.Role, "administrator"),
+            }, "login_form");
 
             var user = new ClaimsPrincipal(identity);
             var state = new AuthenticationState(user);
@@ -53,10 +54,7 @@ namespace EtkBlazorApp.Services
             session.RemoveItemAsync("user_login");
             session.RemoveItemAsync("user_password");
 
-            var state = GetDefaultState();
-
-
-            NotifyAuthenticationStateChanged(Task.FromResult(state));
+            NotifyAuthenticationStateChanged(Task.FromResult(GetDefaultState()));
         }
 
         private AuthenticationState GetDefaultState()
