@@ -1,5 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ICurrencyChecker currencyChecker
+@using System.Globalization
 
 <div class="sidebar">
     <NavMenu />
@@ -9,6 +11,8 @@
     <div class="top-row px-4">
         <AuthorizeView>
             <Authorized>
+                <p><span class="oi oi-euro currency-top">@euro.ToString("F2", CultureInfo.InvariantCulture)</span></p>
+                <p><span class="oi oi-dollar currency-top">@usd.ToString("F2", CultureInfo.InvariantCulture)</span></p>
                 <p><strong>@context.User.Identity.Name</strong>&nbsp;&nbsp;<a href="/Login" @onclick="LogOut">Выйти</a></p>
             </Authorized>
             <NotAuthorized>
@@ -23,8 +27,16 @@
 </div>
 
 @code {
+
+    decimal usd, euro;
     public void LogOut()
     {
         ((MyCustomAuthProvider)AuthenticationStateProvider).LogOutUser();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        euro = await currencyChecker.GetCurrencyRate(BL.Data.CurrencyType.EUR);
+        usd = await currencyChecker.GetCurrencyRate(BL.Data.CurrencyType.USD);
     }
 }

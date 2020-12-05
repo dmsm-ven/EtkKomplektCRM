@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace EtkBlazorApp.Data
 {
@@ -6,7 +7,10 @@ namespace EtkBlazorApp.Data
     {
         public int manufacturer_id { get; set; }
         public string name { get; set; }
+        [Required]
         public string keyword { get; set; }
+        [Required]
+        [Range(0, 355, ErrorMessage = "Срок поставки должен быть в диапазоне от 0 до 355 (дней)")]
         public int shipment_period { get; set; }
         public int? productsCount { get; set; }
 
