@@ -1,5 +1,5 @@
 ﻿@page "/orders"
-@attribute [Authorize]
+@attribute [Authorize (Roles = "Administrator, Manager")]
 @using EtkBlazorApp.DataAccess
 @using System.Web
 @inject IDatabase _database
@@ -19,7 +19,7 @@
     <div class="col-md-3">
         <label for="city_list">Город</label>
         <select id="city_list" @bind="@cityFilter" @oninput="@CityChanged">
-            <option value="all">Все</option>
+            <option value="">Все</option>
             @foreach (var city in cityList)
             {
                 <option value="@city">@city</option>
@@ -72,7 +72,7 @@
         List<int> AvailableTakeCountList = new List<int>(new[] { 10, 50, 100 });
         List<string> cityList = null;
         int TakeCount = 50;
-        string cityFilter = string.Empty;
+        string cityFilter = null;
 
         private async Task ItemsPerPageChanged(ChangeEventArgs e)
         {
@@ -98,7 +98,7 @@
 
         private async Task RefreshOrderList()
         {
-            var data = (await _database.GetLastOrders(TakeCount))
+            var data = (await _database.GetLastOrders(TakeCount, cityFilter))
                 .Select(model => new OrderViewModel()
                 {
                     City = model.payment_city,
@@ -107,12 +107,7 @@
                     OrderId = model.order_id.ToString(),
                     TotalPrice = model.total,
                     OrderStatus = model.order_status
-                });
-             
-            if (!string.IsNullOrWhiteSpace(cityFilter) && cityFilter != "all")
-            {
-                data = data.Where(o => o.City == cityFilter);
-            }
+                });            
 
             orders = data.ToList();
         }

@@ -1,19 +1,6 @@
 ﻿@page "/"
-@inject Blazored.SessionStorage.ISessionStorageService session
-@inject AuthenticationStateProvider authenticationStateProvider
 
 
-@code{
+@code{   
 
-    //TODO: после отладки удалить, - это что бы каждый раз при входе не входить
-    protected override async Task OnInitializedAsync()
-    {
-        var user = new UserViewModel() { Login = "painven", Password = "HYFLo7TPAxWL" };
-
-        await ((MyCustomAuthProvider)authenticationStateProvider).AuthenticateUser(user);
-        await session.SetItemAsync<string>("user_login", user.Login);
-        await session.SetItemAsync<string>("user_password", user.Password);
-
-
-    }
 }

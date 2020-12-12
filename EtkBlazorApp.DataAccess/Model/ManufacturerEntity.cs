@@ -4,7 +4,7 @@ using System.Text;
 
 namespace EtkBlazorApp.DataAccess.Model
 {
-    public class ManufacturerModel
+    public class ManufacturerEntity
     {
         public int manufacturer_id { get; set; }
         public string name { get; set; }

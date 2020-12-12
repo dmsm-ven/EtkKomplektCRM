@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "WsHkca3w8A8h86YtNbDWgGHny9SPJlTl9y+z9f9qN+aOtgM1sKVp2zvlu8XUYQMeIZneZBd9Heb3+/KPw4YvOA==",
+  "dgSpecHash": "4BS+2hRwgJOt9VhX0+DNumtV38UW+PcMqO9tQgOvri9tOoBoIs0O80ZrcAOnk7Ggymk4K38W7DamAeyoaHcEhQ==",
   "success": true,
   "projectFilePath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp\\EtkBlazorApp.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\user\\.nuget\\packages\\blazored.sessionstorage\\1.0.12\\blazored.sessionstorage.1.0.12.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\blazored.toast\\3.1.2\\blazored.toast.3.1.2.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\bouncycastle.netcore\\1.8.3\\bouncycastle.netcore.1.8.3.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\dapper\\2.0.78\\dapper.2.0.78.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\epplus\\5.4.2\\epplus.5.4.2.nupkg.sha512",

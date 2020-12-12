@@ -2,17 +2,24 @@
   "version": 3,
   "targets": {
     "net5.0": {
-      "Blazored.SessionStorage/1.0.12": {
+      "Blazored.Toast/3.1.2": {
         "type": "package",
         "dependencies": {
           "Microsoft.AspNetCore.Components": "3.1.4",
-          "Microsoft.AspNetCore.Components.Web": "3.1.4"
+          "Microsoft.AspNetCore.Components.Web": "3.1.4",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "3.1.4"
         },
         "compile": {
-          "lib/netstandard2.0/Blazored.SessionStorage.dll": {}
+          "lib/netstandard2.0/Blazored.Toast.dll": {}
         },
         "runtime": {
-          "lib/netstandard2.0/Blazored.SessionStorage.dll": {}
+          "lib/netstandard2.0/Blazored.Toast.dll": {}
+        },
+        "build": {
+          "buildTransitive/Blazored.Toast.props": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/Blazored.Toast.props": {}
         }
       },
       "BouncyCastle.NetCore/1.8.3": {
@@ -1880,16 +1887,22 @@
     }
   },
   "libraries": {
-    "Blazored.SessionStorage/1.0.12": {
-      "sha512": "46Ecq7Ek5vjCHjuf9Yia6bIcsgF3gQUYzTvCshoXUj1E3Xg2VD+42PAtWwYEf8yedFZUNdTlaFazjwc5zPHEGw==",
+    "Blazored.Toast/3.1.2": {
+      "sha512": "EDwxOEeqcT8vNIqn+sCYv/Maouu223UfMCuBxtlUpqPsVHql6OmhZgpo3j9GssIkGU1utKKdi4NaAoUoXDKWSQ==",
       "type": "package",
-      "path": "blazored.sessionstorage/1.0.12",
+      "path": "blazored.toast/3.1.2",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "blazored.sessionstorage.1.0.12.nupkg.sha512",
-        "blazored.sessionstorage.nuspec",
-        "lib/netstandard2.0/Blazored.SessionStorage.dll"
+        "blazored.toast.3.1.2.nupkg.sha512",
+        "blazored.toast.nuspec",
+        "build/Blazored.Toast.props",
+        "build/Microsoft.AspNetCore.StaticWebAssets.props",
+        "buildMultiTargeting/Blazored.Toast.props",
+        "buildTransitive/Blazored.Toast.props",
+        "lib/netstandard2.0/Blazored.Toast.dll",
+        "staticwebassets/blazored-toast.css",
+        "staticwebassets/blazored-toast.min.css"
       ]
     },
     "BouncyCastle.NetCore/1.8.3": {
@@ -6543,7 +6556,7 @@
   },
   "projectFileDependencyGroups": {
     "net5.0": [
-      "Blazored.SessionStorage >= 1.0.12",
+      "Blazored.Toast >= 3.1.2",
       "EtkBlazorApp.BL >= 1.0.0",
       "EtkBlazorApp.DataAccess >= 1.0.0",
       "Newtonsoft.Json >= 12.0.3",
@@ -6600,9 +6613,9 @@
       "net5.0": {
         "targetAlias": "net5.0",
         "dependencies": {
-          "Blazored.SessionStorage": {
+          "Blazored.Toast": {
             "target": "Package",
-            "version": "[1.0.12, )"
+            "version": "[3.1.2, )"
           },
           "Newtonsoft.Json": {
             "target": "Package",

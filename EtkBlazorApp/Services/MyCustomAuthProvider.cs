@@ -1,31 +1,36 @@
 ﻿using EtkBlazorApp.Data;
 using EtkBlazorApp.DataAccess;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Blazored.SessionStorage;
 
 namespace EtkBlazorApp.Services
 {
     public class MyCustomAuthProvider : AuthenticationStateProvider
     {
         private readonly IDatabase db;
-        private readonly ISessionStorageService session;
+        private readonly ProtectedLocalStorage storage;
 
-        public MyCustomAuthProvider(IDatabase db, ISessionStorageService session)
+        public MyCustomAuthProvider(IDatabase db, ProtectedLocalStorage storage)
         {
             this.db = db;
-            this.session = session;
+            this.storage = storage;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            var login = await session.GetItemAsync<string>("user_login");
-            var password = await session.GetItemAsync<string>("user_password");
-            if (login != null && password != null)
+            var login = await storage.GetAsync<string>("user_login");
+            var password = await storage.GetAsync<string>("user_password");
+            if (login.Success && password.Success)
             {
-                var state = await AuthenticateUser(new UserViewModel() { Login = login, Password = password });
+                var state = await AuthenticateUser(new UserViewModel() 
+                { 
+                    Login = login.Value, 
+                    Password = password.Value }
+                );
                 return state;           
             }
 
@@ -39,7 +44,8 @@ namespace EtkBlazorApp.Services
             var identity = new ClaimsIdentity(new[]
             {
                 new Claim(ClaimTypes.Name, userData.Login),
-                new Claim(ClaimTypes.Role, "administrator"),
+                new Claim(ClaimTypes.Role, "Administrator"),
+                new Claim(ClaimTypes.Role, "Manager"),
             }, "login_form");
 
             var user = new ClaimsPrincipal(identity);
@@ -51,8 +57,8 @@ namespace EtkBlazorApp.Services
         
         public void LogOutUser()
         {
-            session.RemoveItemAsync("user_login");
-            session.RemoveItemAsync("user_password");
+            storage.DeleteAsync("user_login");
+            storage.DeleteAsync("user_password");
 
             NotifyAuthenticationStateChanged(Task.FromResult(GetDefaultState()));
         }

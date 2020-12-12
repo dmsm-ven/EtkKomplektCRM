@@ -4,7 +4,7 @@ using System.Text;
 
 namespace EtkBlazorApp.DataAccess.Model
 {
-    public class OrderModel
+    public class OrderEntity
     {
         public DateTime date_added { get; set; }
         public int order_id { get; set; }

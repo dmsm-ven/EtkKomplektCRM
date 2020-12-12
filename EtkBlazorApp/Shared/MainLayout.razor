@@ -11,8 +11,8 @@
     <div class="top-row px-4">
         <AuthorizeView>
             <Authorized>
-                <p><span class="oi oi-euro currency-top">@euro.ToString("F2", CultureInfo.InvariantCulture)</span></p>
-                <p><span class="oi oi-dollar currency-top">@usd.ToString("F2", CultureInfo.InvariantCulture)</span></p>
+                <p><span class="oi oi-euro currency-top">&nbsp;&nbsp;@euro.ToString("F2", CultureInfo.InvariantCulture)</span></p>
+                <p><span class="oi oi-dollar currency-top">&nbsp;&nbsp;@usd.ToString("F2", CultureInfo.InvariantCulture)</span></p>
                 <p><strong>@context.User.Identity.Name</strong>&nbsp;&nbsp;<a href="/Login" @onclick="LogOut">Выйти</a></p>
             </Authorized>
             <NotAuthorized>
@@ -26,6 +26,11 @@
     </div>
 </div>
 
+<Blazored.Toast.BlazoredToasts 
+                               Position="Blazored.Toast.Configuration.ToastPosition.TopRight" 
+                               Timeout="6" 
+                               IconType="Blazored.Toast.IconType.Material"/>
+
 @code {
 
     decimal usd, euro;
@@ -36,7 +41,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        euro = await currencyChecker.GetCurrencyRate(BL.Data.CurrencyType.EUR);
-        usd = await currencyChecker.GetCurrencyRate(BL.Data.CurrencyType.USD);
+        //euro = await currencyChecker.GetCurrencyRate(BL.Data.CurrencyType.EUR);
+        //usd = await currencyChecker.GetCurrencyRate(BL.Data.CurrencyType.USD);
     }
 }

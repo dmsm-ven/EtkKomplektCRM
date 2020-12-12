@@ -1,0 +1,65 @@
+﻿@page "/update-products" 
+@inject IDatabase database
+@attribute [Authorize (Roles = "Administrator, Manager")]
+
+<h3>Обновление цен и остатков</h3>
+
+@if(accounts == null)
+{
+    <h3>Загрузка ...</h3>
+}
+else
+{
+<AuthorizeView Roles="Administrator">
+    <Authorized>
+        <div class="row">
+            <div class="col-md-2 offset-10" style="text-align: right;">
+                <a href="/shop-account/new" class="btn btn-sm btn-success">Добавить новый</a>
+            </div>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+    <div class="table-responsive" style="margin: 10px 5px; padding: 12px;">
+        <table class="table">
+            @foreach (var account in accounts)
+            {
+                <ShopAccountComponent ShopAccount="@account"
+                                      OnChecked="@(() => StateHasChanged())"
+                                      OnAccountDeleted="@(() => accounts.Remove(account))" />
+            }
+        </table>
+    </div>
+    <div class="row" style="margin: 12px auto;">
+        <div class="col-md-2">
+            <button class="btn btn-success btn-lg" disabled="@IsUpdateButtonDisabled">Обновить</button>
+        </div>
+    </div>
+
+    
+}
+
+@code {
+    public List<ShopAccountViewModel> accounts = null;
+    ShopAccountViewModel accountToDelete = null;
+
+
+    public bool IsUpdateButtonDisabled => accounts == null ? true : !accounts.Any(ac => ac.IsSelected);
+
+    protected override async Task OnInitializedAsync()
+    {
+        accounts = (await database.GetShopAccounts()).Select(account => new ShopAccountViewModel()
+        {
+            Title = account.title,
+            Id = account.website_id,
+            Uri = account.uri,
+            DB_Host = account.db_host,
+            DB_Login = account.db_login,
+            DB_Password = account.db_password,
+            FTP_Host = account.ftp_host,
+            FTP_Login = account.ftp_login,
+            FTP_Password = account.ftp_password
+        }).ToList();
+    }
+
+}

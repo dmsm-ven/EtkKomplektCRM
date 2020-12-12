@@ -21,35 +21,41 @@ namespace EtkBlazorApp.DataAccess
             this.configuration = configuration;
         }
 
-        public async Task SaveManufacturer(ManufacturerModel manufacturer)
+        public async Task SaveManufacturer(ManufacturerEntity manufacturer)
         {
             string sql = "UPDATE oc_manufacturer SET shipment_period = @shipment_period WHERE manufacturer_id = @manufacturer_id";
             await SaveData(sql, manufacturer);
         }
 
-        public async Task<List<ManufacturerModel>> GetManufacturers()
+        public async Task<List<ManufacturerEntity>> GetManufacturers()
         {
             string sql = "SELECT m.*, url.keyword FROM oc_manufacturer m LEFT JOIN oc_url_alias url ON CONCAT('manufacturer_id=', m.manufacturer_id) = url.query ORDER BY name";
-            var manufacturers = await LoadData<ManufacturerModel, dynamic>(sql, new { });
+            var manufacturers = await LoadData<ManufacturerEntity, dynamic>(sql, new { });
             return manufacturers;
         }
 
-        public async Task<List<OrderModel>> GetLastOrders(int takeCount)
+        public async Task<List<OrderEntity>> GetLastOrders(int takeCount, string city = null)
         {
             if(takeCount <= 0 || takeCount >= 500)
             {
-                return new List<OrderModel>();
+                return new List<OrderEntity>();
             }
 
             var sb = new StringBuilder()
                 .AppendLine("SELECT o.*, s.name as order_status")
                 .AppendLine("FROM oc_order o")
-                .AppendLine("LEFT JOIN oc_order_status s ON o.order_status_id = s.order_status_id")
+                .AppendLine("LEFT JOIN oc_order_status s ON o.order_status_id = s.order_status_id");
+
+            if (!string.IsNullOrWhiteSpace(city))
+            {
+                sb.AppendLine("WHERE o.payment_city = @City");
+            }
+            sb
                 .AppendLine("ORDER BY o.date_added DESC")
                 .AppendLine("LIMIT @TakeCount");
 
             string sql = sb.ToString().Trim();
-            var orders = await LoadData<OrderModel, dynamic>(sql, new { TakeCount = takeCount });
+            var orders = await LoadData<OrderEntity, dynamic>(sql, new { TakeCount = takeCount, City = city});
             return orders;
         }
         
@@ -67,6 +73,66 @@ namespace EtkBlazorApp.DataAccess
             var result = await GetScalar<int, dynamic>(sql, new { login, password = passwordMd5 });
 
             return result == 1;
+        }
+
+        public async Task SaveShopAccount(ShopAccountEntity account)
+        {
+            var sb = new StringBuilder();
+
+            if (account.website_id != 0)
+            {
+                sb
+                .AppendLine("UPDATE etk_app_shop_account")
+                .AppendLine($"SET {nameof(account.title)} = @{nameof(account.title)},")
+                .AppendLine($"    {nameof(account.uri)} = @{nameof(account.uri)},")
+                .AppendLine($"    {nameof(account.ftp_host)} = @{nameof(account.ftp_host)},")
+                .AppendLine($"    {nameof(account.ftp_login)} = @{nameof(account.ftp_login)},")
+                .AppendLine($"    {nameof(account.ftp_password)} = @{nameof(account.ftp_password)},")
+                .AppendLine($"    {nameof(account.db_host)} = @{nameof(account.db_host)},")
+                .AppendLine($"    {nameof(account.db_login)} = @{nameof(account.db_login)},")
+                .AppendLine($"    {nameof(account.db_password)} = @{nameof(account.db_password)}")
+                .AppendLine($"WHERE {nameof(ShopAccountEntity.website_id)} = @{nameof(ShopAccountEntity.website_id)}");
+            }
+            else
+            {
+                sb
+                    .AppendLine("INSERT INTO etk_app_shop_account (")
+                    .AppendLine($"{nameof(account.title)},")
+                    .AppendLine($"{nameof(account.uri)},")
+                    .AppendLine($"{nameof(account.ftp_host)},")
+                    .AppendLine($"{nameof(account.ftp_login)},")
+                    .AppendLine($"{nameof(account.ftp_password)},")
+                    .AppendLine($"{nameof(account.db_host)},")
+                    .AppendLine($"{nameof(account.db_login)},")
+                    .AppendLine($"{nameof(account.db_password)}) VALUES (")
+
+                    .AppendLine($"@{nameof(account.title)},")
+                    .AppendLine($"@{nameof(account.uri)},")
+                    .AppendLine($"@{nameof(account.ftp_host)},")
+                    .AppendLine($"@{nameof(account.ftp_login)},")
+                    .AppendLine($"@{nameof(account.ftp_password)},")
+                    .AppendLine($"@{nameof(account.db_host)},")
+                    .AppendLine($"@{nameof(account.db_login)},")
+                    .AppendLine($"@{nameof(account.db_password)})");
+            }
+
+            string sql = sb.ToString().Trim();
+            await SaveData(sql, account);
+
+            account.website_id = await GetScalar<int, dynamic>($"SELECT max({nameof(account.website_id)}) FROM etk_app_shop_account", new { });
+        }
+
+        public async Task<List<ShopAccountEntity>> GetShopAccounts()
+        {
+            var sql = "SELECT * FROM etk_app_shop_account";
+            var data = await LoadData<ShopAccountEntity, dynamic>(sql, new { });
+            return data;
+        }
+
+        public async Task DeleteShopAccounts(int id)
+        {
+            var sql = $"DELETE FROM etk_app_shop_account WHERE {nameof(ShopAccountEntity.website_id)} = @{nameof(ShopAccountEntity.website_id)}";
+            await SaveData<dynamic>(sql, new { website_id = id });
         }
 
         #region private

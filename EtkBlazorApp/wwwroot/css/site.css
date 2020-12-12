@@ -1,6 +1,29 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+
+.accounts-list {
+    margin: 20px auto;
+    border: 1px solid #1861ac;
+    border-radius: 6px;
+    padding: 12px;
+}
+
+.account-item {
+    margin: 12px 6px;
+    padding: 10px 4px;
+}
+
+.account-item:hover {
+    transition: 200ms;
+    background: rgba(0,0,80, 0.2);
+}
+
+.shop-account-row {
+    margin: 10px 4px;
+    padding: 5px;
+}
+
 .brand-template-logo {
     width: 120px;
     height: auto;

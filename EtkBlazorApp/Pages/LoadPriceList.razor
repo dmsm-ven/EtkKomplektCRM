@@ -1,5 +1,5 @@
 ﻿@page "/load-price-list"
-@attribute [Authorize]
+@attribute [Authorize(Roles = "Administrator, Manager")]
 @using EtkBlazorApp.Data
 @using EtkBlazorApp.BL
 @using System.IO;

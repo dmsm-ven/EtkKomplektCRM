@@ -1,4 +1,4 @@
 ﻿@page "/prikat"
-@attribute [Authorize]
+@attribute [Authorize(Roles = "Administrator, Manager")]
 
 <h1>Выгрузка для ВсеИнструменты</h1>

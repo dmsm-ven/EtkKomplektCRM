@@ -1,0 +1,59 @@
+﻿@inject NavigationManager navigation
+@inject IDatabase database
+
+<tr>
+    <td class="col-md-10">
+        <input type="checkbox" style="font-size: 20px;" 
+               @onchange="(e) => OnCheckboxChecked(e)" />&nbsp;&nbsp;<span>@ShopAccount.Uri</span>
+    </td>
+    <AuthorizeView Roles="Administrator">
+        <Authorized>
+            <td class="text-right col-md-1">
+                <button class="btn btn-secondary my-3 btn-sm" @onclick="@(() => navigation.NavigateTo($"/shop-account/{ShopAccount.Id}"))"><i class="oi oi-pencil"></i></button>
+            </td>
+            <td class="text-right col-md-1">
+                <button class="btn btn-warning my-3 btn-sm" @onclick="@DeleteClick"><i class="oi oi-delete"></i></button>
+            </td>
+        </Authorized>
+    </AuthorizeView>
+</tr>
+
+<DeleteConfirmDialog @ref="deleteDialog" 
+                     ConfirmationTitle="Подтверждение удаления" 
+                     ConfirmationChanged="@DeleteComfirmChanged"
+                     ConfirmationMessage="@(() => ShopAccount.Uri)" />
+
+@code {
+
+    [Parameter]
+    public ShopAccountViewModel ShopAccount { get; set; }
+
+    [Parameter]
+    public EventCallback OnAccountDeleted { get; set; }
+
+    [Parameter]
+    public EventCallback OnChecked { get; set; }
+
+    private DeleteConfirmDialog deleteDialog;
+
+    private void DeleteClick()
+    {
+        deleteDialog.Show();
+    }
+
+    private void OnCheckboxChecked(ChangeEventArgs e)
+    {
+        ShopAccount.IsSelected = !ShopAccount.IsSelected;
+        OnChecked.InvokeAsync();
+    }
+
+    private async Task DeleteComfirmChanged(bool state)
+    {
+        if(state == true)
+        {
+            await database.DeleteShopAccounts(ShopAccount.Id);
+            await OnAccountDeleted.InvokeAsync();
+        }
+    }
+
+}

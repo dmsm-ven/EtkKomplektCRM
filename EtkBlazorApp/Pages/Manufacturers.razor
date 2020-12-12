@@ -13,7 +13,7 @@
 }
 else
 {
-    <AuthorizeView>
+    <AuthorizeView Roles="Administrator, Manager">
         <Authorized>
             <h3>Список производителей на сайте</h3>
             <div class="row">
@@ -90,7 +90,7 @@ else
 
     private async Task ConfirmManufacturerChanges(ManufacturerViewModel manufacturer)
     {
-        var data = new ManufacturerModel() { manufacturer_id = manufacturer.manufacturer_id, shipment_period = manufacturer.shipment_period };
+        var data = new ManufacturerEntity() { manufacturer_id = manufacturer.manufacturer_id, shipment_period = manufacturer.shipment_period };
         await _database.SaveManufacturer(data);
         editManufacturer = null;
     }

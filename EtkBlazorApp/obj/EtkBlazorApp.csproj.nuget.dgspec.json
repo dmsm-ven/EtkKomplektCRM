@@ -186,9 +186,9 @@
         "net5.0": {
           "targetAlias": "net5.0",
           "dependencies": {
-            "Blazored.SessionStorage": {
+            "Blazored.Toast": {
               "target": "Package",
-              "version": "[1.0.12, )"
+              "version": "[3.1.2, )"
             },
             "Newtonsoft.Json": {
               "target": "Package",
