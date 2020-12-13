@@ -1,0 +1,26 @@
+﻿@inject IToastService toastService
+@inject NewOrdersNotificationService newOrderNotificationService
+
+@code {
+    [Parameter]
+    public EventCallback<OrderViewModel> NewOrderPushed { get; set; }
+
+    [Parameter]
+    public TimeSpan RefreshInterval { get; set; }
+
+    protected override void OnInitialized()
+    {
+        newOrderNotificationService.OnNewOrderFound += NewOrderFound;
+    }
+
+    protected override void OnParametersSet()
+    {
+        newOrderNotificationService.RefreshTime = RefreshInterval;
+    }
+
+    private async void NewOrderFound(OrderViewModel order)
+    {
+        InvokeAsync(async () => await NewOrderPushed.InvokeAsync(order));
+    }
+
+}

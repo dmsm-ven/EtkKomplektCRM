@@ -25,10 +25,11 @@ namespace EtkBlazorApp
             services.AddRazorPages();
             services.AddServerSideBlazor();
 
-            //Мои
-            services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
+            //Мои         
             services.AddSingleton<IDatabase, MySqlDatabase>();
+            services.AddSingleton<NewOrdersNotificationService>();
             services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();
+            services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
 
             //Сторонние
             services.AddBlazoredToast();

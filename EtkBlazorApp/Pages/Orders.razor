@@ -1,15 +1,16 @@
 ﻿@page "/orders"
-@attribute [Authorize (Roles = "Administrator, Manager")]
+@attribute [Authorize(Roles = "Administrator, Manager")]
 @using EtkBlazorApp.DataAccess
 @using System.Web
 @inject IDatabase _database
+@inject IToastService toastService 
 
 <h3>Заказы</h3>
 
 <div class="row">
     <div class="col-md-3">
         <label for="orders_per_page">Количество записей на странице</label>
-        <select id="orders_per_page" @bind="@TakeCount" @oninput="@ItemsPerPageChanged">          
+        <select id="orders_per_page" @bind="@TakeCount" @oninput="@ItemsPerPageChanged">
             @foreach (var itemsPerPage in AvailableTakeCountList)
             {
                 <option value="@itemsPerPage">@itemsPerPage</option>
@@ -26,89 +27,108 @@
             }
         </select>
     </div>
-    </div>
+</div>
 
-    @if (orders == null)
-    {
-        <em>Загрузка ...</em>
-    }
-    else
-    {
-        <div class="row">
-            <table class="table table-hover" style="width: 100%">
-                <thead class="thead-dark">
-                    <tr>
-                        <th>№ заказа</th>
-                        <th>Дата/Время</th>
-                        <th>Завершен</th>
-                        <th>Статус заказа</th>
-                        <th>Заказчик</th>
-                        <th>Город</th>
-                        <th>Сумма</th>
-                    </tr>
-                </thead>
-                <tbody>
+@if (orders == null)
+{
+    <em>Загрузка ...</em>
+}
+else
+{
+    <div class="row">
+        <table class="table table-hover" style="width: 100%">
+            <thead class="thead-dark">
+                <tr>
+                    <th>№ заказа</th>
+                    <th>Дата/Время</th>
+                    <th>Завершен</th>
+                    <th>Статус заказа</th>
+                    <th>Заказчик</th>
+                    <th>Город</th>
+                    <th>Сумма</th>
+                </tr>
+            </thead>
+            <tbody>
 
-                    @foreach (var order in orders)
-                    {
-                        <tr>
-                            <td>@order.OrderId</td>
-                            <td>@order.DateTime.ToString("f")</td>
-                            <td><input type="checkbox" value="@order.IsDone" disabled /></td>
-                            <td>@order.OrderStatus</td>
-                            <td>@order.Customer</td>
-                            <td>@order.City</td>
-                            <td>@order.TotalPrice.ToString("C0")</td>
-                        </tr>
-                    }
-
-                </tbody>
-            </table>
-        </div>
-    }
-
-    @code {
-        List<OrderViewModel> orders = null;
-        List<int> AvailableTakeCountList = new List<int>(new[] { 10, 50, 100 });
-        List<string> cityList = null;
-        int TakeCount = 50;
-        string cityFilter = null;
-
-        private async Task ItemsPerPageChanged(ChangeEventArgs e)
-        {
-            orders = null;
-            TakeCount = int.Parse(e.Value.ToString());
-
-            await RefreshOrderList();
-        }
-
-        private async Task CityChanged(ChangeEventArgs e)
-        {
-            orders = null;
-            cityFilter = e.Value.ToString();
-
-            await RefreshOrderList();
-        }
-
-        protected override async Task OnInitializedAsync()
-        {
-            await RefreshOrderList();
-            cityList = orders.Select(o => o.City).Distinct().OrderBy(city => city).ToList();
-        }
-
-        private async Task RefreshOrderList()
-        {
-            var data = (await _database.GetLastOrders(TakeCount, cityFilter))
-                .Select(model => new OrderViewModel()
+                @foreach (var order in orders)
                 {
-                    City = model.payment_city,
-                    Customer = HttpUtility.HtmlDecode(model.payment_firstname),
-                    DateTime = model.date_added,
-                    OrderId = model.order_id.ToString(),
-                    TotalPrice = model.total,
-                    OrderStatus = model.order_status
-                });            
+                    <tr class="@(order == newOrder ? "new-order-row" : string.Empty)">
+                        <td>@order.OrderId</td>
+                        <td>@order.DateTime.ToString("f")</td>
+                        <td><input type="checkbox" value="@order.IsDone" disabled /></td>
+                        <td>@order.OrderStatus</td>
+                        <td>@order.Customer</td>
+                        <td>@order.City</td>
+                        <td>@order.TotalPrice.ToString("C0")</td>
+                    </tr>
+                }
 
-            orders = data.ToList();
-        }
+            </tbody>
+        </table>
+    </div>
+}
+
+<EtkBlazorApp.Components.NewOrdersNotificator NewOrderPushed="@ShowNewOrder"
+                                              RefreshInterval="@TimeSpan.FromSeconds(60)" />
+
+@code {
+    List<OrderViewModel> orders = null;
+    OrderViewModel newOrder = null;
+
+    List<int> AvailableTakeCountList = new List<int>(new[] { 10, 50, 100 });
+    List<string> cityList = null;
+    int TakeCount = 50;
+    string cityFilter = null;
+
+
+    private async Task ItemsPerPageChanged(ChangeEventArgs e)
+    {
+        orders = null;
+        TakeCount = int.Parse(e.Value.ToString());
+
+        await RefreshOrderList();
     }
+
+    private async Task ShowNewOrder(OrderViewModel order)
+    {
+        string toastTitle = $"Покупатель: {order.Customer} | Сумма заказа: {order.TotalPrice.ToString("F0")}";
+        string toastBody = $"Получен новый заказ #{order.OrderId}";
+
+        toastService.ShowSuccess(toastTitle, toastBody);
+
+        orders.Insert(0, order);
+        newOrder = order;
+        StateHasChanged();
+        order = null;
+    }
+
+    private async Task CityChanged(ChangeEventArgs e)
+    {
+        orders = null;
+        cityFilter = e.Value.ToString();
+
+        await RefreshOrderList();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshOrderList();
+        cityList = orders.Select(o => o.City).Distinct().OrderBy(city => city).ToList();
+    }
+
+    private async Task RefreshOrderList()
+    {
+        var data = (await _database.GetLastOrders(TakeCount, cityFilter))
+            .Select(model => new OrderViewModel()
+            {
+                City = model.payment_city,
+                Customer = HttpUtility.HtmlDecode(model.payment_firstname),
+                DateTime = model.date_added,
+                OrderId = model.order_id.ToString(),
+                TotalPrice = model.total,
+                OrderStatus = model.order_status
+            });
+
+        orders = data.ToList();
+    }
+}

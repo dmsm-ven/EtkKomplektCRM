@@ -1,6 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ICurrencyChecker currencyChecker
+@inject IToastService toastService
 @using System.Globalization
 
 <div class="sidebar">
@@ -26,10 +27,9 @@
     </div>
 </div>
 
-<Blazored.Toast.BlazoredToasts 
-                               Position="Blazored.Toast.Configuration.ToastPosition.TopRight" 
-                               Timeout="6" 
-                               IconType="Blazored.Toast.IconType.Material"/>
+<Blazored.Toast.BlazoredToasts Position="Blazored.Toast.Configuration.ToastPosition.TopRight"
+                               Timeout="6"
+                               IconType="Blazored.Toast.IconType.Material" />
 
 @code {
 
@@ -41,7 +41,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        //euro = await currencyChecker.GetCurrencyRate(BL.Data.CurrencyType.EUR);
-        //usd = await currencyChecker.GetCurrencyRate(BL.Data.CurrencyType.USD);
+        euro = await currencyChecker.GetCurrencyRate(BL.Data.CurrencyType.EUR);
+        usd = await currencyChecker.GetCurrencyRate(BL.Data.CurrencyType.USD);
     }
+
 }
+
