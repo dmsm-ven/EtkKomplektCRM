@@ -6,7 +6,7 @@
 
 @if (currentAccount == null)
 {
-    <h3>Загрузка ...</h3>
+    <LoadingSpinner />
 }
 else
 {
@@ -23,9 +23,9 @@ else
         <DataAnnotationsValidator />
 
         <div class="row shop-account-row">
-                <div class="col-md-2"><label for="title">Заголовок аккаунта</label></div>
-                <div class="col-md-6"><input type="text" id="title" class="form-control" @bind-value="@currentAccount.Title" /></div>
-                <div class="col-md-4"><ValidationMessage For="(() => currentAccount.Title)" /></div>
+            <div class="col-md-2"><label for="title">Заголовок аккаунта</label></div>
+            <div class="col-md-6"><input type="text" id="title" class="form-control" @bind-value="@currentAccount.Title" /></div>
+            <div class="col-md-4"><ValidationMessage For="(() => currentAccount.Title)" /></div>
         </div>
         <div class="row shop-account-row">
             <div class="col-md-2"><label for="website_uri">URL сайта</label></div>
@@ -71,7 +71,7 @@ else
                 </div>
             </div>
         </div>
-        <ValidationSummary/>
+        <ValidationSummary />
         <div class="row">
             <div class="col-md-12">
                 <button class="btn btn-success btn-lg" type="submit">@buttonActionName</button>

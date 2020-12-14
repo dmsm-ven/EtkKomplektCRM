@@ -2,6 +2,7 @@
 using EtkBlazorApp.DataAccess.Model;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -21,6 +22,52 @@ namespace EtkBlazorApp.DataAccess
             this.configuration = configuration;
         }
 
+        public async Task<string> GetUserPermission(string login, string password)
+        {
+            var sb = new StringBuilder()
+                .AppendLine("SELECT g.permission")
+                .AppendLine("FROM oc_user u")
+                .AppendLine("LEFT JOIN oc_user_group g ON u.user_group_id = g.user_group_id")
+                .AppendLine("WHERE g.name  LIKE 'etk_app%' AND u.status = 1 AND")
+                .AppendLine("username = @login AND password = @password");
+
+            var sql = sb.ToString().Trim();
+
+            string passwordMd5 = CreateFromStringMD5(password);
+
+            var permission = await GetScalar<string, dynamic>(sql, new { login, password = passwordMd5 });
+
+            return permission;
+        }
+
+        #region Product
+
+        public async Task<List<ProductEntity>> GetLastAddedProducts(int count)
+        {
+           
+            if(count > 100)
+            {
+                throw new ArgumentOutOfRangeException("Превышен предел запрашиваемых товаров (100)");
+            }
+
+            var sb = new StringBuilder()
+                .AppendLine("SELECT p.*, d.name as name, m.name as manufacturer")
+                .AppendLine("FROM oc_product p")
+                .AppendLine("LEFT JOIN oc_product_description d ON p.product_id = d.product_id")
+                .AppendLine("LEFT JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id")
+                .AppendLine("ORDER BY Date(p.date_added) ASC")
+                .AppendLine("LIMIT @Limit");
+
+            string sql = sb.ToString();
+
+            var products = await LoadData<ProductEntity, dynamic>(sql, new { Limit = count });
+
+            return products.ToList();
+        }
+
+        #endregion
+
+        #region Manufacturer
         public async Task SaveManufacturer(ManufacturerEntity manufacturer)
         {
             string sql = "UPDATE oc_manufacturer SET shipment_period = @shipment_period WHERE manufacturer_id = @manufacturer_id";
@@ -33,48 +80,9 @@ namespace EtkBlazorApp.DataAccess
             var manufacturers = await LoadData<ManufacturerEntity, dynamic>(sql, new { });
             return manufacturers;
         }
+        #endregion
 
-        public async Task<List<OrderEntity>> GetLastOrders(int takeCount, string city = null)
-        {
-            if(takeCount <= 0 || takeCount >= 500)
-            {
-                return new List<OrderEntity>();
-            }
-
-            var sb = new StringBuilder()
-                .AppendLine("SELECT o.*, s.name as order_status")
-                .AppendLine("FROM oc_order o")
-                .AppendLine("LEFT JOIN oc_order_status s ON o.order_status_id = s.order_status_id");
-
-            if (!string.IsNullOrWhiteSpace(city))
-            {
-                sb.AppendLine("WHERE o.payment_city = @City");
-            }
-            sb
-                .AppendLine("ORDER BY o.date_added DESC")
-                .AppendLine("LIMIT @TakeCount");
-
-            string sql = sb.ToString().Trim();
-            var orders = await LoadData<OrderEntity, dynamic>(sql, new { TakeCount = takeCount, City = city});
-            return orders;
-        }
-        
-        public async Task<bool> GetUserPremission(string login, string password)
-        {
-            var sb = new StringBuilder()
-                .AppendLine("SELECT COUNT(user_id) FROM oc_user")
-                .AppendLine("WHERE user_group_id = (SELECT user_group_id FROM oc_user_group WHERE name = 'etk_app')")
-                .AppendLine("AND username = @login AND password = @password")
-                .AppendLine("AND status = 1");
-
-            var sql = sb.ToString().Trim();
-
-            string passwordMd5 = CreateFromStringMD5(password);
-            var result = await GetScalar<int, dynamic>(sql, new { login, password = passwordMd5 });
-
-            return result == 1;
-        }
-
+        #region ShopAccount
         public async Task SaveShopAccount(ShopAccountEntity account)
         {
             var sb = new StringBuilder();
@@ -134,6 +142,55 @@ namespace EtkBlazorApp.DataAccess
             var sql = $"DELETE FROM etk_app_shop_account WHERE {nameof(ShopAccountEntity.website_id)} = @{nameof(ShopAccountEntity.website_id)}";
             await SaveData<dynamic>(sql, new { website_id = id });
         }
+        #endregion
+        
+        #region Orders
+        public async Task<List<OrderEntity>> GetLastOrders(int takeCount, string city = null)
+        {
+            if (takeCount <= 0 || takeCount >= 500)
+            {
+                return new List<OrderEntity>();
+            }
+
+            var sb = new StringBuilder()
+                .AppendLine("SELECT o.*, s.name as order_status")
+                .AppendLine("FROM oc_order o")
+                .AppendLine("LEFT JOIN oc_order_status s ON o.order_status_id = s.order_status_id");
+
+            if (!string.IsNullOrWhiteSpace(city))
+            {
+                sb.AppendLine("WHERE o.payment_city = @City");
+            }
+            sb
+                .AppendLine("ORDER BY o.date_added DESC")
+                .AppendLine("LIMIT @TakeCount");
+
+            string sql = sb.ToString().Trim();
+            var orders = await LoadData<OrderEntity, dynamic>(sql, new { TakeCount = takeCount, City = city });
+            return orders;
+        }
+
+        public async Task<List<OrderDetailsEntity>> GetOrderDetails(int orderId)
+        {
+            string sql = "SELECT op.*, p.sku as sku, m.name as manufacturer FROM oc_order_product op " +
+                "LEFT JOIN oc_product p ON op.product_id = p.product_id " + 
+                "LEFT JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id " + 
+                "WHERE order_id = @Id";
+
+            var details = await LoadData<OrderDetailsEntity, dynamic> (sql, new { Id = orderId });
+
+            return details.ToList();
+        }
+
+        public async Task<OrderEntity> GetOrderById(int orderId)
+        {
+            var sql = $"SELECT * FROM oc_order WHERE order_id = @Id";
+
+            var order = (await LoadData<OrderEntity, dynamic>(sql, new { Id = orderId })).FirstOrDefault();
+
+            return order;
+        }
+        #endregion
 
         #region private
         private async Task<List<T>> LoadData<T, U>(string sql, U parameters)

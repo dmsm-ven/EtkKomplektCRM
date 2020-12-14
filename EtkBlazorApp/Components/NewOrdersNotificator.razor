@@ -18,7 +18,7 @@
         newOrderNotificationService.RefreshTime = RefreshInterval;
     }
 
-    private async void NewOrderFound(OrderViewModel order)
+    private void NewOrderFound(OrderViewModel order)
     {
         InvokeAsync(async () => await NewOrderPushed.InvokeAsync(order));
     }

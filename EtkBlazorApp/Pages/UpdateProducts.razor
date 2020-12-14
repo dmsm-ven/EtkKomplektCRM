@@ -1,24 +1,24 @@
-﻿@page "/update-products" 
+﻿@page "/update-products"
 @inject IDatabase database
-@attribute [Authorize (Roles = "Administrator, Manager")]
+@attribute [Authorize(Roles = "Administrator, Manager")]
 
 <h3>Обновление цен и остатков</h3>
 
-@if(accounts == null)
+@if (accounts == null)
 {
-    <h3>Загрузка ...</h3>
+    <LoadingSpinner />
 }
 else
 {
-<AuthorizeView Roles="Administrator">
-    <Authorized>
-        <div class="row">
-            <div class="col-md-2 offset-10" style="text-align: right;">
-                <a href="/shop-account/new" class="btn btn-sm btn-success">Добавить новый</a>
+    <AuthorizeView Roles="Administrator">
+        <Authorized>
+            <div class="row">
+                <div class="col-md-2 offset-10" style="text-align: right;">
+                    <a href="/shop-account/new" class="btn btn-sm btn-success">Добавить новый</a>
+                </div>
             </div>
-        </div>
-    </Authorized>
-</AuthorizeView>
+        </Authorized>
+    </AuthorizeView>
 
     <div class="table-responsive" style="margin: 10px 5px; padding: 12px;">
         <table class="table">
@@ -36,7 +36,7 @@ else
         </div>
     </div>
 
-    
+
 }
 
 @code {

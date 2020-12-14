@@ -9,7 +9,7 @@
 <h1>Производители</h1>
 @if (manufacturers == null)
 {
-    <h3>Загрузка данных ...</h3>
+    <LoadingSpinner/>
 }
 else
 {
@@ -18,7 +18,7 @@ else
             <h3>Список производителей на сайте</h3>
             <div class="row">
                 <table class="table table-hover" style="width: 100%">
-                    <thead class="thead-dark">
+                    <thead class="thead-etk">
                         <tr>
                             <th>Производитель</th>
                             <th>Срок поставки (дней)</th>
@@ -54,7 +54,7 @@ else
             <h3>Список производителей на сайте</h3>
             <div class="row">
                 <table class="table table-hover" style="width: 100%">
-                    <thead class="thead-dark">
+                    <thead class="thead-etk">
                         <tr>
                             <th>Производитель</th>
                             <th>Срок поставки (дней)</th>

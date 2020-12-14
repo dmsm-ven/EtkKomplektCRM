@@ -1,0 +1,48 @@
+﻿@inject IDatabase database
+
+@if(products == null)
+{
+    <LoadingSpinner />
+}
+else
+{
+    <div class="container">
+        @for(int row = 0; row < ProductsCount; row += ItemsPerRow)
+        {
+        <div class="row">
+            @foreach (var product in products.Skip(row).Take(ItemsPerRow))
+            {
+            <div class="col-md-@(12/ItemsPerRow) p-4">
+                <figure class="figure">
+                    <a href="https://etk-komplekt.ru/index.php?route=product/product&product_id=@product.product_id" target="_blank">
+                        <img src="@("https://etk-komplekt.ru/image/" + product.image)"
+                             style="width: 250px; height: 250px;"
+                             class="figure-img img-fluid rounded img-thumbnail" alt="@(product.name ?? "Товар без назания")">
+                        <figcaption class="figure-caption text-left new-product-item-caption">
+                            <p>@(product.name ?? "Товар без назания")</p>
+                            <p>@product.price.ToString("C0")</p>
+                        </figcaption>
+                    </a>
+                </figure>
+            </div>
+            }
+        </div>
+        }
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public int ProductsCount { get; set; } = 6;
+
+    [Parameter]
+    public int ItemsPerRow { get; set; } = 3;
+
+    List<ProductEntity> products = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        products = await database.GetLastAddedProducts(ProductsCount);
+    }
+}

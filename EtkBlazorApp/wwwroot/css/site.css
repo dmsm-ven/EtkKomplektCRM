@@ -1,9 +1,26 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
-.new-order-row {
-    animation: highlight-new-order-row-animation 5s;
+.new-product-item-caption p{
+    margin: 2px;
+    padding: 0px;
+    font-size: 10px;
+    color: red;
 }
+
+.thead-etk {
+    color: #fff;
+    background-color: #3f70a0;
+    border-color: #2bf5ff;
+}
+.thead-etk th{
+    vertical-align: top!important;
+}
+
+
+    .new-order-row {
+        animation: highlight-new-order-row-animation 5s;
+    }
 
 @keyframes highlight-new-order-row-animation {
     /* You could think of as "step 1" */
@@ -69,7 +86,7 @@
     }
 
     .currency-top {
-        color: darkblue;
+        color: white;
         font-weight: 400;
         margin: 4px 12px;
     }

@@ -1,6 +1,5 @@
 ﻿@inherits LayoutComponentBase
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject ICurrencyChecker currencyChecker
 @inject IToastService toastService
 @using System.Globalization
 
@@ -12,9 +11,12 @@
     <div class="top-row px-4">
         <AuthorizeView>
             <Authorized>
-                <p><span class="oi oi-euro currency-top">&nbsp;&nbsp;@euro.ToString("F2", CultureInfo.InvariantCulture)</span></p>
-                <p><span class="oi oi-dollar currency-top">&nbsp;&nbsp;@usd.ToString("F2", CultureInfo.InvariantCulture)</span></p>
-                <p><strong>@context.User.Identity.Name</strong>&nbsp;&nbsp;<a href="/Login" @onclick="LogOut">Выйти</a></p>
+                <p>
+                    <strong>@context.User.Identity.Name</strong> 
+                    <small style="color: #9e9e9e;">@($"({context.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role).Value})")</small>
+                    &nbsp;&nbsp;
+                    <a href="/Login" @onclick="LogOut">Выйти</a>
+                </p>
             </Authorized>
             <NotAuthorized>
                 <a href="/Login">Войти</a>
@@ -34,15 +36,14 @@
 @code {
 
     decimal usd, euro;
-    public void LogOut()
+    public async Task LogOut()
     {
-        ((MyCustomAuthProvider)AuthenticationStateProvider).LogOutUser();
+        await ((MyCustomAuthProvider)AuthenticationStateProvider).LogOutUser();
     }
 
     protected override async Task OnInitializedAsync()
     {
-        euro = await currencyChecker.GetCurrencyRate(BL.Data.CurrencyType.EUR);
-        usd = await currencyChecker.GetCurrencyRate(BL.Data.CurrencyType.USD);
+
     }
 
 }

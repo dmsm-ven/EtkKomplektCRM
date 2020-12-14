@@ -197,6 +197,10 @@
             "SSH.NET": {
               "target": "Package",
               "version": "[2016.1.0, )"
+            },
+            "Serilog.AspNetCore": {
+              "target": "Package",
+              "version": "[3.4.0, )"
             }
           },
           "imports": [

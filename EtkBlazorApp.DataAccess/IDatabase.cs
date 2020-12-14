@@ -10,11 +10,15 @@ namespace EtkBlazorApp.DataAccess
         Task<List<ManufacturerEntity>> GetManufacturers();
         
         Task<List<OrderEntity>> GetLastOrders(int limit, string city = null);
+        Task<List<OrderDetailsEntity>> GetOrderDetails(int orderId);
+        Task<OrderEntity> GetOrderById(int orderId);
 
         Task SaveShopAccount(ShopAccountEntity shopAccount);
         Task<List<ShopAccountEntity>> GetShopAccounts();
         Task DeleteShopAccounts(int id);
 
-        Task<bool> GetUserPremission(string login, string password);
+        Task<List<ProductEntity>> GetLastAddedProducts(int count);
+
+        Task<string> GetUserPermission(string login, string password);
     }
 }

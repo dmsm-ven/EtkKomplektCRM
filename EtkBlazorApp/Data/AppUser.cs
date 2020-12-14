@@ -2,7 +2,7 @@
 
 namespace EtkBlazorApp.Data
 {
-    public class UserViewModel
+    public class AppUser
     {
         [Required(ErrorMessage = "Поле логин обязательно для заполнения")]
         public string Login { get; set; }

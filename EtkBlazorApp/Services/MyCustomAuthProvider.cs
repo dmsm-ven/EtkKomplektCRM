@@ -3,6 +3,7 @@ using EtkBlazorApp.DataAccess;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Serilog;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -26,7 +27,7 @@ namespace EtkBlazorApp.Services
             var password = await storage.GetAsync<string>("user_password");
             if (login.Success && password.Success)
             {
-                var state = await AuthenticateUser(new UserViewModel() 
+                var state = await AuthenticateUser(new AppUser() 
                 { 
                     Login = login.Value, 
                     Password = password.Value }
@@ -37,9 +38,15 @@ namespace EtkBlazorApp.Services
             return GetDefaultState();            
         }
 
-        public async Task<AuthenticationState> AuthenticateUser(UserViewModel userData)
+        public async Task<AuthenticationState> AuthenticateUser(AppUser userData)
         {
-            if(!await db.GetUserPremission(userData.Login, userData.Password)) { return GetDefaultState(); }
+            var permission = await db.GetUserPermission(userData.Login, userData.Password);
+
+            if(string.IsNullOrWhiteSpace(permission))
+            {
+                Log.Warning($"Не верный ввод пароль '{userData.Login}' | '{userData.Password}'");
+                return GetDefaultState(); 
+            }
 
             var identity = new ClaimsIdentity(new[]
             {
@@ -52,15 +59,20 @@ namespace EtkBlazorApp.Services
             var state = new AuthenticationState(user);
 
             NotifyAuthenticationStateChanged(Task.FromResult(state));
+
+            Log.Information($"Пользователь '{userData.Login}' залогинился");
             return state;
         }  
         
-        public void LogOutUser()
+        public async Task LogOutUser()
         {
-            storage.DeleteAsync("user_login");
-            storage.DeleteAsync("user_password");
+            string userName = (await storage.GetAsync<string>("user_login")).Value ?? string.Empty;
+            Log.Information($"Пользователь '{userName}' разлогинился");
 
-            NotifyAuthenticationStateChanged(Task.FromResult(GetDefaultState()));
+            await storage.DeleteAsync("user_login");
+            await storage.DeleteAsync("user_password");
+
+            NotifyAuthenticationStateChanged(Task.FromResult(GetDefaultState()));            
         }
 
         private AuthenticationState GetDefaultState()

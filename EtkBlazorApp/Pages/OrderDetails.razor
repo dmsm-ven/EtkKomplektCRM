@@ -1,0 +1,114 @@
+﻿@page "/order/{id:int}"
+@inject IDatabase database
+@*@attribute [Authorize(Roles = "Administrator, Manager")]*@
+
+@if (order == null)
+{
+    <LoadingSpinner />
+}
+else
+{
+    <h3>Детали заказа</h3>
+    <div class="container-fluid">
+
+        <div class="row">
+            <div class="col-md-4">
+                <p>Номер заказа</p>
+                <input type="text" readonly value="#@order.OrderId" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <p>Дата заказа</p>
+                <input type="text" readonly value="@order.DateTime.ToString("g")" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <p>Заказчик</p>
+                <input type="text" readonly value="@order.Customer" class="form-control" />
+            </div>
+        </div>
+
+        <hr style="margin: 20px auto;" />
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead class="thead-etk">
+                    <tr>
+                        <th>Производитель</th>
+                        <th>Наименование</th>
+                        <th>Модель</th>
+                        <th>Артикул</th>
+                        <th>Количество</th>
+                        <th>Цена, за ед.<br /><small>(на момент заказа)</small></th>
+                        <th>Сумма</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var detail in order.OrderDetails)
+                    {
+                        <tr>
+                            <td>@detail.Manufacturer</td>
+                            <td>
+                                <a href="https://etk-komplekt.ru/index.php?route=product/product&product_id=@detail.ProductId"
+                                   target="_blank">
+                                    @detail.ProductName
+                                </a>
+                            </td>
+                            <td>@detail.Model</td>
+                            <td>@detail.Sku</td>
+                            <td>@detail.Quantity</td>
+                            <td>@detail.Price.ToString("C0")</td>
+                            <td>@detail.Sum.ToString("C0")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col-md-2 offset-8">
+                <p>Количество: @order.OrderDetails.Sum(od => od.Quantity) шт.</p>
+            </div>
+            <div class="col-md-2">
+                <p>Сумма: @order.TotalPrice.ToString("C0")</p>
+            </div>
+        </div>
+
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    OrderViewModel order = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var orderEntity = await database.GetOrderById(Id);
+        var detailsEntity = await database.GetOrderDetails(Id);
+
+        var orderData = new OrderViewModel()
+        {
+            OrderId = orderEntity.order_id.ToString(),
+            City = orderEntity.payment_city,
+            Customer = orderEntity.payment_firstname,
+            DateTime = orderEntity.date_added,
+            OrderStatus = orderEntity.order_status,
+            TotalPrice = orderEntity.total,
+            OrderDetails = detailsEntity.Select(ode => new OrderDetailsViewModel()
+            {
+                ProductName = ode.name,
+                Model = ode.model,
+                Sku = ode.sku,
+                Price = ode.price,
+                ProductId = ode.product_id,
+                Quantity = ode.quantity,
+                Manufacturer = ode.manufacturer
+            }).ToList()
+        };
+
+        order = orderData;
+    }
+}
+
+
