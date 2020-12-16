@@ -11,18 +11,46 @@ else
     <h3>Детали заказа</h3>
     <div class="container-fluid">
 
-        <div class="row">
-            <div class="col-md-4">
+        <div class="row order-details-row">
+            <div class="col-md-3">
                 <p>Номер заказа</p>
                 <input type="text" readonly value="#@order.OrderId" class="form-control" />
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <p>Дата заказа</p>
                 <input type="text" readonly value="@order.DateTime.ToString("g")" class="form-control" />
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <p>Заказчик</p>
                 <input type="text" readonly value="@order.Customer" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <p>Город</p>
+                <input type="text" readonly value="@order.City" class="form-control" />
+            </div>
+        </div>
+        <div class="row order-details-row">
+            <div class="col-md-3">
+                <p>Телефон заказчика</p>
+                <input type="text" readonly value="#@order.CustomerPhoneNumber" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <p>Email заказчика</p>
+                <input type="text" readonly value="@order.CustomerEmail" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <p>Адрес доставки</p>
+                <input type="text" readonly value="@order.ShippingAddress" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <p>Метод доставки</p>
+                <input type="text" readonly value="@order.ShippingMethod" class="form-control" />
+            </div>
+        </div>
+        <div class="row order-details-row">
+            <div class="col-md-3">
+                <p>Вид оплаты</p>
+                <input type="text" readonly value="#@order.PaymentMethod" class="form-control" />
             </div>
         </div>
 
@@ -36,8 +64,8 @@ else
                         <th>Наименование</th>
                         <th>Модель</th>
                         <th>Артикул</th>
-                        <th>Количество</th>
                         <th>Цена, за ед.<br /><small>(на момент заказа)</small></th>
+                        <th>Количество</th>
                         <th>Сумма</th>
                     </tr>
                 </thead>
@@ -54,24 +82,30 @@ else
                             </td>
                             <td>@detail.Model</td>
                             <td>@detail.Sku</td>
-                            <td>@detail.Quantity</td>
                             <td>@detail.Price.ToString("C0")</td>
+                            <td>@detail.Quantity</td>
                             <td>@detail.Sum.ToString("C0")</td>
                         </tr>
                     }
+                    <tr style=" border-top: 2px solid #33121933">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td style="color: red;font-weight: bold;">@order.OrderDetails.Sum(od => od.Quantity)</td>
+                        <td style="color: red; font-weight: bold;">@order.TotalPrice.ToString("C0")</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
-        <hr />
+
         <div class="row">
-            <div class="col-md-2 offset-8">
-                <p>Количество: @order.OrderDetails.Sum(od => od.Quantity) шт.</p>
-            </div>
-            <div class="col-md-2">
-                <p>Сумма: @order.TotalPrice.ToString("C0")</p>
+            <div class="col-md-12">
+                <p>Комментарий к заказу</p>
+                <textarea readonly value="@order.Comment" class="form-control" style="height: auto; width: 100%; margin: auto 20px;" />
             </div>
         </div>
-
     </div>
 }
 
@@ -84,17 +118,23 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var orderEntity = await database.GetOrderById(Id);
+        var oe = await database.GetOrderById(Id);
         var detailsEntity = await database.GetOrderDetails(Id);
 
         var orderData = new OrderViewModel()
         {
-            OrderId = orderEntity.order_id.ToString(),
-            City = orderEntity.payment_city,
-            Customer = orderEntity.payment_firstname,
-            DateTime = orderEntity.date_added,
-            OrderStatus = orderEntity.order_status,
-            TotalPrice = orderEntity.total,
+            OrderId = oe.order_id.ToString(),
+            City = oe.payment_city,
+            Customer = oe.payment_firstname,
+            DateTime = oe.date_added,
+            OrderStatus = oe.order_status,
+            TotalPrice = oe.total,
+            Comment = oe.comment,
+            CustomerEmail = oe.email,
+            CustomerPhoneNumber = oe.telephone,
+            ShippingAddress = oe.shipping_address_1,
+            PaymentMethod = oe.payment_method,
+            ShippingMethod = oe.shipping_method,
             OrderDetails = detailsEntity.Select(ode => new OrderDetailsViewModel()
             {
                 ProductName = ode.name,

@@ -11,6 +11,12 @@ namespace EtkBlazorApp.Data
         public string Customer { get; set; }
         public decimal TotalPrice { get; set; }      
         public string OrderStatus { get; set; }
+        public string CustomerEmail { get; set; }
+        public string CustomerPhoneNumber { get; set; }
+        public string Comment { get; set; }
+        public string ShippingAddress { get; set; }
+        public string ShippingMethod { get; set; }
+        public string PaymentMethod { get; set; }
 
         public bool IsDone => Equals(OrderStatus, "Завершен");
 

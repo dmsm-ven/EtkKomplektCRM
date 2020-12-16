@@ -1,7 +1,11 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
-.new-product-item-caption p{
+
+.order-details-row{
+    margin-bottom: 14px;
+}
+.new-product-item-caption p {
     margin: 2px;
     padding: 0px;
     font-size: 10px;

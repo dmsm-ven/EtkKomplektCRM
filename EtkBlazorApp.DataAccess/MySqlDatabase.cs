@@ -14,8 +14,13 @@ namespace EtkBlazorApp.DataAccess
     public class MySqlDatabase : IDatabase
     {
         private readonly IConfiguration configuration;
-        
-        string ConnectionString => configuration.GetConnectionString("openserver_etk_db");
+
+        #if DEBUG
+            string ConnectionString => configuration.GetConnectionString("openserver_etk_db");
+        #else
+            string ConnectionString => configuration.GetConnectionString("test_server_connection");
+        #endif
+
 
         public MySqlDatabase(IConfiguration configuration)
         {

@@ -1,12 +1,18 @@
-﻿<div class="top-row pl-4 navbar navbar-dark">
+﻿@inject ICurrencyChecker currencyService
+
+<div class="top-row pl-4 navbar navbar-dark">
     <button class="navbar-toggler" @onclick="ToggleNavMenu">
         <span class="navbar-toggler-icon"></span>
     </button>
-    <p>
-        <span class="oi oi-euro currency-top">&nbsp;&nbsp;@euro.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)</span>
-        &nbsp;&nbsp;
-        <span class="oi oi-dollar currency-top">&nbsp;&nbsp;@usd.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)</span>
-    </p>
+    <AuthorizeView Roles="Administrator, Manager">
+        <Authorized>
+            <p>
+                <span class="oi oi-euro currency-top">&nbsp;&nbsp;@euro.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)</span>
+                &nbsp; &nbsp;
+                <span class="oi oi-dollar currency-top">&nbsp;&nbsp;@usd.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)</span>
+            </p>
+        </Authorized>
+    </AuthorizeView>
 </div>
 
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
@@ -53,7 +59,7 @@
 
     string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
-    decimal euro, usd;
+    decimal? euro = 0, usd = 0;
 
     void ToggleNavMenu()
     {
@@ -62,7 +68,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        //euro = await currencyChecker.GetCurrencyRate(BL.Data.CurrencyType.EUR);
-        //usd = await currencyChecker.GetCurrencyRate(BL.Data.CurrencyType.USD);
+        //euro = await currencyService.GetCurrencyRate(BL.Data.CurrencyType.EUR);
+        //usd = await currencyService.GetCurrencyRate(BL.Data.CurrencyType.USD);
     }
 }
