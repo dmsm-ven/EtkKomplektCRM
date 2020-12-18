@@ -1,7 +1,5 @@
 ﻿@page "/load-price-list"
 @attribute [Authorize(Roles = "Administrator, Manager")]
-@using EtkBlazorApp.Data
-@using EtkBlazorApp.BL
 @using System.IO;
 @using System.Threading;
 
@@ -15,13 +13,18 @@
     <button @onclick="CancelFileUpload" class="btn btn-outline-dark">Отменить загрузку</button>
 }
 
-@if (loadedFiles != null && loadedFiles.Any())
+@if (priceListManager.LoadedFiles != null && priceListManager.LoadedFiles.Any())
 {
     <h3>Загруженные прайс-листы</h3>
-    <ul>
-        @foreach (var data in loadedFiles)
+    <ul style="list-style-type: none;">
+        @foreach (var data in priceListManager.LoadedFiles)
         {
-            <li style="margin: 4px 8px;color: red;"><strong style="color:black">@data.TemplateName</strong> @data.FileName<span style="color: navy"> (@data.RecordsInFile записей считано)</span></li>
+            <li style="margin: 4px 8px;color: red;">
+                <button class="btn btn-sm btn-danger" @onclick="@(e => RemoveLoadedPriceList(data))">
+                    &times;
+                </button>
+                <strong style="color:black">@data.TemplateName</strong> @data.FileName<span style="color: navy"> (@data.RecordsInFile записей считано)</span>
+            </li>
         }
     </ul>
     <hr />
@@ -50,19 +53,22 @@
 
 @code
 {
+    [Inject] PriceListManager priceListManager { get; set; }
     List<IPriceListTemplate> templates = null;
-    List<LoadedFileData> loadedFiles = null;
     IPriceListTemplate selectedTemplate = null;
 
     bool isFileLoading = false;
     const int MAX_UPLOAD_SIZE = 15_000_000; // 15 мб
     CancellationTokenSource tcs;
 
+    private void RemoveLoadedPriceList(LoadedFileData data)
+    {
+        priceListManager.RemovePriceList(data);
+    }
 
     protected override void OnInitialized()
     {
         tcs = new CancellationTokenSource();
-        loadedFiles = new List<LoadedFileData>();
         templates = new List<IPriceListTemplate>(new[] { new SymmetronPriceListTemplate() });
         selectedTemplate = templates.First();
     }
@@ -91,16 +97,7 @@
             }
 
             selectedTemplate.FileName = tempFilePath;
-            var records = await Task.Run(() => selectedTemplate.ReadPriceLines(cancelToken));
-
-            var fileData = new LoadedFileData()
-            {
-                RecordsInFile = records.Count,
-                TemplateName = selectedTemplate.GetType().Name,
-                TempFilePath = tempFilePath
-            };
-
-            loadedFiles.Add(fileData);
+            int records = await priceListManager.LoadPriceList(selectedTemplate, cancelToken);
         }
         catch (Exception ex)
         {

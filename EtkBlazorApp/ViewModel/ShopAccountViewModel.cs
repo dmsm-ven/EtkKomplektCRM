@@ -1,13 +1,16 @@
-﻿using System;
+﻿using EtkBlazorApp.DataAccess.Model;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.Data
+namespace EtkBlazorApp.ViewModel
 {
     public class ShopAccountViewModel
     {
+        public event Action ProgressBarStateChanged;
+
         [Url(ErrorMessage = "Введите валидный URL")]
         [Required(ErrorMessage = "Обязательное поле")]
         public string Uri { get; set; }
@@ -19,6 +22,8 @@ namespace EtkBlazorApp.Data
         public int Id { get; set; }
 
         public bool IsSelected { get; set; }
+
+        public bool IsUpdating { get; set; }
 
         public string Favicon => !string.IsNullOrWhiteSpace(Uri) ? $"{Uri}/favicon.ico" : string.Empty;
 
@@ -41,6 +46,18 @@ namespace EtkBlazorApp.Data
         [MinLength(8, ErrorMessage = "Слишком простой пароль (минимальная длина 8 символов)")]
         [Required(ErrorMessage = "Поле обязательно для заполнения")]
         public string DB_Password { get; set; }
+
+        public void ActivateProgressBar()
+        {
+            IsUpdating = true;
+            ProgressBarStateChanged?.Invoke();
+        }
+
+        public void DeactivateProgressBar()
+        {
+            IsUpdating = false;
+            ProgressBarStateChanged?.Invoke();
+        }
 
     }
 }

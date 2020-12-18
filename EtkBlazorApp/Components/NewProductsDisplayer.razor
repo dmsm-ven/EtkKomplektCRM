@@ -12,18 +12,19 @@ else
         <div class="row">
             @foreach (var product in products.Skip(row).Take(ItemsPerRow))
             {
-            <div class="col-md-@(12/ItemsPerRow) p-4">
-                <figure class="figure">
-                    <a href="https://etk-komplekt.ru/index.php?route=product/product&product_id=@product.product_id" target="_blank">
+            <div class="col-md-@(12/ItemsPerRow) product-item">
+                <a href="https://etk-komplekt.ru/index.php?route=product/product&product_id=@product.product_id" target="_blank">
+                    <div class="product-item-inner">
                         <img src="@("https://etk-komplekt.ru/image/" + product.image)"
-                             style="width: 250px; height: 250px;"
-                             class="figure-img img-fluid rounded img-thumbnail" alt="@(product.name ?? "Товар без назания")">
-                        <figcaption class="figure-caption text-left new-product-item-caption">
-                            <p>@(product.name ?? "Товар без назания")</p>
-                            <p>@product.price.ToString("C0")</p>
-                        </figcaption>
-                    </a>
-                </figure>
+                             style="width: 100%; height: 100%;"
+                             class="figure-img img-fluid rounded" alt="@(product.name ?? "Товар без назания")">
+
+                        <div class="product-item-info">
+                            <p class="product-name">@(product.name ?? "Товар без назания")</p>
+                            <p class="product-price">@product.price.ToString("C0")</p>
+                        </div>
+                    </div>
+                </a>
             </div>
             }
         </div>

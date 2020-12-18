@@ -1,15 +1,74 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+.etk-logo-image {
+    opacity: 0.25;
+    display: block;
+    margin-right: 4px;
+    width: auto;
+    height: 100%;
+}
 
-.order-details-row{
+.etk-logo-image:hover {
+    transition: 100ms;
+    opacity: 1;
+} 
+
+.nav-menu-image {
+    width: 20px;
+    height: 20px;
+    margin-right: 15px;
+    margin-left: -1px;
+}
+
+.order-details-row {
     margin-bottom: 14px;
 }
-.new-product-item-caption p {
-    margin: 2px;
+
+.product-item {
+    padding: 5px 10px;  
+    box-sizing: border-box;
+    display: list-item;
+    list-style-type: none;
+    height: auto;
+}
+
+.product-item-inner {
+    border: 2px solid #50093c;
+}
+
+.product-item-info {
+    width: 100%;
+    height: 60px;    
+    background: rgba(0,0,0,0.6);
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.product-item a {
+    color: white;
+    
+}
+.product-item a:hover {
+    text-decoration: none;
+}
+
+    .product-item:hover .product-item-inner {
+        border: 2px solid #AF8ECD;
+    }
+
+.product-item-inner p .product-name {
+    display: block;
+    margin-left: 6px;
+    font-size: 11px;
     padding: 0px;
-    font-size: 10px;
-    color: red;
+}
+
+.product-item-inner p .product-price {
+    display: block;
+    margin-left: 6px;
+    font-size: 11px;
+    padding: 0px;
 }
 
 .thead-etk {
@@ -17,14 +76,17 @@
     background-color: #3f70a0;
     border-color: #2bf5ff;
 }
-.thead-etk th{
-    vertical-align: top!important;
-}
 
-
-    .new-order-row {
-        animation: highlight-new-order-row-animation 5s;
+    .thead-etk th {
+        vertical-align: top !important;
     }
+
+
+.new-order-row {
+    animation: highlight-new-order-row-animation 5s;
+    background: green;
+    transition: 2000ms;
+}
 
 @keyframes highlight-new-order-row-animation {
     /* You could think of as "step 1" */
@@ -37,116 +99,110 @@
     }
 }
 
+.accounts-list {
+    margin: 20px auto;
+    border: 1px solid #1861ac;
+    border-radius: 6px;
+    padding: 12px;
+}
 
-    .new-order-row: {
-        background: green;
-        transition: 2000ms;
-    }
-
-    .accounts-list {
-        margin: 20px auto;
-        border: 1px solid #1861ac;
-        border-radius: 6px;
-        padding: 12px;
-    }
-
-    .account-item {
-        margin: 12px 6px;
-        padding: 10px 4px;
-    }
+.account-item {
+    margin: 12px 6px;
+    padding: 10px 4px;
+}
 
     .account-item:hover {
         transition: 200ms;
         background: rgba(0,0,80, 0.2);
     }
 
-    .shop-account-row {
-        margin: 10px 4px;
-        padding: 5px;
-    }
+.shop-account-row {
+    margin: 10px 4px;
+    padding: 5px;
+}
 
-    .brand-template-logo {
-        width: 120px;
-        height: auto;
-        margin: 4px auto;
-        border: 1px dashed rgba(255,255,255,0.25);
-    }
+.brand-template-logo {
+    width: 120px;
+    height: auto;
+    margin: 4px auto;
+    border: 1px dashed rgba(255,255,255,0.25);
+}
 
-    .brand-template-box {
-        padding: 4px;
-        border: 1px solid #7a7171;
-        border-radius: 6px;
-        margin-left: -4px;
-        margin-top: -4px;
-        margin-right: 2px;
-        margin-bottom: 2px;
-        transition: box-shadow 0.3s ease-in-out;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
+.brand-template-box {
+    padding: 4px;
+    border: 1px solid #7a7171;
+    border-radius: 6px;
+    margin-left: -4px;
+    margin-top: -4px;
+    margin-right: 2px;
+    margin-bottom: 2px;
+    transition: box-shadow 0.3s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
 
     .brand-template-box:hover {
         box-shadow: 0 6px 6px rgba(0,0,0,0.3);
         transition: 200ms;
     }
 
-    .currency-top {
-        color: white;
-        font-weight: 400;
-        margin: 4px 12px;
-    }
-    /*----------------------------------------------------------------------------------------*/
-    /*----------------------------------------------------------------------------------------*/
-    /*----------------------------------------------------------------------------------------*/
-    h1 {
-        font-size: 28px;
-        color: #466085;
-        margin-top: 20px;
-        margin-bottom: 20px;
-    }
+.currency-top {
+    color: white;
+    font-weight: 400;
+    margin: 4px 12px;
+}
+/*----------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------*/
+h1 {
+    font-size: 28px;
+    color: #466085;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
 
-    h2 {
-        font-size: 22px;
-        color: #466085;
-        margin-top: 16px;
-        margin-bottom: 16px;
-    }
+h2 {
+    font-size: 22px;
+    color: #466085;
+    margin-top: 16px;
+    margin-bottom: 16px;
+}
 
-    h3 {
-        font-size: 18px;
-        color: #466085;
-        margin-top: 12px;
-        margin-bottom: 12px;
-    }
-    /*----------------------------------------------------------------------------------------*/
-    html, body {
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    }
+h3 {
+    font-size: 18px;
+    color: #466085;
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
+/*----------------------------------------------------------------------------------------*/
+html, body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
 
-    a, .btn-link {
-        color: #0366d6;
-    }
+a, .btn-link {
+    color: #0366d6;
+}
 
-    .btn-primary {
-        color: #fff;
-        background-color: #1b6ec2;
-        border-color: #1861ac;
-    }
+.btn-primary {
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+}
 
-    app {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-    }
+app {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
 
-    .top-row {
-        height: 3.5rem;
-        display: flex;
-        align-items: center;
-    }
+.top-row {
+    height: 3.0rem;
+    display: flex;
+    align-items: center;
+}
 
-    .main {
-        flex: 1;
-    }
+.main {
+    flex: 1;
+}
 
     .main .top-row {
         background-color: #f7f7f7;
@@ -154,13 +210,13 @@
         justify-content: flex-end;
     }
 
-    .main .top-row > a {
-        margin-left: 1.5rem;
-    }
+        .main .top-row > a {
+            margin-left: 1.5rem;
+        }
 
-    .sidebar {
-        background-image: linear-gradient(180deg, #466085 0%, #4bddc4 100%);
-    }
+.sidebar {
+    background-image: linear-gradient(180deg, #466085 0%, #4bddc4 100%);
+}
 
     .sidebar .top-row {
         background-color: #466085;
@@ -177,10 +233,10 @@
         top: -2px;
     }
 
-    .nav-item {
-        font-size: 0.9rem;
-        padding-bottom: 0.5rem;
-    }
+.nav-item {
+    font-size: 0.9rem;
+    padding-bottom: 0.5rem;
+}
 
     .nav-item:first-of-type {
         padding-top: 1rem;
@@ -199,38 +255,38 @@
         line-height: 3rem;
     }
 
-    .nav-item a.active {
-        background-color: rgba(255,255,255,0.25);
-        color: white;
-    }
+        .nav-item a.active {
+            background-color: rgba(255,255,255,0.25);
+            color: white;
+        }
 
-    .nav-item a:hover {
-        background-color: rgba(255,255,255,0.1);
-        color: white;
-    }
+        .nav-item a:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
 
-    .content {
-        padding-top: 1.1rem;
-    }
+.content {
+    padding-top: 1.1rem;
+}
 
-    .navbar-toggler {
-        background-color: rgba(255, 255, 255, 0.1);
-    }
+.navbar-toggler {
+    background-color: rgba(255, 255, 255, 0.1);
+}
 
-    .valid.modified:not([type=checkbox]) {
-        outline: 1px solid #26b050;
-    }
+.valid.modified:not([type=checkbox]) {
+    outline: 1px solid #26b050;
+}
 
-    .invalid {
-        outline: 1px solid red;
-    }
+.invalid {
+    outline: 1px solid red;
+}
 
-    .validation-message {
-        color: red;
-    }
+.validation-message {
+    color: red;
+}
 
-    @media (max-width: 767.98px) {
-        .main .top-row {
+@media (max-width: 767.98px) {
+    .main .top-row {
         display: none;
     }
 }
@@ -265,7 +321,4 @@
         /* Never collapse the sidebar for wide screens */
         display: block;
     }
-
-
-
 }

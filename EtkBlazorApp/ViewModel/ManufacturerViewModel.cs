@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace EtkBlazorApp.Data
+namespace EtkBlazorApp.ViewModel
 {
     public class ManufacturerViewModel
     {

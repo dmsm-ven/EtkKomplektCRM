@@ -1,4 +1,5 @@
-﻿using OfficeOpenXml;
+﻿using EtkBlazorApp.BL.Data;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,14 +21,14 @@ namespace EtkBlazorApp.BL
                     throw new OperationCanceledException("Отменено пользователем");
                 }
 
-                var priceLine = new PriceLine()
+                var priceLine = new PriceLine(this)
                 {
                     Name = tab.GetValue<string>(i, 1),
                     Sku = tab.GetValue<string>(i, 3),
                     Model = tab.GetValue<string>(i, 27),
                     Manufacturer = tab.GetValue<string>(i, 26),
                     Price = ParsePrice(tab.GetValue<string>(i, 13)),
-                    Currency = Currency.RUB
+                    Currency = CurrencyType.RUB
                 };
 
                 list.Add(priceLine);

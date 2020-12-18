@@ -11,18 +11,18 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.DataAccess
 {
-    public class MySqlDatabase : IDatabase
+    public class DapperMySql : IDatabase
     {
         private readonly IConfiguration configuration;
 
         #if DEBUG
             string ConnectionString => configuration.GetConnectionString("openserver_etk_db");
         #else
-            string ConnectionString => configuration.GetConnectionString("test_server_connection");
+            string ConnectionString => configuration.GetConnectionString("etk_db_connection");
         #endif
 
 
-        public MySqlDatabase(IConfiguration configuration)
+        public DapperMySql(IConfiguration configuration)
         {
             this.configuration = configuration;
         }
@@ -48,8 +48,7 @@ namespace EtkBlazorApp.DataAccess
         #region Product
 
         public async Task<List<ProductEntity>> GetLastAddedProducts(int count)
-        {
-           
+        {          
             if(count > 100)
             {
                 throw new ArgumentOutOfRangeException("Превышен предел запрашиваемых товаров (100)");
@@ -60,7 +59,7 @@ namespace EtkBlazorApp.DataAccess
                 .AppendLine("FROM oc_product p")
                 .AppendLine("LEFT JOIN oc_product_description d ON p.product_id = d.product_id")
                 .AppendLine("LEFT JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id")
-                .AppendLine("ORDER BY Date(p.date_added) ASC")
+                .AppendLine("ORDER BY Date(p.date_added) DESC")
                 .AppendLine("LIMIT @Limit");
 
             string sql = sb.ToString();

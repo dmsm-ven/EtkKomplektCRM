@@ -1,4 +1,6 @@
 using Blazored.Toast;
+using EtkBlazorApp.BL;
+using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.Services;
 using Microsoft.AspNetCore.Builder;
@@ -25,11 +27,19 @@ namespace EtkBlazorApp
             services.AddRazorPages();
             services.AddServerSideBlazor();
 
-            //Мои         
-            services.AddSingleton<IDatabase, MySqlDatabase>();
+            //Мои              
+            services.AddSingleton<IDatabaseProductCorrelator, SimpleDatabaseProductCorrelator>();
+            services.AddSingleton<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
+            services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
+
+            services.AddSingleton<IDatabase, DapperMySql>();
+            services.AddSingleton<DatabaseManager>();
+
+            services.AddSingleton<PriceListManager>();
+            services.AddSingleton<ReportManager>();          
             services.AddSingleton<NewOrdersNotificationService>();
             services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();
-            services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
+            
 
             //Сторонние
             services.AddBlazoredToast();

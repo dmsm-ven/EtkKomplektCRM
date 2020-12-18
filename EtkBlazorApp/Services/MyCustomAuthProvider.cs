@@ -1,10 +1,8 @@
-﻿using EtkBlazorApp.Data;
+﻿using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.DataAccess;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Serilog;
-using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 

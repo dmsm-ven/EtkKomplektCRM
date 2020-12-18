@@ -2356,7 +2356,8 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v5.0",
         "dependencies": {
-          "EPPlus": "5.4.2"
+          "EPPlus": "5.4.2",
+          "EtkBlazorApp.DataAccess": "1.0.0"
         },
         "compile": {
           "bin/placeholder/EtkBlazorApp.BL.dll": {}
@@ -2371,7 +2372,8 @@
         "dependencies": {
           "Dapper": "2.0.78",
           "Microsoft.Extensions.Configuration": "5.0.0",
-          "MySql.Data": "8.0.22"
+          "MySql.Data": "8.0.22",
+          "SSH.NET": "2016.1.0"
         },
         "compile": {
           "bin/placeholder/EtkBlazorApp.DataAccess.dll": {}
@@ -7866,7 +7868,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.100\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.101\\RuntimeIdentifierGraph.json"
       }
     }
   }

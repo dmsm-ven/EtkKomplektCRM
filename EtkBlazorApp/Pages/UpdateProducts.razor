@@ -1,5 +1,4 @@
 ﻿@page "/update-products"
-@inject IDatabase database
 @attribute [Authorize(Roles = "Administrator, Manager")]
 
 <h3>Обновление цен и остатков</h3>
@@ -10,45 +9,62 @@
 }
 else
 {
-    <AuthorizeView Roles="Administrator">
-        <Authorized>
-            <div class="row">
-                <div class="col-md-2 offset-10" style="text-align: right;">
-                    <a href="/shop-account/new" class="btn btn-sm btn-success">Добавить новый</a>
-                </div>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2">
+                <button class="btn btn-success btn-lg" @onclick="UpdateSelectedAccountProducts" disabled="@IsUpdateButtonDisabled">Обновить</button>
             </div>
-        </Authorized>
-    </AuthorizeView>
+            <div class="col-md-2">
+                <span><input type="checkbox" @bind-value="@clearStockBeforeUpdate" /> &nbsp;&nbsp;Обнулять остатки</span>
+            </div>
 
-    <div class="table-responsive" style="margin: 10px 5px; padding: 12px;">
-        <table class="table">
-            @foreach (var account in accounts)
-            {
-                <ShopAccountComponent ShopAccount="@account"
-                                      OnChecked="@(() => StateHasChanged())"
-                                      OnAccountDeleted="@(() => accounts.Remove(account))" />
-            }
-        </table>
-    </div>
-    <div class="row" style="margin: 12px auto;">
-        <div class="col-md-2">
-            <button class="btn btn-success btn-lg" disabled="@IsUpdateButtonDisabled">Обновить</button>
+            <AuthorizeView Roles="Administrator">
+                <Authorized>
+                    <div class="col-md-2 offset-6" style="text-align: right;">
+                        <a href="/shop-account/new" class="btn btn-sm btn-success">Добавить новый</a>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
         </div>
     </div>
 
+    <hr style="margin: 10px 5px;"/>
+
+    <div class="container-fluid" >
+        @foreach (var account in accounts)
+        {
+            <ShopAccountComponent ShopAccount="@account"
+                                  OnChecked="@(() => StateHasChanged())"
+                                  OnAccountDeleted="@(() => accounts.Remove(account))" />
+        }
+    </div>
 
 }
 
 @code {
-    public List<ShopAccountViewModel> accounts = null;
+    bool clearStockBeforeUpdate;
+
+    List<ShopAccountViewModel> accounts = null;
     ShopAccountViewModel accountToDelete = null;
 
+    [Inject] PriceListManager priceListManager { get; set; }
+    [Inject] DatabaseManager databaseManager { get; set; }
+    [Inject] ReportManager reportManager { get; set; }
+    [Inject] IDatabaseProductCorrelator correlator { get; set; }
+    [Inject] IToastService toastService { get; set; }
 
-    public bool IsUpdateButtonDisabled => accounts == null ? true : !accounts.Any(ac => ac.IsSelected);
+    public bool IsUpdateButtonDisabled
+    {
+        get
+        {
+            bool hasSelectedItemAndUploadedPriceList = accounts.Any(ac => ac.IsSelected) && priceListManager.PriceLines.Any();
+            return (accounts == null || priceListManager.PriceLines.Count == 0) ? true : !hasSelectedItemAndUploadedPriceList;
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        accounts = (await database.GetShopAccounts()).Select(account => new ShopAccountViewModel()
+        accounts = (await databaseManager.GetMonobrandAccountConnections()).Select(account => new ShopAccountViewModel()
         {
             Title = account.title,
             Id = account.website_id,
@@ -62,4 +78,38 @@ else
         }).ToList();
     }
 
+    private async Task UpdateSelectedAccountProducts()
+    {
+        var checkedAccounts = accounts.Where(ac => ac.IsSelected).ToList();
+
+        foreach (var account in checkedAccounts)
+        {
+            await UpdateAccountProducts(account);
+        }
+    }
+
+    private async Task UpdateAccountProducts(ShopAccountViewModel account)
+    {
+        account.ActivateProgressBar();
+
+        try
+        {
+            var products = await databaseManager.ReadProducts(account.Id);
+            var updateData = await correlator.GetCorrelationData(products, priceListManager.PriceLines);
+            reportManager.WebsiteUpdatedData.Info[account.Id] = updateData;
+
+            await databaseManager.Update(account.Id, updateData, clearStockBeforeUpdate);
+
+            toastService.ShowError($"Сайт [{account.Uri}] обновлен ({updateData.Count}) товара(ов)", "Информация");
+        }
+        catch (Exception ex)
+        {
+            Log.Logger.Error($"Ошибка загрузки прайс листа для аккаунта: [{account.Title}] " + ex.Message);
+            toastService.ShowError($"При обновлении данных [{account.Uri}] произошла ошибка", "Ошибка обновления");
+        }
+        finally
+        {
+            account.DeactivateProgressBar();
+        }
+    }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace EtkBlazorApp.Data
+namespace EtkBlazorApp.ViewModel
 {
     public class OrderViewModel
     {

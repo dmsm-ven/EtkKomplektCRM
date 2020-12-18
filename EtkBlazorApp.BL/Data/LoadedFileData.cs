@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.Data
+namespace EtkBlazorApp.BL.Data
 {
     public class LoadedFileData
     {
@@ -11,5 +12,12 @@ namespace EtkBlazorApp.Data
         public string TemplateName { get; set; }
         public int RecordsInFile { get; set; }
         public string TempFilePath { get; set; }
+
+        public LoadedFileData(IPriceListTemplate template)
+        {
+            Template = template;
+        }
+
+        public IPriceListTemplate Template { get; }
     }
 }
