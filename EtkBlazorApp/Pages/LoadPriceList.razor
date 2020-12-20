@@ -15,7 +15,7 @@
 
 @if (priceListManager.LoadedFiles != null && priceListManager.LoadedFiles.Any())
 {
-    <h3>Загруженные прайс-листы</h3>
+    <h3>Загруженные прайс-листы <a href="/price-list-loaded-data" target="_blank"><i class="oi oi-eye"/></a></h3>
     <ul style="list-style-type: none;">
         @foreach (var data in priceListManager.LoadedFiles)
         {
