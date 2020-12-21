@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "P0LLCURmw8OCRWQ7SvKhILWmmirkCqtC/xK1LReZMscj6eFdqBSNI0nNG2DkOF9Pi25sYkF1+zcbz1ybBvP2Rw==",
+  "dgSpecHash": "RX4K8NkBDk2NuK1lpW5NuVPU1f5Ee3QZ/iZMcGNQsiu54rvC+xl8MnnsOXOyDU1R+RzeDIf+y2/7rgscTL1q9g==",
   "success": true,
   "projectFilePath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp\\EtkBlazorApp.csproj",
   "expectedPackageFiles": [
@@ -106,6 +106,7 @@
     "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder\\system.linq.expressions\\4.1.0\\system.linq.expressions.4.1.0.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\system.memory\\4.5.3\\system.memory.4.5.3.nupkg.sha512",
     "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder\\system.net.http\\4.1.0\\system.net.http.4.1.0.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\system.net.http.json\\5.0.0\\system.net.http.json.5.0.0.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\system.net.nameresolution\\4.0.0\\system.net.nameresolution.4.0.0.nupkg.sha512",
     "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder\\system.net.primitives\\4.0.11\\system.net.primitives.4.0.11.nupkg.sha512",
     "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder\\system.net.sockets\\4.1.0\\system.net.sockets.4.1.0.nupkg.sha512",

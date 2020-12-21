@@ -1,0 +1,70 @@
+﻿@page "/log"
+@attribute [Authorize(Roles = "Administrator")]
+
+<style>
+    .log-table th {
+        height: 24px;
+        font-size: 16px;
+        border: none;
+        border-bottom: 3px solid black;
+    }
+
+    .log-table td {
+        height: 14px;
+        font-size: 9px;
+    }
+
+    .log-table tr, .log-table td {
+        border: none;
+        border-bottom: 1px solid lightgray;
+    }
+</style>
+
+<div class="container-fluid">
+    <h3>Журнал событий приложения</h3>
+    
+    <div class="table-responsive">
+        <table class="table table-striped log-table">
+            <thead class="thead-etk">
+                <tr>
+                    <th>Дата|Время</th>
+                    <th>Пользователь</th>
+                    <th>Действией</th>
+                </tr>
+            </thead>
+            <tbody>
+                @*<Virtualize Items="@logEntries" ItemSize="16">
+                    <ItemContent>
+                        <tr @key="context.GetHashCode()" class="px-1 py-1 mx-1 my-1">
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </ItemContent>
+                    <Placeholder>
+                        <tr colspan="2">
+                            <LoadingSpinner></LoadingSpinner>
+                        </tr>
+                    </Placeholder>
+                </Virtualize>*@
+            </tbody>
+        </table>
+    </div>
+
+    <div class="row">
+        <p>Тут пагинанатор</p>
+    </div>
+</div>
+
+@code {
+    const int testEntriesCount = 5000;
+
+    public IEnumerable<LogEntryEntity> logEntries = Enumerable.Range(1, testEntriesCount)
+        .Select(number => new LogEntryEntity()
+        {
+            Id = number + 1,
+            DateTime = DateTime.Now.AddMinutes(-(testEntriesCount/2) + number),
+            User = "test user",
+            Action = "Действией пользователя"
+        });
+    }

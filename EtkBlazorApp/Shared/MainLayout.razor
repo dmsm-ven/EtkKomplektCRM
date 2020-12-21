@@ -3,35 +3,39 @@
 @inject IToastService toastService
 @using System.Globalization
 
-<div class="sidebar">
-    <NavMenu />
-</div>
+<AuthorizeView>
+    <Authorized>
+        <div class="sidebar">
+            <NavMenu />
+        </div>
 
-<div class="main">
-    <div class="top-row px-4">
-        <AuthorizeView>
-            <Authorized>
+        <div class="main">
+            <div class="top-row px-4">
                 <p>
                     <strong>@context.User.Identity.Name</strong>
                     <small style="color: #9e9e9e;">@($"({context.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role).Value})")</small>
                     &nbsp;&nbsp;
                     <a href="/Login" @onclick="LogOut">Выйти</a>
                 </p>
-            </Authorized>
-            <NotAuthorized>
-                <a href="/Login">Войти</a>
-            </NotAuthorized>
-        </AuthorizeView>
-    </div>
+            </div>
 
-    <div class="content px-4">
-        @Body
-    </div>
-</div>
+            <div class="content px-4">
+                @Body
+            </div>
+        </div>
 
-<Blazored.Toast.BlazoredToasts Position="Blazored.Toast.Configuration.ToastPosition.TopRight"
-                               Timeout="12"
-                               IconType="Blazored.Toast.IconType.Material" />
+        <Blazored.Toast.BlazoredToasts Position="Blazored.Toast.Configuration.ToastPosition.TopRight"
+                                       Timeout="12"
+                                       IconType="Blazored.Toast.IconType.Material" />
+    </Authorized>
+    <NotAuthorized>
+        <div class="main">
+            <div class="content px-4">
+                <EtkBlazorApp.Pages.Login></EtkBlazorApp.Pages.Login>
+            </div>        
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
 
@@ -39,11 +43,6 @@
     public async Task LogOut()
     {
         await ((MyCustomAuthProvider)AuthenticationStateProvider).LogOutUser();
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-
     }
 
 }

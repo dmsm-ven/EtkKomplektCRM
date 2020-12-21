@@ -104,7 +104,6 @@ else
         }
         catch (Exception ex)
         {
-            Log.Logger.Error($"Ошибка загрузки прайс листа для аккаунта: [{account.Title}] " + ex.Message);
             toastService.ShowError($"При обновлении данных [{account.Uri}] произошла ошибка", "Ошибка обновления");
         }
         finally

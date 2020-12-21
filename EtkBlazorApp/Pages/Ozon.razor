@@ -1,6 +1,112 @@
 ﻿@page "/ozon"
-<h3>Ozon</h3>
+@attribute [Authorize(Roles = "Administrator, Manager")]
+
+<h3>Ozon Seller</h3>
+
+<div class="row">
+    <div class="btn-group" role="group" aria-label="Basic example">
+        <button type="button" class="btn btn-primary mx-2" @onclick="LoadOzonProducts">Загрузить все данные с озона</button>
+        <button type="button" class="btn btn-primary mx-2" @onclick="LoadEtkProducts">Загрузить данные с сайта</button>
+        <button type="button" class="btn btn-primary mx-2" @onclick="CreateCorrelationData" disabled="@correlationButtonDisabled">Найти и отобразить соответствия</button>
+        <button type="button" class="btn btn-primary mx-2" @onclick="UpdateOzonPrice" disabled="@updateOzonDataButtonDisabled">Обновить цены на OZON</button>
+        <button type="button" class="btn btn-primary mx-2" @onclick="UpdateOzonQuantity" disabled="@updateOzonDataButtonDisabled">Обновить остатки OZON</button>
+    </div>
+</div>
+
+<div class="row my-5">
+    <div class="table">
+        <table class="table">
+            <thead class="thead-etk">
+                <tr>
+                    <th>Товары озон</th>
+                    <th>Товары ЕТК</th>
+                    <th>Найдено сопоставлений</th>
+                    <th>Обновлено цены</th>
+                    <th>Обновлено остатки</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>@(ozonProducts?.Count ?? 0)</th>
+                    <th>@(etkProducts?.Count ?? 0)</th>
+                    <th>@(correlationData?.Count ?? 0)</th>
+                    <th>@(newPrice?.Count ?? 0)</th>
+                    <th>@(newQuantity?.Count ?? 0)</th>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (ozonProducts != null)
+{
+    <div class="row my-5">
+        <div class="table">
+            <table class="table">
+                <thead class="thead-etk">
+                    <tr>
+                        <th>ozon_product_id</th>
+                        <th>offer_id</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <Virtualize Items="ozonProducts" ItemSize="30">
+                        <ItemContent>
+                            <tr @key="context.GetHashCode()">
+                                <td>@context.product_id</td>
+                                <td>@context.offer_id</td>
+                            </tr>
+                        </ItemContent>
+                        <Placeholder>
+                            <tr colspan="2">
+                                <LoadingSpinner></LoadingSpinner>
+                            </tr>
+                        </Placeholder>
+                    </Virtualize>
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
 
 @code {
 
+    // ozon manager есть в etk-komplekt windows приложении
+    [Inject] private OzonSellerApi ozonApi { get; set; }
+    [Inject] private DatabaseManager databaseManager { get; set; }
+
+    private List<OzonProductModel> ozonProducts = null;
+    private List<ProductEntity> etkProducts = null;
+    private Dictionary<OzonProductModel, ProductUpdateData> correlationData = null;
+    private Dictionary<OzonProductModel, decimal> newPrice = null;
+    private Dictionary<OzonProductModel, int> newQuantity = null;
+
+    private bool correlationButtonDisabled => ozonProducts == null;
+    private bool updateOzonDataButtonDisabled => ozonProducts == null || correlationData == null;
+
+    private async Task LoadOzonProducts()
+    {
+        ozonProducts = await ozonApi.GetAllProducts();
+        StateHasChanged();
+    }
+
+    private async Task LoadEtkProducts()
+    {
+        etkProducts = await databaseManager.ReadProducts(0);
+    }
+
+    private async Task CreateCorrelationData()
+    {
+
+    }
+
+    private async Task UpdateOzonPrice()
+    {
+
+    }
+
+    private async Task UpdateOzonQuantity()
+    {
+
+    }
 }

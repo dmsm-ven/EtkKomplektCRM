@@ -49,8 +49,7 @@ namespace EtkBlazorApp.Services
             var identity = new ClaimsIdentity(new[]
             {
                 new Claim(ClaimTypes.Name, userData.Login),
-                new Claim(ClaimTypes.Role, "Administrator"),
-                new Claim(ClaimTypes.Role, "Manager"),
+                new Claim(ClaimTypes.Role, permission)
             }, "login_form");
 
             var user = new ClaimsPrincipal(identity);

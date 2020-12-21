@@ -14,7 +14,14 @@ else
             {
             <div class="col-md-@(12/ItemsPerRow) product-item">
                 <a href="https://etk-komplekt.ru/index.php?route=product/product&product_id=@product.product_id" target="_blank">
-                    <div class="product-item-inner">
+                    <div class="product-item-inner shadow">
+                        <div class="product-item-manufacturer">
+                            <p>@product.manufacturer</p>
+                        </div>
+                        <div class="product-item-date">
+                            <p>Добавлен: <span style="color: blue;">@product.date_added.ToString("d")</span></p>
+                        </div>
+
                         <img src="@("https://etk-komplekt.ru/image/" + product.image)"
                              style="width: 100%; height: 100%;"
                              class="figure-img img-fluid rounded" alt="@(product.name ?? "Товар без назания")">

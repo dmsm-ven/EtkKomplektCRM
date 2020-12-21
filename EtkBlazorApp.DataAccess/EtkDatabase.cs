@@ -15,12 +15,7 @@ namespace EtkBlazorApp.DataAccess
     {
         private readonly IConfiguration configuration;
 
-        #if DEBUG
-            string ConnectionString => configuration.GetConnectionString("openserver_etk_db");
-        #else
-            string ConnectionString => configuration.GetConnectionString("etk_db_connection");
-        #endif
-
+        string ConnectionString => configuration.GetConnectionString("etk_db_connection");
 
         public DapperMySql(IConfiguration configuration)
         {
@@ -33,8 +28,8 @@ namespace EtkBlazorApp.DataAccess
                 .AppendLine("SELECT g.permission")
                 .AppendLine("FROM oc_user u")
                 .AppendLine("LEFT JOIN oc_user_group g ON u.user_group_id = g.user_group_id")
-                .AppendLine("WHERE g.name  LIKE 'etk_app%' AND u.status = 1 AND")
-                .AppendLine("username = @login AND password = @password");
+                .AppendLine("WHERE g.name LIKE 'etk_app%' AND u.status = 1")
+                .AppendLine("AND username = @login AND password = @password");
 
             var sql = sb.ToString().Trim();
 

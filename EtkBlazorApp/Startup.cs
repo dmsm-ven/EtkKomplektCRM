@@ -1,4 +1,5 @@
 using Blazored.Toast;
+using EtkBlazorApp.API.Ozon;
 using EtkBlazorApp.BL;
 using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.DataAccess;
@@ -39,6 +40,7 @@ namespace EtkBlazorApp
             services.AddSingleton<ReportManager>();          
             services.AddSingleton<NewOrdersNotificationService>();
             services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();
+            services.AddSingleton<OzonSellerApi>();
             
 
             //Сторонние
