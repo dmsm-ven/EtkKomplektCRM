@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.BL.Data;
+using EtkBlazorApp.BL.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,11 +9,6 @@ using System.Xml;
 
 namespace EtkBlazorApp.Services
 {
-    public interface ICurrencyChecker
-    {
-        Task<decimal> GetCurrencyRate(CurrencyType type);
-    }
-
     public class CurrencyCheckerCbRf : ICurrencyChecker
     {
         Dictionary<CurrencyType, decimal> rates;

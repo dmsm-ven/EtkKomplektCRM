@@ -1,5 +1,6 @@
 ﻿using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.DataAccess;
+using EtkBlazorApp.DataAccess.Model;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.AspNetCore.Http;
@@ -12,15 +13,17 @@ namespace EtkBlazorApp.Services
     {
         private readonly IDatabase db;
         private readonly IHttpContextAccessor httpContextAccessor;
+        private readonly MyDbLogger logger;
         private readonly ProtectedLocalStorage storage;
-        private readonly int PASSWORD_MAX_ENTER_TRY = 5;
 
+        const int PASSWORD_MAX_ENTER_TRY = 5;
 
-        public MyCustomAuthProvider(IDatabase db, IHttpContextAccessor httpContextAccessor, ProtectedLocalStorage storage)
+        public MyCustomAuthProvider(IDatabase db, IHttpContextAccessor httpContextAccessor, MyDbLogger logger, ProtectedLocalStorage storage)
         {
             this.db = db;
             this.storage = storage;
             this.httpContextAccessor = httpContextAccessor;
+            this.logger = logger;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -34,6 +37,7 @@ namespace EtkBlazorApp.Services
                     Login = login.Value, 
                     Password = password.Value 
                 });
+                logger.AuthenticationState = state;
                 return state;           
             }
 
@@ -47,6 +51,7 @@ namespace EtkBlazorApp.Services
             
             if(userData.InvalidPasswordCounter >= PASSWORD_MAX_ENTER_TRY)
             {
+                logger.Write(LogEntryGroupName.Auth, "Авторизация", $"Превышено количество попыток входа для {userData.Login} с паролем {userData.Password}");
                 return GetDefaultState();
             }
 
@@ -54,6 +59,7 @@ namespace EtkBlazorApp.Services
 
             if (string.IsNullOrWhiteSpace(permission))
             {
+                logger.Write(LogEntryGroupName.Auth, "Авторизация", $"Неудачная попытка входа для {userData.Login} с паролем {userData.Password}");
                 await db.SetUserBadPasswordTryCounter(userData.IP, userData.InvalidPasswordCounter + 1);
                 return GetDefaultState();
             }        
@@ -63,18 +69,19 @@ namespace EtkBlazorApp.Services
                 new Claim(ClaimTypes.Name, userData.Login),
                 new Claim(ClaimTypes.Role, permission)
             }, "login_form");
-
             var user = new ClaimsPrincipal(identity);
             var state = new AuthenticationState(user);
 
             NotifyAuthenticationStateChanged(Task.FromResult(state));
-           
+
             await db.SetUserBadPasswordTryCounter(userData.IP, 0);
             return state;
         }  
         
         public async Task LogOutUser()
         {
+            
+
             string userName = (await storage.GetAsync<string>("user_login")).Value ?? string.Empty;
 
             await storage.DeleteAsync("user_login");

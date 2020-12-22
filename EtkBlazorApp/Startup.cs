@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using EtkBlazorApp.BL.Data;
+using EtkBlazorApp.BL.Interfaces;
 
 namespace EtkBlazorApp
 {
@@ -29,20 +30,23 @@ namespace EtkBlazorApp
             services.AddRazorPages();
             services.AddServerSideBlazor();
 
+            //Blazor additional
+            services.AddHttpContextAccessor();
+
             //Мои              
             services.AddSingleton<IDatabaseProductCorrelator, SimpleDatabaseProductCorrelator>();
             services.AddSingleton<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
             services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
-            services.AddSingleton<IDatabase, DapperMySql>();
+            services.AddSingleton<IDatabase, DapperMySql>();         
             services.AddSingleton<DatabaseManager>();
             services.AddSingleton<PriceListManager>();
             services.AddSingleton<ReportManager>();          
             services.AddSingleton<NewOrdersNotificationService>();
             services.AddSingleton<OzonSellerApi>();
 
-            services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();        
-            services.AddHttpContextAccessor();
-
+            services.AddSingleton<MyDbLogger>();
+            services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();
+            
             //Сторонние
             services.AddBlazoredToast();
 

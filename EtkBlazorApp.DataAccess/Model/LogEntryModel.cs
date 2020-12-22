@@ -8,8 +8,10 @@ namespace EtkBlazorApp.DataAccess.Model
         public int Id { get; set; }
         public LogEntryGroupName GroupName { get; set; }
         public string User { get; set; }
+        public string Title { get; set; }
         public string Message { get; set; }
         public DateTime DateTime { get; set; }
+
     }
 
     public enum LogEntryGroupName
@@ -18,7 +20,7 @@ namespace EtkBlazorApp.DataAccess.Model
         None,
 
         [Description("Приложение")]
-        App,
+        Auth,
 
         [Description("Цены и остатки")]
         PriceUpdate,

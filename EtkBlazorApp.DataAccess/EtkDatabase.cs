@@ -53,7 +53,7 @@ namespace EtkBlazorApp.DataAccess
             dynamic param = new { ip };
 
             var sb = new StringBuilder()
-                .AppendLine("SELECT IF( EXISTS(SELECT * FROM etk_app_ban_list WHERE ip = @ip),")
+                .AppendLine(" SELECT IF( EXISTS(SELECT * FROM etk_app_ban_list WHERE ip = @ip),")
                 .AppendLine("(SELECT current_try_counter FROM etk_app_ban_list WHERE ip = @ip), ")
                 .AppendLine("-1)");
 
@@ -62,14 +62,7 @@ namespace EtkBlazorApp.DataAccess
 
             if(tryCount == -1)
             {
-                try
-                {
-                    await SaveData<dynamic>("INSERT INTO etk_app_ban_list (ip) VALUES (@ip)", param);
-                }
-                catch(Exception ex)
-                {
-
-                }
+                await SaveData<dynamic>("INSERT INTO etk_app_ban_list (ip) VALUES (@ip)", param);
                 tryCount = 0;
             }
 
@@ -230,6 +223,21 @@ namespace EtkBlazorApp.DataAccess
         }
         #endregion
 
+        #region Logging
+        public async Task AddLogEntries(IEnumerable<LogEntryEntity> logEntries)
+        {
+            using (IDbConnection connection = new MySqlConnection(ConnectionString))
+            {
+                foreach (var entry in logEntries) 
+                {
+                    string sql = $"INSERT INTO etk_app_log (user, group_name, date_time, title, message) VALUES " +
+                        $"(@{nameof(entry.User)}, @{nameof(entry.GroupName)}, @{nameof(entry.DateTime)}, @{nameof(entry.Title)}, @{nameof(entry.Message)})";
+
+                    await connection.ExecuteAsync(sql, entry);
+                }
+            }
+        }
+        #endregion
         #region private
         private async Task<List<T>> LoadData<T, U>(string sql, U parameters)
         {
