@@ -24,7 +24,7 @@ namespace EtkBlazorApp.DataAccess
             this.configuration = configuration;
 
             jsonSettings = new JsonSerializerSettings();
-            jsonSettings.Formatting = Formatting.Indented;
+            jsonSettings.Formatting = Formatting.None;
             jsonSettings.ContractResolver = new EncryptedStringPropertyResolver("0D83C66D-D21C-401B-8F5B-C1E73CB713A0");
         }
 
@@ -32,11 +32,10 @@ namespace EtkBlazorApp.DataAccess
         public async Task<string> GetUserPermission(string login, string password)
         {
             var sb = new StringBuilder()
-                .AppendLine("SELECT g.permission")
-                .AppendLine("FROM oc_user u")
-                .AppendLine("LEFT JOIN oc_user_group g ON u.user_group_id = g.user_group_id")
-                .AppendLine("WHERE g.name LIKE 'etk_app%' AND u.status = 1")
-                .AppendLine("AND username = @login AND password = @password");
+                .AppendLine("SELECT permission")
+                .AppendLine("FROM etk_app_user u")
+                .AppendLine("LEFT JOIN etk_app_User_group g ON u.user_group_id = g.user_group_id")
+                .AppendLine("WHERE u.status = 1 AND login = @login AND password = @password");
 
             var sql = sb.ToString().Trim();
 
@@ -125,12 +124,12 @@ namespace EtkBlazorApp.DataAccess
 
             if(account.website_id == 0)
             {                         
-                await SaveData<dynamic>("INSERT INTO etk_app_shop_account (account) VALUES ('')", new { });
-                account.website_id = await GetScalar<int, dynamic>($"SELECT max({nameof(account.website_id)}) FROM etk_app_shop_account", new { });
+                await SaveData<dynamic>("INSERT INTO etk_app_monobrand (account) VALUES ('')", new { });
+                account.website_id = await GetScalar<int, dynamic>($"SELECT max({nameof(account.website_id)}) FROM etk_app_monobrand", new { });
             }
 
             var sb = new StringBuilder()
-                .AppendLine("UPDATE etk_app_shop_account")
+                .AppendLine("UPDATE etk_app_monobrand")
                 .AppendLine($"SET account = @data")
                 .AppendLine($"WHERE {nameof(ShopAccountEntity.website_id)} = @{nameof(ShopAccountEntity.website_id)}");
 
@@ -141,7 +140,7 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task<List<ShopAccountEntity>> GetShopAccounts()
         {
-            var sql = "SELECT * FROM etk_app_shop_account";
+            var sql = "SELECT * FROM etk_app_monobrand";
             var encryptedData = await LoadData<dynamic, dynamic>(sql, new { });
             var decruptedData = encryptedData.Select(item => (ShopAccountEntity)JsonConvert.DeserializeObject<ShopAccountEntity>(item.account, jsonSettings)).ToList();
             return decruptedData;
@@ -149,7 +148,7 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task DeleteShopAccounts(int id)
         {
-            var sql = $"DELETE FROM etk_app_shop_account WHERE {nameof(ShopAccountEntity.website_id)} = @{nameof(ShopAccountEntity.website_id)}";
+            var sql = $"DELETE FROM etk_app_monobrand WHERE {nameof(ShopAccountEntity.website_id)} = @{nameof(ShopAccountEntity.website_id)}";
             await SaveData<dynamic>(sql, new { website_id = id });
         }
         #endregion
@@ -217,10 +216,20 @@ namespace EtkBlazorApp.DataAccess
             }
         }
 
-        public async Task<List<LogEntryEntity>> GetLogItems(int count)
+        public async Task<List<LogEntryEntity>> GetLogItems(int count, int maxDaysOld)
         {
             string sql = $"SELECT * FROM etk_app_log ORDER BY date_time DESC LIMIT @limit";
-            var data = await LoadData<LogEntryEntity, dynamic>(sql, new { limit = count });
+
+            if(maxDaysOld > 0)
+            {
+                maxDaysOld *= -1;
+                sql = sql.Insert(sql.IndexOf("ORDER BY"), "WHERE DATE(date_time) >= ADDDATE(NOW(), INTERVAL @maxDaysOld DAY) ");
+            }
+            else if(maxDaysOld < 0)
+            {
+                sql = sql.Insert(sql.IndexOf("ORDER BY"), "WHERE DATE(date_time) = DATE(ADDDATE(NOW(), INTERVAL @maxDaysOld DAY)) ");
+            }
+            var data = await LoadData<LogEntryEntity, dynamic>(sql, new { limit = count , maxDaysOld });
             return data.ToList();
         }
         #endregion
