@@ -5,12 +5,12 @@ namespace EtkBlazorApp.DataAccess.Model
 {
     public class LogEntryEntity
     {
-        public int Id { get; set; }
-        public LogEntryGroupName GroupName { get; set; }
-        public string User { get; set; }
-        public string Title { get; set; }
-        public string Message { get; set; }
-        public DateTime DateTime { get; set; }
+        public int id { get; set; }
+        public LogEntryGroupName group_name { get; set; }
+        public string user { get; set; }
+        public string title { get; set; }
+        public string message { get; set; }
+        public DateTime date_time { get; set; }
 
     }
 

@@ -50,6 +50,10 @@
             "EPPlus": {
               "target": "Package",
               "version": "[5.4.2, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[12.0.3, )"
             }
           },
           "imports": [
@@ -121,6 +125,10 @@
             "MySql.Data": {
               "target": "Package",
               "version": "[8.0.22, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[12.0.3, )"
             },
             "SSH.NET": {
               "target": "Package",

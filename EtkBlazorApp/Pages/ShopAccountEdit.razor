@@ -88,10 +88,10 @@ else
     public string Id { get; set; }
 
     public ShopAccountViewModel currentAccount = null;
-
     public string buttonActionName { get; private set; }
-
     private EditForm editForm;
+
+    [Inject] DatabaseManager dbManager { get; set; }
 
     protected async Task OnValidSubmit()
     {
@@ -111,6 +111,7 @@ else
         };
 
         await database.SaveShopAccount(accountEntity);
+        await dbManager.RefreshAccountList(force: true);
 
         if (Id == "new")
         {

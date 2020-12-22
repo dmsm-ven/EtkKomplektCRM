@@ -1,11 +1,11 @@
 ﻿@page "/log"
 @attribute [Authorize(Roles = "Administrator")]
-@using System.Collections.ObjectModel;
-@using System.ComponentModel;
+@inject IDatabase database
+@inject MyDbLogger logger
 
 
 <h3>Журнал событий приложения</h3>
-@if (testItems == null)
+@if (entries == null)
 {
     <LoadingSpinner />
 }
@@ -20,7 +20,7 @@ else
                     <option value="">Все</option>
                     @foreach (var user in users)
                     {
-                        <option value="@user">@user</option>
+                        <option value="@user" selected="@(selectedUser == user)">@user</option>
                     }
                 </select>
             </div>
@@ -46,17 +46,19 @@ else
                     <th>Дата|Время</th>
                     <th>Пользователь</th>
                     <th>Группа</th>
-                    <th>Действией</th>
+                    <th>Заголовок</th>
+                    <th>Описание</th>
                 </tr>
             </thead>
             <tbody>
-                <Virtualize Items="testItems" ItemSize="14" TItem="LogEntryEntity">
+                <Virtualize Items="entries" ItemSize="14" TItem="LogEntryEntity">
                     <ItemContent>
                         <tr @key="context.GetHashCode()">
-                            <td>@context.DateTime.ToString("G")</td>
-                            <td>@context.User</td>
-                            <td>@context.GroupName</td>
-                            <td>@context.Message</td>
+                            <td>@context.date_time.ToString("G")</td>
+                            <td>@context.user</td>
+                            <td>@context.group_name</td>
+                            <td>@context.title</td>
+                            <td>@context.message</td>
                         </tr>
                     </ItemContent>
                     <Placeholder>
@@ -73,37 +75,40 @@ else
 
 @code {
 
-    List<LogEntryEntity> source = null;
-    List<LogEntryEntity> testItems = null;
-
-    List<string> users;
+    List<LogEntryEntity> entries = null;
+    List<string> users = new List<string>();
 
     string selectedUser;
     LogEntryGroupName? selectedGroup;
 
     protected override async Task OnInitializedAsync()
     {
-        source = await LoadEntries();
-        testItems = source;
-
-        users = testItems.Select(item => item.User).OrderBy(u => u).Distinct().ToList();
-        StateHasChanged();
+        await ApplyFilter();
     }
 
-    private void ApplyFilter()
+    private async Task ApplyFilter()
     {
-        IEnumerable<LogEntryEntity> tempSource = source;
+        entries = null;
+
+        await logger.Send();
+
+
+        IEnumerable<LogEntryEntity> data = await database.GetLogItems(1000);
+        users = data.Select(item => item.user).OrderBy(u => u).Distinct().ToList();
 
         if (!string.IsNullOrWhiteSpace(selectedUser))
         {
-            tempSource = tempSource.Where(entry => entry.User.Equals(selectedUser, StringComparison.OrdinalIgnoreCase));
+            data = data.Where(entry => entry.user.Equals(selectedUser, StringComparison.OrdinalIgnoreCase));
         }
         if (selectedGroup != null)
         {
-            tempSource = tempSource.Where(entry => entry.GroupName == selectedGroup);
+            data = data.Where(entry => entry.group_name == selectedGroup.Value);
         }
 
-        testItems = tempSource.ToList();
+
+
+        entries = data.ToList();
+
         StateHasChanged();
     }
 
@@ -117,22 +122,5 @@ else
         {
             selectedGroup = (LogEntryGroupName)Enum.Parse<LogEntryGroupName>(e.Value.ToString());
         }
-    }
-
-    public async Task<List<LogEntryEntity>> LoadEntries()
-    {
-        var data = Enumerable
-            .Range(1, 5000)
-            .Select(number => new LogEntryEntity()
-            {
-                Id = number,
-                DateTime = DateTime.Now.AddMinutes(-(5000 / 2) + number),
-                GroupName = (LogEntryGroupName)Enum.GetValues(typeof(LogEntryGroupName)).GetValue((int)new Random().Next(0, Enum.GetValues(typeof(LogEntryGroupName)).Length)),
-                User = "User" + new Random().Next(1,5),
-                Message = "Действией пользователя"
-            })
-            .ToList();
-
-        return data;
     }
 }

@@ -2,6 +2,7 @@
 using EtkBlazorApp.DataAccess.Model;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -14,12 +15,17 @@ namespace EtkBlazorApp.DataAccess
     public class DapperMySql : IDatabase
     {
         private readonly IConfiguration configuration;
+        private readonly JsonSerializerSettings jsonSettings;
 
         string ConnectionString => configuration.GetConnectionString("etk_db_connection");
 
         public DapperMySql(IConfiguration configuration)
         {
             this.configuration = configuration;
+
+            jsonSettings = new JsonSerializerSettings();
+            jsonSettings.Formatting = Formatting.Indented;
+            jsonSettings.ContractResolver = new EncryptedStringPropertyResolver("0D83C66D-D21C-401B-8F5B-C1E73CB713A0");
         }
 
         #region Auth
@@ -116,56 +122,29 @@ namespace EtkBlazorApp.DataAccess
         #region ShopAccount
         public async Task SaveShopAccount(ShopAccountEntity account)
         {
-            var sb = new StringBuilder();
 
-            if (account.website_id != 0)
-            {
-                sb
+            if(account.website_id == 0)
+            {                         
+                await SaveData<dynamic>("INSERT INTO etk_app_shop_account (account) VALUES ('')", new { });
+                account.website_id = await GetScalar<int, dynamic>($"SELECT max({nameof(account.website_id)}) FROM etk_app_shop_account", new { });
+            }
+
+            var sb = new StringBuilder()
                 .AppendLine("UPDATE etk_app_shop_account")
-                .AppendLine($"SET {nameof(account.title)} = @{nameof(account.title)},")
-                .AppendLine($"    {nameof(account.uri)} = @{nameof(account.uri)},")
-                .AppendLine($"    {nameof(account.ftp_host)} = @{nameof(account.ftp_host)},")
-                .AppendLine($"    {nameof(account.ftp_login)} = @{nameof(account.ftp_login)},")
-                .AppendLine($"    {nameof(account.ftp_password)} = @{nameof(account.ftp_password)},")
-                .AppendLine($"    {nameof(account.db_host)} = @{nameof(account.db_host)},")
-                .AppendLine($"    {nameof(account.db_login)} = @{nameof(account.db_login)},")
-                .AppendLine($"    {nameof(account.db_password)} = @{nameof(account.db_password)}")
+                .AppendLine($"SET account = @data")
                 .AppendLine($"WHERE {nameof(ShopAccountEntity.website_id)} = @{nameof(ShopAccountEntity.website_id)}");
-            }
-            else
-            {
-                sb
-                    .AppendLine("INSERT INTO etk_app_shop_account (")
-                    .AppendLine($"{nameof(account.title)},")
-                    .AppendLine($"{nameof(account.uri)},")
-                    .AppendLine($"{nameof(account.ftp_host)},")
-                    .AppendLine($"{nameof(account.ftp_login)},")
-                    .AppendLine($"{nameof(account.ftp_password)},")
-                    .AppendLine($"{nameof(account.db_host)},")
-                    .AppendLine($"{nameof(account.db_login)},")
-                    .AppendLine($"{nameof(account.db_password)}) VALUES (")
 
-                    .AppendLine($"@{nameof(account.title)},")
-                    .AppendLine($"@{nameof(account.uri)},")
-                    .AppendLine($"@{nameof(account.ftp_host)},")
-                    .AppendLine($"@{nameof(account.ftp_login)},")
-                    .AppendLine($"@{nameof(account.ftp_password)},")
-                    .AppendLine($"@{nameof(account.db_host)},")
-                    .AppendLine($"@{nameof(account.db_login)},")
-                    .AppendLine($"@{nameof(account.db_password)})");
-            }
-
+            string jsonData = JsonConvert.SerializeObject(account, jsonSettings);
             string sql = sb.ToString().Trim();
-            await SaveData(sql, account);
-
-            account.website_id = await GetScalar<int, dynamic>($"SELECT max({nameof(account.website_id)}) FROM etk_app_shop_account", new { });
+            await SaveData(sql, new { data = jsonData, website_id = account.website_id });
         }
 
         public async Task<List<ShopAccountEntity>> GetShopAccounts()
         {
             var sql = "SELECT * FROM etk_app_shop_account";
-            var data = await LoadData<ShopAccountEntity, dynamic>(sql, new { });
-            return data;
+            var encryptedData = await LoadData<dynamic, dynamic>(sql, new { });
+            var decruptedData = encryptedData.Select(item => (ShopAccountEntity)JsonConvert.DeserializeObject<ShopAccountEntity>(item.account, jsonSettings)).ToList();
+            return decruptedData;
         }
 
         public async Task DeleteShopAccounts(int id)
@@ -231,13 +210,21 @@ namespace EtkBlazorApp.DataAccess
                 foreach (var entry in logEntries) 
                 {
                     string sql = $"INSERT INTO etk_app_log (user, group_name, date_time, title, message) VALUES " +
-                        $"(@{nameof(entry.User)}, @{nameof(entry.GroupName)}, @{nameof(entry.DateTime)}, @{nameof(entry.Title)}, @{nameof(entry.Message)})";
+                        $"(@{nameof(entry.user)}, @{nameof(entry.group_name)}, @{nameof(entry.date_time)}, @{nameof(entry.title)}, @{nameof(entry.message)})";
 
                     await connection.ExecuteAsync(sql, entry);
                 }
             }
         }
+
+        public async Task<List<LogEntryEntity>> GetLogItems(int count)
+        {
+            string sql = $"SELECT * FROM etk_app_log ORDER BY date_time DESC LIMIT @limit";
+            var data = await LoadData<LogEntryEntity, dynamic>(sql, new { limit = count });
+            return data.ToList();
+        }
         #endregion
+
         #region private
         private async Task<List<T>> LoadData<T, U>(string sql, U parameters)
         {

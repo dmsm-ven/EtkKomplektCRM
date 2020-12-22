@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "1vdLo6KifGmxQcCRxQrR3NRB1z4KJH2NH+Cf4Zuyiasi1dmH2BZR1mY527kMfsOFhSScO8j5Y+1DuWCFwG9TVw==",
+  "dgSpecHash": "GgMA8uCgFffy8Ny24nI7qa7k4C9CqEVt71YU5qTF6K3SnBOqa/xb7Y5lA7anTi3OtyDMIyUoBIlsiJIxsF3N4Q==",
   "success": true,
   "projectFilePath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.DataAccess\\EtkBlazorApp.DataAccess.csproj",
   "expectedPackageFiles": [
@@ -20,6 +20,7 @@
     "C:\\Users\\user\\.nuget\\packages\\microsoft.win32.systemevents\\4.7.0\\microsoft.win32.systemevents.4.7.0.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\mysql.data\\8.0.22\\mysql.data.8.0.22.nupkg.sha512",
     "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder\\netstandard.library\\1.6.0\\netstandard.library.1.6.0.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\newtonsoft.json\\12.0.3\\newtonsoft.json.12.0.3.nupkg.sha512",
     "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder\\runtime.native.system\\4.0.0\\runtime.native.system.4.0.0.nupkg.sha512",
     "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder\\runtime.native.system.io.compression\\4.1.0\\runtime.native.system.io.compression.4.1.0.nupkg.sha512",
     "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder\\runtime.native.system.net.http\\4.0.1\\runtime.native.system.net.http.4.0.1.nupkg.sha512",

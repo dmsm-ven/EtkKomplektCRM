@@ -19,15 +19,19 @@ namespace EtkBlazorApp.BL.Managers
 
         public async Task<List<ShopAccountEntity>> GetMonobrandAccountConnections()
         {
-            if(monobrandAccountConnections == null)
-            {
-                monobrandAccountConnections = await etkDatabase.GetShopAccounts();
-            }
-
+            await RefreshAccountList();
             return monobrandAccountConnections;
         }
 
-        public async Task Update(int website_id, List<ProductUpdateData> data, bool clearStockBeforeUpdate)
+        public async Task RefreshAccountList(bool force = false)
+        {
+            if (monobrandAccountConnections == null || force)
+            {
+                monobrandAccountConnections = await etkDatabase.GetShopAccounts();
+            }
+        }
+
+        public async Task UpdatePriceAndStock(int website_id, List<ProductUpdateData> data, bool clearStockBeforeUpdate)
         {
             if (data.Any())
             {

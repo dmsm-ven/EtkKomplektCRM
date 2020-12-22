@@ -2366,7 +2366,8 @@
         "framework": ".NETCoreApp,Version=v5.0",
         "dependencies": {
           "EPPlus": "5.4.2",
-          "EtkBlazorApp.DataAccess": "1.0.0"
+          "EtkBlazorApp.DataAccess": "1.0.0",
+          "Newtonsoft.Json": "12.0.3"
         },
         "compile": {
           "bin/placeholder/EtkBlazorApp.BL.dll": {}
@@ -2382,6 +2383,7 @@
           "Dapper": "2.0.78",
           "Microsoft.Extensions.Configuration": "5.0.0",
           "MySql.Data": "8.0.22",
+          "Newtonsoft.Json": "12.0.3",
           "SSH.NET": "2016.1.0"
         },
         "compile": {

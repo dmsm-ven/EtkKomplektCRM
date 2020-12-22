@@ -42,7 +42,7 @@
         navigation.NavigateTo("/");
 
         await localStorage.SetAsync("user_login", user.Login);
-        await localStorage.SetAsync("user_password", user.Password);
+        await localStorage.SetAsync("user_password", user.Password);     
 
         return await Task.FromResult(true);
     }

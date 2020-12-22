@@ -98,7 +98,7 @@ else
             var updateData = await correlator.GetCorrelationData(products, priceListManager.PriceLines);
             reportManager.WebsiteUpdatedData.Info[account.Id] = updateData;
 
-            await databaseManager.Update(account.Id, updateData, clearStockBeforeUpdate);
+            await databaseManager.UpdatePriceAndStock(account.Id, updateData, clearStockBeforeUpdate);
 
             toastService.ShowError($"Сайт [{account.Uri}] обновлен ({updateData.Count}) товара(ов)", "Информация");
         }

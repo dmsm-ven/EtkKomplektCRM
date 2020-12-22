@@ -24,5 +24,6 @@ namespace EtkBlazorApp.DataAccess
         Task<int> GetUserBadPasswordTryCounter(string ip);
 
         Task AddLogEntries(IEnumerable<LogEntryEntity> logEntries);
+        Task<List<LogEntryEntity>> GetLogItems(int count);
     }
 }

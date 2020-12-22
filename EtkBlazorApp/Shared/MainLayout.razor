@@ -1,6 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IToastService toastService
+@inject MyDbLogger logger
 @using System.Globalization
 
 <AuthorizeView>
@@ -32,7 +33,7 @@
         <div class="main">
             <div class="content px-4">
                 <EtkBlazorApp.Pages.Login></EtkBlazorApp.Pages.Login>
-            </div>        
+            </div>
         </div>
     </NotAuthorized>
 </AuthorizeView>

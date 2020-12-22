@@ -36,8 +36,7 @@ namespace EtkBlazorApp.Services
                 { 
                     Login = login.Value, 
                     Password = password.Value 
-                });
-                logger.AuthenticationState = state;
+                });                
                 return state;           
             }
 
@@ -51,7 +50,7 @@ namespace EtkBlazorApp.Services
             
             if(userData.InvalidPasswordCounter >= PASSWORD_MAX_ENTER_TRY)
             {
-                logger.Write(LogEntryGroupName.Auth, "Авторизация", $"Превышено количество попыток входа для {userData.Login} с паролем {userData.Password}");
+                logger.Write(LogEntryGroupName.Auth, "Неудача", $"Превышено количество попыток входа пользователя {userData.Login}");
                 return GetDefaultState();
             }
 
@@ -59,7 +58,7 @@ namespace EtkBlazorApp.Services
 
             if (string.IsNullOrWhiteSpace(permission))
             {
-                logger.Write(LogEntryGroupName.Auth, "Авторизация", $"Неудачная попытка входа для {userData.Login} с паролем {userData.Password}");
+                logger.Write(LogEntryGroupName.Auth, "Неудача", $"Неудачная попытка входа для {userData.Login} с паролем {userData.Password}");
                 await db.SetUserBadPasswordTryCounter(userData.IP, userData.InvalidPasswordCounter + 1);
                 return GetDefaultState();
             }        
@@ -74,18 +73,22 @@ namespace EtkBlazorApp.Services
 
             NotifyAuthenticationStateChanged(Task.FromResult(state));
 
+            logger.AuthenticationState = state;
+            logger.Write(LogEntryGroupName.Auth, "Вход", $"Пользователь Вошел");
+
             await db.SetUserBadPasswordTryCounter(userData.IP, 0);
             return state;
         }  
         
         public async Task LogOutUser()
-        {
-            
-
+        {            
             string userName = (await storage.GetAsync<string>("user_login")).Value ?? string.Empty;
-
+          
             await storage.DeleteAsync("user_login");
             await storage.DeleteAsync("user_password");
+
+            logger.Write(LogEntryGroupName.Auth, "Выход", $"Пользователь вышел");
+            logger.AuthenticationState = null;
 
             NotifyAuthenticationStateChanged(Task.FromResult(GetDefaultState()));            
         }

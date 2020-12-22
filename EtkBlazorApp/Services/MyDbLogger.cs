@@ -12,7 +12,7 @@ namespace EtkBlazorApp.Services
     public class MyDbLogger : IAsyncDisposable
     {
         private readonly IDatabase db;
-        private readonly Queue<LogEntryEntity> queue;
+        private readonly List<LogEntryEntity> items;
         private readonly Timer timer;
 
         public AuthenticationState AuthenticationState { get; set; }
@@ -22,7 +22,7 @@ namespace EtkBlazorApp.Services
         public MyDbLogger(IDatabase db)
         {
             this.db = db;
-            queue = new Queue<LogEntryEntity>();
+            items = new List<LogEntryEntity>();
             timer = new Timer(SendEnterval.TotalMilliseconds);
             timer.Elapsed += async (o, e) => await Send();
             timer.Start();
@@ -30,26 +30,22 @@ namespace EtkBlazorApp.Services
 
         public void Write(LogEntryGroupName group, string title, string message, string user = null)
         {
-            queue.Enqueue(new LogEntryEntity() 
+            items.Add(new LogEntryEntity() 
             { 
-                User = (user ?? AuthenticationState?.User?.Identity?.Name) ?? "Нет данных", 
-                DateTime = DateTime.Now, 
-                GroupName = group, 
-                Title = title, 
-                Message = message
+                user = (user ?? AuthenticationState?.User?.Identity?.Name) ?? "Нет данных", 
+                date_time = DateTime.Now, 
+                group_name = group, 
+                title = title, 
+                message = message
             });
         }
 
-        public async Task Flush()
+        public async Task Send()
         {
-            await db.AddLogEntries(queue.ToList());
-        }
-
-        private async Task Send()
-        {
-            if (queue.Count > 0)
+            if (items.Count > 0)
             {
-                await db.AddLogEntries(queue.ToList());
+                await db.AddLogEntries(items);
+                items.Clear();
             }
         }
 
