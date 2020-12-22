@@ -58,7 +58,7 @@ namespace EtkBlazorApp.Services
 
             if (string.IsNullOrWhiteSpace(permission))
             {
-                logger.Write(LogEntryGroupName.Auth, "Неудача", $"Неудачная попытка входа для {userData.Login} с паролем {userData.Password}");
+                logger.Write(LogEntryGroupName.Auth, "Неудача", $"Неудачная попытка входа {userData.Login}");
                 await db.SetUserBadPasswordTryCounter(userData.IP, userData.InvalidPasswordCounter + 1);
                 return GetDefaultState();
             }        

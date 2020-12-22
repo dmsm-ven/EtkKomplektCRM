@@ -24,7 +24,7 @@ namespace EtkBlazorApp.Services
             this.db = db;
             items = new List<LogEntryEntity>();
             timer = new Timer(SendEnterval.TotalMilliseconds);
-            timer.Elapsed += async (o, e) => await Send();
+            timer.Elapsed += async (o, e) => await Flush();
             timer.Start();
         }
 
@@ -40,7 +40,7 @@ namespace EtkBlazorApp.Services
             });
         }
 
-        public async Task Send()
+        public async Task Flush()
         {
             if (items.Count > 0)
             {
@@ -51,7 +51,7 @@ namespace EtkBlazorApp.Services
 
         public async ValueTask DisposeAsync()
         {
-            await Send();
+            await Flush();
         }
     }
 }
