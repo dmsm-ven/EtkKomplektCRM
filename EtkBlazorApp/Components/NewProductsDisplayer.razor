@@ -7,35 +7,32 @@
 else
 {
     <div class="container">
-        @for(int row = 0; row < ProductsCount; row += ItemsPerRow)
-        {
         <div class="row">
-            @foreach (var product in products.Skip(row).Take(ItemsPerRow))
+            @foreach (var product in products)
             {
-            <div class="col-md-@(12/ItemsPerRow) product-item">
-                <a href="https://etk-komplekt.ru/index.php?route=product/product&product_id=@product.product_id" target="_blank">
-                    <div class="product-item-inner shadow">
-                        <div class="product-item-manufacturer">
-                            <p>@product.manufacturer</p>
-                        </div>
-                        <div class="product-item-date">
-                            <p>Добавлен: <span style="color: blue;">@product.date_added.ToString("d")</span></p>
-                        </div>
+                <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12 product-item">
+                    <a href="https://etk-komplekt.ru/index.php?route=product/product&product_id=@product.product_id" target="_blank">
+                        <div class="product-item-inner shadow">
+                            <div class="product-item-manufacturer">
+                                <p>@product.manufacturer</p>
+                            </div>
+                            <div class="product-item-date">
+                                <p>Добавлен: <span style="color: blue;">@product.date_added.ToString("d")</span></p>
+                            </div>
 
-                        <img src="@("https://etk-komplekt.ru/image/" + product.image)"
-                             style="width: 100%; height: 100%;"
-                             class="figure-img img-fluid rounded" alt="@(product.name ?? "Товар без назания")">
+                            <img src="@("https://etk-komplekt.ru/image/" + product.image)"
+                                    style="width: 100%; height: 100%;"
+                                    class="figure-img img-fluid rounded" alt="@(product.name ?? "Товар без назания")">
 
-                        <div class="product-item-info">
-                            <p class="product-name">@(product.name ?? "Товар без назания")</p>
-                            <p class="product-price">@product.price.ToString("C0")</p>
+                            <div class="product-item-info">
+                                <p class="product-name">@(product.name ?? "Товар без назания")</p>
+                                <p class="product-price">@product.price.ToString("C0")</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-            </div>
+                    </a>
+                </div>
             }
         </div>
-        }
     </div>
 }
 
@@ -44,13 +41,15 @@ else
     [Parameter]
     public int ProductsCount { get; set; } = 6;
 
-    [Parameter]
-    public int ItemsPerRow { get; set; } = 3;
-
     List<ProductEntity> products = null;
 
     protected override async Task OnInitializedAsync()
     {
+        if(ProductsCount >= 32)
+        {
+            ProductsCount = 32;
+        }
+
         products = await database.GetLastAddedProducts(ProductsCount);
     }
 }

@@ -22,6 +22,7 @@ namespace EtkBlazorApp.DataAccess
             this.configuration = configuration;
         }
 
+        #region Auth
         public async Task<string> GetUserPermission(string login, string password)
         {
             var sb = new StringBuilder()
@@ -39,6 +40,44 @@ namespace EtkBlazorApp.DataAccess
 
             return permission;
         }
+
+        public async Task SetUserBadPasswordTryCounter(string ip, int tryCount)
+        {
+            string sql = "UPDATE etk_app_ban_list SET current_try_counter = @tryCount, last_access = NOW() WHERE ip = @ip";
+
+            await SaveData<dynamic>(sql, new { tryCount, ip });
+        }
+
+        public async Task<int> GetUserBadPasswordTryCounter(string ip)
+        {
+            dynamic param = new { ip };
+
+            var sb = new StringBuilder()
+                .AppendLine("SELECT IF( EXISTS(SELECT * FROM etk_app_ban_list WHERE ip = @ip),")
+                .AppendLine("(SELECT current_try_counter FROM etk_app_ban_list WHERE ip = @ip), ")
+                .AppendLine("-1)");
+
+            string sql = sb.ToString().Trim();
+            int tryCount = await GetScalar<int, dynamic>(sql, param);
+
+            if(tryCount == -1)
+            {
+                try
+                {
+                    await SaveData<dynamic>("INSERT INTO etk_app_ban_list (ip) VALUES (@ip)", param);
+                }
+                catch(Exception ex)
+                {
+
+                }
+                tryCount = 0;
+            }
+
+            return tryCount;
+
+
+        }
+        #endregion
 
         #region Product
 

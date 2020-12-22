@@ -10,5 +10,8 @@ namespace EtkBlazorApp.BL.Data
         [Required(ErrorMessage = "Поле пароль обязательно для заполнения")]
         [StringLength(maximumLength: 16, MinimumLength = 6, ErrorMessage = "Минимальная длина пароля 6 символов")]
         public string Password { get; set; }
+
+        public string IP { get; set; }
+        public int InvalidPasswordCounter { get; set; }
     }
 }

@@ -4,12 +4,12 @@
     "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp\\EtkBlazorApp.csproj": {}
   },
   "projects": {
-    "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.API\\EtkBlazorApp.API.csproj": {
+    "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.API\\EtkBlazorApp.Integration.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.API\\EtkBlazorApp.API.csproj",
-        "projectName": "EtkBlazorApp.API",
-        "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.API\\EtkBlazorApp.API.csproj",
+        "projectUniqueName": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.API\\EtkBlazorApp.Integration.csproj",
+        "projectName": "EtkBlazorApp.Integration",
+        "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.API\\EtkBlazorApp.Integration.csproj",
         "packagesPath": "C:\\Users\\user\\.nuget\\packages\\",
         "outputPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.API\\obj\\",
         "projectStyle": "PackageReference",
@@ -245,8 +245,8 @@
           "net5.0": {
             "targetAlias": "net5.0",
             "projectReferences": {
-              "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.API\\EtkBlazorApp.API.csproj": {
-                "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.API\\EtkBlazorApp.API.csproj"
+              "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.API\\EtkBlazorApp.Integration.csproj": {
+                "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.API\\EtkBlazorApp.Integration.csproj"
               },
               "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.BL\\EtkBlazorApp.BL.csproj": {
                 "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.BL\\EtkBlazorApp.BL.csproj"

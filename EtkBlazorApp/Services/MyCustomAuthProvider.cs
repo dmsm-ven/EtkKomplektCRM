@@ -2,7 +2,7 @@
 using EtkBlazorApp.DataAccess;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
-using Serilog;
+using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -11,12 +11,16 @@ namespace EtkBlazorApp.Services
     public class MyCustomAuthProvider : AuthenticationStateProvider
     {
         private readonly IDatabase db;
+        private readonly IHttpContextAccessor httpContextAccessor;
         private readonly ProtectedLocalStorage storage;
+        private readonly int PASSWORD_MAX_ENTER_TRY = 5;
 
-        public MyCustomAuthProvider(IDatabase db, ProtectedLocalStorage storage)
+
+        public MyCustomAuthProvider(IDatabase db, IHttpContextAccessor httpContextAccessor, ProtectedLocalStorage storage)
         {
             this.db = db;
             this.storage = storage;
+            this.httpContextAccessor = httpContextAccessor;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -28,8 +32,8 @@ namespace EtkBlazorApp.Services
                 var state = await AuthenticateUser(new AppUser() 
                 { 
                     Login = login.Value, 
-                    Password = password.Value }
-                );
+                    Password = password.Value 
+                });
                 return state;           
             }
 
@@ -38,13 +42,21 @@ namespace EtkBlazorApp.Services
 
         public async Task<AuthenticationState> AuthenticateUser(AppUser userData)
         {
-            var permission = await db.GetUserPermission(userData.Login, userData.Password);
-
-            if(string.IsNullOrWhiteSpace(permission))
+            userData.IP = httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
+            userData.InvalidPasswordCounter = await db.GetUserBadPasswordTryCounter(userData.IP);
+            
+            if(userData.InvalidPasswordCounter >= PASSWORD_MAX_ENTER_TRY)
             {
-                Log.Warning($"Не верный ввод пароль '{userData.Login}' | '{userData.Password}'");
-                return GetDefaultState(); 
+                return GetDefaultState();
             }
+
+            string permission = await db.GetUserPermission(userData.Login, userData.Password);
+
+            if (string.IsNullOrWhiteSpace(permission))
+            {
+                await db.SetUserBadPasswordTryCounter(userData.IP, userData.InvalidPasswordCounter + 1);
+                return GetDefaultState();
+            }        
 
             var identity = new ClaimsIdentity(new[]
             {
@@ -56,15 +68,14 @@ namespace EtkBlazorApp.Services
             var state = new AuthenticationState(user);
 
             NotifyAuthenticationStateChanged(Task.FromResult(state));
-
-            Log.Information($"Пользователь '{userData.Login}' залогинился");
+           
+            await db.SetUserBadPasswordTryCounter(userData.IP, 0);
             return state;
         }  
         
         public async Task LogOutUser()
         {
             string userName = (await storage.GetAsync<string>("user_login")).Value ?? string.Empty;
-            Log.Information($"Пользователь '{userName}' разлогинился");
 
             await storage.DeleteAsync("user_login");
             await storage.DeleteAsync("user_password");

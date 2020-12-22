@@ -1,70 +1,138 @@
 ﻿@page "/log"
 @attribute [Authorize(Roles = "Administrator")]
+@using System.Collections.ObjectModel;
+@using System.ComponentModel;
 
-<style>
-    .log-table th {
-        height: 24px;
-        font-size: 16px;
-        border: none;
-        border-bottom: 3px solid black;
-    }
 
-    .log-table td {
-        height: 14px;
-        font-size: 9px;
-    }
+<h3>Журнал событий приложения</h3>
+@if (testItems == null)
+{
+    <LoadingSpinner />
+}
+else
+{
+    <div class="container-fluid">
 
-    .log-table tr, .log-table td {
-        border: none;
-        border-bottom: 1px solid lightgray;
-    }
-</style>
+        <div class="row my-5">
+            <div class="col-md-3">
+                <label for="filter-user">Пользователь</label>
+                <select name="filter-user" class="form-control" @onchange="@(e => selectedUser = e.Value.ToString())">
+                    <option value="">Все</option>
+                    @foreach (var user in users)
+                    {
+                        <option value="@user">@user</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="filter-group-name">Категория</label>
+                <select name="filter-group-name" class="form-control" @onchange="SelectedGroupFilterChanged">
+                    <option value="">Все</option>
+                    @foreach (var group in (LogEntryGroupName[])Enum.GetValues(typeof(LogEntryGroupName)))
+                    {
+                <option value="@group">@group.GetDescriptionAttribute()</option>
+                    }
+                </select>
+            </div>
 
-<div class="container-fluid">
-    <h3>Журнал событий приложения</h3>
-    
-    <div class="table-responsive">
+            <div class="col-md-3 offset-3">
+                <button class="btn btn-success" @onclick="ApplyFilter">Обновить фильтр</button>
+            </div>
+        </div>
+
         <table class="table table-striped log-table">
             <thead class="thead-etk">
                 <tr>
                     <th>Дата|Время</th>
                     <th>Пользователь</th>
+                    <th>Группа</th>
                     <th>Действией</th>
                 </tr>
             </thead>
             <tbody>
-                @*<Virtualize Items="@logEntries" ItemSize="16">
+                <Virtualize Items="testItems" ItemSize="14" TItem="LogEntryEntity">
                     <ItemContent>
-                        <tr @key="context.GetHashCode()" class="px-1 py-1 mx-1 my-1">
-                            <td></td>
-                            <td></td>
-                            <td></td>
+                        <tr @key="context.GetHashCode()">
+                            <td>@context.DateTime.ToString("G")</td>
+                            <td>@context.User</td>
+                            <td>@context.GroupName</td>
+                            <td>@context.Message</td>
                         </tr>
                     </ItemContent>
                     <Placeholder>
-                        <tr colspan="2">
+                        <tr colspan="4">
                             <LoadingSpinner></LoadingSpinner>
                         </tr>
                     </Placeholder>
-                </Virtualize>*@
+                </Virtualize>
             </tbody>
         </table>
-    </div>
 
-    <div class="row">
-        <p>Тут пагинанатор</p>
     </div>
-</div>
+}
 
 @code {
-    const int testEntriesCount = 5000;
 
-    public IEnumerable<LogEntryEntity> logEntries = Enumerable.Range(1, testEntriesCount)
-        .Select(number => new LogEntryEntity()
-        {
-            Id = number + 1,
-            DateTime = DateTime.Now.AddMinutes(-(testEntriesCount/2) + number),
-            User = "test user",
-            Action = "Действией пользователя"
-        });
+    List<LogEntryEntity> source = null;
+    List<LogEntryEntity> testItems = null;
+
+    List<string> users;
+
+    string selectedUser;
+    LogEntryGroupName? selectedGroup;
+
+    protected override async Task OnInitializedAsync()
+    {
+        source = await LoadEntries();
+        testItems = source;
+
+        users = testItems.Select(item => item.User).OrderBy(u => u).Distinct().ToList();
+        StateHasChanged();
     }
+
+    private void ApplyFilter()
+    {
+        IEnumerable<LogEntryEntity> tempSource = source;
+
+        if (!string.IsNullOrWhiteSpace(selectedUser))
+        {
+            tempSource = tempSource.Where(entry => entry.User.Equals(selectedUser, StringComparison.OrdinalIgnoreCase));
+        }
+        if (selectedGroup != null)
+        {
+            tempSource = tempSource.Where(entry => entry.GroupName == selectedGroup);
+        }
+
+        testItems = tempSource.ToList();
+        StateHasChanged();
+    }
+
+    private void SelectedGroupFilterChanged(ChangeEventArgs e)
+    {
+        if(string.IsNullOrWhiteSpace(e.Value.ToString()))
+        {
+            selectedGroup = null;
+        }
+        else
+        {
+            selectedGroup = (LogEntryGroupName)Enum.Parse<LogEntryGroupName>(e.Value.ToString());
+        }
+    }
+
+    public async Task<List<LogEntryEntity>> LoadEntries()
+    {
+        var data = Enumerable
+            .Range(1, 5000)
+            .Select(number => new LogEntryEntity()
+            {
+                Id = number,
+                DateTime = DateTime.Now.AddMinutes(-(5000 / 2) + number),
+                GroupName = (LogEntryGroupName)Enum.GetValues(typeof(LogEntryGroupName)).GetValue((int)new Random().Next(0, Enum.GetValues(typeof(LogEntryGroupName)).Length)),
+                User = "User" + new Random().Next(1,5),
+                Message = "Действией пользователя"
+            })
+            .ToList();
+
+        return data;
+    }
+}

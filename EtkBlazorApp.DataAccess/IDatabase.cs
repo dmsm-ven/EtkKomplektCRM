@@ -20,5 +20,7 @@ namespace EtkBlazorApp.DataAccess
         Task<List<ProductEntity>> GetLastAddedProducts(int count);
 
         Task<string> GetUserPermission(string login, string password);
+        Task SetUserBadPasswordTryCounter(string ip, int tryCount);
+        Task<int> GetUserBadPasswordTryCounter(string ip);
     }
 }

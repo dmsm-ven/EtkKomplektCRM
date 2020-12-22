@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Net.Http.Headers;
 using System.Text;
 
-namespace EtkBlazorApp.API.Ozon
+namespace EtkBlazorApp.Integration.Ozon
 {
     //Актуальная (рабочая) версия в EtkKomplekt windows приложении
     public class OzonSellerApi

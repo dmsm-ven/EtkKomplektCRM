@@ -2,16 +2,17 @@
 @inject AuthenticationStateProvider authenticationStateProvider
 @inject NavigationManager navigation
 @inject ProtectedLocalStorage localStorage
+@inject IToastService toastService
 
 <center style="background: linear-gradient(to right, #4bddc4 0%, #466085); padding: 20px 0px;">
     <div class="col-12 row">
         <div class="col-4">
-            <img src="./image/logotips/etk-logo.png" width="250" height="250"/>
+            <img src="./image/logotips/etk-logo.png" width="250" height="250" />
         </div>
 
         <div class="col-4">
             <EditForm Model="@user" OnValidSubmit="@ValidateUser">
-                <DataAnnotationsValidator/>
+                <DataAnnotationsValidator />
                 <ValidationSummary />
                 <div>
                     <h3 style="color: white;">Авторизация</h3>
@@ -32,16 +33,12 @@
 
 @code {
 
-    private AppUser user;
-
-    protected override void OnInitialized()
-    {
-        user = new AppUser();
-    }
+    static AppUser user = new AppUser();
 
     private async Task<bool> ValidateUser()
     {
         await ((MyCustomAuthProvider)authenticationStateProvider).AuthenticateUser(user);
+
         navigation.NavigateTo("/");
 
         await localStorage.SetAsync("user_login", user.Login);

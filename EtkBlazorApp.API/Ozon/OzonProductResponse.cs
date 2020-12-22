@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace EtkBlazorApp.API.Ozon
+namespace EtkBlazorApp.Integration.Ozon
 {
     public class OzonProductListRootObjectModel
     {

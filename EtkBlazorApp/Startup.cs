@@ -1,5 +1,5 @@
 using Blazored.Toast;
-using EtkBlazorApp.API.Ozon;
+using EtkBlazorApp.Integration.Ozon;
 using EtkBlazorApp.BL;
 using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.DataAccess;
@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using EtkBlazorApp.BL.Data;
 
 namespace EtkBlazorApp
 {
@@ -32,16 +33,15 @@ namespace EtkBlazorApp
             services.AddSingleton<IDatabaseProductCorrelator, SimpleDatabaseProductCorrelator>();
             services.AddSingleton<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
             services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
-
             services.AddSingleton<IDatabase, DapperMySql>();
             services.AddSingleton<DatabaseManager>();
-
             services.AddSingleton<PriceListManager>();
             services.AddSingleton<ReportManager>();          
             services.AddSingleton<NewOrdersNotificationService>();
-            services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();
             services.AddSingleton<OzonSellerApi>();
-            
+
+            services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();        
+            services.AddHttpContextAccessor();
 
             //Сторонние
             services.AddBlazoredToast();

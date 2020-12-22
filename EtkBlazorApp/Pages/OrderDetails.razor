@@ -8,49 +8,55 @@
 }
 else
 {
-    <h3>Детали заказа</h3>
+    <h1>Детали заказа</h1>
     <div class="container-fluid">
 
+        <h3>Основные данные</h3>
         <div class="row order-details-row">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <p>Номер заказа</p>
                 <input type="text" readonly value="#@order.OrderId" class="form-control" />
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <p>Дата заказа</p>
                 <input type="text" readonly value="@order.DateTime.ToString("g")" class="form-control" />
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <p>Заказчик</p>
                 <input type="text" readonly value="@order.Customer" class="form-control" />
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <p>Город</p>
                 <input type="text" readonly value="@order.City" class="form-control" />
             </div>
-        </div>
-        <div class="row order-details-row">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <p>Телефон заказчика</p>
-                <input type="text" readonly value="#@order.CustomerPhoneNumber" class="form-control" />
+                <input type="text" readonly value="@order.CustomerPhoneNumber" class="form-control" />
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <p>Email заказчика</p>
                 <input type="text" readonly value="@order.CustomerEmail" class="form-control" />
             </div>
-            <div class="col-md-3">
+        </div>
+
+        <h3>Доставка</h3>
+        <div class="row order-details-row">
+            <div class="col-md-6">
                 <p>Адрес доставки</p>
                 <input type="text" readonly value="@order.ShippingAddress" class="form-control" />
             </div>
-            <div class="col-md-3">
+            <div class="col-md-6">
                 <p>Метод доставки</p>
                 <input type="text" readonly value="@order.ShippingMethod" class="form-control" />
             </div>
         </div>
+
+        <h3>Оплата</h3>
         <div class="row order-details-row">
-            <div class="col-md-3">
+
+            <div class="col-md-12">
                 <p>Вид оплаты</p>
-                <input type="text" readonly value="#@order.PaymentMethod" class="form-control" />
+                <input type="text" readonly value="@order.PaymentMethod" class="form-control" />
             </div>
         </div>
 

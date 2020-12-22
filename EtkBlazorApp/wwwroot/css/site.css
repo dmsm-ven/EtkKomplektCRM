@@ -1,19 +1,6 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
-.etk-logo-image {
-    opacity: 0.25;
-    display: block;
-    margin-right: 4px;
-    width: auto;
-    height: 100%;
-}
-
-    .etk-logo-image:hover {
-        transition: 100ms;
-        opacity: 1;
-    }
-
 .nav-menu-image {
     width: 20px;
     height: 20px;
@@ -35,8 +22,12 @@
 
 .product-item-inner {
     border: 2px solid #50093c;
+    border-radius: 3px;
 }
 
+.product-item:hover .product-item-inner {
+    border: 2px solid #AF8ECD;
+}
 
 .product-item-info {
     width: 100%;
@@ -74,9 +65,6 @@
         text-decoration: none;
     }
 
-.product-item:hover .product-item-inner {
-    border: 2px solid #AF8ECD;
-}
 
 .product-item-inner p .product-name {
     display: block;
