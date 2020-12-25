@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>   
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,6 +10,16 @@
     <PackageReference Include="MySql.Data" Version="8.0.22" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="SSH.NET" Version="2016.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Diagnostics.Debug" Version = "4.3.0" />
+    <PackageReference Include="System.Globalization" Version = "4.3.0" />
+    <PackageReference Include="System.IO.FileSystem" Version = "4.3.0" />
+    <PackageReference Include="System.IO.FileSystem.Primitives" Version = "4.3.0" />
+    <PackageReference Include="System.Net.Primitives" Version = "4.3.0" />
+    <PackageReference Include="System.Runtime.Extensions" Version = "4.3.0" />
+    <PackageReference Include="System.Threading" Version = "4.3.0" />
   </ItemGroup>
 
 </Project>

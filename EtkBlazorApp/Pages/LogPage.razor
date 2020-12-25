@@ -2,7 +2,6 @@
 @attribute [Authorize(Roles = "Administrator")]
 @inject IDatabase database
 @inject MyDbLogger logger
-@using System.Web
 
 
 <h3>Журнал событий приложения</h3>
@@ -40,8 +39,6 @@ else
 
                 <label class="btn btn-primary @(filterMaxDays == 1 ? "active" : string.Empty)" @onclick="@(e => filterMaxDays = 1)">
                     <input type="radio" name="options" id="option_day" autocomplete="off"> За сегодня
-                    <br />
-                    @DateTime.Now.ToString("dd ddd")
                 </label>
             </div>
         </div>
@@ -81,8 +78,6 @@ else
 
         </div>
 
-
-
         <table class="table table-striped log-table">
             <thead class="thead-etk">
                 <tr>
@@ -112,7 +107,6 @@ else
                 </Virtualize>
             </tbody>
         </table>
-
     </div>
 }
 

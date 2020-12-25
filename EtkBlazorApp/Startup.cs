@@ -37,7 +37,7 @@ namespace EtkBlazorApp
             services.AddSingleton<IDatabaseProductCorrelator, SimpleDatabaseProductCorrelator>();
             services.AddSingleton<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
             services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
-            services.AddSingleton<IDatabase, DapperMySql>();    
+            services.AddSingleton<IDatabase, EtkDatabase>();    
             
             services.AddSingleton<DatabaseManager>();
             services.AddSingleton<PriceListManager>();

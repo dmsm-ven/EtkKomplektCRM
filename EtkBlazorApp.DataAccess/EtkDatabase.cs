@@ -12,14 +12,24 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.DataAccess
 {
-    public class DapperMySql : IDatabase
+    public class EtkDatabase : IDatabase
     {
         private readonly IConfiguration configuration;
         private readonly JsonSerializerSettings jsonSettings;
 
-        string ConnectionString => configuration.GetConnectionString("etk_db_connection");
+        string ConnectionString
+        {
+            get
+            {
+#if DEBUG
+                return configuration.GetConnectionString("local_server_db");
+#else
+                return configuration.GetConnectionString("prod_server_db");             
+#endif
+            }
+        }
 
-        public DapperMySql(IConfiguration configuration)
+        public EtkDatabase(IConfiguration configuration)
         {
             this.configuration = configuration;
 
@@ -65,7 +75,7 @@ namespace EtkBlazorApp.DataAccess
             string sql = sb.ToString().Trim();
             int tryCount = await GetScalar<int, dynamic>(sql, param);
 
-            if(tryCount == -1)
+            if (tryCount == -1)
             {
                 await SaveData<dynamic>("INSERT INTO etk_app_ban_list (ip) VALUES (@ip)", param);
                 tryCount = 0;
@@ -80,8 +90,8 @@ namespace EtkBlazorApp.DataAccess
         #region Product
 
         public async Task<List<ProductEntity>> GetLastAddedProducts(int count)
-        {          
-            if(count > 100)
+        {
+            if (count > 100)
             {
                 throw new ArgumentOutOfRangeException("Превышен предел запрашиваемых товаров (100)");
             }
@@ -122,8 +132,8 @@ namespace EtkBlazorApp.DataAccess
         public async Task SaveShopAccount(ShopAccountEntity account)
         {
 
-            if(account.website_id == 0)
-            {                         
+            if (account.website_id == 0)
+            {
                 await SaveData<dynamic>("INSERT INTO etk_app_monobrand (account) VALUES ('')", new { });
                 account.website_id = await GetScalar<int, dynamic>($"SELECT max({nameof(account.website_id)}) FROM etk_app_monobrand", new { });
             }
@@ -152,7 +162,7 @@ namespace EtkBlazorApp.DataAccess
             await SaveData<dynamic>(sql, new { website_id = id });
         }
         #endregion
-        
+
         #region Orders
         public async Task<List<OrderEntity>> GetLastOrders(int takeCount, string city = null)
         {
@@ -182,11 +192,11 @@ namespace EtkBlazorApp.DataAccess
         public async Task<List<OrderDetailsEntity>> GetOrderDetails(int orderId)
         {
             string sql = "SELECT op.*, p.sku as sku, m.name as manufacturer FROM oc_order_product op " +
-                "LEFT JOIN oc_product p ON op.product_id = p.product_id " + 
-                "LEFT JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id " + 
+                "LEFT JOIN oc_product p ON op.product_id = p.product_id " +
+                "LEFT JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id " +
                 "WHERE order_id = @Id";
 
-            var details = await LoadData<OrderDetailsEntity, dynamic> (sql, new { Id = orderId });
+            var details = await LoadData<OrderDetailsEntity, dynamic>(sql, new { Id = orderId });
 
             return details.ToList();
         }
@@ -206,7 +216,7 @@ namespace EtkBlazorApp.DataAccess
         {
             using (IDbConnection connection = new MySqlConnection(ConnectionString))
             {
-                foreach (var entry in logEntries) 
+                foreach (var entry in logEntries)
                 {
                     string sql = $"INSERT INTO etk_app_log (user, group_name, date_time, title, message) VALUES " +
                         $"(@{nameof(entry.user)}, @{nameof(entry.group_name)}, @{nameof(entry.date_time)}, @{nameof(entry.title)}, @{nameof(entry.message)})";
@@ -220,16 +230,16 @@ namespace EtkBlazorApp.DataAccess
         {
             string sql = $"SELECT * FROM etk_app_log ORDER BY date_time DESC LIMIT @limit";
 
-            if(maxDaysOld > 0)
+            if (maxDaysOld > 0)
             {
                 maxDaysOld *= -1;
                 sql = sql.Insert(sql.IndexOf("ORDER BY"), "WHERE DATE(date_time) >= ADDDATE(NOW(), INTERVAL @maxDaysOld DAY) ");
             }
-            else if(maxDaysOld < 0)
+            else if (maxDaysOld < 0)
             {
                 sql = sql.Insert(sql.IndexOf("ORDER BY"), "WHERE DATE(date_time) = DATE(ADDDATE(NOW(), INTERVAL @maxDaysOld DAY)) ");
             }
-            var data = await LoadData<LogEntryEntity, dynamic>(sql, new { limit = count , maxDaysOld });
+            var data = await LoadData<LogEntryEntity, dynamic>(sql, new { limit = count, maxDaysOld });
             return data.ToList();
         }
         #endregion
