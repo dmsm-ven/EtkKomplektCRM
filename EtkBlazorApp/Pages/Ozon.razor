@@ -1,70 +1,39 @@
 ﻿@page "/ozon"
 @attribute [Authorize(Roles = "Administrator, Manager")]
+@inject IToastService toastService
+@inject IManufacturerStorage manufacturerStorage
+@inject ISettingStorage settings
 
-<h3>Ozon Seller</h3>
-
-<div class="row">
-    <div class="btn-group" role="group" aria-label="Basic example">
-        <button type="button" class="btn btn-primary mx-2" @onclick="LoadOzonProducts">Загрузить все данные с озона</button>
-        <button type="button" class="btn btn-primary mx-2" @onclick="LoadEtkProducts">Загрузить данные с сайта</button>
-        <button type="button" class="btn btn-primary mx-2" @onclick="CreateCorrelationData" disabled="@correlationButtonDisabled">Найти и отобразить соответствия</button>
-        <button type="button" class="btn btn-primary mx-2" @onclick="UpdateOzonPrice" disabled="@updateOzonDataButtonDisabled">Обновить цены на OZON</button>
-        <button type="button" class="btn btn-primary mx-2" @onclick="UpdateOzonQuantity" disabled="@updateOzonDataButtonDisabled">Обновить остатки OZON</button>
-    </div>
-</div>
-
-<div class="row my-5">
-    <div class="table">
-        <table class="table">
-            <thead class="thead-etk">
-                <tr>
-                    <th>Товары озон</th>
-                    <th>Товары ЕТК</th>
-                    <th>Найдено сопоставлений</th>
-                    <th>Обновлено цены</th>
-                    <th>Обновлено остатки</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>@(ozonProducts?.Count ?? 0)</th>
-                    <th>@(etkProducts?.Count ?? 0)</th>
-                    <th>@(correlationData?.Count ?? 0)</th>
-                    <th>@(newPrice?.Count ?? 0)</th>
-                    <th>@(newQuantity?.Count ?? 0)</th>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-@if (ozonProducts != null)
+@if (manufacturerDiscounts == null)
 {
-    <div class="row my-5">
-        <div class="table">
-            <table class="table">
-                <thead class="thead-etk">
-                    <tr>
-                        <th>ozon_product_id</th>
-                        <th>offer_id</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <Virtualize Items="ozonProducts" ItemSize="30">
-                        <ItemContent>
-                            <tr @key="context.GetHashCode()">
-                                <td>@context.product_id</td>
-                                <td>@context.offer_id</td>
-                            </tr>
-                        </ItemContent>
-                        <Placeholder>
-                            <tr colspan="2">
-                                <LoadingSpinner></LoadingSpinner>
-                            </tr>
-                        </Placeholder>
-                    </Virtualize>
-                </tbody>
-            </table>
+    <LoadingSpinner />
+}
+else
+{
+    <h3>Ozon Seller</h3>
+    <div class="row">
+        <div class="col-lg-6 col-md-8 col-sm-12">
+            <div class="row">
+                <div class="col-md-6 col-sm-6">
+                    <button type="button" class="btn btn-primary" style="width: 100%;">Обновить остатки</button>
+                </div>
+                <div class="col-md-6 col-sm-6">
+                    <button type="button" class="btn btn-primary" style="width: 100%;">Обновить цены</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="ozon-manufacturer-discount-list col-sm-12">
+                    @foreach (var item in manufacturerDiscounts)
+                    {
+                        @if (!hasSeparator && !item.IsChecked)
+                        {
+                            <hr class="discount-list-separator" />
+                            hasSeparator = true;
+                        }
+                        <OzonManufacturerDiscountItem Item="item" ItemChanged="DiscountChanged" />
+                    }
+                </div>
+            </div>
         </div>
     </div>
 }
@@ -72,41 +41,52 @@
 @code {
 
     // ozon manager есть в etk-komplekt windows приложении
-    [Inject] private OzonSellerApi ozonApi { get; set; }
-    [Inject] private DatabaseManager databaseManager { get; set; }
+    [Inject] OzonSellerApi ozonApi { get; set; }
+    [Inject] DatabaseManager databaseManager { get; set; }
 
-    private List<OzonProductModel> ozonProducts = null;
-    private List<ProductEntity> etkProducts = null;
-    private Dictionary<OzonProductModel, ProductUpdateData> correlationData = null;
-    private Dictionary<OzonProductModel, decimal> newPrice = null;
-    private Dictionary<OzonProductModel, int> newQuantity = null;
+    private bool hasSeparator = false;
+    private bool needReloadSavedData = false;
 
-    private bool correlationButtonDisabled => ozonProducts == null;
-    private bool updateOzonDataButtonDisabled => ozonProducts == null || correlationData == null;
+    private List<OzonManufacturerDiscountViewModel> manufacturerDiscounts = null;
 
-    private async Task LoadOzonProducts()
+    private async Task DiscountChanged()
     {
-        ozonProducts = await ozonApi.GetAllProducts();
+        toastService.ShowSuccess("Скидка изменена");
+
+        var data = string.Join(";", manufacturerDiscounts.Where(m => m.IsChecked == true).Select(m => $"{m.Id}={m.Discount}"));
+        needReloadSavedData = true;
+
+        await settings.SetOzonDiscounts(data);
+
         StateHasChanged();
     }
 
-    private async Task LoadEtkProducts()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        etkProducts = await databaseManager.ReadProducts(0);
-    }
+        hasSeparator = false;
 
-    private async Task CreateCorrelationData()
-    {
+        if (firstRender || needReloadSavedData)
+        {
+            needReloadSavedData = false;
 
-    }
+            var manufacturers = await manufacturerStorage.GetManufacturers();
+            var discountData = (await settings.GetOzonDiscounts())
+                .Split(';')
+                .Select(data => data.Split('='))
+                .Select(array => new { manufacturer_id = int.Parse(array[0]), discount = int.Parse(array[1]) })
+                .ToDictionary(i => i.manufacturer_id, i => i.discount);
 
-    private async Task UpdateOzonPrice()
-    {
+            manufacturerDiscounts = manufacturers
+                .Select(manufacturer => new OzonManufacturerDiscountViewModel(manufacturer.name)
+                {
+                    Id = manufacturer.manufacturer_id,
+                    Discount = discountData.ContainsKey(manufacturer.manufacturer_id) ? discountData[manufacturer.manufacturer_id] : 0,
+                    IsChecked = discountData.ContainsKey(manufacturer.manufacturer_id) ? true : false,
+                })
+                .OrderByDescending(item => item.IsChecked)
+                .ToList();
 
-    }
-
-    private async Task UpdateOzonQuantity()
-    {
-
+            StateHasChanged();
+        }
     }
 }

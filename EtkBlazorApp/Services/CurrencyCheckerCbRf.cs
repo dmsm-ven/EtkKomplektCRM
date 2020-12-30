@@ -12,17 +12,19 @@ namespace EtkBlazorApp.Services
     public class CurrencyCheckerCbRf : ICurrencyChecker
     {
         Dictionary<CurrencyType, decimal> rates;
+        DateTime lastUpdate;
+        readonly TimeSpan expire_time = TimeSpan.FromHours(1);
 
         public async Task<decimal> GetCurrencyRate(CurrencyType type)
         {
-            if (rates == null)
+            if (rates == null || (lastUpdate + expire_time) < DateTime.Now)
             {
                 rates = await ReadCurrenciesFromCbRf();
             }
             return rates.ContainsKey(type) ? rates[type] : 0;
         }
 
-        private async static Task<Dictionary<CurrencyType, decimal>> ReadCurrenciesFromCbRf()
+        private async Task<Dictionary<CurrencyType, decimal>> ReadCurrenciesFromCbRf()
         {
             var dic = new Dictionary<CurrencyType, decimal>();
             //Инициализируем объекта типа XmlTextReader и
@@ -101,6 +103,7 @@ namespace EtkBlazorApp.Services
 
             dic[CurrencyType.USD] = usdValue;
             dic[CurrencyType.EUR] = euroValue;
+            lastUpdate = DateTime.Now;
 
             return dic;
         }

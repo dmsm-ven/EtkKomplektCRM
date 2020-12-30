@@ -1,5 +1,5 @@
 ﻿@page "/shop-account/{id}"
-@inject IDatabase database
+@inject ISettingStorage database
 @inject IToastService toastService
 @inject NavigationManager navigation
 @attribute [Authorize(Roles = "Administrator")]

@@ -2,7 +2,7 @@
 @attribute [Authorize(Roles = "Administrator, Manager")]
 @using EtkBlazorApp.DataAccess
 @using System.Web
-@inject IDatabase _database
+@inject IOrderStorage _database
 @inject IToastService toastService
 
 <h3>Заказы</h3>

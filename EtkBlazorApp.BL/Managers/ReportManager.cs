@@ -8,8 +8,7 @@ using System.Threading.Tasks;
 namespace EtkBlazorApp.BL.Managers
 {
     public class ReportManager
-    {
-        
+    {        
         public PrikatReportFormatter Prikat { get; } 
         public OzonReportFormatter Ozon { get; } 
         public WebsiteUpdatedDataFormatter WebsiteUpdatedData { get; } 

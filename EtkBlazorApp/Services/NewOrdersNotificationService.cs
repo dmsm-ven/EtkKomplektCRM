@@ -28,9 +28,9 @@ namespace EtkBlazorApp.Services
         Timer _refreshTimer;
         OrderEntity _lastOrder = null;
         bool _isFirstCheck = true;
-        readonly IDatabase _database;
+        readonly IOrderStorage _database;
 
-        public NewOrdersNotificationService(IDatabase database)
+        public NewOrdersNotificationService(IOrderStorage database)
         {
             _refreshTimer = new Timer();
             _refreshTimer.Elapsed += RefreshTimer_Elapsed;

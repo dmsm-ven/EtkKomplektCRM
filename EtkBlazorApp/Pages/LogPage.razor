@@ -1,7 +1,6 @@
 ﻿@page "/log"
 @attribute [Authorize(Roles = "Administrator")]
-@inject IDatabase database
-@inject MyDbLogger logger
+@inject ILogStorage database
 
 
 <h3>Журнал событий приложения</h3>
@@ -130,9 +129,6 @@ else
     private async Task ApplyFilter()
     {
         entries = null;
-
-        await logger.Flush();
-
 
         IEnumerable<LogEntryEntity> data = await database.GetLogItems(MAX_ITEMS, filterMaxDays);
         users = data.Select(item => item.user).OrderBy(u => u).Distinct().ToList();

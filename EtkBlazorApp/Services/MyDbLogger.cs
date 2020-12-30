@@ -1,57 +1,24 @@
 ﻿using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Model;
-using Microsoft.AspNetCore.Components.Authorization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Timers;
 
 namespace EtkBlazorApp.Services
 {
-    public class MyDbLogger : IAsyncDisposable
+    public class MyDbLogger
     {
-        private readonly IDatabase db;
-        private readonly List<LogEntryEntity> items;
-        private readonly Timer timer;
+        private readonly ILogStorage logStorage;
 
-        public AuthenticationState AuthenticationState { get; set; }
-
-        public TimeSpan SendEnterval { get; } = TimeSpan.FromSeconds(10);
-
-        public MyDbLogger(IDatabase db)
+        public MyDbLogger(ILogStorage logStorage)
         {
-            this.db = db;
-            items = new List<LogEntryEntity>();
-            timer = new Timer(SendEnterval.TotalMilliseconds);
-            timer.Elapsed += async (o, e) => await Flush();
-            timer.Start();
+            this.logStorage = logStorage;
         }
 
-        public void Write(LogEntryGroupName group, string title, string message, string user = null)
+        public async Task Write(LogEntryGroupName group, string user, string title, string message)
         {
-            items.Add(new LogEntryEntity() 
-            { 
-                user = (user ?? AuthenticationState?.User?.Identity?.Name) ?? "Нет данных", 
-                date_time = DateTime.Now, 
-                group_name = group, 
-                title = title, 
-                message = message
-            });
-        }
-
-        public async Task Flush()
-        {
-            if (items.Count > 0)
-            {
-                await db.AddLogEntries(items);
-                items.Clear();
-            }
-        }
-
-        public async ValueTask DisposeAsync()
-        {
-            await Flush();
+            await logStorage.Write(new LogEntryEntity() { date_time = DateTime.Now, user = user, title = title, group_name = group, message = message });
         }
     }
 }

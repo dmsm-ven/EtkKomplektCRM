@@ -28,7 +28,7 @@ namespace EtkBlazorApp
         {
             //Blazor default
             services.AddRazorPages();
-            services.AddServerSideBlazor();
+            services.AddServerSideBlazor().AddCircuitOptions(options => { options.DetailedErrors = true; });
 
             //Blazor additional
             services.AddHttpContextAccessor();
@@ -37,16 +37,24 @@ namespace EtkBlazorApp
             services.AddSingleton<IDatabaseProductCorrelator, SimpleDatabaseProductCorrelator>();
             services.AddSingleton<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
             services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
-            services.AddSingleton<IDatabase, EtkDatabase>();    
+
+            services.AddSingleton<IDatabaseAccess, EtkDatabaseDapperAccess>();
+            services.AddSingleton<IProductStorage, ProductStorage>();
+            services.AddSingleton<IOrderStorage, OrderStorage>();
+            services.AddSingleton<IManufacturerStorage, ManufacturerStorage>();
+            services.AddSingleton<ILogStorage, LogStorage>();
+            services.AddSingleton<ISettingStorage, SettingStorage>();
+            services.AddSingleton<IAuthStateProcessor, MyAuthStateProcessor>();
             
-            services.AddSingleton<DatabaseManager>();
-            services.AddSingleton<PriceListManager>();
-            services.AddSingleton<ReportManager>();          
             services.AddSingleton<NewOrdersNotificationService>();
+            services.AddSingleton<DatabaseManager>();
             services.AddSingleton<OzonSellerApi>();
 
-            services.AddSingleton<MyDbLogger>();
+            services.AddScoped<MyDbLogger>();
+            services.AddScoped<PriceListManager>();         
             services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();
+            services.AddScoped<ReportManager>();                    
+            
             
             //Сторонние
             services.AddBlazoredToast();

@@ -9,12 +9,12 @@ namespace EtkBlazorApp.BL.Managers
 {
     public class DatabaseManager
     {
-        private readonly IDatabase etkDatabase;
+        private readonly ISettingStorage settingsStorage;
         private List<ShopAccountEntity> monobrandAccountConnections;
 
-        public DatabaseManager(IDatabase etkDatabase)
+        public DatabaseManager(ISettingStorage settingsStorage)
         {
-            this.etkDatabase = etkDatabase;
+            this.settingsStorage = settingsStorage;
         }
 
         public async Task<List<ShopAccountEntity>> GetMonobrandAccountConnections()
@@ -27,7 +27,7 @@ namespace EtkBlazorApp.BL.Managers
         {
             if (monobrandAccountConnections == null || force)
             {
-                monobrandAccountConnections = await etkDatabase.GetShopAccounts();
+                monobrandAccountConnections = await settingsStorage.GetShopAccounts();
             }
         }
 

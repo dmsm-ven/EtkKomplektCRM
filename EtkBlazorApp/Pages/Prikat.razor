@@ -1,4 +1,94 @@
 ﻿@page "/prikat"
 @attribute [Authorize(Roles = "Administrator, Manager")]
+@inject IToastService toastService
+@inject ISettingStorage settings
+@inject IManufacturerStorage manufacturerStorage
 
-<h1>Выгрузка для ВсеИнструменты</h1>
+@if (manufacturerDiscounts == null)
+{
+    <LoadingSpinner />
+}
+else
+{
+    <h3>ВсеИснтрументы</h3>
+    <div class="row">
+        <div class="col-lg-6 col-md-8 col-sm-12">
+            <div class="row">
+                <div class="col-md-6 col-sm-6">
+                    <button type="button" class="btn btn-vi" style="width: 100%;">Обновить остатки</button>
+                </div>
+                <div class="col-md-6 col-sm-6">
+                    <button type="button" class="btn btn-vi" style="width: 100%;">Обновить цены</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="prikat-manufacturer-discount-list col-sm-12">
+                    @foreach (var item in manufacturerDiscounts)
+                    {
+                        @if (!hasSeparator && !item.IsChecked)
+                        {
+                            <hr class="discount-list-separator" />
+                            hasSeparator = true;
+                        }
+                        <PrikatManufacturerDiscountItem Item="@item" ItemChanged="DiscountChanged" />
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@code {
+
+    private List<PrikatManufacturerDiscountViewModel> manufacturerDiscounts = null;
+
+    private bool hasSeparator = false;
+    private bool needReloadSavedData = false;
+
+    private async Task DiscountChanged()
+    {
+        toastService.ShowSuccess("Скидка изменена");
+
+        var data = string.Join(";", manufacturerDiscounts.Where(m => m.IsChecked == true).Select(m => $"{m.Id}={m.Discount1}|{m.Discount2}"));
+        needReloadSavedData = true;
+
+        await settings.SetPrikatDiscounts(data);
+
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        hasSeparator = false;
+
+        if (firstRender || needReloadSavedData)
+        {
+            needReloadSavedData = false;
+
+            var manufacturers = await manufacturerStorage.GetManufacturers();
+            var discountData = (await settings.GetPrikatDiscounts())
+                .Split(';')
+                .Select(data => data.Split('='))
+                .Select(array => new
+                {
+                    manufacturer_id = int.Parse(array[0]),
+                    discount1 = int.Parse(array[1].Split('|')[0]),
+                    discount2 = int.Parse(array[1].Split('|')[1])
+                })
+                .ToDictionary(i => i.manufacturer_id, i => Tuple.Create(i.discount1, i.discount2));
+
+            manufacturerDiscounts = manufacturers
+                .Select(manufacturer => new PrikatManufacturerDiscountViewModel(manufacturer.name)
+                {
+                    Id = manufacturer.manufacturer_id,
+                    Discount1 = discountData.ContainsKey(manufacturer.manufacturer_id) ? discountData[manufacturer.manufacturer_id].Item1 : 0,
+                    Discount2 = discountData.ContainsKey(manufacturer.manufacturer_id) ? discountData[manufacturer.manufacturer_id].Item2 : 0,
+                    IsChecked = discountData.ContainsKey(manufacturer.manufacturer_id) ? true : false,
+                })
+                .OrderByDescending(item => item.IsChecked)
+                .ToList();
+
+            StateHasChanged();
+        }
+    }
+}
+

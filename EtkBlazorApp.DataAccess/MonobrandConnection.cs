@@ -2,6 +2,7 @@
 using EtkBlazorApp.DataAccess.Model;
 using MySql.Data.MySqlClient;
 using Renci.SshNet;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
@@ -28,6 +29,7 @@ namespace EtkBlazorApp.DataAccess
         public async Task UpdateProducts (List<ProductUpdateData> updateData, bool clearStock)
         {
             string sql = "";
+            throw new NotImplementedException();
 
             await ExecuteAsync(sql, null);
         }
@@ -35,8 +37,9 @@ namespace EtkBlazorApp.DataAccess
         public async Task<List<ProductEntity>> ReadProducts()
         {
             string sql = "SELECT * FROM oc_product";
+            throw new NotImplementedException();
 
-            var data = await QueryAsync<ProductEntity>(sql, null);
+            var data = await QueryAsync<ProductEntity>(sql, new { });
 
             return data;
         }

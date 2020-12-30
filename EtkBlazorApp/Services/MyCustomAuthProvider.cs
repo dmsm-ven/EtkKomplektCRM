@@ -11,19 +11,18 @@ namespace EtkBlazorApp.Services
 {
     public class MyCustomAuthProvider : AuthenticationStateProvider
     {
-        private readonly IDatabase db;
-        private readonly IHttpContextAccessor httpContextAccessor;
+        private readonly IDatabaseAccess db;
+        private readonly IAuthStateProcessor auth;
         private readonly MyDbLogger logger;
         private readonly ProtectedLocalStorage storage;
 
         const int PASSWORD_MAX_ENTER_TRY = 5;
 
-        public MyCustomAuthProvider(IDatabase db, IHttpContextAccessor httpContextAccessor, MyDbLogger logger, ProtectedLocalStorage storage)
+        public MyCustomAuthProvider(IAuthStateProcessor auth, MyDbLogger logger, ProtectedLocalStorage storage)
         {
-            this.db = db;
             this.storage = storage;
-            this.httpContextAccessor = httpContextAccessor;
             this.logger = logger;
+            this.auth = auth;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -45,21 +44,20 @@ namespace EtkBlazorApp.Services
 
         public async Task<AuthenticationState> AuthenticateUser(AppUser userData)
         {
-            userData.IP = httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
-            userData.InvalidPasswordCounter = await db.GetUserBadPasswordTryCounter(userData.IP);
+            userData.InvalidPasswordCounter = await auth.GetUserBadPasswordTryCounter(userData.Login);
             
             if(userData.InvalidPasswordCounter >= PASSWORD_MAX_ENTER_TRY)
             {
-                logger.Write(LogEntryGroupName.Auth, "Неудача", $"Превышено количество попыток входа пользователя {userData.Login}");
+                await logger.Write(LogEntryGroupName.Auth, userData.Login, "Неудача", $"Превышено количество попыток входа пользователя {userData.Login}");
                 return GetDefaultState();
             }
 
-            string permission = await db.GetUserPermission(userData.Login, userData.Password);
+            string permission = await auth.GetUserPermission(userData.Login, userData.Password);
 
             if (string.IsNullOrWhiteSpace(permission))
             {
-                logger.Write(LogEntryGroupName.Auth, "Неудача", $"Неудачная попытка входа {userData.Login}");
-                await db.SetUserBadPasswordTryCounter(userData.IP, userData.InvalidPasswordCounter + 1);
+                await logger.Write(LogEntryGroupName.Auth, userData.Login, "Неудача", $"Неудачная попытка входа {userData.Login}");
+                await auth.SetUserBadPasswordTryCounter(userData.Login, userData.InvalidPasswordCounter + 1);
                 return GetDefaultState();
             }        
 
@@ -73,10 +71,9 @@ namespace EtkBlazorApp.Services
 
             NotifyAuthenticationStateChanged(Task.FromResult(state));
 
-            logger.AuthenticationState = state;
-            logger.Write(LogEntryGroupName.Auth, "Вход", $"Пользователь Вошел");
+            await logger.Write(LogEntryGroupName.Auth, userData.Login, "Вход", $"Пользователь Вошел");
 
-            await db.SetUserBadPasswordTryCounter(userData.IP, 0);
+            await auth.SetUserBadPasswordTryCounter(userData.Login, 0);
             return state;
         }  
         
@@ -87,8 +84,7 @@ namespace EtkBlazorApp.Services
             await storage.DeleteAsync("user_login");
             await storage.DeleteAsync("user_password");
 
-            logger.Write(LogEntryGroupName.Auth, "Выход", $"Пользователь вышел");
-            logger.AuthenticationState = null;
+            await logger.Write(LogEntryGroupName.Auth, userName, "Выход", $"Пользователь вышел");
 
             NotifyAuthenticationStateChanged(Task.FromResult(GetDefaultState()));            
         }

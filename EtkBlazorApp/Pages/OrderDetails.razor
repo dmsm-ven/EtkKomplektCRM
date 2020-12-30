@@ -1,6 +1,6 @@
 ﻿@page "/order/{id:int}"
-@inject IDatabase database
-@*@attribute [Authorize(Roles = "Administrator, Manager")]*@
+@inject IOrderStorage database
+@attribute [Authorize(Roles = "Administrator, Manager")]
 
 @if (order == null)
 {

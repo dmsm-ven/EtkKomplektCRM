@@ -1,6 +1,70 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+.discount-list-separator{
+    height: 3px;
+    background: lightgray;
+    margin: 20px 2px;
+}
+.btn-vi {
+    background-color: #d60000;
+    color: white;
+}
+
+.prikat-manufacturer-discount-list {
+    padding: 10px 4px;
+    margin: 10px 15px;
+    background-color: #466085;
+    border: 1px solid black;
+    border-radius: 4px;
+    color: white;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    max-height: 800px;
+    width: 100%;
+}
+
+.prikat-manufacturer-discount-item {
+    margin: 4px 2px;
+    padding: 4px;
+    background-color: rgba(176, 73, 73, 0.77);
+    border: 1px solid black;
+    border-radius: 4px;
+    display: flex;
+}
+
+.prikat-manufacturer-discount-item:hover {
+    background-color: #DF5D5A;
+    transition: 100ms;
+}
+
+.ozon-manufacturer-discount-list {
+    padding: 10px 4px;
+    margin: 10px 15px;
+    background-color: #466085;
+    border: 1px solid lightblue;
+    border-radius: 4px;
+    color: white;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    max-height: 800px;
+    width: 100%;
+}
+
+.ozon-manufacturer-discount-item {
+    margin: 4px 2px;
+    padding: 4px;
+    background-color: rgba(65, 105, 225, 0.85);
+    border: 1px solid lightblue;
+    border-radius: 4px;
+    display: flex;
+}
+
+    .ozon-manufacturer-discount-item:hover {
+        background-color: #0088ff;
+        transition: 100ms;
+    }
+
 .nav-menu-image {
     width: 20px;
     height: 20px;
@@ -36,6 +100,7 @@
     box-sizing: border-box;
     text-align: center;
 }
+
 .product-item-date {
     position: absolute;
     right: 0px;
