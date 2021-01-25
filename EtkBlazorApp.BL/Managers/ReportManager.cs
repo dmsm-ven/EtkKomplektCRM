@@ -1,6 +1,4 @@
-﻿using EtkBlazorApp.DataAccess.Model;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,20 +17,5 @@ namespace EtkBlazorApp.BL.Managers
             Ozon = new OzonReportFormatter();
             WebsiteUpdatedData = new WebsiteUpdatedDataFormatter();
         }
-    }
-
-    public class WebsiteUpdatedDataFormatter
-    {
-        public Dictionary<int, List<ProductUpdateData>> Info { get; }
-    }
-
-    public class OzonReportFormatter
-    {
-
-    }
-
-    public class PrikatReportFormatter
-    {
-
     }
 }

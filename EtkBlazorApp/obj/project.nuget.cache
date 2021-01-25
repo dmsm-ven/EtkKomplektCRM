@@ -1,11 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "WMeOEO69//MOZJPQe8/yATHduvHuNZ97XlOGcs0YPcAfrE5RB9RCphX6NfsFwU+2uXexP59au3+/wqiwvoKMVA==",
+  "dgSpecHash": "r90vZl/LAAFAg7zkrybQQbYV27rOkYj2mjV0AZIC99+z8qXf6TcgL+fCsrZ8tYb0/0zWUouWHkivjNN5LJMZiQ==",
   "success": true,
   "projectFilePath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp\\EtkBlazorApp.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\user\\.nuget\\packages\\blazored.toast\\3.1.2\\blazored.toast.3.1.2.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\bouncycastle.netcore\\1.8.3\\bouncycastle.netcore.1.8.3.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\csvhelper\\21.1.0\\csvhelper.21.1.0.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\dapper\\2.0.78\\dapper.2.0.78.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\epplus\\5.5.0\\epplus.5.5.0.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\google.protobuf\\3.11.4\\google.protobuf.3.11.4.nupkg.sha512",

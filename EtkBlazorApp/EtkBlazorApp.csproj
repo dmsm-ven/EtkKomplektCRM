@@ -41,8 +41,4 @@
     <ProjectReference Include="..\EtkBlazorApp.DataAccess\EtkBlazorApp.DataAccess.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="wwwroot\script\" />
-  </ItemGroup>
-
 </Project>

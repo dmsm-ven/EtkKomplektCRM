@@ -4,12 +4,6 @@
            style="display: inline-block; transform: scale(1.5); margin: 4px 10px;"
            @bind="@Item.IsChecked" />
     <p style="display: inline-block; font-size: 20px; color: white; width: 100%">@Item.Manufacturer</p>
-    <button class="btn btn-sm"
-            style="display:inline-block; color: navy; width: auto;"
-            hidden="@SaveButtonHidden"
-            @onclick="OnStateChanged">
-        <i class="oi oi-circle-check"></i>
-    </button>
     <input type="number"
            class="form-control"
            style="display: inline-block; width: auto; margin: 4px 10px;"
@@ -28,25 +22,14 @@
     [Parameter]
     public EventCallback ItemChanged { get; set; }
 
-    private int tempDiscount1;
-    private int tempDiscount2;
-    private bool tempChecked;
-
-    private bool SaveButtonHidden => (Item.Discount1 == tempDiscount1) && (Item.Discount2 == tempDiscount2) && (tempChecked == Item.IsChecked);
-
-    protected override void OnInitialized()
+    protected override void OnParametersSet()
     {
-        tempDiscount1 = Item.Discount1;
-        tempDiscount2 = Item.Discount2;
-        tempChecked = Item.IsChecked;
+        Item.PropertyChanged += OnStateChanged;
     }
 
-    private async Task OnStateChanged(MouseEventArgs e)
+    private void OnStateChanged(object o, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        await ItemChanged.InvokeAsync();
-        tempDiscount1 = Item.Discount1;
-        tempDiscount2 = Item.Discount2;
-        tempChecked = Item.IsChecked;
+        ItemChanged.InvokeAsync();
         StateHasChanged();
     }
 }

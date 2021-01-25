@@ -15,10 +15,10 @@ else
         <div class="col-lg-6 col-md-8 col-sm-12">
             <div class="row">
                 <div class="col-md-6 col-sm-6">
-                    <button type="button" class="btn btn-primary" style="width: 100%;">Обновить остатки</button>
+                    <button type="button" class="btn btn-primary" style="width: 100%;" disabled="@updateButtonDisabled">Обновить остатки</button>
                 </div>
                 <div class="col-md-6 col-sm-6">
-                    <button type="button" class="btn btn-primary" style="width: 100%;">Обновить цены</button>
+                    <button type="button" class="btn btn-primary" style="width: 100%;" disabled="@updateButtonDisabled">Обновить цены</button>
                 </div>
             </div>
             <div class="row">
@@ -44,20 +44,21 @@ else
     [Inject] OzonSellerApi ozonApi { get; set; }
     [Inject] DatabaseManager databaseManager { get; set; }
 
-    private bool hasSeparator = false;
-    private bool needReloadSavedData = false;
+    bool hasSeparator = false;
+    bool needReloadSavedData = false;
+    bool updateButtonDisabled => manufacturerDiscounts.All(m => m.IsChecked == false);
 
     private List<OzonManufacturerDiscountViewModel> manufacturerDiscounts = null;
 
     private async Task DiscountChanged()
     {
-        toastService.ShowSuccess("Скидка изменена");
+        var checkedData = string.Join(";", manufacturerDiscounts.Where(m => m.IsChecked).Select(m => m.Id).OrderBy(id => id));
+        await settings.SetOzonCheckedManufacturers(checkedData);
 
-        var data = string.Join(";", manufacturerDiscounts.Where(m => m.IsChecked == true).Select(m => $"{m.Id}={m.Discount}"));
+        var discountData = string.Join(";", manufacturerDiscounts.Select(m => $"{m.Id}={m.Discount}"));
+        await settings.SetOzonDiscounts(discountData);
+
         needReloadSavedData = true;
-
-        await settings.SetOzonDiscounts(data);
-
         StateHasChanged();
     }
 
@@ -70,18 +71,15 @@ else
             needReloadSavedData = false;
 
             var manufacturers = await manufacturerStorage.GetManufacturers();
-            var discountData = (await settings.GetOzonDiscounts())
-                .Split(';')
-                .Select(data => data.Split('='))
-                .Select(array => new { manufacturer_id = int.Parse(array[0]), discount = int.Parse(array[1]) })
-                .ToDictionary(i => i.manufacturer_id, i => i.discount);
+            var discountData = await settings.GetOzonDiscounts();
+            var checkedManufacturers = await settings.GetOzonCheckedManufacturers();
 
             manufacturerDiscounts = manufacturers
                 .Select(manufacturer => new OzonManufacturerDiscountViewModel(manufacturer.name)
                 {
                     Id = manufacturer.manufacturer_id,
                     Discount = discountData.ContainsKey(manufacturer.manufacturer_id) ? discountData[manufacturer.manufacturer_id] : 0,
-                    IsChecked = discountData.ContainsKey(manufacturer.manufacturer_id) ? true : false,
+                    IsChecked = checkedManufacturers.Contains(manufacturer.manufacturer_id)
                 })
                 .OrderByDescending(item => item.IsChecked)
                 .ToList();
