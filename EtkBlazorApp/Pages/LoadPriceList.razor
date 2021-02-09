@@ -3,9 +3,12 @@
 @using System.IO;
 @using System.Threading;
 
-<InputFile OnChange="@UploadFileSelected" disabled="@(selectedTemplate == null)"></InputFile>
+<InputFile OnChange="@UploadFileSelected" 
+
+           disabled="@(selectedTemplate == null)"></InputFile>
 
 <hr />
+
 @if (isFileLoading)
 {
     <progress style="width: 100%; height: 24px;"></progress>
@@ -20,7 +23,7 @@
         @foreach (var data in priceListManager.LoadedFiles)
         {
             <li style="margin: 4px 8px;color: red;">
-                <button class="btn btn-sm btn-danger" @onclick="@(e => RemoveLoadedPriceList(data))">
+                <button class="btn btn-sm btn-danger" @onclick="@(e => priceListManager.RemovePriceList(data))">
                     &times;
                 </button>
                 <strong style="color:black">@data.TemplateName</strong> @data.FileName<span style="color: navy"> (@data.RecordsInFile записей считано)</span>
@@ -31,25 +34,27 @@
 }
 
 <h2>Выберите шаблон загружаемого файла</h2>
+
 <div class="row">
     @foreach (var template in templates)
     {
-        <div class="col-md-3 col-xs-12 col-sm-6 brand-template-box ">
-            <img class="brand-template-logo" src="@($"./image/logotips/{template.GetType().Name}-logo.png")" />
-            <div>
-                <input type="radio"
-                       id="@template.GetType().Name"
-                       value="@template"
-                       @onchange="@(e => selectedTemplate = template)"
-                       checked="@(selectedTemplate == template)" />
-                <label for="@template.GetType().Name" style="font-size: 11px; margin-left: 2px;">@template.GetType().Name</label>
+        <div class="col-md-2 col-xs-6 col-sm-4 price-list-template-outer">
+            <div class="price-list-template-inner @(IsTemplateAlreadyLoaded(template) ? "already-loaded-template" : "")">
+                <img class="brand-template-logo" src="@($"./image/logotips/{template.GetType().Name}-logo.png")" />
+                <div>
+                    <input type="radio"
+                           id="@template.GetType().Name"
+                           value="@template"
+                           @onchange="@(e => selectedTemplate = template)"
+                           checked="@(selectedTemplate == template)" />
+                    <label for="@template.GetType().Name" style="font-size: 11px; margin-left: 2px;">@template.GetType().Name</label>
+                </div>
             </div>
         </div>
     }
 </div>
 
 <hr />
-
 
 @code
 {
@@ -61,15 +66,11 @@
     const int MAX_UPLOAD_SIZE = 15_000_000; // 15 мб
     CancellationTokenSource tcs;
 
-    private void RemoveLoadedPriceList(LoadedFileData data)
-    {
-        priceListManager.RemovePriceList(data);
-    }
 
     protected override void OnInitialized()
     {
         tcs = new CancellationTokenSource();
-        templates = new List<IPriceListTemplate>(new[] { new SymmetronPriceListTemplate() });
+        templates = new List<IPriceListTemplate>(Enumerable.Repeat(new SymmetronPriceListTemplate(), 20));
         selectedTemplate = templates.First();
     }
 
@@ -117,4 +118,8 @@
         selectedTemplate = (IPriceListTemplate)e.Value;
     }
 
+    private bool IsTemplateAlreadyLoaded(IPriceListTemplate template)
+    {
+        return priceListManager.LoadedTemplates.Contains(template);
+    }
 }

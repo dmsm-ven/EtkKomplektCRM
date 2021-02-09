@@ -23,6 +23,10 @@ else
             </div>
             <div class="row">
                 <div class="ozon-manufacturer-discount-list col-sm-12">
+                    <div class="row">
+                        <div class="col-md-9">Производитель</div>
+                        <div class="col-md-3">Наценка от сайта</div>
+                    </div>
                     @foreach (var item in manufacturerDiscounts)
                     {
                         @if (!hasSeparator && !item.IsChecked)

@@ -26,11 +26,29 @@ else
                 </Authorized>
             </AuthorizeView>
         </div>
+        <div class="row">
+            @if (priceListManager.LoadedFiles != null && priceListManager.LoadedFiles.Any())
+            {
+                <h3>Загруженные прайс-листы <a href="/price-list-loaded-data" target="_blank"><i class="oi oi-eye" /></a></h3>
+                <ul style="list-style-type: none;">
+                    @foreach (var data in priceListManager.LoadedFiles)
+                    {
+                        <li style="margin: 4px 8px;color: red;">
+                            <button class="btn btn-sm btn-danger" @onclick="@(e => priceListManager.RemovePriceList(data))">
+                                &times;
+                            </button>
+                            <strong style="color:black">@data.TemplateName</strong> @data.FileName<span style="color: navy"> (@data.RecordsInFile записей считано)</span>
+                        </li>
+                    }
+                </ul>
+                <hr />
+            }
+        </div>
     </div>
 
-    <hr style="margin: 10px 5px;"/>
+    <hr style="margin: 10px 5px;" />
 
-    <div class="container-fluid" >
+    <div class="container-fluid">
         @foreach (var account in accounts)
         {
             <ShopAccountComponent ShopAccount="@account"

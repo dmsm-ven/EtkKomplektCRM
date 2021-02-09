@@ -202,22 +202,28 @@
     border: 1px dashed rgba(255,255,255,0.25);
 }
 
-.brand-template-box {
-    padding: 4px;
-    border: 1px solid #7a7171;
-    border-radius: 6px;
-    margin-left: -4px;
-    margin-top: -4px;
-    margin-right: 2px;
-    margin-bottom: 2px;
-    transition: box-shadow 0.3s ease-in-out;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+.price-list-template-inner.already-loaded-template {
+    opacity: 0.4;
+    transition: 500ms;
 }
 
-    .brand-template-box:hover {
-        box-shadow: 0 6px 6px rgba(0,0,0,0.3);
-        transition: 200ms;
-    }
+.price-list-template-outer {
+    padding: 14px 8px;
+}
+
+.price-list-template-inner {
+    box-shadow: 0 6px 6px rgba(0,0,0,0.3);
+    border: 1px solid #7a7171;
+    border-radius: 6px;
+    padding: 4px 8px;
+}
+
+.price-list-template-outer:hover .price-list-template-inner {
+    box-shadow: 0 6px 6px rgba(0,0,80,0.3);
+    border: 1px solid #000080;
+    background-color: whitesmoke;
+    transition: 200ms;
+}
 
 .currency-top {
     color: white;

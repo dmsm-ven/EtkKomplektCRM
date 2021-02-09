@@ -1,5 +1,6 @@
 ﻿using EtkBlazorApp.BL.Data;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,6 +10,7 @@ namespace EtkBlazorApp.BL.Managers
     {
         public List<PriceLine> PriceLines { get; }
         public List<LoadedFileData> LoadedFiles { get; }
+        public IEnumerable<IPriceListTemplate> LoadedTemplates => LoadedFiles.Select(f => f.Template);
 
         private readonly IPriceLineLoadCorrelator correlator;
 
