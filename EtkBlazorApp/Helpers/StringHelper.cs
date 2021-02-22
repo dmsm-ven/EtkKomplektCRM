@@ -22,5 +22,19 @@ namespace EtkBlazorApp
             }
             return currentEnum.ToString();
         }
+
+        public static string ToStringValue(this bool value)
+        {
+            return value ? "1" : "0";
+        }
+
+        public static bool FromStringValue(this string str)
+        {
+            if (!string.IsNullOrWhiteSpace(str))
+            {
+                return str == "1";
+            }
+            return false;
+        }
     }
 }

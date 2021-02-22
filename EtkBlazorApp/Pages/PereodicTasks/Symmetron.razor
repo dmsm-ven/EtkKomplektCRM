@@ -1,0 +1,110 @@
+﻿@page "/symmetron-task-settings"
+@inject ISettingStorage settings
+
+<h3>Настройки Symmetron задачи</h3>
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-md-6 offset-3">
+            <form>
+                <div class="form-group">
+                    <input type="checkbox" @bind="isActive" class="form-check-input" />
+                    <span style="font-size: 16px; color: olive; margin: 4px; color: @(isActive ? "green" : "lightgray")">@(isActive ? "Включено" : "Выключено")</span>
+                </div>
+                <div class="form-group">
+                    <label for="imapServerFeild">Сервер</label>
+                    <input type="text" class="form-control" id="imapServerFeild" placeholder="IMAP сервер" @bind="imapServer">
+                </div>
+                <div class="form-group">
+                    <labe for="imapPortField">Порт</labe>
+                    <select class="form-control" id="imapPortField" value="@imapPort">
+                        <option value="143">143</option>
+                        <option value="993">993</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="Почтовый ящик" @bind="email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" class="form-control" id="password" placeholder="Пароль от почтового ящика" @bind="password">
+                </div>
+                <div class="btn-group" role="group" aria-label="Basic example" style="width: 100%">
+                    <button type="button" style="width: 100%;" class="btn btn-secondary @(checkConnectionCss)" @onclick="CheckConnection">@checkConnectionMessage</button>
+                    <button type="button" style="width: auto;" class="btn btn-primary" @onclick="SaveSettings">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (isConnectionCheckProgress)
+    {
+        <IntermediateProgressBar />
+    }
+
+    <div class="row py-4">
+        <button class="btn btn-outline-dark btn-lg" @onclick="TestMethod">Тест выполнения</button>
+    </div>
+</div>
+
+@code {
+    bool isActive = true;
+    bool? checkConnectionState = null;
+
+    string imapServer, imapPort, password, email;
+    string checkConnectionMessage => checkConnectionState.HasValue ? (checkConnectionState.Value ? "Успешно" : "Ошибка соединения") : "Проверить соединение";
+    string checkConnectionCss => checkConnectionState.HasValue ? (checkConnectionState.Value ? "btn-success" : "btn-danger") : string.Empty;
+
+    bool isConnectionCheckProgress = false;
+
+    private async Task CheckConnection()
+    {
+        isConnectionCheckProgress = true;
+
+        checkConnectionState = await EtkBlazorApp.ImapClient.MyImapClient.CheckConnection(imapServer, imapPort, email, password);
+
+        isConnectionCheckProgress = false;
+    }
+
+    private async Task TestMethod()
+    {
+        isConnectionCheckProgress = true;
+
+        var tempFile = await EtkBlazorApp.ImapClient.MyImapClient.DownloadLastSymmetronPriceListFromMail(imapServer, imapPort, email, password);
+        System.IO.File.Delete(tempFile);
+
+        isConnectionCheckProgress = false;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        imapServer = await settings.GetValue("task_symmetron_imap_server");
+        imapPort = await settings.GetValue("task_symmetron_imap_port");
+        if (string.IsNullOrWhiteSpace(imapPort))
+        {
+            imapPort = "143";
+        }
+        email = await settings.GetValue("task_symmetron_login");
+        password = await settings.GetValue("task_symmetron_password");
+        isActive = (await settings.GetValue("task_symmetron_active")).FromStringValue();
+    }
+
+    private async Task SaveSettings()
+    {
+        try
+        {
+            await settings.SetValue("task_symmetron_active", isActive.ToStringValue());
+            await settings.SetValue("task_symmetron_imap_server", imapServer);
+            await settings.SetValue("task_symmetron_imap_port", imapPort);
+            await settings.SetValue("task_symmetron_login", email);
+            await settings.SetValue("task_symmetron_password", password);
+            checkConnectionState = null;
+        }
+        catch (Exception ex)
+        {
+
+        }
+    }
+}

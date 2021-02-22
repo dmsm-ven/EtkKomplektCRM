@@ -1,0 +1,31 @@
+﻿<div class="col-md-2 col-xs-6 col-sm-4 price-list-template-outer">
+    <div class="price-list-template-inner @(IsTemplateAlreadyLoaded(Template) ? "already-loaded-template" : "")">
+        <img class="brand-template-logo" src="@($"./image/logotips/{Template.GetType().Name}-logo.png")" />
+        <div>
+            <input type="radio"
+                   id="@(Template.GetType().Name)"
+                   name="select-template-list-group"
+                   value="@Template"
+                   disabled="@IsTemplateAlreadyLoaded(Template)"
+                   @onchange="OnCheckedChange"/>
+            <label for="@Template.GetType().Name" style="font-size: 11px; margin-left: 2px;">@Template.GetType().Name</label>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Inject] PriceListManager priceListManager { get; set; }
+
+    [Parameter] public IPriceListTemplate Template { get; set; }
+    [Parameter] public EventCallback CheckedChanged { get; set; }
+
+    private bool IsTemplateAlreadyLoaded(IPriceListTemplate template)
+    {
+        return priceListManager.LoadedTemplates.Contains(template);
+    }
+
+    private void OnCheckedChange()
+    {
+        CheckedChanged.InvokeAsync();
+    }
+}

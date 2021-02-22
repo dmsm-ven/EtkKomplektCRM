@@ -57,10 +57,10 @@ else
     private async Task DiscountChanged()
     {
         var checkedData = string.Join(";", manufacturerDiscounts.Where(m => m.IsChecked).Select(m => m.Id).OrderBy(id => id));
-        await settings.SetOzonCheckedManufacturers(checkedData);
+        await settings.SetValue("ozon_checked_manufacturers", checkedData);
 
         var discountData = string.Join(";", manufacturerDiscounts.Select(m => $"{m.Id}={m.Discount}"));
-        await settings.SetOzonDiscounts(discountData);
+        await settings.SetValue("ozon_manufacturer_discounts", discountData);
 
         needReloadSavedData = true;
         StateHasChanged();
@@ -75,8 +75,12 @@ else
             needReloadSavedData = false;
 
             var manufacturers = await manufacturerStorage.GetManufacturers();
-            var discountData = await settings.GetOzonDiscounts();
-            var checkedManufacturers = await settings.GetOzonCheckedManufacturers();
+            var discountData = (await settings.GetValue("ozon_manufacturer_discounts")).Split(';')
+                .Select(data => data.Split('='))
+                .Select(array => new { manufacturer_id = int.Parse(array[0]), discount = int.Parse(array[1]) })
+                .ToDictionary(i => i.manufacturer_id, i => i.discount);
+
+            var checkedManufacturers = (await settings.GetValue("ozon_checked_manufacturers")).Split(';').Select(i => int.Parse(i)).ToList();
 
             manufacturerDiscounts = manufacturers
                 .Select(manufacturer => new OzonManufacturerDiscountViewModel(manufacturer.name)

@@ -3,16 +3,12 @@
 
 <h3>Обновление цен и остатков</h3>
 
-@if (accounts == null)
-{
-    <LoadingSpinner />
-}
-else
-{
+
+
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-2">
-                <button class="btn btn-success btn-lg" @onclick="UpdateSelectedAccountProducts" disabled="@IsUpdateButtonDisabled">Обновить</button>
+                <button class="btn btn-success btn-lg" @onclick="UpdateProductsPriceAndStock" disabled="@(priceListManager.PriceLines.Count == 0)">Обновить</button>
             </div>
             <div class="col-md-2">
                 <span><input type="checkbox" @bind-value="@clearStockBeforeUpdate" /> &nbsp;&nbsp;Обнулять остатки</span>
@@ -26,44 +22,13 @@ else
                 </Authorized>
             </AuthorizeView>
         </div>
-        <div class="row">
-            @if (priceListManager.LoadedFiles != null && priceListManager.LoadedFiles.Any())
-            {
-                <h3>Загруженные прайс-листы <a href="/price-list-loaded-data" target="_blank"><i class="oi oi-eye" /></a></h3>
-                <ul style="list-style-type: none;">
-                    @foreach (var data in priceListManager.LoadedFiles)
-                    {
-                        <li style="margin: 4px 8px;color: red;">
-                            <button class="btn btn-sm btn-danger" @onclick="@(e => priceListManager.RemovePriceList(data))">
-                                &times;
-                            </button>
-                            <strong style="color:black">@data.TemplateName</strong> @data.FileName<span style="color: navy"> (@data.RecordsInFile записей считано)</span>
-                        </li>
-                    }
-                </ul>
-                <hr />
-            }
-        </div>
     </div>
 
-    <hr style="margin: 10px 5px;" />
+    <LoadedPriceListDisplay/>
 
-    <div class="container-fluid">
-        @foreach (var account in accounts)
-        {
-            <ShopAccountComponent ShopAccount="@account"
-                                  OnChecked="@(() => StateHasChanged())"
-                                  OnAccountDeleted="@(() => accounts.Remove(account))" />
-        }
-    </div>
-
-}
 
 @code {
     bool clearStockBeforeUpdate;
-
-    List<ShopAccountViewModel> accounts = null;
-    ShopAccountViewModel accountToDelete = null;
 
     [Inject] PriceListManager priceListManager { get; set; }
     [Inject] DatabaseManager databaseManager { get; set; }
@@ -71,62 +36,23 @@ else
     [Inject] IDatabaseProductCorrelator correlator { get; set; }
     [Inject] IToastService toastService { get; set; }
 
-    public bool IsUpdateButtonDisabled
+    private async Task UpdateProductsPriceAndStock()
     {
-        get
-        {
-            bool hasSelectedItemAndUploadedPriceList = accounts.Any(ac => ac.IsSelected) && priceListManager.PriceLines.Any();
-            return (accounts == null || priceListManager.PriceLines.Count == 0) ? true : !hasSelectedItemAndUploadedPriceList;
-        }
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        accounts = (await databaseManager.GetMonobrandAccountConnections()).Select(account => new ShopAccountViewModel()
-        {
-            Title = account.title,
-            Id = account.website_id,
-            Uri = account.uri,
-            DB_Host = account.db_host,
-            DB_Login = account.db_login,
-            DB_Password = account.db_password,
-            FTP_Host = account.ftp_host,
-            FTP_Login = account.ftp_login,
-            FTP_Password = account.ftp_password
-        }).ToList();
-    }
-
-    private async Task UpdateSelectedAccountProducts()
-    {
-        var checkedAccounts = accounts.Where(ac => ac.IsSelected).ToList();
-
-        foreach (var account in checkedAccounts)
-        {
-            await UpdateAccountProducts(account);
-        }
-    }
-
-    private async Task UpdateAccountProducts(ShopAccountViewModel account)
-    {
-        account.ActivateProgressBar();
-
         try
         {
-            var products = await databaseManager.ReadProducts(account.Id);
+            var products = await databaseManager.ReadProducts();
             var updateData = await correlator.GetCorrelationData(products, priceListManager.PriceLines);
-            reportManager.WebsiteUpdatedData.Info[account.Id] = updateData;
+            await databaseManager.UpdatePriceAndStock(updateData, clearStockBeforeUpdate);
 
-            await databaseManager.UpdatePriceAndStock(account.Id, updateData, clearStockBeforeUpdate);
-
-            toastService.ShowError($"Сайт [{account.Uri}] обновлен ({updateData.Count}) товара(ов)", "Информация");
+            toastService.ShowError($"Остатки и цены на сайте (из загруженных прайс-листов) обновлены", "Информация");
         }
         catch (Exception ex)
         {
-            toastService.ShowError($"При обновлении данных [{account.Uri}] произошла ошибка", "Ошибка обновления");
+            toastService.ShowError($"При обновлении данных произошла ошибка\r\n" + ex.Message, "Ошибка обновления");
         }
         finally
         {
-            account.DeactivateProgressBar();
+            
         }
     }
 }

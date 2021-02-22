@@ -69,10 +69,10 @@ else
     private async Task DiscountChanged()
     {
         var checkedData = string.Join(";", manufacturerDiscounts.Where(m => m.IsChecked).Select(m => m.Id).OrderBy(id => id));
-        await settings.SetPrikatCheckedManufacturers(checkedData);
+        await settings.SetValue("prikat_checked_manufacturers", checkedData);
 
         var discountData = string.Join(";", manufacturerDiscounts.Select(m => $"{m.Id}={m.Discount1}|{m.Discount2}"));
-        await settings.SetPrikatDiscounts(discountData);
+        await settings.SetValue("prikat_manufacturer_discounts", discountData);
 
         needReloadSavedData = true;
         StateHasChanged();
@@ -87,9 +87,17 @@ else
             needReloadSavedData = false;
 
             var manufacturers = await manufacturerStorage.GetManufacturers();
-            var discountData = await settings.GetPrikatDiscounts();
-            var checkedManufacturers = await settings.GetPrikatCheckedManufacturers();
+            var discountData = (await settings.GetValue("prikat_manufacturer_discounts")).Split(';')
+            .Select(data => data.Split('='))
+            .Select(array => new
+            {
+                manufacturer_id = int.Parse(array[0]),
+                discount1 = int.Parse(array[1].Split('|')[0]),
+                discount2 = int.Parse(array[1].Split('|')[1])
+            })
+            .ToDictionary(i => i.manufacturer_id, i => Tuple.Create(i.discount1, i.discount2));
 
+            var checkedManufacturers = (await settings.GetValue("prikat_checked_manufacturers")).Split(';').Select(i => int.Parse(i)).ToList();
             manufacturerDiscounts = manufacturers
                 .Select(manufacturer => new PrikatManufacturerDiscountViewModel(manufacturer.name)
                 {

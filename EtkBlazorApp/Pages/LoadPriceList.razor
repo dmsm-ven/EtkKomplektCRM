@@ -3,58 +3,33 @@
 @using System.IO;
 @using System.Threading;
 
-<InputFile OnChange="@UploadFileSelected" 
-
+<InputFile OnChange="@UploadFileSelected"
            disabled="@(selectedTemplate == null)"></InputFile>
-
-<hr />
 
 @if (isFileLoading)
 {
-    <progress style="width: 100%; height: 24px;"></progress>
+    <IntermediateProgressBar />
     <hr />
     <button @onclick="CancelFileUpload" class="btn btn-outline-dark">Отменить загрузку</button>
 }
 
-@if (priceListManager.LoadedFiles != null && priceListManager.LoadedFiles.Any())
-{
-    <h3>Загруженные прайс-листы <a href="/price-list-loaded-data" target="_blank"><i class="oi oi-eye"/></a></h3>
-    <ul style="list-style-type: none;">
-        @foreach (var data in priceListManager.LoadedFiles)
-        {
-            <li style="margin: 4px 8px;color: red;">
-                <button class="btn btn-sm btn-danger" @onclick="@(e => priceListManager.RemovePriceList(data))">
-                    &times;
-                </button>
-                <strong style="color:black">@data.TemplateName</strong> @data.FileName<span style="color: navy"> (@data.RecordsInFile записей считано)</span>
-            </li>
-        }
-    </ul>
-    <hr />
-}
+<LoadedPriceListDisplay />
 
 <h2>Выберите шаблон загружаемого файла</h2>
 
 <div class="row">
     @foreach (var template in templates)
     {
-        <div class="col-md-2 col-xs-6 col-sm-4 price-list-template-outer">
-            <div class="price-list-template-inner @(IsTemplateAlreadyLoaded(template) ? "already-loaded-template" : "")">
-                <img class="brand-template-logo" src="@($"./image/logotips/{template.GetType().Name}-logo.png")" />
-                <div>
-                    <input type="radio"
-                           id="@template.GetType().Name"
-                           value="@template"
-                           @onchange="@(e => selectedTemplate = template)"
-                           checked="@(selectedTemplate == template)" />
-                    <label for="@template.GetType().Name" style="font-size: 11px; margin-left: 2px;">@template.GetType().Name</label>
-                </div>
-            </div>
-        </div>
+        <PriceListTemplateItem Template="@template" CheckedChanged="@(e => selectedTemplate = template)"></PriceListTemplateItem>
     }
 </div>
 
 <hr />
+
+@if (priceListManager.LoadedFiles != null && priceListManager.LoadedFiles.Any())
+{
+    <a href="/update-products" class="btn btn-lg btn-outline-primary">Перейти к обновлению товаров</a>
+}
 
 @code
 {
@@ -65,7 +40,6 @@
     bool isFileLoading = false;
     const int MAX_UPLOAD_SIZE = 15_000_000; // 15 мб
     CancellationTokenSource tcs;
-
 
     protected override void OnInitialized()
     {
@@ -110,16 +84,12 @@
             isFileLoading = false;
             selectedTemplate = null;
             selectedFile = null;
+            StateHasChanged();
         }
     }
 
     private void SelectedTemplateChanged(ChangeEventArgs e)
     {
         selectedTemplate = (IPriceListTemplate)e.Value;
-    }
-
-    private bool IsTemplateAlreadyLoaded(IPriceListTemplate template)
-    {
-        return priceListManager.LoadedTemplates.Contains(template);
     }
 }

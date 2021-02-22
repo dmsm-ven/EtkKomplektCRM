@@ -1,0 +1,89 @@
+﻿@page "/tasks"
+@inject ISettingStorage settings
+
+<style>
+
+    .task-time-picker {
+        margin: 4px;
+        border: 1px solid #ffa5fd;
+    }
+
+    .timer-task-list {
+        list-style-type: none;
+    }
+
+        .timer-task-list input {
+            transform: scale(1.35);
+        }
+
+        .timer-task-list .cog-icon {
+            color: gray;
+            font-size: 18px;
+            margin: 2px 8px;
+        }
+
+        .timer-task-list li {
+            font-size: 18px;
+            font-family: Tahoma;
+            color: olive;
+            line-height: 32px;
+            margin: 6px 12px 6px 2px;
+            border-bottom: 1px solid #ffa5fd;
+        }
+
+</style>
+
+<h3>Переодические задачи</h3>
+<div class="row" disabled>
+    <span style="margin: auto 0px;">Время выполнения заданий</span>
+    <input type="time" value="@executionTime" class="task-time-picker" @onchange="ExecTimeChanged" disabled="@timePickerDisabled"/>
+</div>
+<hr />
+<ul class="timer-task-list">
+    <li>
+        <input type="checkbox" @bind="symmetronEnabled" disabled />
+        <a href="/symmetron-task-settings"><span class="oi oi-cog cog-icon" aria-hidden="true"></span></a>
+        <span>Symmetron</span>
+
+    </li>
+    <li>
+        <input type="checkbox" @bind="silverEnabled" disabled />
+        <a href="/silver-task-settings"><span class="oi oi-cog cog-icon" aria-hidden="true"></span></a>
+        <span>Silver</span>
+
+    </li>
+    <li>
+        <input type="checkbox" @bind="c1Enabled" disabled />
+        <a href="/task-settings-1c"><span class="oi oi-cog cog-icon" aria-hidden="true"></span></a>
+        <span>1C</span>
+    </li>
+</ul>
+
+
+
+@code {
+    TimeSpan executionTime = TimeSpan.FromHours(3);
+
+    bool symmetronEnabled = true;
+    bool c1Enabled = true;
+    bool silverEnabled = false;
+
+    bool timePickerDisabled => new[] { symmetronEnabled, c1Enabled, silverEnabled}.All(v => !v);
+
+    protected override async Task OnInitializedAsync()
+    {
+        symmetronEnabled = (await settings.GetValue("task_symmetron_active")).FromStringValue();
+        c1Enabled = (await settings.GetValue("task_1c_active")).FromStringValue();
+        silverEnabled = (await settings.GetValue("task_silver_active")).FromStringValue();
+
+        if(TimeSpan.TryParse(await settings.GetValue("task_exec_time"), out var time))
+        {
+            executionTime = time;
+        }
+    }
+
+    private async Task ExecTimeChanged(ChangeEventArgs e)
+    {
+        await settings.SetValue("task_exec_time", e?.Value.ToString());
+    }
+}
