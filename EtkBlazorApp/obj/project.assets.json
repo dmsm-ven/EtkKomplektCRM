@@ -2209,6 +2209,7 @@
         "dependencies": {
           "CsvHelper": "21.1.0",
           "EPPlus": "5.5.0",
+          "EtkBlazorApp.Data": "1.0.0",
           "EtkBlazorApp.DataAccess": "1.0.0",
           "Newtonsoft.Json": "12.0.3",
           "System.Net.Primitives": "4.3.0"
@@ -2220,11 +2221,22 @@
           "bin/placeholder/EtkBlazorApp.BL.dll": {}
         }
       },
+      "EtkBlazorApp.Data/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v5.0",
+        "compile": {
+          "bin/placeholder/EtkBlazorApp.Data.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/EtkBlazorApp.Data.dll": {}
+        }
+      },
       "EtkBlazorApp.DataAccess/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v5.0",
         "dependencies": {
           "Dapper": "2.0.78",
+          "EtkBlazorApp.Data": "1.0.0",
           "Microsoft.Extensions.Configuration": "5.0.0",
           "MySql.Data": "8.0.22",
           "Newtonsoft.Json": "12.0.3",
@@ -7606,6 +7618,11 @@
       "type": "project",
       "path": "../EtkBlazorApp.BL/EtkBlazorApp.BL.csproj",
       "msbuildProject": "../EtkBlazorApp.BL/EtkBlazorApp.BL.csproj"
+    },
+    "EtkBlazorApp.Data/1.0.0": {
+      "type": "project",
+      "path": "../EtkBlazorApp.Data/EtkBlazorApp.Data.csproj",
+      "msbuildProject": "../EtkBlazorApp.Data/EtkBlazorApp.Data.csproj"
     },
     "EtkBlazorApp.DataAccess/1.0.0": {
       "type": "project",

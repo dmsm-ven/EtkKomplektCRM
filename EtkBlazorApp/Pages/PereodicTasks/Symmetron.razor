@@ -88,23 +88,17 @@
         }
         email = await settings.GetValue("task_symmetron_login");
         password = await settings.GetValue("task_symmetron_password");
-        isActive = (await settings.GetValue("task_symmetron_active")).FromStringValue();
+        isActive = await settings.GetValue<bool>("task_symmetron_active");
     }
 
     private async Task SaveSettings()
     {
-        try
-        {
-            await settings.SetValue("task_symmetron_active", isActive.ToStringValue());
-            await settings.SetValue("task_symmetron_imap_server", imapServer);
-            await settings.SetValue("task_symmetron_imap_port", imapPort);
-            await settings.SetValue("task_symmetron_login", email);
-            await settings.SetValue("task_symmetron_password", password);
-            checkConnectionState = null;
-        }
-        catch (Exception ex)
-        {
 
-        }
+        await settings.SetValue("task_symmetron_active", isActive);
+        await settings.SetValue("task_symmetron_imap_server", imapServer);
+        await settings.SetValue("task_symmetron_imap_port", imapPort);
+        await settings.SetValue("task_symmetron_login", email);
+        await settings.SetValue("task_symmetron_password", password);
+        checkConnectionState = null;
     }
 }

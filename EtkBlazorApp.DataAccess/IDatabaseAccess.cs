@@ -1,5 +1,5 @@
 ﻿using Dapper;
-using EtkBlazorApp.DataAccess.Model;
+using EtkBlazorApp.DataAccess.Entity;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;

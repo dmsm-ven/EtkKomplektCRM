@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace EtkBlazorApp.BL.Data
+namespace EtkBlazorApp
 {
     public class AppUser
     {

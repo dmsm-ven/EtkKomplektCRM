@@ -1,48 +1,61 @@
 ﻿@page "/update-products"
 @attribute [Authorize(Roles = "Administrator, Manager")]
+@inject IToastService toastService
+@inject ISettingStorage setting
 
 <h3>Обновление цен и остатков</h3>
 
 
 
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-2">
-                <button class="btn btn-success btn-lg" @onclick="UpdateProductsPriceAndStock" disabled="@(priceListManager.PriceLines.Count == 0)">Обновить</button>
-            </div>
-            <div class="col-md-2">
-                <span><input type="checkbox" @bind-value="@clearStockBeforeUpdate" /> &nbsp;&nbsp;Обнулять остатки</span>
-            </div>
-
-            <AuthorizeView Roles="Administrator">
-                <Authorized>
-                    <div class="col-md-2 offset-6" style="text-align: right;">
-                        <a href="/shop-account/new" class="btn btn-sm btn-success">Добавить новый</a>
-                    </div>
-                </Authorized>
-            </AuthorizeView>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2">
+            <button class="btn btn-success btn-lg" @onclick="UpdateProductsPriceAndStock" disabled="@(priceListManager.PriceLines.Count == 0)">Обновить</button>
         </div>
-    </div>
+        <div class="col-md-2">
+            <span>
+                <input type="checkbox" 
+                       value="@clearStockBeforeUpdate"
+                       @onchange="ClearStockStateChanged" /> &nbsp;&nbsp;Обнулять остатки
+            </span>
+        </div>
 
-    <LoadedPriceListDisplay/>
+        <AuthorizeView Roles="Administrator">
+            <Authorized>
+                <div class="col-md-2 offset-6" style="text-align: right;">
+                    <a href="/shop-account/new" class="btn btn-sm btn-success">Добавить новый</a>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+    </div>
+</div>
+
+<LoadedPriceListDisplay />
 
 
 @code {
-    bool clearStockBeforeUpdate;
+    bool clearStockBeforeUpdate = false;
 
     [Inject] PriceListManager priceListManager { get; set; }
-    [Inject] DatabaseManager databaseManager { get; set; }
+    [Inject] UpdateManager databaseManager { get; set; }
     [Inject] ReportManager reportManager { get; set; }
-    [Inject] IDatabaseProductCorrelator correlator { get; set; }
-    [Inject] IToastService toastService { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        clearStockBeforeUpdate = (await setting.GetValue("update_products_clear_stock_before_update")).ToBooleanNumber();
+    }
+
+    private async Task ClearStockStateChanged(ChangeEventArgs e)
+    {
+        await setting.SetValue("update_products_clear_stock_before_update", ((bool)e?.Value).ToStringValue());
+    }
 
     private async Task UpdateProductsPriceAndStock()
     {
         try
         {
-            var products = await databaseManager.ReadProducts();
-            var updateData = await correlator.GetCorrelationData(products, priceListManager.PriceLines);
-            await databaseManager.UpdatePriceAndStock(updateData, clearStockBeforeUpdate);
+
+            await databaseManager.UpdatePriceAndStock(priceListManager.PriceLines, clearStockBeforeUpdate);
 
             toastService.ShowError($"Остатки и цены на сайте (из загруженных прайс-листов) обновлены", "Информация");
         }
@@ -52,7 +65,7 @@
         }
         finally
         {
-            
+
         }
     }
 }

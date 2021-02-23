@@ -28,7 +28,12 @@ namespace EtkBlazorApp
             return value ? "1" : "0";
         }
 
-        public static bool FromStringValue(this string str)
+        /// <summary>
+        /// Если входящая строка равна "1" то возращает false, иначе false
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static bool ToBooleanNumber(this string str)
         {
             if (!string.IsNullOrWhiteSpace(str))
             {

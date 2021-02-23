@@ -1,4 +1,4 @@
-﻿namespace EtkBlazorApp.BL.Data
+﻿namespace EtkBlazorApp.Data
 {
     public class PriceLine
     {

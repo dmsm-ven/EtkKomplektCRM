@@ -1,8 +1,7 @@
-﻿using EtkBlazorApp.BL.Data;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 
-namespace EtkBlazorApp.BL
+namespace EtkBlazorApp.Data
 {
     public interface IPriceListTemplate
     {

@@ -1,32 +1,30 @@
-﻿using EtkBlazorApp.BL.Data;
+﻿using EtkBlazorApp.Data;
 using EtkBlazorApp.DataAccess;
-using EtkBlazorApp.DataAccess.Model;
+using EtkBlazorApp.DataAccess.Entity;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL.Managers
 {
-    public class DatabaseManager
+    public class UpdateManager
     {
-        private readonly IProductStorage productsAccess;
+        private readonly IProductStorage productsStorage;
+        private readonly IDatabaseProductCorrelator correlator;
 
-        public DatabaseManager(IProductStorage productsAccess)
+        public UpdateManager(IProductStorage productsStorage, IDatabaseProductCorrelator correlator)
         {
-            this.productsAccess = productsAccess;
+            this.productsStorage = productsStorage;
+            this.correlator = correlator;
         }
 
-        public async Task UpdatePriceAndStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate)
-        {
-            await productsAccess.UpdateStock(data, clearStockBeforeUpdate);
-            await productsAccess.UpdatePrice(data);
-        }
+        public async Task UpdatePriceAndStock(IEnumerable<PriceLine> priceLines, bool clearStockBeforeUpdate)
+        {            
+            var products = await productsStorage.ReadProducts();
 
-        public async Task<List<ProductEntity>> ReadProducts()
-        {
-            var products = await productsAccess.ReadProducts();
+            var data = await correlator.GetCorrelationData(products, priceLines);
 
-            return products;
+            await productsStorage.UpdateStock(data, clearStockBeforeUpdate);
+            await productsStorage.UpdatePrice(data);
         }
     }
 }

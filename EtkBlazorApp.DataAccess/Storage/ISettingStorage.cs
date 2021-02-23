@@ -1,8 +1,9 @@
-﻿using EtkBlazorApp.DataAccess.Model;
+﻿using EtkBlazorApp.DataAccess.Entity;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,7 +13,10 @@ namespace EtkBlazorApp.DataAccess
     public interface ISettingStorage
     {
         public Task<string> GetValue(string name);
+        public Task<T> GetValue<T>(string name);
+
         public Task SetValue(string name, string value);
+        public Task SetValue<T>(string name, T value);
     }
 
     public class SettingStorage : ISettingStorage
@@ -27,11 +31,26 @@ namespace EtkBlazorApp.DataAccess
         public async Task<string> GetValue(string name)
         {
             var sql = $"SELECT value FROM etk_app_setting WHERE name = @name";
-            string result = await database.GetScalar<string, dynamic>(sql, new { name } ) ?? string.Empty;
+            string result = await database.GetScalar<string, dynamic>(sql, new { name }) ?? string.Empty;
             return result;
-
         }
-        
+
+        public async Task<T> GetValue<T>(string name)
+        {
+            var converter = TypeDescriptor.GetConverter(typeof(T));
+            var stringValue = await GetValue(name);
+            try
+            {
+                var value = (T)(converter.ConvertFromInvariantString(stringValue));
+                return value;
+            }
+            catch(Exception ex)
+            {
+
+            }
+            return default;
+        }
+
         public async Task SetValue(string name, string value)
         {
             string checkSql = "SELECT COUNT(*) FROM etk_app_setting WHERE name = @name";
@@ -50,6 +69,20 @@ namespace EtkBlazorApp.DataAccess
                 var insertQuery = $"INSERT INTO etk_app_setting (name, value) VALUES (@name, @value)";
                 await database.SaveData<dynamic>(insertQuery, new { name, value });
             }         
-        }       
+        }
+
+        public async Task SetValue<T>(string name, T value)
+        {
+            var converter = TypeDescriptor.GetConverter(typeof(T));
+            try
+            {
+                var typeConvertedStringValue = converter.ConvertToInvariantString(value);
+                await SetValue(name, typeConvertedStringValue);
+            }
+            catch(Exception ex)
+            {
+
+            }
+        }
     }
 }

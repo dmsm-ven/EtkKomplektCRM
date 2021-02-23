@@ -1608,6 +1608,16 @@
         "runtime": {
           "lib/netstandard1.3/System.Xml.XPath.XmlDocument.dll": {}
         }
+      },
+      "EtkBlazorApp.Data/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v5.0",
+        "compile": {
+          "bin/placeholder/EtkBlazorApp.Data.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/EtkBlazorApp.Data.dll": {}
+        }
       }
     }
   },
@@ -5693,11 +5703,17 @@
         "system.xml.xpath.xmldocument.4.0.1.nupkg.sha512",
         "system.xml.xpath.xmldocument.nuspec"
       ]
+    },
+    "EtkBlazorApp.Data/1.0.0": {
+      "type": "project",
+      "path": "../EtkBlazorApp.Data/EtkBlazorApp.Data.csproj",
+      "msbuildProject": "../EtkBlazorApp.Data/EtkBlazorApp.Data.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net5.0": [
       "Dapper >= 2.0.78",
+      "EtkBlazorApp.Data >= 1.0.0",
       "Microsoft.Extensions.Configuration >= 5.0.0",
       "MySql.Data >= 8.0.22",
       "Newtonsoft.Json >= 12.0.3",
@@ -5741,7 +5757,11 @@
       "frameworks": {
         "net5.0": {
           "targetAlias": "net5.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Data\\EtkBlazorApp.Data.csproj": {
+              "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Data\\EtkBlazorApp.Data.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

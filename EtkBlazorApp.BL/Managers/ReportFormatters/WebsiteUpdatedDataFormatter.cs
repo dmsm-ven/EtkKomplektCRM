@@ -1,4 +1,4 @@
-﻿using EtkBlazorApp.DataAccess.Model;
+﻿using EtkBlazorApp.DataAccess.Entity;
 using System.Collections.Generic;
 
 namespace EtkBlazorApp.BL.Managers

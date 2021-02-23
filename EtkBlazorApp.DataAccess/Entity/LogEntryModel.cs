@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 
-namespace EtkBlazorApp.DataAccess.Model
+namespace EtkBlazorApp.DataAccess.Entity
 {
     public class LogEntryEntity
     {

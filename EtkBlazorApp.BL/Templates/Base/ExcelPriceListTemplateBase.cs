@@ -1,4 +1,4 @@
-﻿using EtkBlazorApp.BL.Data;
+﻿using EtkBlazorApp.Data;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;

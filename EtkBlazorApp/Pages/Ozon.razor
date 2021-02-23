@@ -46,7 +46,7 @@ else
 
     // ozon manager есть в etk-komplekt windows приложении
     [Inject] OzonSellerApi ozonApi { get; set; }
-    [Inject] DatabaseManager databaseManager { get; set; }
+    [Inject] UpdateManager updateManager { get; set; }
 
     bool hasSeparator = false;
     bool needReloadSavedData = false;

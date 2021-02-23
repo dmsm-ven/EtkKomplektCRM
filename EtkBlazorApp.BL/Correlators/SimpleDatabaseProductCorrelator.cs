@@ -1,15 +1,15 @@
-﻿using EtkBlazorApp.DataAccess.Model;
+﻿using EtkBlazorApp.Data;
+using EtkBlazorApp.DataAccess.Entity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.BL.Data
+namespace EtkBlazorApp.BL.Correlators
 {
     public class SimpleDatabaseProductCorrelator : IDatabaseProductCorrelator
     {
-        public async Task<List<ProductUpdateData>> GetCorrelationData(List<ProductEntity> products, List<PriceLine> priceLines)
+        public async Task<List<ProductUpdateData>> GetCorrelationData(IEnumerable<ProductEntity> products, IEnumerable<PriceLine> priceLines)
         {
             var list = new List<ProductUpdateData>();
 
@@ -28,7 +28,7 @@ namespace EtkBlazorApp.BL.Data
             return list;
         }
 
-        private ProductUpdateData GetCorrelationDataForProduct(ProductEntity product, List<PriceLine> priceLines)
+        private ProductUpdateData GetCorrelationDataForProduct(ProductEntity product, IEnumerable<PriceLine> priceLines)
         {
             PriceLine priceLine = null;
             if (!string.IsNullOrWhiteSpace(product.sku))
@@ -59,7 +59,7 @@ namespace EtkBlazorApp.BL.Data
                 {
                     product_id = product.product_id,
                     price = priceLine.Price,
-                    currency_code = priceLine.Currency.ToString(),
+                    currency_code = priceLine.Currency,
                     quantity = priceLine.Quantity
                 };
             }

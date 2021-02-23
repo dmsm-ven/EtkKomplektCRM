@@ -80,7 +80,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        euro = await currencyService.GetCurrencyRate(BL.Data.CurrencyType.EUR);
-        usd = await currencyService.GetCurrencyRate(BL.Data.CurrencyType.USD);
+        euro = await currencyService.GetCurrencyRate(CurrencyType.EUR);
+        usd = await currencyService.GetCurrencyRate(CurrencyType.USD);
     }
 }

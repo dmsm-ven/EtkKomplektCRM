@@ -1,10 +1,4 @@
-﻿using EtkBlazorApp.BL.Data;
-using EtkBlazorApp.DataAccess.Model;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Text.Unicode;
+﻿using System.IO;
 
 namespace EtkBlazorApp.BL.Managers
 {

@@ -1,4 +1,4 @@
-﻿using EtkBlazorApp.DataAccess.Model;
+﻿using EtkBlazorApp.DataAccess.Entity;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

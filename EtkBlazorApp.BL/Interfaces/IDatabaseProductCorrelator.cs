@@ -1,8 +1,6 @@
-﻿using EtkBlazorApp.BL.Data;
-using EtkBlazorApp.DataAccess.Model;
-using System;
+﻿using EtkBlazorApp.Data;
+using EtkBlazorApp.DataAccess.Entity;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
@@ -10,7 +8,7 @@ namespace EtkBlazorApp.BL
 
     public interface IDatabaseProductCorrelator
     {
-        Task<List<ProductUpdateData>> GetCorrelationData(List<ProductEntity> products, List<PriceLine> priceLines);
+        Task<List<ProductUpdateData>> GetCorrelationData(IEnumerable<ProductEntity> products, IEnumerable<PriceLine> priceLines);
     }
 
 

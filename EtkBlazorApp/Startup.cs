@@ -10,8 +10,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.BL.Interfaces;
+using EtkBlazorApp.BL.Correlators;
 
 namespace EtkBlazorApp
 {
@@ -47,13 +47,15 @@ namespace EtkBlazorApp
             services.AddSingleton<IAuthStateProcessor, MyAuthStateProcessor>();
             
             services.AddSingleton<NewOrdersNotificationService>();
-            services.AddSingleton<DatabaseManager>();
+            services.AddSingleton<UpdateManager>();
             services.AddSingleton<OzonSellerApi>();
+            services.AddSingleton<TaskScheduleManager>();
 
             services.AddScoped<MyDbLogger>();
             services.AddScoped<PriceListManager>();         
             services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();
             services.AddScoped<ReportManager>();                    
+                           
             
             
             //Сторонние

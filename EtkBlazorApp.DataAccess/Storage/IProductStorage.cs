@@ -1,6 +1,8 @@
-﻿using EtkBlazorApp.DataAccess.Model;
+﻿using EtkBlazorApp.Data;
+using EtkBlazorApp.DataAccess.Entity;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -85,12 +87,92 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task UpdatePrice(List<ProductUpdateData> data)
         {
-            throw new NotImplementedException();
+            List<int> discountProductIds = await GetDiscountProductIds();
+            
+            List<ProductUpdateData> source = data
+                .Where(d => d.price.HasValue && !discountProductIds.Contains(d.product_id))
+                .ToList();
+
+            Dictionary<CurrencyType, List<int>> idsGroupedByCurrency = source
+                .GroupBy(p => p.currency_code)
+                .ToDictionary(g => g.Key, g => g.Select(p => p.product_id).OrderBy(id => id).ToList());
+ 
+            string idsArray = string.Join(",", source.Select(d => d.product_id).Distinct().OrderBy(id => id));
+
+            if (source.Count == 0) { return; }
+
+            var sb = new StringBuilder()
+                .AppendLine("UPDATE oc_product")
+                .AppendLine("SET base_price = CASE product_id");
+
+                foreach (var productInfo in source)
+                {
+                    sb.AppendLine($"WHEN '{productInfo.product_id}' THEN '{productInfo.price.Value.ToString(new CultureInfo("en-EN"))}'");
+                }
+
+                sb.AppendLine("ELSE base_price")
+                  .AppendLine("END, date_modified = NOW()")
+                  .AppendLine($"WHERE product_id IN ({idsArray});");
+
+            //Обновляем тип валюты товара
+            foreach(var kvp in idsGroupedByCurrency)
+            {
+                string currencyIdsArray = string.Join(",", source.Select(d => d.product_id).Distinct().OrderBy(id => id));
+                sb.AppendLine($"UPDATE oc_product SET currency_code = '{kvp.Key}' WHERE product_id IN ({currencyIdsArray});");
+            }
+
+            var sql = sb.ToString();
+
+            await database.SaveData<dynamic>(sql, new { });
         }
 
         public async Task UpdateStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate)
         {
-            throw new NotImplementedException();
+            List<ProductUpdateData> source = data
+                .Where(d => d.quantity.HasValue)
+                .ToList();
+
+            if (source.Count == 0) { return; }
+
+            var sb = new StringBuilder()
+                .AppendLine("UPDATE oc_product")
+                .AppendLine("SET quantity = CASE product_id");
+
+            foreach (var productInfo in source)
+            {
+                sb.AppendLine($"WHEN '{productInfo.product_id}' THEN '{productInfo.quantity}'");
+            }
+
+            sb.AppendLine("ELSE quantity")
+              .AppendLine("END, date_modified = NOW();");
+
+            if (clearStockBeforeUpdate)
+            {
+                string idsArray = string.Join(",", source.Select(d => d.product_id).Distinct().OrderBy(id => id));
+                var clearStockQueryBuilder = new StringBuilder()
+                    .AppendLine("UPDATE oc_product")
+                    .AppendLine("SET quantity = 0")
+                    .AppendLine($"WHERE manufacturer_id IN (SELECT manufacturer_id FROM oc_manufacturer WHERE product_id IN ({idsArray}));");
+                
+
+                sb.Insert(0, clearStockQueryBuilder.ToString());
+            }
+
+            string sql = sb.ToString();
+
+            await database.SaveData<dynamic>(sql, new { });
+        }
+
+
+        /// <summary>
+        /// Получение списка ID товаров которые участвуют акции на данный момент
+        /// </summary>
+        /// <returns></returns>
+        private async Task<List<int>> GetDiscountProductIds()
+        {
+            var sql = "SELECT DISTINCT product_id FROM oc_product_special WHERE NOW() BETWEEN date_start AND date_end";
+            var list = (await database.LoadData<int, dynamic>(sql, new { })).ToList();
+            return list;
         }
     }
 }

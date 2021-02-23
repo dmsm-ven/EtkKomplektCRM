@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorApp.DataAccess", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorApp.Integration", "..\EtkBlazorApp.API\EtkBlazorApp.Integration.csproj", "{3822CAFE-7B98-4734-801D-CE2CA3A7618D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtkBlazorApp.ImapClient", "..\EtkBlazorApp.ImapClient\EtkBlazorApp.ImapClient.csproj", "{B33E7744-D63B-4B75-B7BF-36E36C9F036A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorApp.ImapClient", "..\EtkBlazorApp.ImapClient\EtkBlazorApp.ImapClient.csproj", "{B33E7744-D63B-4B75-B7BF-36E36C9F036A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtkBlazorApp.Data", "..\EtkBlazorApp.Data\EtkBlazorApp.Data.csproj", "{52D3C236-8B22-4DF1-B4AC-1F5DCB2FE346}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{B33E7744-D63B-4B75-B7BF-36E36C9F036A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B33E7744-D63B-4B75-B7BF-36E36C9F036A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B33E7744-D63B-4B75-B7BF-36E36C9F036A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52D3C236-8B22-4DF1-B4AC-1F5DCB2FE346}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52D3C236-8B22-4DF1-B4AC-1F5DCB2FE346}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52D3C236-8B22-4DF1-B4AC-1F5DCB2FE346}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52D3C236-8B22-4DF1-B4AC-1F5DCB2FE346}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,5 +1,5 @@
 ﻿using EtkBlazorApp.DataAccess;
-using EtkBlazorApp.DataAccess.Model;
+using EtkBlazorApp.DataAccess.Entity;
 using EtkBlazorApp.ViewModel;
 using System;
 using System.Linq;

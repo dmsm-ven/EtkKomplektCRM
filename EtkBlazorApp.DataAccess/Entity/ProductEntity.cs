@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace EtkBlazorApp.DataAccess.Model
+namespace EtkBlazorApp.DataAccess.Entity
 {
     public class ProductEntity
     {
