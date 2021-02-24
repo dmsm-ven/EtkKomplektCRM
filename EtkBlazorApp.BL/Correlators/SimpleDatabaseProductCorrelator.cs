@@ -13,9 +13,19 @@ namespace EtkBlazorApp.BL.Correlators
         {
             var list = new List<ProductUpdateData>();
 
+            var validBrands = priceLines
+                .GroupBy(p => p.Manufacturer)
+                .Select(g => g.Key)
+                .ToList();
+
+            var productsWithValidBrand = products
+                .Where(p => validBrands.Any(brand => brand.Equals(p.manufacturer, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+
             await Task.Run(() =>
             {
-                foreach (var product in products)
+                foreach (var product in productsWithValidBrand)
                 {
                     var correlationData = GetCorrelationDataForProduct(product, priceLines);
                     if (correlationData != null)

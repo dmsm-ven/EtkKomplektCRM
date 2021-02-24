@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.Components
 {
-    public abstract class DeleteConfirmDialogBase : ComponentBase
+    public abstract class ConfirmDialogBase : ComponentBase
     {
         protected bool ShowConfirmation { get; set; }
 

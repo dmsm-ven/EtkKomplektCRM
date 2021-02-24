@@ -1,5 +1,6 @@
 ﻿@page "/symmetron-task-settings"
 @inject ISettingStorage settings
+@inject IToastService toasts
 
 <h3>Настройки Symmetron задачи</h3>
 
@@ -11,6 +12,10 @@
                 <div class="form-group">
                     <input type="checkbox" @bind="isActive" class="form-check-input" />
                     <span style="font-size: 16px; color: olive; margin: 4px; color: @(isActive ? "green" : "lightgray")">@(isActive ? "Включено" : "Выключено")</span>
+                </div>
+                <div class="form-group">
+                    <span>Выполнить в</span>
+                    <input type="time" @bind="executionDateTime" class="form-control" />
                 </div>
                 <div class="form-group">
                     <label for="imapServerFeild">Сервер</label>
@@ -39,43 +44,67 @@
         </div>
     </div>
 
-    @if (isConnectionCheckProgress)
+    @if (isProgressBarVisible)
     {
         <IntermediateProgressBar />
     }
 
     <div class="row py-4">
-        <button class="btn btn-outline-dark btn-lg" @onclick="TestMethod">Тест выполнения</button>
+        <button class="btn btn-outline-dark btn-lg" @onclick="@(e => confirmDialog.Show())">Выполнить сейчас</button>
     </div>
 </div>
 
+<ConfirmDialog @ref="confirmDialog" 
+               ConfirmationChanged="ExecuteImmediatelyDialogStatusChanged" 
+               ConfirmationMessage="@(() => "Выполнить задание по обновление цен Symmetron (из прайс-листа с почты) ?")"
+               ConfirmationTitle="Подтверждение"/>
+
 @code {
     bool isActive = true;
+    bool isProgressBarVisible = false;
     bool? checkConnectionState = null;
+
+    DateTime executionDateTime;
+    DateTime lastExecutionDateTime;
+    TimeSpan executionTime => executionDateTime.TimeOfDay;
 
     string imapServer, imapPort, password, email;
     string checkConnectionMessage => checkConnectionState.HasValue ? (checkConnectionState.Value ? "Успешно" : "Ошибка соединения") : "Проверить соединение";
     string checkConnectionCss => checkConnectionState.HasValue ? (checkConnectionState.Value ? "btn-success" : "btn-danger") : string.Empty;
 
-    bool isConnectionCheckProgress = false;
+    [Inject] TaskScheduleManager taskManager { get; set; }
+
+    ConfirmDialogBase confirmDialog;
 
     private async Task CheckConnection()
     {
-        isConnectionCheckProgress = true;
+        isProgressBarVisible = true;
 
         checkConnectionState = await EtkBlazorApp.ImapClient.MyImapClient.CheckConnection(imapServer, imapPort, email, password);
 
-        isConnectionCheckProgress = false;
+        isProgressBarVisible = false;
     }
 
-    private async Task TestMethod()
+    private async Task ExecuteImmediatelyDialogStatusChanged(bool status)
     {
-        isConnectionCheckProgress = true;
+        if (status)
+        {
+            isProgressBarVisible = true;
 
-        var tempFile = await EtkBlazorApp.ImapClient.MyImapClient.DownloadLastSymmetronPriceListFromMail(imapServer, imapPort, email, password);
-        System.IO.File.Delete(tempFile);
+            await Task.Delay(TimeSpan.FromSeconds(3));
 
-        isConnectionCheckProgress = false;
+            var runResult = new Random().Next(2);
+            if (runResult == 1)
+            {
+                toasts.ShowSuccess("Задание успешно выполнено");
+            }
+            else
+            {
+                toasts.ShowError("Ошибка при выполнении задания");
+            }
+
+            isProgressBarVisible = false;
+        }
     }
 
     protected override async Task OnInitializedAsync()
@@ -88,17 +117,23 @@
         }
         email = await settings.GetValue("task_symmetron_login");
         password = await settings.GetValue("task_symmetron_password");
-        isActive = await settings.GetValue<bool>("task_symmetron_active");
+        isActive = await settings.GetValue<bool>
+            ("task_symmetron_active");
+        executionDateTime = DateTime.Now.Date + (await settings.GetValue<TimeSpan>
+            ("task_symmetron_exec_time"));
+        lastExecutionDateTime = (await settings.GetValue<DateTime>
+            ($"task_symmetron_last_exec_date_time"));
     }
 
     private async Task SaveSettings()
     {
-
         await settings.SetValue("task_symmetron_active", isActive);
         await settings.SetValue("task_symmetron_imap_server", imapServer);
         await settings.SetValue("task_symmetron_imap_port", imapPort);
         await settings.SetValue("task_symmetron_login", email);
         await settings.SetValue("task_symmetron_password", password);
+        await settings.SetValue("task_symmetron_exec_time", executionTime);
+
         checkConnectionState = null;
     }
 }

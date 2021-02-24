@@ -1,4 +1,4 @@
-﻿@inherits DeleteConfirmDialogBase
+﻿@inherits ConfirmDialogBase
 
 @if (ShowConfirmation)
 {
@@ -18,11 +18,11 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal"
                             @onclick="() => OnConfirmationChange(false)">
-                        Отмена
+                        Нет
                     </button>
-                    <button type="button" class="btn btn-danger"
+                    <button type="button" class="btn btn-success"
                             @onclick="() => OnConfirmationChange(true)">
-                        Удалить
+                        Да
                     </button>
                 </div>
             </div>

@@ -23,8 +23,9 @@ namespace EtkBlazorApp.BL.Managers
 
             var data = await correlator.GetCorrelationData(products, priceLines);
 
-            await productsStorage.UpdateStock(data, clearStockBeforeUpdate);
             await productsStorage.UpdatePrice(data);
+            await productsStorage.UpdateStock(data, clearStockBeforeUpdate);
+            
         }
     }
 }

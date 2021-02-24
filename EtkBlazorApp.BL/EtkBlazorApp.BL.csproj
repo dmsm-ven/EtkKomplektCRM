@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\EtkBlazorApp.DataAccess\EtkBlazorApp.DataAccess.csproj" />
     <ProjectReference Include="..\EtkBlazorApp.Data\EtkBlazorApp.Data.csproj" />
+    <ProjectReference Include="..\EtkBlazorApp.ImapClient\EtkBlazorApp.ImapClient.csproj" />
   </ItemGroup>
 
   <ItemGroup>

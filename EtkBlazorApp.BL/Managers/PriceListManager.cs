@@ -21,7 +21,7 @@ namespace EtkBlazorApp.BL.Managers
             this.correlator = correlator;
         }
 
-        public async Task<int> LoadPriceList(IPriceListTemplate template, CancellationToken? token)
+        public async Task<int> LoadPriceList(IPriceListTemplate template, CancellationToken? token = null)
         {
             if (template != null)
             {              

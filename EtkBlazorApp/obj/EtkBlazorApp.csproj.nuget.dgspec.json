@@ -107,6 +107,9 @@
               },
               "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Data\\EtkBlazorApp.Data.csproj": {
                 "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Data\\EtkBlazorApp.Data.csproj"
+              },
+              "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.ImapClient\\EtkBlazorApp.ImapClient.csproj": {
+                "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.ImapClient\\EtkBlazorApp.ImapClient.csproj"
               }
             }
           }

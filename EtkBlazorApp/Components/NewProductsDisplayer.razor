@@ -16,10 +16,6 @@ else
                             <div class="product-item-manufacturer">
                                 <p>@product.manufacturer</p>
                             </div>
-                            <div class="product-item-date">
-                                <p>Добавлен: <span style="color: blue;">@product.date_added.ToString("d")</span></p>
-                            </div>
-
                             <img src="@("https://etk-komplekt.ru/image/" + product.image)"
                                     style="width: 250px; height: 250px;"
                                     class="figure-img img-fluid rounded" alt="@(product.name ?? "Товар без назания")">

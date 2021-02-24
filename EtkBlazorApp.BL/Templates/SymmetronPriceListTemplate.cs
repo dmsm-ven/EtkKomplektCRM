@@ -13,11 +13,6 @@ namespace EtkBlazorApp.BL
 
             for (int i = 2; i < tab.Dimension.Rows; i++)
             {
-                if (CancelToken.HasValue && (i % 100 == 0) && CancelToken.Value.IsCancellationRequested)
-                {
-                    throw new OperationCanceledException("Отменено пользователем");
-                }
-
                 var priceLine = new PriceLine(this)
                 {
                     Name = tab.GetValue<string>(i, 1),

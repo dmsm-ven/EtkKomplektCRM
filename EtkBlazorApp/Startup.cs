@@ -49,15 +49,13 @@ namespace EtkBlazorApp
             services.AddSingleton<NewOrdersNotificationService>();
             services.AddSingleton<UpdateManager>();
             services.AddSingleton<OzonSellerApi>();
+            services.AddSingleton<PriceListManager>();
             services.AddSingleton<TaskScheduleManager>();
 
-            services.AddScoped<MyDbLogger>();
-            services.AddScoped<PriceListManager>();         
+            services.AddScoped<MyDbLogger>();                 
             services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();
-            services.AddScoped<ReportManager>();                    
-                           
-            
-            
+            services.AddScoped<ReportManager>();      
+
             //Сторонние
             services.AddBlazoredToast();
 
@@ -88,6 +86,8 @@ namespace EtkBlazorApp
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
             });
+
+            app.ApplicationServices.GetService<TaskScheduleManager>();
         }
     }
 }

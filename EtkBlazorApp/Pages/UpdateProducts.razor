@@ -15,8 +15,7 @@
         <div class="col-md-2">
             <span>
                 <input type="checkbox" 
-                       value="@clearStockBeforeUpdate"
-                       @onchange="ClearStockStateChanged" /> &nbsp;&nbsp;Обнулять остатки
+                       @bind="clearStockBeforeUpdate" /> &nbsp;&nbsp;Обнулять остатки
             </span>
         </div>
 
@@ -39,16 +38,6 @@
     [Inject] PriceListManager priceListManager { get; set; }
     [Inject] UpdateManager databaseManager { get; set; }
     [Inject] ReportManager reportManager { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        clearStockBeforeUpdate = (await setting.GetValue("update_products_clear_stock_before_update")).ToBooleanNumber();
-    }
-
-    private async Task ClearStockStateChanged(ChangeEventArgs e)
-    {
-        await setting.SetValue("update_products_clear_stock_before_update", ((bool)e?.Value).ToStringValue());
-    }
 
     private async Task UpdateProductsPriceAndStock()
     {

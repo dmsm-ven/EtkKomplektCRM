@@ -15,7 +15,5 @@ namespace EtkBlazorApp.DataAccess.Entity
         public string url { get; set; }
         public string image { get; set; }
         public int quantity { get; set; }
-        public DateTime date_modified { get; set; }
-        public DateTime date_added { get; set; }
     }
 }

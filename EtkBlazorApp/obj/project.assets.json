@@ -2211,6 +2211,7 @@
           "EPPlus": "5.5.0",
           "EtkBlazorApp.Data": "1.0.0",
           "EtkBlazorApp.DataAccess": "1.0.0",
+          "EtkBlazorApp.ImapClient": "1.0.0",
           "Newtonsoft.Json": "12.0.3",
           "System.Net.Primitives": "4.3.0"
         },

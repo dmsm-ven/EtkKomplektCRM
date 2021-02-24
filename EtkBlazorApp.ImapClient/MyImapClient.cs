@@ -36,7 +36,7 @@ namespace EtkBlazorApp.ImapClient
 		/// <param name="login"></param>
 		/// <param name="password"></param>
 		/// <returns>Возращает путь до временного файла или в случае неудачи null</returns>
-		public static async Task<string> DownloadLastSymmetronPriceListFromMail(string host, string port, string login, string password)
+		public static async Task<string> DownloadLastSymmetronPriceListFromMail(string host, string port, string login, string password, uint maxEmailAgeInDays = 5)
         {
 			string userName = login.Split('@')[0];
 
@@ -48,7 +48,7 @@ namespace EtkBlazorApp.ImapClient
 
 				var searchQuery = SearchQuery.SubjectContains("Price Symmetron")
 					.And(SearchQuery.FromContains("price@symmetron.ru"))
-					.And(SearchQuery.DeliveredAfter(DateTime.Now.AddDays(-3)));
+					.And(SearchQuery.DeliveredAfter(DateTime.Now.AddDays(-maxEmailAgeInDays)));
 
 				var searchResult = await client.Inbox.SearchAsync(searchQuery);
 

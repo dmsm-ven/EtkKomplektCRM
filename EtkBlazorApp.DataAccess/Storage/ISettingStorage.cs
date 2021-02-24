@@ -37,10 +37,12 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task<T> GetValue<T>(string name)
         {
-            var converter = TypeDescriptor.GetConverter(typeof(T));
-            var stringValue = await GetValue(name);
+            // TODO добавить сюда и в SetValue проверку: 
+            // если тип сложный класс то выполнять json сериализацию/десериализацию
             try
             {
+                var converter = TypeDescriptor.GetConverter(typeof(T));
+                var stringValue = await GetValue(name);
                 var value = (T)(converter.ConvertFromInvariantString(stringValue));
                 return value;
             }

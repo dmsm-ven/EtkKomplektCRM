@@ -58,26 +58,14 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task<List<ProductEntity>> ReadProducts()
         {
-            //public int product_id { get; set; }
-            //public string name { get; set; }
-            //public string model { get; set; }
-            //public string manufacturer { get; set; }
-            //public string sku { get; set; }
-            //public decimal price { get; set; }
-            //public string url { get; set; }
-            //public string image { get; set; }
-            //public int quantity { get; set; }
-            //public DateTime date_modified { get; set; }
-            //public DateTime date_added { get; set; }
-
             var sb = new StringBuilder()
-                    .Append("SELECT p.*, d.name as name, m.name as manufacturer, url.keyword as url")
-                    .Append("FROM oc_product p")
-                    .Append("LEFT JOIN oc_product_description d ON p.product_id = d.product_id")
-                    .Append("LEFT JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id")
-                    .Append("LEFT JOIN oc_url_alias url ON CONCAT('product_id=', p.product_id) = [url.query]");
+                    .AppendLine("SELECT p.*, d.name as name, m.name as manufacturer, url.keyword as url")
+                    .AppendLine("FROM oc_product p")
+                    .AppendLine("LEFT JOIN oc_product_description d ON p.product_id = d.product_id")
+                    .AppendLine("LEFT JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id")
+                    .AppendLine("LEFT JOIN oc_url_alias url ON CONCAT('product_id=', p.product_id) = url.query");
 
-            string sql = sb.ToString();
+            string sql = sb.ToString().Trim(); 
 
             var products = await database.LoadData<ProductEntity, dynamic>(sql, new { });
 
@@ -96,6 +84,7 @@ namespace EtkBlazorApp.DataAccess
             Dictionary<CurrencyType, List<int>> idsGroupedByCurrency = source
                 .GroupBy(p => p.currency_code)
                 .ToDictionary(g => g.Key, g => g.Select(p => p.product_id).OrderBy(id => id).ToList());
+            bool onlyOneCurrency = idsGroupedByCurrency.Keys.Count == 1;
  
             string idsArray = string.Join(",", source.Select(d => d.product_id).Distinct().OrderBy(id => id));
 
@@ -110,16 +99,23 @@ namespace EtkBlazorApp.DataAccess
                     sb.AppendLine($"WHEN '{productInfo.product_id}' THEN '{productInfo.price.Value.ToString(new CultureInfo("en-EN"))}'");
                 }
 
-                sb.AppendLine("ELSE base_price")
-                  .AppendLine("END, date_modified = NOW()")
-                  .AppendLine($"WHERE product_id IN ({idsArray});");
+                sb.AppendLine("ELSE base_price").AppendLine("END, date_modified = NOW()");
 
-            //Обновляем тип валюты товара
-            foreach(var kvp in idsGroupedByCurrency)
-            {
-                string currencyIdsArray = string.Join(",", source.Select(d => d.product_id).Distinct().OrderBy(id => id));
-                sb.AppendLine($"UPDATE oc_product SET currency_code = '{kvp.Key}' WHERE product_id IN ({currencyIdsArray});");
-            }
+                if (onlyOneCurrency)
+                {
+                    sb.AppendLine($", base_currency_code = '{idsGroupedByCurrency.Keys.First()}'");
+                }
+                sb.AppendLine($"WHERE product_id IN ({idsArray});");
+
+                if (!onlyOneCurrency)
+                {
+                    //Обновляем тип валюты товара
+                    foreach (var kvp in idsGroupedByCurrency)
+                    {
+                        string currencyIdsArray = string.Join(",", source.Select(d => d.product_id).Distinct().OrderBy(id => id));
+                        sb.AppendLine($"UPDATE oc_product SET base_currency_code = '{kvp.Key}' WHERE product_id IN ({currencyIdsArray});");
+                    }
+                }
 
             var sql = sb.ToString();
 
@@ -162,7 +158,6 @@ namespace EtkBlazorApp.DataAccess
 
             await database.SaveData<dynamic>(sql, new { });
         }
-
 
         /// <summary>
         /// Получение списка ID товаров которые участвуют акции на данный момент

@@ -35,6 +35,9 @@ namespace EtkBlazorApp.DataAccess.Entity
         Ozon,
 
         [Description("ВсеИнструменты")]
-        VseInstrumenti
+        VseInstrumenti,
+
+        [Description("Задание")]
+        PereodicTask
     }
 }
