@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.DataAccess;
+﻿using EtkBlazorApp.BL.Managers;
+using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using System;
 using System.Diagnostics;
@@ -10,46 +11,25 @@ namespace EtkBlazorApp.BL
     {
         public ScheduleTask Name { get; }
         public bool IsDoneToday { get; protected set; }
+        protected ScheduleTaskManager Manager { get; private set; }
 
         public ScheduleTaskBase(ScheduleTask task)
         {
             Name = task;
         }
 
-        public virtual async Task<bool> Execute(ILogStorage logger)
+        public virtual async Task Execute()
         {
-            bool status = false;
-
-            var logEntry = new LogEntryEntity()
-            {
-                group_name = LogEntryGroupName.PereodicTask,
-                message = "Обновления товаров из прайс-листа Symmetron",
-                date_time = DateTime.Now
-            };
-
-            var sw = Stopwatch.StartNew();
-
             try
             {
                 await Run();
-
-                logEntry.title = $"{Name} выполнено успешно";
-                logEntry.message += $" Выполнено за: {sw.Elapsed.TotalSeconds} секунд.";
-
-                status = true;
-
             }
-            catch(Exception ex)
+            catch
             {
-                logEntry.title = $"{Name} ошибка выполнения";
-                logEntry.message += $" Ошибка: {ex.Message}";
+                throw;
             }
-
 
             IsDoneToday = true;
-
-            await logger.Write(logEntry);
-            return status;
         }
 
         public void Reset()
@@ -57,7 +37,13 @@ namespace EtkBlazorApp.BL
             IsDoneToday = false;
         }
 
+        public void SetManager(ScheduleTaskManager manager)
+        {
+            Manager = manager;
+        }
+
         protected abstract Task Run();
+
     }
 
     public enum ScheduleTask

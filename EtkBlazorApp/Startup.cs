@@ -50,7 +50,7 @@ namespace EtkBlazorApp
             services.AddSingleton<UpdateManager>();
             services.AddSingleton<OzonSellerApi>();
             services.AddSingleton<PriceListManager>();
-            services.AddSingleton<TaskScheduleManager>();
+            services.AddSingleton<ScheduleTaskManager>();
 
             services.AddScoped<MyDbLogger>();                 
             services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();
@@ -87,7 +87,7 @@ namespace EtkBlazorApp
                 endpoints.MapFallbackToPage("/_Host");
             });
 
-            app.ApplicationServices.GetService<TaskScheduleManager>();
+            app.ApplicationServices.GetService<ScheduleTaskManager>();
         }
     }
 }

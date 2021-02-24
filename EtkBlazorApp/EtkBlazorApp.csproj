@@ -39,7 +39,6 @@
     <ProjectReference Include="..\EtkBlazorApp.API\EtkBlazorApp.Integration.csproj" />
     <ProjectReference Include="..\EtkBlazorApp.BL\EtkBlazorApp.BL.csproj" />
     <ProjectReference Include="..\EtkBlazorApp.DataAccess\EtkBlazorApp.DataAccess.csproj" />
-    <ProjectReference Include="..\EtkBlazorApp.ImapClient\EtkBlazorApp.ImapClient.csproj" />
   </ItemGroup>
 
 </Project>

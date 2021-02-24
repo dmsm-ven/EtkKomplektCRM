@@ -2086,20 +2086,6 @@
         "runtime": {
           "bin/placeholder/EtkBlazorApp.DataAccess.dll": {}
         }
-      },
-      "EtkBlazorApp.ImapClient/1.0.0": {
-        "type": "project",
-        "framework": ".NETCoreApp,Version=v5.0",
-        "dependencies": {
-          "MailKit": "2.10.1",
-          "SharpCompress": "0.28.1"
-        },
-        "compile": {
-          "bin/placeholder/EtkBlazorApp.ImapClient.dll": {}
-        },
-        "runtime": {
-          "bin/placeholder/EtkBlazorApp.ImapClient.dll": {}
-        }
       }
     }
   },
@@ -7215,11 +7201,6 @@
       "type": "project",
       "path": "../EtkBlazorApp.DataAccess/EtkBlazorApp.DataAccess.csproj",
       "msbuildProject": "../EtkBlazorApp.DataAccess/EtkBlazorApp.DataAccess.csproj"
-    },
-    "EtkBlazorApp.ImapClient/1.0.0": {
-      "type": "project",
-      "path": "../EtkBlazorApp.ImapClient/EtkBlazorApp.ImapClient.csproj",
-      "msbuildProject": "../EtkBlazorApp.ImapClient/EtkBlazorApp.ImapClient.csproj"
     }
   },
   "projectFileDependencyGroups": {
@@ -7228,8 +7209,9 @@
       "EPPlus >= 5.5.0",
       "EtkBlazorApp.Data >= 1.0.0",
       "EtkBlazorApp.DataAccess >= 1.0.0",
-      "EtkBlazorApp.ImapClient >= 1.0.0",
+      "MailKit >= 2.10.1",
       "Newtonsoft.Json >= 12.0.3",
+      "SharpCompress >= 0.28.1",
       "System.Net.Primitives >= 4.3.0"
     ]
   },
@@ -7269,9 +7251,6 @@
             },
             "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Data\\EtkBlazorApp.Data.csproj": {
               "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Data\\EtkBlazorApp.Data.csproj"
-            },
-            "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.ImapClient\\EtkBlazorApp.ImapClient.csproj": {
-              "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.ImapClient\\EtkBlazorApp.ImapClient.csproj"
             }
           }
         }
@@ -7294,9 +7273,17 @@
             "target": "Package",
             "version": "[5.5.0, )"
           },
+          "MailKit": {
+            "target": "Package",
+            "version": "[2.10.1, )"
+          },
           "Newtonsoft.Json": {
             "target": "Package",
             "version": "[12.0.3, )"
+          },
+          "SharpCompress": {
+            "target": "Package",
+            "version": "[0.28.1, )"
           },
           "System.Net.Primitives": {
             "target": "Package",

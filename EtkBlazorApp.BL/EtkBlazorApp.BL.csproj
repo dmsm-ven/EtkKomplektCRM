@@ -6,14 +6,15 @@
 
   <ItemGroup>    
     <PackageReference Include="CsvHelper" Version="21.1.0" />    
-    <PackageReference Include="EPPlus" Version="5.5.0" />
+    <PackageReference Include="EPPlus" Version="5.5.0" />    
+    <PackageReference Include="MailKit" Version="2.10.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="SharpCompress" Version="0.28.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\EtkBlazorApp.DataAccess\EtkBlazorApp.DataAccess.csproj" />
     <ProjectReference Include="..\EtkBlazorApp.Data\EtkBlazorApp.Data.csproj" />
-    <ProjectReference Include="..\EtkBlazorApp.ImapClient\EtkBlazorApp.ImapClient.csproj" />
   </ItemGroup>
 
   <ItemGroup>

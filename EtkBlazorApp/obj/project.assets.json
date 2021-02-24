@@ -2211,8 +2211,9 @@
           "EPPlus": "5.5.0",
           "EtkBlazorApp.Data": "1.0.0",
           "EtkBlazorApp.DataAccess": "1.0.0",
-          "EtkBlazorApp.ImapClient": "1.0.0",
+          "MailKit": "2.10.1",
           "Newtonsoft.Json": "12.0.3",
+          "SharpCompress": "0.28.1",
           "System.Net.Primitives": "4.3.0"
         },
         "compile": {
@@ -2255,20 +2256,6 @@
         },
         "runtime": {
           "bin/placeholder/EtkBlazorApp.DataAccess.dll": {}
-        }
-      },
-      "EtkBlazorApp.ImapClient/1.0.0": {
-        "type": "project",
-        "framework": ".NETCoreApp,Version=v5.0",
-        "dependencies": {
-          "MailKit": "2.10.1",
-          "SharpCompress": "0.28.1"
-        },
-        "compile": {
-          "bin/placeholder/EtkBlazorApp.ImapClient.dll": {}
-        },
-        "runtime": {
-          "bin/placeholder/EtkBlazorApp.ImapClient.dll": {}
         }
       },
       "EtkBlazorApp.Integration/1.0.0": {
@@ -7630,11 +7617,6 @@
       "path": "../EtkBlazorApp.DataAccess/EtkBlazorApp.DataAccess.csproj",
       "msbuildProject": "../EtkBlazorApp.DataAccess/EtkBlazorApp.DataAccess.csproj"
     },
-    "EtkBlazorApp.ImapClient/1.0.0": {
-      "type": "project",
-      "path": "../EtkBlazorApp.ImapClient/EtkBlazorApp.ImapClient.csproj",
-      "msbuildProject": "../EtkBlazorApp.ImapClient/EtkBlazorApp.ImapClient.csproj"
-    },
     "EtkBlazorApp.Integration/1.0.0": {
       "type": "project",
       "path": "../EtkBlazorApp.API/EtkBlazorApp.Integration.csproj",
@@ -7646,7 +7628,6 @@
       "Blazored.Toast >= 3.1.2",
       "EtkBlazorApp.BL >= 1.0.0",
       "EtkBlazorApp.DataAccess >= 1.0.0",
-      "EtkBlazorApp.ImapClient >= 1.0.0",
       "EtkBlazorApp.Integration >= 1.0.0",
       "Newtonsoft.Json >= 12.0.3",
       "SSH.NET >= 2016.1.0",
@@ -7692,9 +7673,6 @@
             },
             "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.DataAccess\\EtkBlazorApp.DataAccess.csproj": {
               "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.DataAccess\\EtkBlazorApp.DataAccess.csproj"
-            },
-            "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.ImapClient\\EtkBlazorApp.ImapClient.csproj": {
-              "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.ImapClient\\EtkBlazorApp.ImapClient.csproj"
             }
           }
         }

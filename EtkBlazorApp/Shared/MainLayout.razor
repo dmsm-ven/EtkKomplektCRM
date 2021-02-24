@@ -1,7 +1,9 @@
 ﻿@inherits LayoutComponentBase
-@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IToastService toastService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject MyDbLogger logger
+@inject ScheduleTaskManager taskManager
+
 @using System.Globalization
 
 <AuthorizeView>
@@ -44,6 +46,22 @@
     public async Task LogOut()
     {
         await ((MyCustomAuthProvider)AuthenticationStateProvider).LogOutUser();
+    }
+
+    protected override void OnInitialized()
+    {
+        taskManager.TaskProcessed += (e) =>
+        {
+            string taskName = e.Item1.Name.ToString();
+            if (e.Item2)
+            {
+                toastService.ShowSuccess($"Задание выполнено: {taskName}");
+            }
+            else
+            {
+                toastService.ShowWarning($"Ошибка выполнения задания: {taskName}");
+            }
+        };
     }
 
 }

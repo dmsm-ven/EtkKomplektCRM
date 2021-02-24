@@ -1,6 +1,7 @@
 ﻿@page "/symmetron-task-settings"
 @inject ISettingStorage settings
 @inject IToastService toasts
+@inject ScheduleTaskManager taskManager
 
 <h3>Настройки Symmetron задачи</h3>
 
@@ -54,10 +55,10 @@
     </div>
 </div>
 
-<ConfirmDialog @ref="confirmDialog" 
-               ConfirmationChanged="ExecuteImmediatelyDialogStatusChanged" 
+<ConfirmDialog @ref="confirmDialog"
+               ConfirmationChanged="ExecuteImmediatelyDialogStatusChanged"
                ConfirmationMessage="@(() => "Выполнить задание по обновление цен Symmetron (из прайс-листа с почты) ?")"
-               ConfirmationTitle="Подтверждение"/>
+               ConfirmationTitle="Подтверждение" />
 
 @code {
     bool isActive = true;
@@ -72,15 +73,13 @@
     string checkConnectionMessage => checkConnectionState.HasValue ? (checkConnectionState.Value ? "Успешно" : "Ошибка соединения") : "Проверить соединение";
     string checkConnectionCss => checkConnectionState.HasValue ? (checkConnectionState.Value ? "btn-success" : "btn-danger") : string.Empty;
 
-    [Inject] TaskScheduleManager taskManager { get; set; }
-
     ConfirmDialogBase confirmDialog;
 
     private async Task CheckConnection()
     {
         isProgressBarVisible = true;
 
-        checkConnectionState = await EtkBlazorApp.ImapClient.MyImapClient.CheckConnection(imapServer, imapPort, email, password);
+        checkConnectionState = await MyImapClient.CheckConnection(imapServer, imapPort, email, password);
 
         isProgressBarVisible = false;
     }
@@ -91,17 +90,7 @@
         {
             isProgressBarVisible = true;
 
-            await Task.Delay(TimeSpan.FromSeconds(3));
-
-            var runResult = new Random().Next(2);
-            if (runResult == 1)
-            {
-                toasts.ShowSuccess("Задание успешно выполнено");
-            }
-            else
-            {
-                toasts.ShowError("Ошибка при выполнении задания");
-            }
+            await taskManager.ExecuteImmediately(ScheduleTask.Symmetron);
 
             isProgressBarVisible = false;
         }
