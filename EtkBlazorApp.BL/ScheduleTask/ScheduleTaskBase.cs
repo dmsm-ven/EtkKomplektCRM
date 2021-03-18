@@ -9,13 +9,13 @@ namespace EtkBlazorApp.BL
 {
     public abstract class ScheduleTaskBase
     {
-        public ScheduleTask Name { get; }
+        public CronTask Prefix { get; }
         public bool IsDoneToday { get; protected set; }
         protected ScheduleTaskManager Manager { get; private set; }
 
-        public ScheduleTaskBase(ScheduleTask task)
+        public ScheduleTaskBase(CronTask prefix)
         {
-            Name = task;
+            Prefix = prefix;
         }
 
         public virtual async Task Execute()
@@ -45,9 +45,4 @@ namespace EtkBlazorApp.BL
         protected abstract Task Run();
 
     }
-
-    public enum ScheduleTask
-    {
-        Symmetron
-    };
 }

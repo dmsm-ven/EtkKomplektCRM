@@ -10,11 +10,10 @@ namespace EtkBlazorApp.BL
 {
     public class SymmetronScheduleTask : ScheduleTaskBase
     {
-        public SymmetronScheduleTask() : base(ScheduleTask.Symmetron) { }
+        public SymmetronScheduleTask() : base(CronTask.Symmetron) { }
 
         protected override async Task Run()
         {
-
             await Task.Delay(TimeSpan.FromSeconds(45));
 
             //var imapServer = await Manager.settings.GetValue("task_symmetron_imap_server");

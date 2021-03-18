@@ -10,7 +10,7 @@ else
         <div class="row">
             @foreach (var product in products)
             {
-                <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12 product-item">
+                <div class="col-lg-2 col-md-4 col-sm-6 col-xs-12 product-item">
                     <a href="https://etk-komplekt.ru/index.php?route=product/product&product_id=@product.product_id" target="_blank">
                         <div class="product-item-inner shadow">
                             <div class="product-item-manufacturer">
@@ -35,7 +35,7 @@ else
 @code {
 
     [Parameter]
-    public int ProductsCount { get; set; } = 6;
+    public int ProductsCount { get; set; } = 12;
 
     List<ProductEntity> products = null;
 

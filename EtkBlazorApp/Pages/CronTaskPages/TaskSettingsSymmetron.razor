@@ -1,7 +1,8 @@
-﻿@page "/symmetron-task-settings"
+﻿@page "/task-settings/symmetron"
 @inject ISettingStorage settings
 @inject IToastService toasts
 @inject ScheduleTaskManager taskManager
+@attribute [Authorize(Roles = "Administrator")]
 
 <h3>Настройки Symmetron задачи</h3>
 
@@ -90,7 +91,7 @@
         {
             isProgressBarVisible = true;
 
-            await taskManager.ExecuteImmediately(ScheduleTask.Symmetron);
+            await taskManager.ExecuteImmediately(CronTask.Symmetron);
 
             isProgressBarVisible = false;
         }

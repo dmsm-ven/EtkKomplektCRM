@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
 {
@@ -15,19 +16,25 @@ namespace EtkBlazorApp.BL
         protected CancellationToken? CancelToken { get; set; }
         protected ExcelPackage Excel { get; set; }
 
-        public List<PriceLine> ReadPriceLines(CancellationToken? token = null)
+        public async Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            List<PriceLine> lines = null;
 
-            using (Excel = new ExcelPackage(new FileInfo(FileName)))
+            await Task.Run(() =>
             {
-                if (token.HasValue && token.Value.IsCancellationRequested)
+                using (Excel = new ExcelPackage(new FileInfo(FileName)))
                 {
-                    throw new OperationCanceledException("Отменено пользователем");
-                }
+                    if (token.HasValue && token.Value.IsCancellationRequested)
+                    {
+                        throw new OperationCanceledException("Отменено пользователем");
+                    }
 
-                return ReadDataFromExcel();
-            }
+                    lines = ReadDataFromExcel();
+                }
+            });
+
+            return lines;
         }
 
         protected abstract List<PriceLine> ReadDataFromExcel();

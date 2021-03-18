@@ -1,6 +1,10 @@
 ﻿using EtkBlazorApp.Data;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,7 +14,6 @@ namespace EtkBlazorApp.BL.Managers
     {
         public List<PriceLine> PriceLines { get; }
         public List<LoadedFileData> LoadedFiles { get; }
-        public IEnumerable<IPriceListTemplate> LoadedTemplates => LoadedFiles.Select(f => f.Template);
 
         private readonly IPriceLineLoadCorrelator correlator;
 
@@ -21,24 +24,45 @@ namespace EtkBlazorApp.BL.Managers
             this.correlator = correlator;
         }
 
-        public async Task<int> LoadPriceList(IPriceListTemplate template, CancellationToken? token = null)
+        public async Task UploadPriceList(Type templateType, Stream downloadFileStream, long streamLength, CancellationToken? token = null)
         {
-            if (template != null)
-            {              
-                var data = await Task.Run(() => template.ReadPriceLines(token));
+            if (templateType == null) { return; }
+
+            string fileName = Path.GetTempFileName();
+            using (var fileStream = File.Create(fileName))
+            {
+                var buffer = new byte[streamLength];
+                await downloadFileStream.ReadAsync(buffer);
+                await fileStream.WriteAsync(buffer, 0, buffer.Length);
+            }
+
+            //Скачали данные из потока и записали в временный файл
+            if (!File.Exists(fileName)) { return; }
+            
+            try
+            {
+                IPriceListTemplate templateInstance = (IPriceListTemplate)Activator.CreateInstance(templateType, fileName );
+
+                var data = await templateInstance.ReadPriceLines(token);
                 AddNewPriceLines(data);
 
-                var fileData = new LoadedFileData(template)
+                var fileData = new LoadedFileData(templateInstance)
                 {
                     RecordsInFile = data.Count,
-                    TemplateName = template.GetType().Name
+                    TemplateName = templateInstance.GetType().Name
                 };
 
                 LoadedFiles.Add(fileData);
-                return data.Count;
             }
+            catch(Exception ex)
+            {
 
-            return 0;
+            }
+            finally
+            {
+                File.Delete(fileName);
+            }
+       
         }
 
         public void RemovePriceList(LoadedFileData data)
@@ -52,39 +76,27 @@ namespace EtkBlazorApp.BL.Managers
             if (PriceLines.Count == 0)
             {
                 PriceLines.AddRange(newLines);
+                return;
             }
-            else
+
+            foreach (var line in newLines)
             {
-                foreach (var line in newLines)
+                var linkedLine = correlator.FindCorrelation(line, PriceLines);
+
+                if (linkedLine != null)
                 {
-                    var linkedLine = correlator.FindCorrelation(line, PriceLines);
-
-                    if (linkedLine != null)
+                    if (line.Price.HasValue)
                     {
-                        // если SpecialLine то прибавляем остаток на складе к тещей записи
-                        // Пример - загрузка SymmetronPriceListTemplate и сразу за ним DipolQuantityTemplate или 1c остатки
-                        // В итоге добавятся цена и остатки Symmetron, а так же приплюсуются остатки из Dipol
-
-                        if (line.IsSpecialLine && (line.Quantity.HasValue && linkedLine.Quantity.HasValue))
-                        {
-                            linkedLine.Quantity += line.Quantity;
-                        }
-                        else
-                        {
-                            if (line.Price.HasValue)
-                            {
-                                linkedLine.Price = line.Price;
-                            }
-                            if (line.Quantity.HasValue)
-                            {
-                                linkedLine.Quantity = line.Quantity;
-                            }
-                        }
-                        continue;
+                        linkedLine.Price = line.Price;
                     }
-
-                    PriceLines.Add(line);
+                    if (line.Quantity.HasValue)
+                    {
+                        linkedLine.Quantity = line.Quantity;
+                    }
+                    continue;
                 }
+
+                PriceLines.Add(line);
             }
         }
     }

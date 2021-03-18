@@ -14,22 +14,13 @@
         </div>
         <div class="col-md-2">
             <span>
-                <input type="checkbox" 
-                       @bind="clearStockBeforeUpdate" /> &nbsp;&nbsp;Обнулять остатки
+                <input type="checkbox" @bind="clearStockBeforeUpdate" /> &nbsp;&nbsp;Обнулять остатки
             </span>
         </div>
-
-        <AuthorizeView Roles="Administrator">
-            <Authorized>
-                <div class="col-md-2 offset-6" style="text-align: right;">
-                    <a href="/shop-account/new" class="btn btn-sm btn-success">Добавить новый</a>
-                </div>
-            </Authorized>
-        </AuthorizeView>
     </div>
 </div>
 
-<LoadedPriceListDisplay />
+<LoadedPriceListDisplayer></LoadedPriceListDisplayer>
 
 
 @code {

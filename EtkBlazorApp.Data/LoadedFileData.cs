@@ -7,11 +7,11 @@
         public int RecordsInFile { get; set; }
         public string TempFilePath { get; set; }
 
+        public IPriceListTemplate Template { get; }
+
         public LoadedFileData(IPriceListTemplate template)
         {
             Template = template;
-        }
-
-        public IPriceListTemplate Template { get; }
+        }    
     }
 }

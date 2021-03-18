@@ -1,0 +1,28 @@
+﻿@page "/tasks"
+@inject ISettingStorage settings
+@inject ScheduleTaskManager taskManager
+@attribute [Authorize(Roles = "Administrator")]
+
+<h3>Переодические задачи</h3>
+<div class="table-responsive">
+    <table class="table">
+        <thead class="thead-etk">
+            <tr>
+                <th>Задание</th>
+                <th>Запускается в</th>
+                <th>Следующий через</th>
+                <th>Последний запуск</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            <CronTaskDisplayItem Title="Symmetron" Prefix="@(CronTask.Symmetron.ToString())" />
+            <CronTaskDisplayItem Title="Silver" Prefix="@(CronTask.Silver.ToString())" />
+            <CronTaskDisplayItem Title="Прист" Prefix="@(CronTask.Prist.ToString())" />
+            <CronTaskDisplayItem Title="ПКФ Марс-Компонент" Prefix="@(CronTask.MarsComponent.ToString())" />
+            <CronTaskDisplayItem Title="1C" Prefix="@(CronTask.OdinC.ToString())" />
+            <CronTaskDisplayItem Title="Bosch B2B" Prefix="@(CronTask.Bosch.ToString())" />
+            <CronTaskDisplayItem Title="Ozon" Prefix="@(CronTask.OzonSeller.ToString())" />
+        </tbody>
+    </table>
+</div>

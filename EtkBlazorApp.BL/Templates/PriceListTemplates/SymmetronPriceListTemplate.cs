@@ -1,9 +1,9 @@
 ﻿using EtkBlazorApp.Data;
-using System;
 using System.Collections.Generic;
 
 namespace EtkBlazorApp.BL
 {
+    [PriceListTemplateDescription("3853B988-DB37-4B6E-861F-3000B643FAC4")]
     public class SymmetronPriceListTemplate : ExcelPriceListTemplateBase
     {
         protected override List<PriceLine> ReadDataFromExcel()

@@ -12,7 +12,8 @@ namespace EtkBlazorApp.BL.Managers
 {
     public class ScheduleTaskManager
     {
-        public event Action<Tuple<ScheduleTaskBase, bool>> TaskProcessed;
+        public event Action<ScheduleTaskBase> OnTaskComplete;
+        public event Action<ScheduleTaskBase> OnTaskError;
 
         internal readonly ISettingStorage settings;
         internal readonly ILogStorage logger;
@@ -46,9 +47,9 @@ namespace EtkBlazorApp.BL.Managers
             checkTimer.Start();
         }
 
-        public async Task ExecuteImmediately(ScheduleTask name)
+        public async Task ExecuteImmediately(CronTask name)
         {
-            var task = taskList.FirstOrDefault(t => t.Name == name);
+            var task = taskList.FirstOrDefault(t => t.Prefix == name);
             if(task != null)
             {
                 await ExecuteTask(task, DateTime.Now.TimeOfDay, forceRun: true);
@@ -72,7 +73,7 @@ namespace EtkBlazorApp.BL.Managers
 
         private async Task ExecuteTask(ScheduleTaskBase task, TimeSpan startTime, bool forceRun = false)
         {
-            string settingsPrefix = task.Name.ToString().ToLower();
+            string settingsPrefix = task.Prefix.ToString().ToLower();
             var isEnabled = await settings.GetValue<bool>($"task_{settingsPrefix}_active");
 
             if(!isEnabled && !forceRun) { return; }
@@ -96,7 +97,7 @@ namespace EtkBlazorApp.BL.Managers
                 {
                     await task.Execute();
 
-                    logEntry.title = $"{task.Name} выполнено успешно";
+                    logEntry.title = $"{task.Prefix} выполнено успешно";
                     logEntry.message += $" Выполнено за: {sw.Elapsed.TotalSeconds} секунд.";
 
                     isDone = true;
@@ -104,18 +105,18 @@ namespace EtkBlazorApp.BL.Managers
                 }
                 catch (Exception ex)
                 {
-                    logEntry.title = $"{task.Name} ошибка выполнения";
+                    logEntry.title = $"{task.Prefix} ошибка выполнения";
                     logEntry.message += $" Ошибка: {ex.Message}";
+                    OnTaskError?.Invoke(task);
                 }                 
 
                 if (isDone)
                 {
                     await settings.SetValue($"task_{settingsPrefix}_last_exec_date_time", DateTime.Now);
+                    OnTaskComplete?.Invoke(task);
                 }
 
-                await logger.Write(logEntry);
-                TaskProcessed?.Invoke(Tuple.Create(task, isDone));
-                
+                await logger.Write(logEntry);                            
             }
         }
 

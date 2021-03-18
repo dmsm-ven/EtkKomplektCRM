@@ -50,18 +50,8 @@
 
     protected override void OnInitialized()
     {
-        taskManager.TaskProcessed += (e) =>
-        {
-            string taskName = e.Item1.Name.ToString();
-            if (e.Item2)
-            {
-                toastService.ShowSuccess($"Задание выполнено: {taskName}");
-            }
-            else
-            {
-                toastService.ShowWarning($"Ошибка выполнения задания: {taskName}");
-            }
-        };
+        taskManager.OnTaskComplete += (e) => toastService.ShowSuccess($"Задание выполнено: {e.Prefix.ToString()}");
+        taskManager.OnTaskError += (e) => toastService.ShowSuccess($"Ошибка выполнения задания: {e.Prefix.ToString()}");
     }
 
 }

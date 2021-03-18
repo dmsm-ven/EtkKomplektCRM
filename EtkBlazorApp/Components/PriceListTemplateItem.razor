@@ -1,27 +1,31 @@
 ﻿<div class="col-md-2 col-xs-6 col-sm-4 price-list-template-outer">
-    <div class="price-list-template-inner @(IsTemplateAlreadyLoaded(Template) ? "already-loaded-template" : "")">
-        <img class="brand-template-logo" src="@($"./image/logotips/{Template.GetType().Name}-logo.png")" />
+    <div class="price-list-template-inner @(IsTemplateAlreadyLoaded(Item) ? "already-loaded-template" : "")">
+        <img class="brand-template-logo" src="@Item.Image" />
         <div>
             <input type="radio"
-                   id="@(Template.GetType().Name)"
+                   id="@Item.Guid"
                    name="select-template-list-group"
-                   value="@Template"
-                   disabled="@IsTemplateAlreadyLoaded(Template)"
-                   @onchange="OnCheckedChange"/>
-            <label for="@Template.GetType().Name" style="font-size: 11px; margin-left: 2px;">@Template.GetType().Name</label>
+                   disabled="@IsTemplateAlreadyLoaded(Item)"
+                   @onchange="OnCheckedChange" />
+            <label for="@Item.Guid" style="font-size: 11px; margin-left: 2px;">@Item.Title</label>
         </div>
     </div>
 </div>
 
 @code {
     [Inject] PriceListManager priceListManager { get; set; }
-
-    [Parameter] public IPriceListTemplate Template { get; set; }
+    [Parameter] public PriceListTemplateItemViewModel Item { get; set; }
     [Parameter] public EventCallback CheckedChanged { get; set; }
 
-    private bool IsTemplateAlreadyLoaded(IPriceListTemplate template)
+    protected override void OnParametersSet()
     {
-        return priceListManager.LoadedTemplates.Contains(template);
+        base.OnParametersSet();
+    }
+
+    private bool IsTemplateAlreadyLoaded(PriceListTemplateItemViewModel template)
+    {
+        return false;
+        //return priceListManager.LoadedFiles.FirstOrDefault(lf => lf.Template.GetType() == template.Type) != null;
     }
 
     private void OnCheckedChange()

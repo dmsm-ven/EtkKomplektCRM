@@ -1,7 +1,20 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
-.discount-list-separator{
+
+.loaded-price-list-box {
+    background: #c4ffbb;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    margin: 10px 0px;
+    width: 100%;
+    padding: 20px 2px;
+}
+
+.btn:disabled {
+    opacity: 0.3;
+}
+.discount-list-separator {
     height: 3px;
     background: lightgray;
     margin: 20px 2px;
@@ -173,6 +186,17 @@
     }
 }
 
+@keyframes blink-animation {
+    /* You could think of as "step 1" */
+    0% {
+        opacity: 0;
+    }
+    /* You could think of as "step 2" */
+    100% {
+        opacity: 1;
+    }
+}
+
 .accounts-list {
     margin: 20px auto;
     border: 1px solid #1861ac;
@@ -197,7 +221,7 @@
 
 .brand-template-logo {
     width: 120px;
-    height: auto;
+    height: 60px;
     margin: 4px auto;
     border: 1px dashed rgba(255,255,255,0.25);
 }
@@ -401,4 +425,9 @@ app {
         /* Never collapse the sidebar for wide screens */
         display: block;
     }
+}
+
+
+.task-tool-items-box input[@type='checkbox'] {
+    margin-right: 12px;
 }
