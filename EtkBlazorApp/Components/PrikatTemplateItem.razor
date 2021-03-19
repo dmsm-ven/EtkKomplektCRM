@@ -1,0 +1,70 @@
+﻿<tr style="opacity: @(Item.IsChecked ? "1" : "0.6");">
+    <td width="5%">
+        <input type="checkbox"
+               min="-99" max="999"
+               style="display: inline-block;  margin: 2px 6px;"
+               @bind="@Item.IsChecked" />
+    </td>
+    <td width="50%"><p style="font-size: 15px; font-weight: bold; font-family: monospace;">@Item.Manufacturer</p></td>
+
+    @if (Item.IsChecked)
+    {
+        <td width="15%"><input type="number" class="form-control" @bind-value="@Item.Discount1" /></td>
+        <td width="15%"><input type="number" class="form-control" @bind-value="@Item.Discount2" /></td>
+        <td width="15%">
+            <select @onchange="(e => Item.CurrencyCode = (string)e.Value)" class="form-control">
+                @foreach (var currencyCode in currencyCodeList)
+                {
+                    <option selected="@(currencyCode.Equals(Item.CurrencyCode))" value="@currencyCode">@currencyCode</option>
+                }
+            </select>
+        </td>
+    }
+    else
+    {
+        <td width="15%"></td>
+        <td width="15%"></td>
+        <td width="15%"></td>
+    }
+</tr>
+
+@code {
+
+    [Parameter]
+    public PrikatManufacturerDiscountViewModel Item { get; set; }
+
+    [Parameter]
+    public EventCallback ItemChanged { get; set; }
+
+    List<string> currencyCodeList = new List<string>(Enum.GetNames(typeof(CurrencyType)));
+
+    decimal exampleStartPrice = 1000;
+
+    string exampleString
+    {
+        get
+        {
+            decimal priceExample1 = (exampleStartPrice * (decimal)(1 + ((decimal)Item.Discount1 / 100)));
+            decimal priceExample2 = priceExample1 * (decimal)(1 + ((decimal)Item.Discount2 / 100));
+
+            string sign1 = Math.Sign(Item.Discount1) < 0 ? "-" : "+";
+            string sign2 = Math.Sign(Item.Discount2) < 0 ? "-" : "+";
+
+            string part1 = $"{exampleStartPrice} {sign1} {Math.Abs(Item.Discount1)}% = {priceExample1.ToString("N")}";
+            string part2 = $"{priceExample1} {sign2} {Math.Abs(Item.Discount2)}% = {priceExample2.ToString("N")}";
+
+            return $"[{part1}] | [{part2}]";
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        Item.PropertyChanged += OnStateChanged;
+    }
+
+    private void OnStateChanged(object o, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        ItemChanged.InvokeAsync();
+        StateHasChanged();
+    }
+}

@@ -1,116 +1,110 @@
 ﻿@page "/prikat"
 @attribute [Authorize(Roles = "Administrator, Manager")]
 @inject IToastService toastService
-@inject ISettingStorage settings
+@inject ITemplateStorage templateStorage
 @inject IManufacturerStorage manufacturerStorage
 @inject IJSRuntime js
 
 
-@if (manufacturerDiscounts == null)
+@if (itemsSource == null)
 {
     <LoadingSpinner />
 }
 else
 {
-    <h3>ВсеИнcтрументы</h3>
-    <div class="row">
-        <div class="col-lg-6 col-md-8 col-sm-12">
+    <img style="height: 100px; margin: 0px auto 40px auto; display: block;" src="image/logotips/vse-instrumenti-logo-big.jpg" class="img-fluid"/>
+    <div class="container">
+        @if (inProgress)
+        {
+            <IntermediateProgressBar />
+        }
+        else
+        {
             <div class="row">
                 <div class="col-md-6 col-sm-6">
                     <button type="button" class="btn btn-vi" style="width: 100%;" @onclick="GetReport" disabled="@reportButtonDisabled">Скачать выгрузку</button>
                 </div>
                 <div class="col-md-6 col-sm-6">
-                    <input type="checkbox" class="form-control" value="@removeEmptyStock"/>
+                    <input type="checkbox" class="form-control" value="@removeEmptyStock" />
                     <p style="text-align: center; margin-top: 4px;">Не включать товары с 0 на складе</p>
                 </div>
             </div>
-            <div class="row">
-                <div class="prikat-manufacturer-discount-list col-sm-12">
-                    <div class="row">
-                        <div class="col-md-6">Производитель</div>
-                        <div class="col-md-3">Наценка</div>
-                        <div class="col-md-3">Закупочная цена</div>
-                    </div>
-                    @foreach (var item in manufacturerDiscounts)
+        }
+        <div class="table-responsive">
+            <table class="table">
+                <thead class="thead-etk">
+                    <tr>
+                        <th></th>
+                        <th>Производитель</th>
+                        <th>Наценка 1, %</th>
+                        <th>Наценка 2, %</th>
+                        <th>Валюта выгрузки</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in orderedSource)
                     {
-                        @if (!hasSeparator && !item.IsChecked)
-                        {
-                            <hr class="discount-list-separator" />
-                            hasSeparator = true;
-                        }
-                        <PrikatManufacturerDiscountItem Item="@item" ItemChanged="DiscountChanged" />
+                        <PrikatTemplateItem Item="@item" ItemChanged="@(e => DiscountChanged(item))" />
                     }
-                </div>
-            </div>
+                </tbody>
+            </table>
         </div>
     </div>
 }
 @code {
 
-    private List<PrikatManufacturerDiscountViewModel> manufacturerDiscounts = null;
+    List<PrikatManufacturerDiscountViewModel> itemsSource;
+    List<PrikatManufacturerDiscountViewModel> orderedSource => itemsSource.OrderByDescending(t => t.IsChecked).ToList();
 
     [Inject]ReportManager ReportManager { get; set; }
 
     bool removeEmptyStock = true;
-    bool hasSeparator = false;
-    bool needReloadSavedData = false;
-    bool reportButtonDisabled => manufacturerDiscounts.All(m => m.IsChecked == false);
-
+    bool inProgress = false;
+    bool reportButtonDisabled => itemsSource == null || itemsSource.All(m => m.IsChecked == false);
 
     private async Task GetReport()
     {
-        var filePath = ReportManager.Prikat.Create(removeEmptyStock);
+        inProgress = true;
+        StateHasChanged();
+        string filePath = System.IO.Path.GetTempFileName() + ".csv";
+
+        await ReportManager.Prikat.Create(filePath, removeEmptyStock);
 
         await js.InvokeVoidAsync("FileSaveAs", "prikat_report.csv", System.IO.File.ReadAllText(filePath));
 
+        inProgress = false;
         System.IO.File.Delete(filePath);
+
     }
 
-    private async Task DiscountChanged()
+    protected override async Task OnInitializedAsync()
     {
-        var checkedData = string.Join(";", manufacturerDiscounts.Where(m => m.IsChecked).Select(m => m.Id).OrderBy(id => id));
-        await settings.SetValue("prikat_checked_manufacturers", checkedData);
-
-        var discountData = string.Join(";", manufacturerDiscounts.Select(m => $"{m.Id}={m.Discount1}|{m.Discount2}"));
-        await settings.SetValue("prikat_manufacturer_discounts", discountData);
-
-        needReloadSavedData = true;
-        StateHasChanged();
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        hasSeparator = false;
-
-        if (firstRender || needReloadSavedData)
+        itemsSource = (await templateStorage.GetPrikatTemplates())
+        .Select(t => new PrikatManufacturerDiscountViewModel()
         {
-            needReloadSavedData = false;
+            IsChecked = t.status == 1,
+            Discount1 = t.discount1,
+            Discount2 = t.discount2,
+            Manufacturer_id = t.manufacturer_id,
+            Manufacturer = t.manufacturer_name,
+            CurrencyCode = t.currency_code
+        })
+        .ToList();
+    }
 
-            var manufacturers = await manufacturerStorage.GetManufacturers();
-            var discountData = (await settings.GetValue("prikat_manufacturer_discounts")).Split(';')
-            .Select(data => data.Split('='))
-            .Select(array => new
-            {
-                manufacturer_id = int.Parse(array[0]),
-                discount1 = int.Parse(array[1].Split('|')[0]),
-                discount2 = int.Parse(array[1].Split('|')[1])
-            })
-            .ToDictionary(i => i.manufacturer_id, i => Tuple.Create(i.discount1, i.discount2));
+    private async Task DiscountChanged(PrikatManufacturerDiscountViewModel vmItem)
+    {
+        var dbItem = new PrikatReportTemplateEntity()
+        {
+            manufacturer_id = vmItem.Manufacturer_id,
+            discount1 = vmItem.Discount1,
+            discount2 = vmItem.Discount2,
+            status = vmItem.IsChecked ? 1 : 0,
+            currency_code = vmItem.CurrencyCode
+        };
+        await templateStorage.SavePrikatTemplate(dbItem);
 
-            var checkedManufacturers = (await settings.GetValue("prikat_checked_manufacturers")).Split(';').Select(i => int.Parse(i)).ToList();
-            manufacturerDiscounts = manufacturers
-                .Select(manufacturer => new PrikatManufacturerDiscountViewModel(manufacturer.name)
-                {
-                    Id = manufacturer.manufacturer_id,
-                    Discount1 = discountData.ContainsKey(manufacturer.manufacturer_id) ? discountData[manufacturer.manufacturer_id].Item1 : 0,
-                    Discount2 = discountData.ContainsKey(manufacturer.manufacturer_id) ? discountData[manufacturer.manufacturer_id].Item2 : 0,
-                    IsChecked = checkedManufacturers.Contains(manufacturer.manufacturer_id)
-                })
-                .OrderByDescending(item => item.IsChecked)
-                .ToList();
-
-            StateHasChanged();
-        }
+        StateHasChanged();
     }
 }
 

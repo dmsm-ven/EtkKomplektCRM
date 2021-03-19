@@ -35,6 +35,6 @@ namespace EtkBlazorApp.DataAccess
                          "ORDER BY name";
             var manufacturers = await database.LoadData<ManufacturerEntity, dynamic>(sql, new { });
             return manufacturers;
-        }
+        }            
     }
 }

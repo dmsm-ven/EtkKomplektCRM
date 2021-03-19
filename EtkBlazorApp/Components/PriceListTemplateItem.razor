@@ -1,21 +1,27 @@
 ﻿<div class="col-md-2 col-xs-6 col-sm-4 price-list-template-outer">
-    <div class="price-list-template-inner @(IsTemplateAlreadyLoaded(Item) ? "already-loaded-template" : "")">
-        <img class="brand-template-logo" src="@Item.Image" />
-        <div>
-            <input type="radio"
-                   id="@Item.Guid"
-                   name="select-template-list-group"
-                   disabled="@IsTemplateAlreadyLoaded(Item)"
-                   @onchange="OnCheckedChange" />
-            <label for="@Item.Guid" style="font-size: 11px; margin-left: 2px;">@Item.Title</label>
-        </div>
+    <div class="price-list-template-inner">
+        <img class="brand-template-logo" src="@GroupImage" style="margin: 4px 8px 4px 2px;"/>       
+        <ul style="list-style-type: none; position:absolute;top: 35px;left: 115px;">
+            @foreach (var item in Items)
+            {
+            <li>
+                <input type="radio" name="selected-price-list" id="@item.Guid" disabled="@IsTemplateAlreadyLoaded(item)" @onchange="@(e => CheckedChanged.InvokeAsync(item))" />
+                @if (Items.Count > 1)
+                {
+                <label for="@item.Guid" style="font-size: 11px; margin-left: 2px;">@item.Title</label>
+                }
+            </li>
+            }
+        </ul>
     </div>
 </div>
 
 @code {
     [Inject] PriceListManager priceListManager { get; set; }
-    [Parameter] public PriceListTemplateItemViewModel Item { get; set; }
-    [Parameter] public EventCallback CheckedChanged { get; set; }
+    [Parameter] public List<PriceListTemplateItemViewModel> Items { get; set; }
+    [Parameter] public EventCallback<PriceListTemplateItemViewModel> CheckedChanged { get; set; }
+    private string GroupName => Items.FirstOrDefault()?.GroupName;
+    private string GroupImage => Items.FirstOrDefault()?.Image;
 
     protected override void OnParametersSet()
     {
@@ -24,12 +30,7 @@
 
     private bool IsTemplateAlreadyLoaded(PriceListTemplateItemViewModel template)
     {
-        return false;
-        //return priceListManager.LoadedFiles.FirstOrDefault(lf => lf.Template.GetType() == template.Type) != null;
+        return priceListManager.LoadedFiles.FirstOrDefault(lf => lf.Template.GetType() == template.Type) != null;
     }
 
-    private void OnCheckedChange()
-    {
-        CheckedChanged.InvokeAsync();
-    }
 }

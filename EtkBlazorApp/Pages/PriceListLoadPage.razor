@@ -1,17 +1,12 @@
 ﻿@page "/load-price-list"
 @attribute [Authorize(Roles = "Administrator, Manager")]
 @inject PriceListManager priceListManager
-@inject IPriceListTemplateStorage templateStorage
+@inject ITemplateStorage templateStorage
 
 @using System.IO;
 @using System.Threading;
 
-<button class="btn btn-success"
-        @onclick="LoadRemoteUriTemplate"
-        disabled="@(string.IsNullOrWhiteSpace(selectedTemplate?.RemoteUrl))">
-    Загрузить от поставщика
-</button>
-<InputFile OnChange="@UploadSelectedPriceListTemplateFile" disabled="@(selectedTemplate == null)"></InputFile>
+
 
 @if (isFileLoading)
 {
@@ -19,14 +14,21 @@
 }
 else
 {
+    <button class="btn btn-success"
+            @onclick="LoadRemoteUriTemplate"
+            disabled="@(string.IsNullOrWhiteSpace(selectedTemplate?.RemoteUrl))">
+        Загрузить от поставщика
+    </button>
+    <InputFile OnChange="@UploadSelectedPriceListTemplateFile" disabled="@(selectedTemplate == null)"></InputFile>
+
     <h2>Выберите шаблон загружаемого файла</h2>
 }
 
 <div class="row">
     @foreach (var template in templates)
     {
-        <PriceListTemplateItem Item="@template"
-                               CheckedChanged="@(() => selectedTemplate = template)"></PriceListTemplateItem>
+        <PriceListTemplateItem Items="@template.Value"
+                               CheckedChanged="(e => selectedTemplate = (PriceListTemplateItemViewModel)e)"></PriceListTemplateItem>
     }
 </div>
 
@@ -35,7 +37,7 @@ else
 @if (selectedTemplate != null)
 {
     <h4>Примечания к выбранному шаблону</h4>
-    <textarea readonly style="width: 100%; margin: 4px 12px;resize: none; height: 90px;">@selectedTemplate.Description</textarea>
+    <textarea readonly class="price-list-template-description">@selectedTemplate.Description</textarea>
     @if (selectedTemplate.RemoteUrl != null)
     {
         <p>Прямая ссылка на файл: <a href="@selectedTemplate.RemoteUrl" target="_blank">@selectedTemplate.RemoteUrl</a></p>
@@ -46,33 +48,33 @@ else
 @if (priceListManager.LoadedFiles != null && priceListManager.LoadedFiles.Any())
 {
     <a href="/update-products" class="btn btn-lg btn-outline-primary">Перейти к обновлению товаров</a>
-    <LoadedPriceListDisplayer></LoadedPriceListDisplayer>
 }
 
 @code
 {
     const int MAX_UPLOAD_SIZE = 15_000_000; // 15 мб
 
-    List<PriceListTemplateItemViewModel> templates = null;
+    Dictionary<string, List<PriceListTemplateItemViewModel>> templates = null;
     PriceListTemplateItemViewModel selectedTemplate = null;
     bool isFileLoading = false;
 
     protected override async Task OnInitializedAsync()
     {
-        templates = (await templateStorage.GetTemplates()).Select(t => new PriceListTemplateItemViewModel()
-        {
-            Guid = t.id,
-            Description = t.description,
-            Discount = t.discount,
-            GroupName = t.group_name,
-            Image = t.image,
-            Manufacturer = t.manufacturer,
-            PriceListType = t.price_list_type,
-            RemoteUrl = t.remote_uri,
-            Title = t.title
-        }).ToList();
-
-        selectedTemplate = templates.FirstOrDefault();
+        templates = (await templateStorage.GetPriceListTemplates())
+            .Select(t => new PriceListTemplateItemViewModel()
+            {
+                Guid = t.id,
+                Description = t.description,
+                Discount = t.discount,
+                GroupName = t.group_name,
+                Image = t.image,
+                Manufacturer = t.manufacturer,
+                PriceListType = t.price_list_type,
+                RemoteUrl = t.remote_uri,
+                Title = t.title
+            })
+            .GroupBy(template => template.GroupName ?? "<Без группы>")
+            .ToDictionary(i => i.Key, i => i.ToList());
     }
 
     private async Task UploadSelectedPriceListTemplateFile(InputFileChangeEventArgs e)
@@ -81,7 +83,7 @@ else
 
         var stream = e.File.OpenReadStream(MAX_UPLOAD_SIZE);
         long fileLength = e.File.Size;
-        await LoadRemoteUriTemplate(stream, fileLength);
+        await LoadRemoteTemplateFromStream(stream, fileLength);
     }
 
     private async Task LoadRemoteUriTemplate()
@@ -91,10 +93,10 @@ else
         var response = await (new HttpClient().GetAsync(selectedTemplate.RemoteUrl));
         var stream = await response.Content.ReadAsStreamAsync();
         long fileLength = (long)response.Content.Headers.ContentLength;
-        await LoadRemoteUriTemplate(stream, fileLength);
+        await LoadRemoteTemplateFromStream(stream, fileLength);
     }
 
-    private async Task LoadRemoteUriTemplate(Stream stream, long fileLength)
+    private async Task LoadRemoteTemplateFromStream(Stream stream, long fileLength)
     {
         await priceListManager.UploadPriceList(selectedTemplate.Type, stream, fileLength);
 

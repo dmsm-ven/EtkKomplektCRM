@@ -102,6 +102,7 @@ namespace EtkBlazorApp.Services
 
             dic[CurrencyType.USD] = usdValue;
             dic[CurrencyType.EUR] = euroValue;
+            dic[CurrencyType.RUB] = 1;
             lastUpdate = DateTime.Now;
 
             return dic;

@@ -15,7 +15,7 @@ namespace EtkBlazorApp.DataAccess
         ProductEntity GetProductById(int id);
         Task UpdateStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate);
         Task UpdatePrice(List<ProductUpdateData> data);
-        Task<List<ProductEntity>> ReadProducts();
+        Task<List<ProductEntity>> ReadProducts(int? manufacturer_id = null);
     }
 
     public class ProductStorage : IProductStorage
@@ -56,14 +56,20 @@ namespace EtkBlazorApp.DataAccess
             throw new NotImplementedException();
         }
 
-        public async Task<List<ProductEntity>> ReadProducts()
+        public async Task<List<ProductEntity>> ReadProducts(int? manufacturer_id = null)
         {
             var sb = new StringBuilder()
                     .AppendLine("SELECT p.*, d.name as name, m.name as manufacturer, url.keyword as url")
                     .AppendLine("FROM oc_product p")
                     .AppendLine("LEFT JOIN oc_product_description d ON p.product_id = d.product_id")
                     .AppendLine("LEFT JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id")
-                    .AppendLine("LEFT JOIN oc_url_alias url ON CONCAT('product_id=', p.product_id) = url.query");
+                    .AppendLine("LEFT JOIN oc_url_alias url ON CONCAT('product_id=', p.product_id) = url.query")
+                    .Append    ("WHERE p.status = 1 AND d.main_product = '0'");
+
+            if (manufacturer_id.HasValue)
+            {
+                sb.Append($" AND p.manufacturer_id = '{manufacturer_id.Value}'");
+            }
 
             string sql = sb.ToString().Trim(); 
 

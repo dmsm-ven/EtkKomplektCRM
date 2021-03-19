@@ -6,6 +6,8 @@ namespace EtkBlazorApp.BL
     [PriceListTemplateDescription("3853B988-DB37-4B6E-861F-3000B643FAC4")]
     public class SymmetronPriceListTemplate : ExcelPriceListTemplateBase
     {
+        public SymmetronPriceListTemplate(string fileName) : base(fileName) { }
+
         protected override List<PriceLine> ReadDataFromExcel()
         {
             var list = new List<PriceLine>();

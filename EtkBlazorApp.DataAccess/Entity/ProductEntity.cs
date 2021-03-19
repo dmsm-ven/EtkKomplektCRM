@@ -11,6 +11,7 @@ namespace EtkBlazorApp.DataAccess.Entity
         public string model { get; set; }
         public string manufacturer { get; set; }
         public string sku { get; set; }
+        public string ean { get; set; }
         public decimal price { get; set; }
         public string url { get; set; }
         public string image { get; set; }

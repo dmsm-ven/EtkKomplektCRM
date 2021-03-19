@@ -11,10 +11,12 @@ namespace EtkBlazorApp.BL
 {
     public abstract class ExcelPriceListTemplateBase : IPriceListTemplate
     {
-        public string FileName { get; set; }
+        public string FileName { get;  }
 
         protected CancellationToken? CancelToken { get; set; }
         protected ExcelPackage Excel { get; set; }
+
+        public ExcelPriceListTemplateBase(string fileName) { FileName = fileName; }
 
         public async Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)
         {

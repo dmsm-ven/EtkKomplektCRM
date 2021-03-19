@@ -40,7 +40,7 @@ namespace EtkBlazorApp
 
             services.AddSingleton<IDatabaseAccess, EtkDatabaseDapperAccess>();
             services.AddSingleton<IProductStorage, ProductStorage>();
-            services.AddSingleton<IPriceListTemplateStorage, PriceListTemplateStorage>();
+            services.AddSingleton<ITemplateStorage, TemplateStorage>();
             services.AddSingleton<IOrderStorage, OrderStorage>();
             services.AddSingleton<IManufacturerStorage, ManufacturerStorage>();
             services.AddSingleton<ILogStorage, LogStorage>();
