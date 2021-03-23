@@ -101,7 +101,7 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task UpdateCronTask(CronTaskEntity task)
         {
-            string sql = "UPDATE etk_app_cron_task SET status = @status, exec_time = @exec_time WHERE task_id = @task_id";
+            string sql = "UPDATE etk_app_cron_task SET enabled = @enabled, exec_time = @exec_time WHERE task_id = @task_id";
 
             await database.SaveData(sql, task);
         }

@@ -12,7 +12,7 @@ namespace EtkBlazorApp.DataAccess.Entity
         public int manufacturer_id { get; set; }        
         public int discount1 { get; set; }
         public int discount2 { get; set; }
-        public int status { get; set; }
+        public bool enabled { get; set; }
 
         public string manufacturer_name { get; set; }
         public string currency_code { get; set; }

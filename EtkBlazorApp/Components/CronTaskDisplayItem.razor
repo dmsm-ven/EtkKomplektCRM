@@ -6,16 +6,16 @@
 <tr>
     <td>
         <div class="task-tool-items-box">
-            <input type="checkbox" @onchange="EnableStatusChanged" checked="@(Item.status == 1)" />
+            <input type="checkbox" @onchange="EnableStatusChanged" checked="@Item.enabled" />
             <a href="@("/task-settings/" + @Item.details_page)"><span class="oi oi-cog cog-icon" aria-hidden="true"></span></a>
             <span>@Item.name</span>
         </div>
     </td>
     <td>
-        @(Item.status == 1 ? Item.exec_time.ToString(@"hh\:mm") : "-")
+        @(Item.enabled ? Item.exec_time.ToString(@"hh\:mm") : "-")
     </td>
     <td>
-        @(Item.status == 1 ? string.Format("{0} ч. {1} мин.", nextExecution.ToString("hh"), nextExecution.ToString("mm")) : "-")
+        @(Item.enabled ? string.Format("{0} ч. {1} мин.", nextExecution.ToString("hh"), nextExecution.ToString("mm")) : "-")
     </td>
     <td>
         @(Item.last_exec_date_time != default ? Item.last_exec_date_time.ToString("dd.MM.yyyy HH:mm") : "-")
@@ -42,11 +42,11 @@
 
     private async Task EnableStatusChanged(ChangeEventArgs e)
     {
-        Item.status = (bool)e?.Value ? 1 : 0;
+        Item.enabled = (bool)e?.Value;
 
         await settings.UpdateCronTask(Item);
 
-        timeLeftRefresh.Enabled = Item.status == 1;
+        timeLeftRefresh.Enabled = Item.enabled;
         StateHasChanged();
     }
 

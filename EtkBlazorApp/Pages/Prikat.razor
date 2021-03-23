@@ -99,7 +99,7 @@ else
         itemsSource = (await templateStorage.GetPrikatTemplates())
         .Select(t => new PrikatManufacturerDiscountViewModel()
         {
-            IsChecked = t.status == 1,
+            IsChecked = t.enabled,
             Discount1 = t.discount1,
             Discount2 = t.discount2,
             Manufacturer_id = t.manufacturer_id,
@@ -116,7 +116,7 @@ else
             manufacturer_id = vmItem.Manufacturer_id,
             discount1 = vmItem.Discount1,
             discount2 = vmItem.Discount2,
-            status = vmItem.IsChecked ? 1 : 0,
+            enabled = vmItem.IsChecked,
             currency_code = vmItem.CurrencyCode
         };
         await templateStorage.SavePrikatTemplate(dbItem);

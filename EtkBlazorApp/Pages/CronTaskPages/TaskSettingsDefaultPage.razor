@@ -11,8 +11,8 @@
         <div class="col-md-6 offset-3">
             <form>
                 <div class="form-group">
-                    <input type="checkbox" class="form-check-input" checked="@(Item.status == 1)" @onchange="@(e => Item.status = (bool)e.Value ? 1 : 0)" />
-                    <span style="font-size: 16px; color: olive; margin: 4px; color: @(isActive ? "green" : "lightgray")">@(isActive ? "Включено" : "Выключено")</span>
+                    <input type="checkbox" class="form-check-input" checked="@Item.enabled" @onchange="@(e => Item.enabled = (bool)e.Value)" />
+                    <span style="font-size: 16px; color: olive; margin: 4px; color: @(Item.enabled ? "green" : "lightgray")">@(Item.enabled ? "Включено" : "Выключено")</span>
                 </div>
                 <div class="form-group">
                     <span>Выполнить в</span>
@@ -27,8 +27,6 @@
 </div>
 
 @code {
-    bool isActive = true;
-
     private DateTime executionDateTime;
     private DateTime ExecutionDateTime 
     { 

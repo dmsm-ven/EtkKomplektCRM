@@ -11,7 +11,7 @@ namespace EtkBlazorApp.DataAccess.Entity
         public int task_id { get; set; }
         public string name { get; set; }
         public string details_page { get; set; }
-        public int status { get; set; }
+        public bool enabled { get; set; }
         public TimeSpan exec_time { get; set; }
         public DateTime last_exec_date_time { get; set; }
     }

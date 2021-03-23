@@ -12,8 +12,8 @@
         <div class="col-md-6 offset-3">
             <form>
                 <div class="form-group">
-                    <input type="checkbox" @bind="isActive" class="form-check-input" />
-                    <span style="font-size: 16px; color: olive; margin: 4px; color: @(isActive ? "green" : "lightgray")">@(isActive ? "Включено" : "Выключено")</span>
+                    <input type="checkbox" @bind="Item.enabled" class="form-check-input" />
+                    <span style="font-size: 16px; color: olive; margin: 4px; color: @(Item.enabled ? "green" : "lightgray")">@(Item.enabled ? "Включено" : "Выключено")</span>
                 </div>
                 <div class="form-group">
                     <span>Выполнить в</span>
@@ -62,7 +62,6 @@
                ConfirmationTitle="Подтверждение" />
 
 @code {
-    bool isActive = true;
     bool isProgressBarVisible = false;
     bool? checkConnectionState = null;
 
@@ -76,26 +75,7 @@
 
     ConfirmDialogBase confirmDialog;
 
-    private async Task CheckConnection()
-    {
-        isProgressBarVisible = true;
-
-        checkConnectionState = await MyImapClient.CheckConnection(imapServer, imapPort, email, password);
-
-        isProgressBarVisible = false;
-    }
-
-    private async Task ExecuteImmediatelyDialogStatusChanged(bool status)
-    {
-        if (status)
-        {
-            isProgressBarVisible = true;
-
-            await taskManager.ExecuteImmediately(CronTask.Symmetron);
-
-            isProgressBarVisible = false;
-        }
-    }
+    private CronTaskEntity Item { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -107,22 +87,39 @@
         }
         email = await settings.GetValue("task_symmetron_login");
         password = await settings.GetValue("task_symmetron_password");
-        isActive = await settings.GetValue<bool>
-            ("task_symmetron_active");
-        executionDateTime = DateTime.Now.Date + (await settings.GetValue<TimeSpan>
-            ("task_symmetron_exec_time"));
-        lastExecutionDateTime = (await settings.GetValue<DateTime>
-            ($"task_symmetron_last_exec_date_time"));
+
+        Item = (await settings.GetCronTasks()).Single(t => t.details_page.Equals("symmetron"));
+    }
+
+    private async Task CheckConnection()
+    {
+        isProgressBarVisible = true;
+
+        checkConnectionState = await MyImapClient.CheckConnection(imapServer, imapPort, email, password);
+
+        isProgressBarVisible = false;
+    }
+
+    private async Task ExecuteImmediatelyDialogStatusChanged(bool dialogResult)
+    {
+        if (dialogResult)
+        {
+            isProgressBarVisible = true;
+
+            await taskManager.ExecuteImmediately(Item.task_id);
+
+            isProgressBarVisible = false;
+        }
     }
 
     private async Task SaveSettings()
-    {
-        await settings.SetValue("task_symmetron_active", isActive);
+    {       
         await settings.SetValue("task_symmetron_imap_server", imapServer);
         await settings.SetValue("task_symmetron_imap_port", imapPort);
         await settings.SetValue("task_symmetron_login", email);
         await settings.SetValue("task_symmetron_password", password);
-        await settings.SetValue("task_symmetron_exec_time", executionTime);
+
+        await settings.UpdateCronTask(Item);
 
         checkConnectionState = null;
     }

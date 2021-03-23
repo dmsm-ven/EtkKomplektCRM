@@ -44,7 +44,7 @@ namespace EtkBlazorApp.DataAccess
             string sql = "UPDATE etk_app_prikat_template " +
                          "SET discount1 = @discount1, " +
                              "discount2 = @discount2, " +
-                             "status = @status, " +
+                             "enabled = @enabled, " +
                              "currency_code = @currency_code " +
                          "WHERE manufacturer_id = @manufacturer_id";
 

@@ -29,7 +29,7 @@ namespace EtkBlazorApp.BL.Managers
             {
                 using (var sw = new StreamWriter(File.Open(outputFileName, FileMode.Create), new UTF8Encoding()))
                 {
-                    var templateSource = (await templateStorage.GetPrikatTemplates()).Where(t => t.status == 1);
+                    var templateSource = (await templateStorage.GetPrikatTemplates()).Where(t => t.enabled);
                     foreach (var data in templateSource)
                     {
                         CurrencyType currency = (CurrencyType)Enum.Parse(typeof(CurrencyType), data.currency_code);

@@ -47,9 +47,9 @@ namespace EtkBlazorApp.BL.Managers
             checkTimer.Start();
         }
 
-        public async Task ExecuteImmediately(CronTask name)
+        public async Task ExecuteImmediately(int task_id)
         {
-            var task = taskList.FirstOrDefault(t => t.Prefix == name);
+            var task = taskList.FirstOrDefault(t => t.Prefix == (CronTask)task_id);
             if(task != null)
             {
                 await ExecuteTask(task, DateTime.Now.TimeOfDay, forceRun: true);
