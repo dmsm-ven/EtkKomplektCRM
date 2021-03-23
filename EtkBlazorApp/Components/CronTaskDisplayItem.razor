@@ -6,52 +6,31 @@
 <tr>
     <td>
         <div class="task-tool-items-box">
-            <input type="checkbox" @onchange="EnableStatusChanged" checked="@IsEnabled" />
-            <a href="@("/task-settings/" + Prefix)"><span class="oi oi-cog cog-icon" aria-hidden="true"></span></a>
-            <span>@Title</span>
+            <input type="checkbox" @onchange="EnableStatusChanged" checked="@(Item.status == 1)" />
+            <a href="@("/task-settings/" + @Item.details_page)"><span class="oi oi-cog cog-icon" aria-hidden="true"></span></a>
+            <span>@Item.name</span>
         </div>
     </td>
     <td>
-        @(isEnabled ? executionTime.ToString(@"hh\:mm") : "-")
+        @(Item.status == 1 ? Item.exec_time.ToString(@"hh\:mm") : "-")
     </td>
     <td>
-        @(isEnabled ? string.Format("{0} ч. {1} мин.", nextExecution.ToString("hh"), nextExecution.ToString("mm")) : "-")
+        @(Item.status == 1 ? string.Format("{0} ч. {1} мин.", nextExecution.ToString("hh"), nextExecution.ToString("mm")) : "-")
     </td>
     <td>
-        @(lastExecution != default ? @lastExecution.ToString("dd.MM.yyyy HH:mm") : "-")
+        @(Item.last_exec_date_time != default ? Item.last_exec_date_time.ToString("dd.MM.yyyy HH:mm") : "-")
     </td>
 </tr>
 
 @code {
     Timer timeLeftRefresh;
-    bool isEnabled;
-    TimeSpan executionTime;
-    DateTime lastExecution;
-    TimeSpan nextExecution => executionTime < DateTime.Now.TimeOfDay ?
-                             (DateTime.Now.AddDays(1).Date.AddTicks(executionTime.Ticks) - DateTime.Now) :
-                             (executionTime - DateTime.Now.TimeOfDay);
+    TimeSpan nextExecution => Item.exec_time < DateTime.Now.TimeOfDay ?
+                             (DateTime.Now.AddDays(1).Date.AddTicks(Item.exec_time.Ticks) - DateTime.Now) :
+                             (Item.exec_time - DateTime.Now.TimeOfDay);
 
-    bool IsEnabled
-    {
-        get => isEnabled;
-        set
-        {
-            isEnabled = value;
-            timeLeftRefresh.Enabled = value;
-        }
-    }
-    [Parameter] public string Title { get; set; }
-    [Parameter] public string Prefix { get; set; }
+    [Parameter] public CronTaskEntity Item { get; set; }
 
-    protected override void OnParametersSet()
-    {
-        if(Prefix != null)
-        {
-            Prefix = System.Text.RegularExpressions.Regex.Replace(Prefix, "([A-Z])", "-$1").ToLower().Trim('-');
-        }
-    }
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         timeLeftRefresh = new Timer();
         timeLeftRefresh.Interval = TimeSpan.FromMinutes(1).TotalMilliseconds;
@@ -59,17 +38,15 @@
         {
             InvokeAsync(() => StateHasChanged());
         };
-
-        IsEnabled = (await settings.GetValue<bool>($"task_{Prefix}_active"));
-        lastExecution = (await settings.GetValue<DateTime>($"task_{Prefix}_last_exec_date_time"));
-        executionTime = (await settings.GetValue<TimeSpan>($"task_{Prefix}_exec_time"));
     }
 
     private async Task EnableStatusChanged(ChangeEventArgs e)
     {
-        IsEnabled = (bool)e?.Value;
-        await settings.SetValue($"task_{Prefix}_active", IsEnabled);
+        Item.status = (bool)e?.Value ? 1 : 0;
 
+        await settings.UpdateCronTask(Item);
+
+        timeLeftRefresh.Enabled = Item.status == 1;
         StateHasChanged();
     }
 

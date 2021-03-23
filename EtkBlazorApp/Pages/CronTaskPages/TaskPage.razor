@@ -4,6 +4,12 @@
 @attribute [Authorize(Roles = "Administrator")]
 
 <h3>Переодические задачи</h3>
+@if (cronTaskList == null)
+{
+    <LoadingSpinner></LoadingSpinner>
+}
+else
+{
 <div class="table-responsive">
     <table class="table">
         <thead class="thead-etk">
@@ -16,13 +22,20 @@
             </tr>
         </thead>
         <tbody>
-            <CronTaskDisplayItem Title="Symmetron" Prefix="@(CronTask.Symmetron.ToString())" />
-            <CronTaskDisplayItem Title="Silver" Prefix="@(CronTask.Silver.ToString())" />
-            <CronTaskDisplayItem Title="Прист" Prefix="@(CronTask.Prist.ToString())" />
-            <CronTaskDisplayItem Title="ПКФ Марс-Компонент" Prefix="@(CronTask.MarsComponent.ToString())" />
-            <CronTaskDisplayItem Title="1C" Prefix="@(CronTask.OdinC.ToString())" />
-            <CronTaskDisplayItem Title="Bosch B2B" Prefix="@(CronTask.Bosch.ToString())" />
-            <CronTaskDisplayItem Title="Ozon" Prefix="@(CronTask.OzonSeller.ToString())" />
+            @foreach (var task in cronTaskList)
+            {
+                <CronTaskDisplayItem Item="@task"></CronTaskDisplayItem>
+            }
         </tbody>
     </table>
 </div>
+}
+
+@code {
+    List<CronTaskEntity> cronTaskList = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        cronTaskList = await settings.GetCronTasks();
+    }
+} 

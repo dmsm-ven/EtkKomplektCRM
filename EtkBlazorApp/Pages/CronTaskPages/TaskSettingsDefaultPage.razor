@@ -11,12 +11,12 @@
         <div class="col-md-6 offset-3">
             <form>
                 <div class="form-group">
-                    <input type="checkbox" @bind="isActive" class="form-check-input" />
+                    <input type="checkbox" class="form-check-input" checked="@(Item.status == 1)" @onchange="@(e => Item.status = (bool)e.Value ? 1 : 0)" />
                     <span style="font-size: 16px; color: olive; margin: 4px; color: @(isActive ? "green" : "lightgray")">@(isActive ? "Включено" : "Выключено")</span>
                 </div>
                 <div class="form-group">
                     <span>Выполнить в</span>
-                    <input type="time" @bind="executionDateTime" class="form-control" />
+                    <input type="time" @bind="ExecutionDateTime" class="form-control" />
                 </div>
                 <div class="btn-group" role="group" aria-label="Basic example" style="width: 100%">
                     <button type="button" style="width: auto;" class="btn btn-primary" @onclick="SaveSettings">Сохранить</button>
@@ -29,25 +29,27 @@
 @code {
     bool isActive = true;
 
-    DateTime executionDateTime;
-    DateTime lastExecutionDateTime;
-    TimeSpan executionTime => executionDateTime.TimeOfDay;
-
+    private DateTime executionDateTime;
+    private DateTime ExecutionDateTime 
+    { 
+        get => executionDateTime; 
+        set
+        {
+            executionDateTime = value;
+            Item.exec_time = executionDateTime.TimeOfDay;
+        } 
+    }
+    
     [Parameter] public string Prefix { get; set; }
+    private CronTaskEntity Item { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        isActive = await settings.GetValue<bool>
-            ($"task_{Prefix}_active");
-        executionDateTime = DateTime.Now.Date + (await settings.GetValue<TimeSpan>
-            ($"task_{Prefix}_exec_time"));
-        lastExecutionDateTime = (await settings.GetValue<DateTime>
-            ($"task_{Prefix}_last_exec_date_time"));
+        Item = (await settings.GetCronTasks()).Single(t => t.details_page == Prefix);
     }
 
     private async Task SaveSettings()
     {
-        await settings.SetValue($"task_{Prefix}_active", isActive);
-        await settings.SetValue($"task_{Prefix}_exec_time", executionTime);
+        await settings.UpdateCronTask(Item);
     }
 }

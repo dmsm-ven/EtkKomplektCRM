@@ -20,15 +20,25 @@ else
         }
         else
         {
-            <div class="row">
-                <div class="col-md-6 col-sm-6">
-                    <button type="button" class="btn btn-vi" style="width: 100%;" @onclick="GetReport" disabled="@reportButtonDisabled">Скачать выгрузку</button>
-                </div>
-                <div class="col-md-6 col-sm-6">
-                    <input type="checkbox" class="form-control" value="@removeEmptyStock" />
-                    <p style="text-align: center; margin-top: 4px;">Не включать товары с 0 на складе</p>
-                </div>
-            </div>
+    <div class="row">
+        <div class="col-md-6 col-sm-6">
+            <button type="button" class="btn btn-vi" style="width: 100%;" @onclick="GetReport" disabled="@reportButtonDisabled">Скачать выгрузку</button>
+        </div>
+        <div class="col-md-3 col-sm-3">
+            <input type="checkbox" class="form-control" value="@removeEmptyStock" />
+            <p style="text-align: center; margin-top: 4px;">Исключить 0 ед.</p>
+        </div>
+        <div class="col-md-3 col-sm-3">
+            <input type="checkbox" class="form-control" @onchange="@((e) => ShowPriceExample = (bool)e.Value)" />
+            <p style="text-align: center; margin-top: 4px;">Показать примеры цен</p>
+            @if (ShowPriceExample)
+            {
+                <label for="example-price">Цена для примера</label>
+                <input type="number" style="display: inline; margin: 2px;" class="form-control" name="example-price" 
+                       @bind-value="ExamplePrice"/>
+            }
+        </div>
+    </div>
         }
         <div class="table-responsive">
             <table class="table">
@@ -36,15 +46,19 @@ else
                     <tr>
                         <th></th>
                         <th>Производитель</th>
-                        <th>Наценка 1, %</th>
-                        <th>Наценка 2, %</th>
+                        <th>Закупочная цена</th>
+                        <th>Рекомендуемая цена</th>
                         <th>Валюта выгрузки</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var item in orderedSource)
                     {
-                        <PrikatTemplateItem Item="@item" ItemChanged="@(e => DiscountChanged(item))" />
+                    <CascadingValue Value="@ShowPriceExample">
+                        <CascadingValue Value="@ExamplePrice">
+                            <PrikatTemplateItem Item="@item" ItemChanged="@(e => DiscountChanged(item))" />
+                        </CascadingValue>
+                    </CascadingValue>
                     }
                 </tbody>
             </table>
@@ -57,6 +71,9 @@ else
     List<PrikatManufacturerDiscountViewModel> orderedSource => itemsSource.OrderByDescending(t => t.IsChecked).ToList();
 
     [Inject]ReportManager ReportManager { get; set; }
+    
+    public bool ShowPriceExample { get; set; }
+    public decimal ExamplePrice { get; set; } = 1000;
 
     bool removeEmptyStock = true;
     bool inProgress = false;

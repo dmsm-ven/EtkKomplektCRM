@@ -5,13 +5,13 @@
                style="display: inline-block;  margin: 2px 6px;"
                @bind="@Item.IsChecked" />
     </td>
-    <td width="50%"><p style="font-size: 15px; font-weight: bold; font-family: monospace;">@Item.Manufacturer</p></td>
+    <td width="45%"><p style="font-size: 15px; font-weight: bold; font-family: monospace;">@Item.Manufacturer</p></td>
 
     @if (Item.IsChecked)
     {
-        <td width="15%"><input type="number" class="form-control" @bind-value="@Item.Discount1" /></td>
-        <td width="15%"><input type="number" class="form-control" @bind-value="@Item.Discount2" /></td>
-        <td width="15%">
+        <td width="20%"><input type="number" class="form-control" @bind-value="@Item.Discount1" /></td>
+        <td width="20%"><input type="number" class="form-control" @bind-value="@Item.Discount2" /></td>
+        <td width="10%">
             <select @onchange="(e => Item.CurrencyCode = (string)e.Value)" class="form-control">
                 @foreach (var currencyCode in currencyCodeList)
                 {
@@ -22,11 +22,20 @@
     }
     else
     {
-        <td width="15%"></td>
-        <td width="15%"></td>
-        <td width="15%"></td>
+        <td width="20%"></td>
+        <td width="20%"></td>
+        <td width="10%"></td>
     }
 </tr>
+@if (ShowPriceExample && Item.IsChecked)
+{
+    <tr style="border-bottom: 2px solid black;">
+        <td colspan="2">Пример цен</td>
+        <td style="font-size: 0.8em;">@GetExampleStringPart(1)</td>
+        <td  style="font-size: 0.8em;">@GetExampleStringPart(2)</td>
+        <td></td>
+    </tr>
+}
 
 @code {
 
@@ -36,25 +45,29 @@
     [Parameter]
     public EventCallback ItemChanged { get; set; }
 
+    [CascadingParameter]
+    public bool ShowPriceExample { get; set; }
+
+    [CascadingParameter]
+    public decimal ExamplePrice { get; set; }
+
+
     List<string> currencyCodeList = new List<string>(Enum.GetNames(typeof(CurrencyType)));
 
-    decimal exampleStartPrice = 1000;
-
-    string exampleString
+    private string GetExampleStringPart(int index)
     {
-        get
-        {
-            decimal priceExample1 = (exampleStartPrice * (decimal)(1 + ((decimal)Item.Discount1 / 100)));
-            decimal priceExample2 = priceExample1 * (decimal)(1 + ((decimal)Item.Discount2 / 100));
+        decimal priceExample1 = (ExamplePrice * (decimal)(1 + ((decimal)Item.Discount1 / 100)));
+        decimal priceExample2 = priceExample1 * (decimal)(1 + ((decimal)Item.Discount2 / 100));
 
-            string sign1 = Math.Sign(Item.Discount1) < 0 ? "-" : "+";
-            string sign2 = Math.Sign(Item.Discount2) < 0 ? "-" : "+";
+        string sign1 = Math.Sign(Item.Discount1) < 0 ? "-" : "+";
+        string sign2 = Math.Sign(Item.Discount2) < 0 ? "-" : "+";
 
-            string part1 = $"{exampleStartPrice} {sign1} {Math.Abs(Item.Discount1)}% = {priceExample1.ToString("N")}";
-            string part2 = $"{priceExample1} {sign2} {Math.Abs(Item.Discount2)}% = {priceExample2.ToString("N")}";
+        string part1 = $"{ExamplePrice} {sign1} {Math.Abs(Item.Discount1)}% = {priceExample1.ToString("N")}";
+        string part2 = $"{priceExample1} {sign2} {Math.Abs(Item.Discount2)}% = {priceExample2.ToString("N")}";
+        if(index == 1) { return part1; }
+        if(index == 2) { return part2; }
 
-            return $"[{part1}] | [{part2}]";
-        }
+        throw new ArgumentOutOfRangeException();
     }
 
     protected override void OnParametersSet()

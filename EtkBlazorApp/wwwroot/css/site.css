@@ -1,6 +1,11 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+.form-control:focus {
+    outline: none;
+    box-shadow: none;
+}
+
 input[@type='radio'] {
     transform: scale(1.3);
 }

@@ -21,8 +21,4 @@
     <PackageReference Include="System.Net.Primitives" Version="4.3.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Templates\Новая папка\" />
-  </ItemGroup>
-
 </Project>

@@ -41,10 +41,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        isActive = await settings.GetValue<bool>
-            ($"task_{Prefix}_active");
-        executionDateTime = DateTime.Now.Date + (await settings.GetValue<TimeSpan>
-            ($"task_{Prefix}_exec_time"));
+        isActive = await settings.GetValue<bool> ($"task_{Prefix}_active");
+        executionDateTime = DateTime.Now.Date + (await settings.GetValue<TimeSpan> ($"task_{Prefix}_exec_time"));
         fileUri = await settings.GetValue($"task_{Prefix}_file_uri");
     }
 

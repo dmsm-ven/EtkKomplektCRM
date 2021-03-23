@@ -17,6 +17,9 @@ namespace EtkBlazorApp.DataAccess
 
         public Task SetValue(string name, string value);
         public Task SetValue<T>(string name, T value);
+
+        public Task<List<CronTaskEntity>> GetCronTasks();
+        public Task UpdateCronTask(CronTaskEntity task);
     }
 
     public class SettingStorage : ISettingStorage
@@ -87,6 +90,20 @@ namespace EtkBlazorApp.DataAccess
             }
         }    
     
+        public async Task<List<CronTaskEntity>> GetCronTasks()
+        {
+            string sql = "SELECT * FROM etk_app_cron_task";
 
+            var data = await database.LoadData<CronTaskEntity, dynamic>(sql, new { });
+
+            return data;
+        }
+
+        public async Task UpdateCronTask(CronTaskEntity task)
+        {
+            string sql = "UPDATE etk_app_cron_task SET status = @status, exec_time = @exec_time WHERE task_id = @task_id";
+
+            await database.SaveData(sql, task);
+        }
     }
 }
