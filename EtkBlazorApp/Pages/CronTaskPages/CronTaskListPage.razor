@@ -1,6 +1,6 @@
 ﻿@page "/tasks"
 @inject ISettingStorage settings
-@inject ScheduleTaskManager taskManager
+@inject CronTaskManager taskManager
 @attribute [Authorize(Roles = "Administrator")]
 
 <h3>Переодические задачи</h3>

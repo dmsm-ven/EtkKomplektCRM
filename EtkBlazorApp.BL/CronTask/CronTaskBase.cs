@@ -7,18 +7,18 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
 {
-    public abstract class ScheduleTaskBase
+    public abstract class CronTaskBase
     {
-        public CronTask Prefix { get; }
+        public CronTaskPrefix Prefix { get; }
         public bool IsDoneToday { get; protected set; }
-        protected ScheduleTaskManager Manager { get; private set; }
+        protected CronTaskManager Manager { get; private set; }
 
-        public ScheduleTaskBase(CronTask prefix)
+        public CronTaskBase(CronTaskPrefix prefix)
         {
             Prefix = prefix;
         }
 
-        public virtual async Task Execute()
+        public async Task Execute()
         {
             try
             {
@@ -37,7 +37,7 @@ namespace EtkBlazorApp.BL
             IsDoneToday = false;
         }
 
-        public void SetManager(ScheduleTaskManager manager)
+        public void SetManager(CronTaskManager manager)
         {
             Manager = manager;
         }

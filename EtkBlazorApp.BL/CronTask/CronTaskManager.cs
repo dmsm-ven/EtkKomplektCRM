@@ -10,10 +10,10 @@ using System.Timers;
 
 namespace EtkBlazorApp.BL.Managers
 {
-    public class ScheduleTaskManager
+    public class CronTaskManager
     {
-        public event Action<ScheduleTaskBase> OnTaskComplete;
-        public event Action<ScheduleTaskBase> OnTaskError;
+        public event Action<CronTaskBase> OnTaskComplete;
+        public event Action<CronTaskBase> OnTaskError;
 
         internal readonly ISettingStorage settings;
         internal readonly ILogStorage logger;
@@ -22,9 +22,9 @@ namespace EtkBlazorApp.BL.Managers
 
         private DateTime lastCheckDate;
         private readonly Timer checkTimer;
-        private readonly List<ScheduleTaskBase> taskList;
+        private readonly List<CronTaskBase> taskList;
 
-        public ScheduleTaskManager(
+        public CronTaskManager(
             ISettingStorage settings, 
             ILogStorage logger,
             UpdateManager updateManager, 
@@ -35,9 +35,9 @@ namespace EtkBlazorApp.BL.Managers
             this.updateManager = updateManager;
             this.priceListManager = priceListManager;
 
-            taskList = Assembly.GetAssembly(typeof(ScheduleTaskBase)).GetTypes()
-                .Where(tt => tt.IsClass && !tt.IsAbstract && tt.IsSubclassOf(typeof(ScheduleTaskBase)))
-                .Select(tt => (ScheduleTaskBase)Activator.CreateInstance(tt))
+            taskList = Assembly.GetAssembly(typeof(CronTaskBase)).GetTypes()
+                .Where(tt => tt.IsClass && !tt.IsAbstract && tt.IsSubclassOf(typeof(CronTaskBase)))
+                .Select(tt => (CronTaskBase)Activator.CreateInstance(tt))
                 .ToList();
 
             taskList.ForEach(t => t.SetManager(this));
@@ -49,7 +49,7 @@ namespace EtkBlazorApp.BL.Managers
 
         public async Task ExecuteImmediately(int task_id)
         {
-            var task = taskList.FirstOrDefault(t => t.Prefix == (CronTask)task_id);
+            var task = taskList.FirstOrDefault(t => t.Prefix == (CronTaskPrefix)task_id);
             if(task != null)
             {
                 await ExecuteTask(task, DateTime.Now.TimeOfDay, forceRun: true);
@@ -71,15 +71,13 @@ namespace EtkBlazorApp.BL.Managers
 
         }
 
-        private async Task ExecuteTask(ScheduleTaskBase task, TimeSpan startTime, bool forceRun = false)
+        private async Task ExecuteTask(CronTaskBase task, TimeSpan startTime, bool forceRun = false)
         {
-            string settingsPrefix = task.Prefix.ToString().ToLower();
-            var isEnabled = await settings.GetValue<bool>($"task_{settingsPrefix}_active");
+            var taskDatabaseEntity = await settings.GetCronTaskById((int)task.Prefix);
 
-            if(!isEnabled && !forceRun) { return; }
+            if(taskDatabaseEntity.enabled == false && forceRun == false) { return; }
 
-            TimeSpan taskCheckTime = await settings.GetValue<TimeSpan>($"task_{settingsPrefix}_exec_time");
-            if (IsTimeToRun(taskCheckTime, startTime))
+            if (IsTimeToRun(taskDatabaseEntity.exec_time, startTime) || forceRun)
             {
                 bool isDone = false;
 
@@ -95,13 +93,14 @@ namespace EtkBlazorApp.BL.Managers
 
                 try
                 {
+                    taskDatabaseEntity.last_exec_date_time = DateTime.Now;
+
                     await task.Execute();
 
                     logEntry.title = $"{task.Prefix} выполнено успешно";
                     logEntry.message += $" Выполнено за: {sw.Elapsed.TotalSeconds} секунд.";
 
-                    isDone = true;
-
+                    OnTaskComplete?.Invoke(task);
                 }
                 catch (Exception ex)
                 {
@@ -110,12 +109,7 @@ namespace EtkBlazorApp.BL.Managers
                     OnTaskError?.Invoke(task);
                 }                 
 
-                if (isDone)
-                {
-                    await settings.SetValue($"task_{settingsPrefix}_last_exec_date_time", DateTime.Now);
-                    OnTaskComplete?.Invoke(task);
-                }
-
+                await settings.UpdateCronTask(taskDatabaseEntity);
                 await logger.Write(logEntry);                            
             }
         }

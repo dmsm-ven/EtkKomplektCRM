@@ -1,7 +1,7 @@
 ﻿@page "/task-settings/{Prefix}"
 @inject ISettingStorage settings
 @inject IToastService toasts
-@inject ScheduleTaskManager taskManager
+@inject CronTaskManager taskManager
 @attribute [Authorize(Roles = "Administrator")]
 
 <h3>Настройки задачи</h3>
@@ -12,7 +12,7 @@
             <form>
                 <div class="form-group">
                     <input type="checkbox" class="form-check-input" checked="@Item.enabled" @onchange="@(e => Item.enabled = (bool)e.Value)" />
-                    <span style="font-size: 16px; color: olive; margin: 4px; color: @(Item.enabled ? "green" : "lightgray")">@(Item.enabled ? "Включено" : "Выключено")</span>
+                    <span style="font-size: 16px; color: olive; margin-left: 25px; color: @(Item.enabled ? "green" : "lightgray")">@(Item.enabled ? "Включено" : "Выключено")</span>
                 </div>
                 <div class="form-group">
                     <span>Выполнить в</span>
@@ -24,26 +24,56 @@
             </form>
         </div>
     </div>
+
+    @if (isProgressBarVisible)
+    {
+        <IntermediateProgressBar />
+    }
+    else
+    {
+        <div class="row py-4">
+            <button class="btn btn-outline-dark btn-lg" @onclick="@(e => confirmDialog.Show())">Выполнить сейчас</button>
+        </div>
+    }
 </div>
+
+<ConfirmDialog @ref="confirmDialog"
+               ConfirmationChanged="ExecuteImmediatelyDialogStatusChanged"
+               ConfirmationMessage="@(() => $"Выполнить задание {Item.name} ?")"
+               ConfirmationTitle="Подтверждение" />
 
 @code {
     private DateTime executionDateTime;
-    private DateTime ExecutionDateTime 
-    { 
-        get => executionDateTime; 
+    private DateTime ExecutionDateTime
+    {
+        get => executionDateTime;
         set
         {
             executionDateTime = value;
             Item.exec_time = executionDateTime.TimeOfDay;
-        } 
+        }
     }
-    
+
     [Parameter] public string Prefix { get; set; }
     private CronTaskEntity Item { get; set; }
+    private bool isProgressBarVisible;
+    ConfirmDialogBase confirmDialog;
 
     protected override async Task OnInitializedAsync()
     {
         Item = (await settings.GetCronTasks()).Single(t => t.details_page == Prefix);
+    }
+
+    private async Task ExecuteImmediatelyDialogStatusChanged(bool dialogResult)
+    {
+        if (dialogResult)
+        {
+            isProgressBarVisible = true;
+            StateHasChanged();
+            await taskManager.ExecuteImmediately(Item.task_id);
+
+            isProgressBarVisible = false;
+        }
     }
 
     private async Task SaveSettings()
