@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -23,19 +23,20 @@ namespace EtkBlazorApp.BL
             var email = await Manager.settings.GetValue("task_symmetron_login");
             var password = await Manager.settings.GetValue("task_symmetron_password");
 
-            var tempFile = await MyImapClient.DownloadLastSymmetronPriceListFromMail(imapServer, imapPort, email, password);
+            //TODO: тут нужно сделать что бы метод возращал Stream, и можно будет не сохранять/удалять файл лишний раз
+            //т.к. получается что файл сохраняется 2 раза тут и внутри метода "UploadPriceList"
+            var tempFile = await EmailImapClient.DownloadLastSymmetronPriceListFromMail(imapServer, imapPort, email, password);
 
             using (var fs = new FileStream(tempFile, FileMode.Open))
             {
-                await Manager.priceListManager.UploadPriceList(typeof(SymmetronPriceListTemplate), fs, fs.Length);
+                var lines = await Manager.priceListManager.ReadTemplateLines(typeof(SymmetronPriceListTemplate), fs, fs.Length);
+                await Manager.updateManager.UpdatePriceAndStock(lines, clearStockBeforeUpdate: false);
             }
-
-            await Manager.updateManager.UpdatePriceAndStock(Manager.priceListManager.PriceLines, clearStockBeforeUpdate: false);
 
             if (File.Exists(tempFile))
             {
                 File.Delete(tempFile);
-            }
+            }   
         }
     }
 }

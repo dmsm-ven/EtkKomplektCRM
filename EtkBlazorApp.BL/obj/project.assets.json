@@ -2052,22 +2052,11 @@
           "lib/netstandard1.3/System.Xml.XPath.XmlDocument.dll": {}
         }
       },
-      "EtkBlazorApp.Data/1.0.0": {
-        "type": "project",
-        "framework": ".NETCoreApp,Version=v5.0",
-        "compile": {
-          "bin/placeholder/EtkBlazorApp.Data.dll": {}
-        },
-        "runtime": {
-          "bin/placeholder/EtkBlazorApp.Data.dll": {}
-        }
-      },
       "EtkBlazorApp.DataAccess/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v5.0",
         "dependencies": {
           "Dapper": "2.0.78",
-          "EtkBlazorApp.Data": "1.0.0",
           "Microsoft.Extensions.Configuration": "5.0.0",
           "MySql.Data": "8.0.22",
           "Newtonsoft.Json": "12.0.3",
@@ -7192,11 +7181,6 @@
         "system.xml.xpath.xmldocument.nuspec"
       ]
     },
-    "EtkBlazorApp.Data/1.0.0": {
-      "type": "project",
-      "path": "../EtkBlazorApp.Data/EtkBlazorApp.Data.csproj",
-      "msbuildProject": "../EtkBlazorApp.Data/EtkBlazorApp.Data.csproj"
-    },
     "EtkBlazorApp.DataAccess/1.0.0": {
       "type": "project",
       "path": "../EtkBlazorApp.DataAccess/EtkBlazorApp.DataAccess.csproj",
@@ -7207,7 +7191,6 @@
     "net5.0": [
       "CsvHelper >= 21.1.0",
       "EPPlus >= 5.5.0",
-      "EtkBlazorApp.Data >= 1.0.0",
       "EtkBlazorApp.DataAccess >= 1.0.0",
       "MailKit >= 2.10.1",
       "Newtonsoft.Json >= 12.0.3",
@@ -7248,9 +7231,6 @@
           "projectReferences": {
             "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.DataAccess\\EtkBlazorApp.DataAccess.csproj": {
               "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.DataAccess\\EtkBlazorApp.DataAccess.csproj"
-            },
-            "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Data\\EtkBlazorApp.Data.csproj": {
-              "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Data\\EtkBlazorApp.Data.csproj"
             }
           }
         }

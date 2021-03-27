@@ -1,4 +1,3 @@
-using EtkBlazorApp.Data;
 using EtkBlazorApp.DataAccess.Entity;
 using System;
 using System.Collections.Generic;
@@ -6,7 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 
-namespace EtkBlazorApp.BL.Managers
+namespace EtkBlazorApp.BL.Templates
 {
     public class PrikatReportTemplate
     {

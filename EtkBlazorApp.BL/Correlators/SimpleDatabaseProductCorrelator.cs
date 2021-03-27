@@ -1,11 +1,11 @@
-﻿using EtkBlazorApp.Data;
+﻿using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.BL.Correlators
+namespace EtkBlazorApp.BL
 {
     public class SimpleDatabaseProductCorrelator : IDatabaseProductCorrelator
     {
@@ -69,12 +69,40 @@ namespace EtkBlazorApp.BL.Correlators
                 {
                     product_id = product.product_id,
                     price = priceLine.Price,
-                    currency_code = priceLine.Currency,
+                    currency_code = priceLine.Currency.ToString(),
                     quantity = priceLine.Quantity
                 };
             }
 
             return null;
+        }
+    }
+
+    public class HardOrdereSkuModelProductCorrelator : IDatabaseProductCorrelator
+    {
+        public async Task<List<ProductUpdateData>> GetCorrelationData(IEnumerable<ProductEntity> products, IEnumerable<PriceLine> priceLines)
+        {
+            var list = new List<ProductUpdateData>();
+            await Task.Run(() =>
+            {
+                foreach (var product in products)
+                {
+                    var findedLine = priceLines.FirstOrDefault(pl => pl.Sku.Equals(product.sku) || pl.Model.Equals(product.model));
+                    if (findedLine != null)
+                    {
+                        var updateData = new ProductUpdateData()
+                        {
+                            product_id = product.product_id,
+                            price = findedLine.Price,
+                            currency_code = findedLine.Currency.ToString(),
+                            quantity = findedLine.Quantity
+                        };
+                        list.Add(updateData);
+                    }
+                }
+            });
+
+            return list;
         }
     }
 }

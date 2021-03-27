@@ -1,5 +1,4 @@
-﻿using EtkBlazorApp.Data;
-using EtkBlazorApp.DataAccess.Entity;
+﻿using EtkBlazorApp.DataAccess.Entity;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -15,7 +14,8 @@ namespace EtkBlazorApp.DataAccess
         ProductEntity GetProductById(int id);
         Task UpdateStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate);
         Task UpdatePrice(List<ProductUpdateData> data);
-        Task<List<ProductEntity>> ReadProducts(int? manufacturer_id = null);
+        Task<List<ProductEntity>> ReadProducts(List<int> allowedManufacturers = null);
+        Task<List<ProductEntity>> ReadProducts(int manufacturer_id);
     }
 
     public class ProductStorage : IProductStorage
@@ -39,9 +39,10 @@ namespace EtkBlazorApp.DataAccess
             var sb = new StringBuilder()
                 .AppendLine("SELECT p.*, d.name as name, m.name as manufacturer")
                 .AppendLine("FROM oc_product p")
-                .AppendLine("LEFT JOIN oc_product_description d ON p.product_id = d.product_id")
-                .AppendLine("LEFT JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id")
-                .AppendLine("ORDER BY Date(p.date_added) DESC")
+                .AppendLine("JOIN oc_product_description d ON p.product_id = d.product_id")
+                .AppendLine("JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id")
+                .AppendLine("WHERE p.status = 1")
+                .AppendLine("ORDER BY p.product_id DESC")
                 .AppendLine("LIMIT @Limit");
 
             string sql = sb.ToString();
@@ -56,7 +57,7 @@ namespace EtkBlazorApp.DataAccess
             throw new NotImplementedException();
         }
 
-        public async Task<List<ProductEntity>> ReadProducts(int? manufacturer_id = null)
+        public async Task<List<ProductEntity>> ReadProducts(List<int> allowedManufacturers = null)
         {
             var sb = new StringBuilder()
                     .AppendLine("SELECT p.*, d.name as name, m.name as manufacturer, url.keyword as url")
@@ -64,12 +65,15 @@ namespace EtkBlazorApp.DataAccess
                     .AppendLine("LEFT JOIN oc_product_description d ON p.product_id = d.product_id")
                     .AppendLine("LEFT JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id")
                     .AppendLine("LEFT JOIN oc_url_alias url ON CONCAT('product_id=', p.product_id) = url.query")
-                    .Append    ("WHERE p.status = 1 AND d.main_product = '0'");
+                    .AppendLine("WHERE p.status = 1 AND d.main_product = '0'");
 
-            if (manufacturer_id.HasValue)
+            if (allowedManufacturers != null && allowedManufacturers.Any())
             {
-                sb.Append($" AND p.manufacturer_id = '{manufacturer_id.Value}'");
+                string allowedIdArray = string.Join(",", allowedManufacturers);
+                sb.AppendLine($"AND p.manufacturer_id IN ({allowedIdArray})");
             }
+
+            sb.Append("ORDER BY m.name, d.name");
 
             string sql = sb.ToString().Trim(); 
 
@@ -77,6 +81,11 @@ namespace EtkBlazorApp.DataAccess
 
             return products;
 
+        }
+
+        public Task<List<ProductEntity>> ReadProducts(int manufacturer_id)
+        {
+            return ReadProducts(new List<int>(new[] { manufacturer_id }));
         }
 
         public async Task UpdatePrice(List<ProductUpdateData> data)
@@ -87,7 +96,7 @@ namespace EtkBlazorApp.DataAccess
                 .Where(d => d.price.HasValue && !discountProductIds.Contains(d.product_id))
                 .ToList();
 
-            Dictionary<CurrencyType, List<int>> idsGroupedByCurrency = source
+            Dictionary<string, List<int>> idsGroupedByCurrency = source
                 .GroupBy(p => p.currency_code)
                 .ToDictionary(g => g.Key, g => g.Select(p => p.product_id).OrderBy(id => id).ToList());
             bool onlyOneCurrency = idsGroupedByCurrency.Keys.Count == 1;
@@ -136,17 +145,20 @@ namespace EtkBlazorApp.DataAccess
 
             if (source.Count == 0) { return; }
 
+            string pidArray = string.Join(",", source.Select(ud => ud.product_id).Distinct());
+
             var sb = new StringBuilder()
                 .AppendLine("UPDATE oc_product")
                 .AppendLine("SET quantity = CASE product_id");
 
             foreach (var productInfo in source)
             {
-                sb.AppendLine($"WHEN '{productInfo.product_id}' THEN '{productInfo.quantity}'");
+                sb.AppendLine($"WHEN '{productInfo.product_id}' THEN '{Math.Max(productInfo.quantity.Value, 0)}'");
             }
 
             sb.AppendLine("ELSE quantity")
-              .AppendLine("END, date_modified = NOW();");
+              .AppendLine("END, date_modified = NOW()")
+              .AppendLine($"WHERE product_id IN ({pidArray});");
 
             if (clearStockBeforeUpdate)
             {

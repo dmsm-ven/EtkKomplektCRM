@@ -10,6 +10,7 @@ namespace EtkBlazorApp.DataAccess
     public interface ITemplateStorage
     {
         Task<List<PriceListTemplateEntity>> GetPriceListTemplates();
+        Task<PriceListTemplateEntity> GetPriceListTemplateById(string guid);
         Task<List<PrikatReportTemplateEntity>> GetPrikatTemplates();
         Task SavePrikatTemplate(PrikatReportTemplateEntity template);
     }
@@ -28,6 +29,13 @@ namespace EtkBlazorApp.DataAccess
             string sql = "SELECT * FROM etk_app_price_list_template";
             var templatesInfo = await database.LoadData<PriceListTemplateEntity, dynamic>(sql, new { });
             return templatesInfo;
+        }
+
+        public async Task<PriceListTemplateEntity> GetPriceListTemplateById(string guid)
+        {
+            string sql = "SELECT * FROM etk_app_price_list_template WHERE id = @guid LIMIT 1";
+            var templateInfo = (await database.LoadData<PriceListTemplateEntity, dynamic>(sql, new { guid })).FirstOrDefault();
+            return templateInfo;
         }
 
         public async Task<List<PrikatReportTemplateEntity>> GetPrikatTemplates()

@@ -83,6 +83,7 @@ else
 
         var stream = e.File.OpenReadStream(MAX_UPLOAD_SIZE);
         long fileLength = e.File.Size;
+
         await LoadRemoteTemplateFromStream(stream, fileLength);
     }
 
@@ -98,7 +99,7 @@ else
 
     private async Task LoadRemoteTemplateFromStream(Stream stream, long fileLength)
     {
-        await priceListManager.UploadPriceList(selectedTemplate.Type, stream, fileLength);
+        await priceListManager.UploadTemplate(selectedTemplate.Type, stream, fileLength);
 
         isFileLoading = false;
         selectedTemplate = null;

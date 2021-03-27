@@ -1,8 +1,7 @@
 using Blazored.Toast;
-using EtkBlazorApp.Integration.Ozon;
 using EtkBlazorApp.BL;
-using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.DataAccess;
+using EtkBlazorApp.Integration.Ozon;
 using EtkBlazorApp.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -10,8 +9,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using EtkBlazorApp.BL.Interfaces;
-using EtkBlazorApp.BL.Correlators;
 
 namespace EtkBlazorApp
 {
@@ -26,15 +23,15 @@ namespace EtkBlazorApp
 
         public void ConfigureServices(IServiceCollection services)
         {
-            //Blazor default
+            //Blazor стандартные
             services.AddRazorPages();
             services.AddServerSideBlazor().AddCircuitOptions(options => { options.DetailedErrors = true; });
 
-            //Blazor additional
+            //Blazor дополнительные
             services.AddHttpContextAccessor();
 
-            //Мои              
-            services.AddSingleton<IDatabaseProductCorrelator, SimpleDatabaseProductCorrelator>();
+            //Приложение              
+            services.AddSingleton<IDatabaseProductCorrelator, HardOrdereSkuModelProductCorrelator>();
             services.AddSingleton<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
             services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
 

@@ -1,11 +1,6 @@
-﻿using EtkBlazorApp.BL.Interfaces;
-using EtkBlazorApp.DataAccess;
-using System;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using EtkBlazorApp.DataAccess;
 
-namespace EtkBlazorApp.BL.Managers
+namespace EtkBlazorApp.BL
 {
     public class ReportManager
     {        

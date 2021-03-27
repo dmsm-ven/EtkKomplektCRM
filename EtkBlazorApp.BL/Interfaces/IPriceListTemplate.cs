@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.Data
+namespace EtkBlazorApp.BL
 {
     public interface IPriceListTemplate
     {

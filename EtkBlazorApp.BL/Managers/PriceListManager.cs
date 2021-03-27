@@ -1,14 +1,11 @@
-﻿using EtkBlazorApp.Data;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.BL.Managers
+namespace EtkBlazorApp.BL
 {
     public class PriceListManager
     {
@@ -24,16 +21,16 @@ namespace EtkBlazorApp.BL.Managers
             this.correlator = correlator;
         }
 
-        public async Task UploadPriceList(Type templateType, Stream downloadFileStream, long streamLength, CancellationToken? token = null)
+        public async Task UploadTemplate(Type templateType, Stream downloadFileStream, long streamLength)
         {
-            if (templateType == null) { return; }
+            if (templateType == null) { throw new ArgumentNullException(nameof(templateType)); }
 
             string fileName = Path.GetTempFileName();
-            using (var fileStream = File.Create(fileName))
+            using (var fs = File.Create(fileName))
             {
                 var buffer = new byte[streamLength];
                 await downloadFileStream.ReadAsync(buffer);
-                await fileStream.WriteAsync(buffer, 0, buffer.Length);
+                await fs.WriteAsync(buffer, 0, buffer.Length);
             }
 
             //Скачали данные из потока и записали в временный файл
@@ -43,7 +40,7 @@ namespace EtkBlazorApp.BL.Managers
             {
                 IPriceListTemplate templateInstance = (IPriceListTemplate)Activator.CreateInstance(templateType, fileName );
 
-                var data = await templateInstance.ReadPriceLines(token);
+                var data = await templateInstance.ReadPriceLines(null);
                 AddNewPriceLines(data);
 
                 var fileData = new LoadedFileData(templateInstance)
@@ -61,14 +58,54 @@ namespace EtkBlazorApp.BL.Managers
             finally
             {
                 File.Delete(fileName);
+            }       
+        }
+
+        public async Task<List<PriceLine>> ReadTemplateLines(Type templateType, Stream downloadFileStream, long streamLength)
+        {
+            if (templateType == null) { throw new ArgumentNullException(nameof(templateType)); }
+
+            List<PriceLine> list = new List<PriceLine>();
+
+            string fileName = Path.GetTempFileName();
+            using (var fileStream = File.Create(fileName))
+            {
+                var buffer = new byte[streamLength];
+                await downloadFileStream.ReadAsync(buffer);
+                await fileStream.WriteAsync(buffer, 0, buffer.Length);
             }
-       
+
+            //Скачали данные из потока и записали в временный файл
+            if (!File.Exists(fileName)) { return list; }
+
+            try
+            {
+                IPriceListTemplate templateInstance = (IPriceListTemplate)Activator.CreateInstance(templateType, fileName);
+
+                list = await templateInstance.ReadPriceLines(null);
+                return list;
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         public void RemovePriceList(LoadedFileData data)
         {
             LoadedFiles.Remove(data);
             PriceLines.RemoveAll(line => line.Template == data.Template);
+        }
+
+        public void RemovePriceList(Type templateType)
+        {
+            PriceLines.RemoveAll(line => line.Template.GetType() == templateType);
+            LoadedFiles.Remove(LoadedFiles.FirstOrDefault(lf => lf.Template.GetType() == templateType));
+        }
+
+        public List<PriceLine> PriceLinesOfTemplate(Type templateType)
+        {
+            return PriceLines.OrderBy(pl => pl.Template).Where(line => line.Template.GetType() == templateType).ToList();
         }
 
         private void AddNewPriceLines(List<PriceLine> newLines)

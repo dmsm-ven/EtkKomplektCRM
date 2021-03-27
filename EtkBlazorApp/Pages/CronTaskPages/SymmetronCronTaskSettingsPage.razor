@@ -99,7 +99,7 @@
 
         try
         {
-            checkConnectionState = await MyImapClient.CheckConnection(imapServer, imapPort, email, password);
+            checkConnectionState = await EmailImapClient.CheckConnection(imapServer, imapPort, email, password);
         }
         catch(Exception ex)
         {

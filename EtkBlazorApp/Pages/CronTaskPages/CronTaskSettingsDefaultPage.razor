@@ -11,8 +11,8 @@
         <div class="col-md-6 offset-3">
             <form>
                 <div class="form-group">
-                    <input type="checkbox" class="form-check-input" checked="@Item.enabled" @onchange="@(e => Item.enabled = (bool)e.Value)" />
-                    <span style="font-size: 16px; color: olive; margin-left: 25px; color: @(Item.enabled ? "green" : "lightgray")">@(Item.enabled ? "Включено" : "Выключено")</span>
+                    <input type="checkbox" class="form-check-input" checked="@item.enabled" @onchange="@(e => item.enabled = (bool)e.Value)" />
+                    <span style="font-size: 16px; color: olive; margin-left: 25px; color: @(item.enabled ? "green" : "lightgray")">@(item.enabled ? "Включено" : "Выключено")</span>
                 </div>
                 <div class="form-group">
                     <span>Выполнить в</span>
@@ -39,29 +39,30 @@
 
 <ConfirmDialog @ref="confirmDialog"
                ConfirmationChanged="ExecuteImmediatelyDialogStatusChanged"
-               ConfirmationMessage="@(() => $"Выполнить задание {Item.name} ?")"
+               ConfirmationMessage="@(() => $"Выполнить задание {item.name} ?")"
                ConfirmationTitle="Подтверждение" />
 
 @code {
-    private DateTime executionDateTime;
+    private DateTime executionDateTime = new DateTime();
     private DateTime ExecutionDateTime
     {
         get => executionDateTime;
         set
         {
             executionDateTime = value;
-            Item.exec_time = executionDateTime.TimeOfDay;
+            item.exec_time = executionDateTime.TimeOfDay;
         }
     }
+    private bool isProgressBarVisible;
+    private CronTaskEntity item;
+    private ConfirmDialogBase confirmDialog;
 
     [Parameter] public string Prefix { get; set; }
-    private CronTaskEntity Item { get; set; }
-    private bool isProgressBarVisible;
-    ConfirmDialogBase confirmDialog;
 
     protected override async Task OnInitializedAsync()
     {
-        Item = (await settings.GetCronTasks()).Single(t => t.details_page == Prefix);
+        item = (await settings.GetCronTasks()).Single(t => t.details_page == Prefix);
+        executionDateTime = executionDateTime + item.exec_time;
     }
 
     private async Task ExecuteImmediatelyDialogStatusChanged(bool dialogResult)
@@ -70,7 +71,7 @@
         {
             isProgressBarVisible = true;
             StateHasChanged();
-            await taskManager.ExecuteImmediately(Item.task_id);
+            await taskManager.ExecuteImmediately(item.task_id);
 
             isProgressBarVisible = false;
         }
@@ -78,6 +79,7 @@
 
     private async Task SaveSettings()
     {
-        await settings.UpdateCronTask(Item);
+        await settings.UpdateCronTask(item);
+        toasts.ShowSuccess($"Настройки '{item.name}' сохранены");
     }
 }

@@ -2209,7 +2209,6 @@
         "dependencies": {
           "CsvHelper": "21.1.0",
           "EPPlus": "5.5.0",
-          "EtkBlazorApp.Data": "1.0.0",
           "EtkBlazorApp.DataAccess": "1.0.0",
           "MailKit": "2.10.1",
           "Newtonsoft.Json": "12.0.3",
@@ -2223,22 +2222,11 @@
           "bin/placeholder/EtkBlazorApp.BL.dll": {}
         }
       },
-      "EtkBlazorApp.Data/1.0.0": {
-        "type": "project",
-        "framework": ".NETCoreApp,Version=v5.0",
-        "compile": {
-          "bin/placeholder/EtkBlazorApp.Data.dll": {}
-        },
-        "runtime": {
-          "bin/placeholder/EtkBlazorApp.Data.dll": {}
-        }
-      },
       "EtkBlazorApp.DataAccess/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v5.0",
         "dependencies": {
           "Dapper": "2.0.78",
-          "EtkBlazorApp.Data": "1.0.0",
           "Microsoft.Extensions.Configuration": "5.0.0",
           "MySql.Data": "8.0.22",
           "Newtonsoft.Json": "12.0.3",
@@ -7607,11 +7595,6 @@
       "path": "../EtkBlazorApp.BL/EtkBlazorApp.BL.csproj",
       "msbuildProject": "../EtkBlazorApp.BL/EtkBlazorApp.BL.csproj"
     },
-    "EtkBlazorApp.Data/1.0.0": {
-      "type": "project",
-      "path": "../EtkBlazorApp.Data/EtkBlazorApp.Data.csproj",
-      "msbuildProject": "../EtkBlazorApp.Data/EtkBlazorApp.Data.csproj"
-    },
     "EtkBlazorApp.DataAccess/1.0.0": {
       "type": "project",
       "path": "../EtkBlazorApp.DataAccess/EtkBlazorApp.DataAccess.csproj",
@@ -7619,8 +7602,8 @@
     },
     "EtkBlazorApp.Integration/1.0.0": {
       "type": "project",
-      "path": "../EtkBlazorApp.API/EtkBlazorApp.Integration.csproj",
-      "msbuildProject": "../EtkBlazorApp.API/EtkBlazorApp.Integration.csproj"
+      "path": "../EtkBlazorApp.Integration/EtkBlazorApp.Integration.csproj",
+      "msbuildProject": "../EtkBlazorApp.Integration/EtkBlazorApp.Integration.csproj"
     }
   },
   "projectFileDependencyGroups": {
@@ -7665,14 +7648,14 @@
         "net5.0": {
           "targetAlias": "net5.0",
           "projectReferences": {
-            "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.API\\EtkBlazorApp.Integration.csproj": {
-              "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.API\\EtkBlazorApp.Integration.csproj"
-            },
             "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.BL\\EtkBlazorApp.BL.csproj": {
               "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.BL\\EtkBlazorApp.BL.csproj"
             },
             "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.DataAccess\\EtkBlazorApp.DataAccess.csproj": {
               "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.DataAccess\\EtkBlazorApp.DataAccess.csproj"
+            },
+            "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Integration\\EtkBlazorApp.Integration.csproj": {
+              "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Integration\\EtkBlazorApp.Integration.csproj"
             }
           }
         }

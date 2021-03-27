@@ -9,9 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorApp.BL", "..\EtkBl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorApp.DataAccess", "..\EtkBlazorApp.DataAccess\EtkBlazorApp.DataAccess.csproj", "{2EDE050B-D2E1-4E8D-8AB9-22B99AEEAEA9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorApp.Integration", "..\EtkBlazorApp.API\EtkBlazorApp.Integration.csproj", "{3822CAFE-7B98-4734-801D-CE2CA3A7618D}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorApp.Data", "..\EtkBlazorApp.Data\EtkBlazorApp.Data.csproj", "{52D3C236-8B22-4DF1-B4AC-1F5DCB2FE346}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorApp.Integration", "..\EtkBlazorApp.Integration\EtkBlazorApp.Integration.csproj", "{8D02D14E-9CC6-4D4F-BFF2-9AE102A08D4F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,14 +29,10 @@ Global
 		{2EDE050B-D2E1-4E8D-8AB9-22B99AEEAEA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2EDE050B-D2E1-4E8D-8AB9-22B99AEEAEA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2EDE050B-D2E1-4E8D-8AB9-22B99AEEAEA9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3822CAFE-7B98-4734-801D-CE2CA3A7618D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3822CAFE-7B98-4734-801D-CE2CA3A7618D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3822CAFE-7B98-4734-801D-CE2CA3A7618D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3822CAFE-7B98-4734-801D-CE2CA3A7618D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{52D3C236-8B22-4DF1-B4AC-1F5DCB2FE346}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{52D3C236-8B22-4DF1-B4AC-1F5DCB2FE346}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{52D3C236-8B22-4DF1-B4AC-1F5DCB2FE346}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{52D3C236-8B22-4DF1-B4AC-1F5DCB2FE346}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D02D14E-9CC6-4D4F-BFF2-9AE102A08D4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D02D14E-9CC6-4D4F-BFF2-9AE102A08D4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D02D14E-9CC6-4D4F-BFF2-9AE102A08D4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D02D14E-9CC6-4D4F-BFF2-9AE102A08D4F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

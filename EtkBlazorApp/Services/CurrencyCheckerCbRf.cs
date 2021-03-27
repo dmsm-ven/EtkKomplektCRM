@@ -1,5 +1,4 @@
-﻿using EtkBlazorApp.BL.Interfaces;
-using EtkBlazorApp.Data;
+﻿using EtkBlazorApp.BL;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;

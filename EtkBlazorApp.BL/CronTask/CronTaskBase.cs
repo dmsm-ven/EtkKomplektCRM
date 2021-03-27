@@ -1,9 +1,4 @@
-﻿using EtkBlazorApp.BL.Managers;
-using EtkBlazorApp.DataAccess;
-using EtkBlazorApp.DataAccess.Entity;
-using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
 {
@@ -23,13 +18,14 @@ namespace EtkBlazorApp.BL
             try
             {
                 await Run();
+                //Ставим флаг что задание выполнено (даже в случае ошибки, что бы не вызывать выполнение каждые раз, даже если не получилось выполнить)
+                IsDoneToday = true;
             }
             catch
             {
                 throw;
             }
-
-            IsDoneToday = true;
+            
         }
 
         public void Reset()

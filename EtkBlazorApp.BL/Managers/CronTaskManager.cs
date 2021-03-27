@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Timers;
 
-namespace EtkBlazorApp.BL.Managers
+namespace EtkBlazorApp.BL
 {
     public class CronTaskManager
     {
@@ -16,6 +16,7 @@ namespace EtkBlazorApp.BL.Managers
         public event Action<CronTaskBase> OnTaskError;
 
         internal readonly ISettingStorage settings;
+        internal readonly ITemplateStorage templates;
         internal readonly ILogStorage logger;
         internal readonly UpdateManager updateManager;
         internal readonly PriceListManager priceListManager;
@@ -25,12 +26,14 @@ namespace EtkBlazorApp.BL.Managers
         private readonly List<CronTaskBase> taskList;
 
         public CronTaskManager(
-            ISettingStorage settings, 
+            ISettingStorage settings,
+            ITemplateStorage templates,
             ILogStorage logger,
             UpdateManager updateManager, 
             PriceListManager priceListManager)
         {
             this.settings = settings;
+            this.templates = templates;
             this.logger = logger;
             this.updateManager = updateManager;
             this.priceListManager = priceListManager;
@@ -42,7 +45,7 @@ namespace EtkBlazorApp.BL.Managers
 
             taskList.ForEach(t => t.SetManager(this));
 
-            checkTimer = new Timer(TimeSpan.FromSeconds(45).TotalMilliseconds);
+            checkTimer = new Timer(TimeSpan.FromSeconds(600).TotalMilliseconds);
             checkTimer.Elapsed += CheckTimer_Elapsed;
             checkTimer.Start();
         }

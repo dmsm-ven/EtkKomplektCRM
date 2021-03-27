@@ -20,11 +20,8 @@ namespace EtkBlazorApp.DataAccess
     public class EtkDatabaseDapperAccess : IDatabaseAccess
     {
         private readonly IConfiguration configuration;
-#if DEBUG
-        string ConnectionString => configuration.GetConnectionString("local_server_db");
-#else
-        string ConnectionString => configuration.GetConnectionString("server_db");
-#endif
+
+        string ConnectionString => configuration.GetConnectionString("etk_db");
 
         public EtkDatabaseDapperAccess(IConfiguration configuration)
         {

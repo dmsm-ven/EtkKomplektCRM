@@ -4,77 +4,6 @@
     "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp\\EtkBlazorApp.csproj": {}
   },
   "projects": {
-    "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.API\\EtkBlazorApp.Integration.csproj": {
-      "version": "1.0.0",
-      "restore": {
-        "projectUniqueName": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.API\\EtkBlazorApp.Integration.csproj",
-        "projectName": "EtkBlazorApp.Integration",
-        "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.API\\EtkBlazorApp.Integration.csproj",
-        "packagesPath": "C:\\Users\\user\\.nuget\\packages\\",
-        "outputPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.API\\obj\\",
-        "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
-        ],
-        "configFilePaths": [
-          "C:\\Users\\user\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
-        ],
-        "originalTargetFrameworks": [
-          "net5.0"
-        ],
-        "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "https://api.nuget.org/v3/index.json": {}
-        },
-        "frameworks": {
-          "net5.0": {
-            "targetAlias": "net5.0",
-            "projectReferences": {}
-          }
-        },
-        "warningProperties": {
-          "warnAsError": [
-            "NU1605"
-          ]
-        }
-      },
-      "frameworks": {
-        "net5.0": {
-          "targetAlias": "net5.0",
-          "dependencies": {
-            "Microsoft.Extensions.Configuration.Abstractions": {
-              "target": "Package",
-              "version": "[5.0.0, )"
-            },
-            "Newtonsoft.Json": {
-              "target": "Package",
-              "version": "[12.0.3, )"
-            },
-            "System.Net.Http.Json": {
-              "target": "Package",
-              "version": "[5.0.0, )"
-            }
-          },
-          "imports": [
-            "net461",
-            "net462",
-            "net47",
-            "net471",
-            "net472",
-            "net48"
-          ],
-          "assetTargetFallback": true,
-          "warn": true,
-          "frameworkReferences": {
-            "Microsoft.NETCore.App": {
-              "privateAssets": "all"
-            }
-          },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.101\\RuntimeIdentifierGraph.json"
-        }
-      }
-    },
     "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.BL\\EtkBlazorApp.BL.csproj": {
       "version": "1.0.0",
       "restore": {
@@ -104,9 +33,6 @@
             "projectReferences": {
               "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.DataAccess\\EtkBlazorApp.DataAccess.csproj": {
                 "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.DataAccess\\EtkBlazorApp.DataAccess.csproj"
-              },
-              "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Data\\EtkBlazorApp.Data.csproj": {
-                "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Data\\EtkBlazorApp.Data.csproj"
               }
             }
           }
@@ -191,11 +117,7 @@
         "frameworks": {
           "net5.0": {
             "targetAlias": "net5.0",
-            "projectReferences": {
-              "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Data\\EtkBlazorApp.Data.csproj": {
-                "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Data\\EtkBlazorApp.Data.csproj"
-              }
-            }
+            "projectReferences": {}
           }
         },
         "warningProperties": {
@@ -276,14 +198,14 @@
         }
       }
     },
-    "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Data\\EtkBlazorApp.Data.csproj": {
+    "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Integration\\EtkBlazorApp.Integration.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Data\\EtkBlazorApp.Data.csproj",
-        "projectName": "EtkBlazorApp.Data",
-        "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Data\\EtkBlazorApp.Data.csproj",
+        "projectUniqueName": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Integration\\EtkBlazorApp.Integration.csproj",
+        "projectName": "EtkBlazorApp.Integration",
+        "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Integration\\EtkBlazorApp.Integration.csproj",
         "packagesPath": "C:\\Users\\user\\.nuget\\packages\\",
-        "outputPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Data\\obj\\",
+        "outputPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Integration\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -314,6 +236,20 @@
       "frameworks": {
         "net5.0": {
           "targetAlias": "net5.0",
+          "dependencies": {
+            "Microsoft.Extensions.Configuration.Abstractions": {
+              "target": "Package",
+              "version": "[5.0.0, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[12.0.3, )"
+            },
+            "System.Net.Http.Json": {
+              "target": "Package",
+              "version": "[5.0.0, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
@@ -360,14 +296,14 @@
           "net5.0": {
             "targetAlias": "net5.0",
             "projectReferences": {
-              "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.API\\EtkBlazorApp.Integration.csproj": {
-                "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.API\\EtkBlazorApp.Integration.csproj"
-              },
               "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.BL\\EtkBlazorApp.BL.csproj": {
                 "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.BL\\EtkBlazorApp.BL.csproj"
               },
               "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.DataAccess\\EtkBlazorApp.DataAccess.csproj": {
                 "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.DataAccess\\EtkBlazorApp.DataAccess.csproj"
+              },
+              "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Integration\\EtkBlazorApp.Integration.csproj": {
+                "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Integration\\EtkBlazorApp.Integration.csproj"
               }
             }
           }

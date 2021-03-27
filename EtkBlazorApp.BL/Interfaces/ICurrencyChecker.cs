@@ -1,7 +1,6 @@
-﻿using EtkBlazorApp.Data;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
-namespace EtkBlazorApp.BL.Interfaces
+namespace EtkBlazorApp.BL
 {
     public interface ICurrencyChecker
     {

@@ -8,71 +8,73 @@
 
 @if (itemsSource == null)
 {
-    <LoadingSpinner />
+<LoadingSpinner></LoadingSpinner>
 }
 else
 {
-    <img style="height: 100px; margin: 0px auto 40px auto; display: block;" src="image/logotips/vse-instrumenti-logo-big.jpg" class="img-fluid"/>
-    <div class="container">
-        @if (inProgress)
+<img style="height: 100px; margin: 0px auto 40px auto; display: block;" src="image/logotips/vse-instrumenti-logo-big.jpg" class="img-fluid" />
+<div class="container">
+    @if (inProgress)
         {
-            <IntermediateProgressBar />
-        }
-        else
-        {
+    <IntermediateProgressBar></IntermediateProgressBar>
+    }
+    else
+    {
     <div class="row">
-        <div class="col-md-6 col-sm-6">
-            <button type="button" class="btn btn-vi" style="width: 100%;" 
-                    @onclick="GetReport" disabled="@reportButtonDisabled">Скачать выгрузку</button>
-        </div>
-        <div class="col-md-3 col-sm-3">
-            <input type="checkbox" class="form-control" value="@removeEmptyStock" />
-            <p style="text-align: center; margin-top: 4px;">Исключить 0 ед.</p>
-        </div>
-        <div class="col-md-3 col-sm-3">
-            <input type="checkbox" class="form-control" @onchange="@((e) => ShowPriceExample = (bool)e.Value)" />
-            <p style="text-align: center; margin-top: 4px;">Показать примеры цен</p>
+        <button type="button" class="btn btn-vi" style="width: 100%;" @onclick="GetReport" disabled="@reportButtonDisabled">Скачать выгрузку</button>
+    </div>
+    <hr />
+    <h3>Настройки выгрузки</h3>
+    <ul class="list-group">
+        <li class="list-group-item">
+            <input class="form-check-input" type="checkbox" value="@removeEmptyStock" aria-label="">
+            Убрать товары с 0 остатка
+        </li>
+        <li class="list-group-item">
+            <input class="form-check-input" type="checkbox" @onchange="@((e) => ShowPriceExample = (bool)e.Value)" aria-label="">
+            Показать примеры цен
             @if (ShowPriceExample)
             {
-                <label for="example-price">Цена для примера</label>
-                <input type="number" style="display: inline; margin: 2px;" class="form-control" name="example-price" 
-                       @bind-value="ExamplePrice"/>
+                <li class="list-group-item" style="border: none;">    
+                <input type="number" style="display: inline; margin: 2px; width: 100px;" class="form-control" name="example-price"@bind-value="ExamplePrice" />
+                Тестовая цена
+                </li>
             }
-        </div>
-    </div>
-        }
-        <div class="table-responsive">
-            <table class="table">
-                <thead class="thead-etk">
-                    <tr>
-                        <th></th>
-                        <th>Производитель</th>
-                        <th>Закупочная цена</th>
-                        <th>Рекомендуемая цена</th>
-                        <th>Валюта выгрузки</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in orderedSource)
+        </li>
+    </ul>
+    }
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead class="thead-etk">
+                <tr>
+                    <th></th>
+                    <th>Производитель</th>
+                    <th>Закупочная цена</th>
+                    <th>Рекомендуемая цена</th>
+                    <th>Валюта выгрузки</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in orderedSource)
                     {
-                    <CascadingValue Value="@ShowPriceExample">
-                        <CascadingValue Value="@ExamplePrice">
-                            <PrikatTemplateItem Item="@item" ItemChanged="@(e => DiscountChanged(item))" />
-                        </CascadingValue>
+                <CascadingValue Value="@ShowPriceExample">
+                    <CascadingValue Value="@ExamplePrice">
+                        <PrikatTemplateItem Item="@item" ItemChanged="@(e => DiscountChanged(item))" />
                     </CascadingValue>
+                </CascadingValue>
                     }
-                </tbody>
-            </table>
-        </div>
+            </tbody>
+        </table>
     </div>
+</div>
 }
 @code {
-
     List<PrikatManufacturerDiscountViewModel> itemsSource;
     List<PrikatManufacturerDiscountViewModel> orderedSource => itemsSource.OrderByDescending(t => t.IsChecked).ToList();
 
-    [Inject]ReportManager ReportManager { get; set; }
-    
+    [Inject] ReportManager ReportManager { get; set; }
+
     public bool ShowPriceExample { get; set; }
     public decimal ExamplePrice { get; set; } = 1000;
 

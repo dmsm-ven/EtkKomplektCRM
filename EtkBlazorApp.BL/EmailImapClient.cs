@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
 {
-    public static class MyImapClient
+    public static class EmailImapClient
     {
 		public static async Task<bool> CheckConnection(string host, string port, string login, string password)
 		{

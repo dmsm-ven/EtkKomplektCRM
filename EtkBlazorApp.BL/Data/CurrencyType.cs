@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace EtkBlazorApp.Data
+namespace EtkBlazorApp.BL
 {
     public enum CurrencyType
     {

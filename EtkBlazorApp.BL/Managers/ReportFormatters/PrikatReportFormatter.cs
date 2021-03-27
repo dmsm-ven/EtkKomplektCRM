@@ -1,5 +1,4 @@
-﻿using EtkBlazorApp.BL.Interfaces;
-using EtkBlazorApp.Data;
+﻿using EtkBlazorApp.BL.Templates;
 using EtkBlazorApp.DataAccess;
 using System;
 using System.Collections.Generic;
@@ -8,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.BL.Managers
+namespace EtkBlazorApp.BL
 {
     public class PrikatReportFormatter
     {

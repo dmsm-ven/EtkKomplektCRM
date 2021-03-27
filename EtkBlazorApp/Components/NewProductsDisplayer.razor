@@ -10,23 +10,26 @@ else
         <div class="row">
             @foreach (var product in products)
             {
-                <div class="col-lg-2 col-md-4 col-sm-6 col-xs-12 product-item">
-                    <a href="https://etk-komplekt.ru/index.php?route=product/product&product_id=@product.product_id" target="_blank">
-                        <div class="product-item-inner shadow">
-                            <div class="product-item-manufacturer">
-                                <p>@product.manufacturer</p>
-                            </div>
-                            <img src="@("https://etk-komplekt.ru/image/" + product.image)"
-                                    style="width: 250px; height: 250px;"
-                                    class="figure-img img-fluid rounded" alt="@(product.name ?? "Товар без назания")">
-
-                            <div class="product-item-info">
-                                <p class="product-name">@(product.name ?? "Товар без назания")</p>
-                                <p class="product-price">@product.price.ToString("C0")</p>
-                            </div>
+            <div class="col-md-3 product-item">
+                @if (product.price != 0)
+                {
+                    <p class="product-price">@product.price.ToString("C0")</p>
+                }
+                <a href="https://etk-komplekt.ru/index.php?route=product/product&product_id=@product.product_id" target="_blank">
+                    <div class="product-item-inner shadow">
+                        <div class="product-item-manufacturer">
+                            <p>@product.manufacturer</p>
                         </div>
-                    </a>
-                </div>
+                        <img src="@("https://etk-komplekt.ru/image/" + product.image)"
+                             style="width: 250px; height: 250px;"
+                             class="figure-img img-fluid rounded" alt="@(product.name ?? "Товар без назания")">
+
+                        <div class="product-item-info">
+                            <p class="product-name">@(product.name ?? "Товар без назания")</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
             }
         </div>
     </div>
@@ -35,7 +38,7 @@ else
 @code {
 
     [Parameter]
-    public int ProductsCount { get; set; } = 12;
+    public int ProductsCount { get; set; } = 8;
 
     List<ProductEntity> products = null;
 
