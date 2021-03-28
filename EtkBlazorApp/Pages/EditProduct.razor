@@ -1,0 +1,189 @@
+﻿@page "/edit-product";
+
+@using EtkBlazorApp.DataAccess
+@using EtkBlazorApp.Components;
+@inject IProductStorage productStorage
+@inject ISettingStorage settingStorage
+@inject ICurrencyChecker currencyChecker
+@attribute [Authorize]
+
+
+
+<h3>Редактирование товара</h3>
+<div class="row">
+    <div class="col-md-6">
+        <input type="url" class="form-control" id="product-uri" @bind="enteredUri">
+    </div>
+    <div class="col-md-3">
+        <button class="btn btn-primary px-2 py-1" @onclick="LoadProduct">Найти товар по URL</button>
+        @if (hasChanges)
+        {
+            <button class="btn btn-success px-2 py-1" @onclick="SaveChanges">Сохранить</button>
+        }
+    </div>
+</div>
+
+<div class="container">
+    @if (editedProduct != null)
+    {
+
+        <form>
+            <div class="form-group">
+                <label for="product-name">Наименование</label>
+                <input type="text" class="form-control" id="product-name" @bind="@editedProduct.Name" readonly>
+            </div>
+            <div class="form-group">
+                <label for="product-model">Модель</label>
+                <input type="text" class="form-control" id="product-model" @bind="@editedProduct.Model" readonly>
+            </div>
+            <div class="form-group">
+                <label for="product-sku">Артикул</label>
+                <input type="text" class="form-control" id="product-sku" @bind="@editedProduct.Sku" readonly>
+            </div>
+            <div class="form-group">
+                <label for="product-quantity">Количество на складе</label>
+                <input type="number" class="form-control" id="product-quantity" @bind="@editedProduct.Quantity">
+            </div>
+            <div class="form-group">
+                <label for="product-stock-status">Статус на складе</label>
+                <select class="form-control" @bind="editedProduct.StockStatus" id="product-stock-status">
+                    @foreach (var name in stockStatusNames)
+                    {
+                        <option value="@name" selected="@(name == editedProduct.StockStatus)">@name</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="product-price">Цена товара, рублей</label>
+                <input type="number" disabled="@editedProduct.IsPriceInCurrency" class="form-control" id="product-price" @bind="@editedProduct.Price">
+            </div>
+
+            <div class="form-group">
+                @if (editedProduct.IsPriceInCurrency == false)
+                {
+                    <label for="is-product-price-in-currency">Цена товара в валюте</label>
+                }
+                <input type="checkbox" id="is-product-price-in-currency" class="form-check" @bind="editedProduct.IsPriceInCurrency" />
+            </div>
+            @if (editedProduct.IsPriceInCurrency)
+            {
+                <div class="form-group">
+                    <label for="product-base-price">Цена товара (@editedProduct.BasePriceCurrency)</label>
+                    <input type="number" class="form-control" id="product-base-price" @bind="@editedProduct.BasePrice">
+                </div>
+                <div class="form-group">
+                    <label for="product-base-currency-code">Валюта цены</label>
+                    <select class="form-control" @bind="editedProduct.BasePriceCurrency" id="base-currency-code">
+                        @foreach (var currency in basePriceCurrencyNames)
+                        {
+                            <option value="@currency" selected="@(currency == editedProduct.BasePriceCurrency)">@currency</option>
+                        }
+                    </select>
+                </div>
+            }
+        </form>
+
+    }
+</div>
+
+
+@code {
+    string[] basePriceCurrencyNames = Enum.GetNames(typeof(CurrencyType));
+
+    ProductViewModel editedProduct = null;
+    string[] stockStatusNames = null;
+    string enteredUri = null;
+
+    int currentStateCode = 0;
+    bool hasChanges => currentStateCode != 0 && currentStateCode != GetCurrentStateCode();
+
+    protected override async Task OnInitializedAsync()
+    {
+        enteredUri = await settingStorage.GetValue("edit-product-page-last-uri");
+        stockStatusNames = (await productStorage.GetStockStatuses()).Select(e => e.name).ToArray();
+    }
+
+    private async Task ConfirmProductChanges()
+    {
+        var entity = new ProductEntity()
+        {
+            product_id = editedProduct.Id,
+            price = editedProduct.Price,
+            quantity = editedProduct.Quantity,
+            stock_status = editedProduct.StockStatus,
+            base_price = editedProduct.BasePrice,
+            base_currency_code = editedProduct.StockStatus
+        };
+        await productStorage.UpdateDirectProduct(entity);
+    }
+
+    private async Task LoadProduct()
+    {
+        string keyword = new Uri(enteredUri).AbsolutePath.Trim('/', '?', '&');
+        var entity = await productStorage.GetProductByKeyword(keyword);
+        editedProduct = new ProductViewModel()
+        {
+            Id = entity.product_id,
+            Uri = $"https://etk-komplekt.ru/{entity.keyword}",
+            Name = entity.name,
+            Model = entity.model,
+            Sku = entity.sku,
+            Quantity = entity.quantity,
+            Price = entity.price,
+            BasePrice = entity.base_price,
+            BasePriceCurrency = entity.base_currency_code,
+            StockStatus = entity.stock_status,
+            IsPriceInCurrency = entity.base_currency_code != "RUB"
+        };
+
+        if (entity != null)
+        {
+            await settingStorage.SetValue("edit-product-page-last-uri", editedProduct.Uri);
+        }
+
+        editedProduct.PropertyChanged += FieldChanged;
+        currentStateCode = GetCurrentStateCode();
+    }
+
+    private void FieldChanged(object o, System.ComponentModel.PropertyChangedEventArgs e)
+    {        
+        currentStateCode = GetCurrentStateCode();
+        if (editedProduct.IsPriceInCurrency)
+        {
+            decimal ratio = 77;//await currencyChecker.GetCurrencyRate(Enum.Parse<CurrencyType>(editedProduct.BasePriceCurrency));
+            editedProduct.Price = Math.Round(ratio * editedProduct.BasePrice, 2);
+        }
+        StateHasChanged();
+    }
+
+    private async Task SaveChanges()
+    {
+        var entity = new ProductEntity()
+        {
+            product_id = editedProduct.Id,
+            price = editedProduct.Price,
+            base_price = editedProduct.BasePrice,
+            base_currency_code = editedProduct.BasePriceCurrency,
+            quantity = editedProduct.Quantity,
+            stock_status = editedProduct.StockStatus
+        };
+
+        await productStorage.UpdateDirectProduct(entity);
+        currentStateCode = GetCurrentStateCode();
+    }
+
+    private int GetCurrentStateCode()
+    {
+        int code = 0;
+        if (editedProduct != null)
+        {
+            code += editedProduct.Id;
+            code += editedProduct.Price.GetHashCode();
+            code += editedProduct.BasePrice.GetHashCode();
+            code += editedProduct.Quantity.GetHashCode();
+            code += (editedProduct?.StockStatus ?? string.Empty).GetHashCode();
+            code += (editedProduct?.BasePriceCurrency ?? string.Empty).GetHashCode();
+        }
+        return code;
+    }
+}

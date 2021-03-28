@@ -2,7 +2,6 @@
 @inject IToastService toastService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject MyDbLogger logger
-@inject CronTaskManager taskManager
 
 @using System.Globalization
 
@@ -50,9 +49,7 @@
 
     protected override void OnInitialized()
     {
-        taskManager.OnTaskComplete += (e) => toastService.ShowSuccess($"Задание выполнено: {e.Prefix.ToString()}");
-        taskManager.OnTaskError += (e) => toastService.ShowError($"Ошибка выполнения задания: {e.Prefix.ToString()}");
+        
     }
-
 }
 

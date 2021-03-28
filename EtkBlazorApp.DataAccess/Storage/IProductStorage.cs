@@ -11,11 +11,13 @@ namespace EtkBlazorApp.DataAccess
     public interface IProductStorage
     {
         Task<List<ProductEntity>> GetLastAddedProducts(int count);
-        ProductEntity GetProductById(int id);
-        Task UpdateStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate);
-        Task UpdatePrice(List<ProductUpdateData> data);
+        Task<ProductEntity> GetProductByKeyword(string keyword);
+        Task UpdateProductsStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate);
+        Task UpdateProductsPrice(List<ProductUpdateData> data);
         Task<List<ProductEntity>> ReadProducts(List<int> allowedManufacturers = null);
         Task<List<ProductEntity>> ReadProducts(int manufacturer_id);
+        Task UpdateDirectProduct(ProductEntity product);
+        Task<List<StockStatusEntity>> GetStockStatuses();
     }
 
     public class ProductStorage : IProductStorage
@@ -52,9 +54,29 @@ namespace EtkBlazorApp.DataAccess
             return products.ToList();
         }
 
-        public ProductEntity GetProductById(int id)
+        public async Task<ProductEntity> GetProductByKeyword(string keyword)
+        {
+            string sql = "SELECT p.product_id, d.name, p.sku, p.model, p.quantity, p.price, p.base_price, p.base_currency_code, s.name as stock_status, url.keyword as keyword " +
+                         "\nFROM oc_product p " +
+                         "\nJOIN oc_url_alias url ON url.query = CONCAT('product_id=', p.product_id) " +
+                         "\nLEFT JOIN oc_product_description d ON p.product_id = d.product_id " +
+                         "\nLEFT JOIN oc_stock_status s ON s.stock_status_id = p.stock_status_id " +
+                         "\nWHERE url.keyword = @keyword " +
+                         "\nLIMIT 1";
+
+            var product = (await database.LoadData<ProductEntity, dynamic>(sql, new { keyword })).FirstOrDefault();
+            return product;
+        }
+
+        public async Task UpdateDirectProduct(ProductEntity product)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<List<StockStatusEntity>> GetStockStatuses()
+        {
+            var data = await database.LoadData<StockStatusEntity, dynamic>("SELECT * FROM oc_stock_status", new { });
+            return data;
         }
 
         public async Task<List<ProductEntity>> ReadProducts(List<int> allowedManufacturers = null)
@@ -88,7 +110,7 @@ namespace EtkBlazorApp.DataAccess
             return ReadProducts(new List<int>(new[] { manufacturer_id }));
         }
 
-        public async Task UpdatePrice(List<ProductUpdateData> data)
+        public async Task UpdateProductsPrice(List<ProductUpdateData> data)
         {
             List<int> discountProductIds = await GetDiscountProductIds();
             
@@ -137,7 +159,7 @@ namespace EtkBlazorApp.DataAccess
             await database.SaveData<dynamic>(sql, new { });
         }
 
-        public async Task UpdateStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate)
+        public async Task UpdateProductsStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate)
         {
             List<ProductUpdateData> source = data
                 .Where(d => d.quantity.HasValue)

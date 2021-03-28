@@ -35,7 +35,7 @@ else
                                 {
                                     <td>@item.shipment_period</td>
                                     <td>@item.NextShipmentDate.ToShortDateString()</td>
-                                    <td><button class="btn-secondary btn-sm" @onclick="@(e => EditManufacturer(item))">Изменить</button></td>
+                                    <td><button class="btn-secondary btn-sm" @onclick="@(e => ChangeEditedManufacturer(item))">Изменить</button></td>
                                 }
                                 else
                                 {
@@ -82,7 +82,7 @@ else
     List<ManufacturerViewModel> manufacturers = null;
     ManufacturerViewModel editManufacturer = null;
 
-    private void EditManufacturer(ManufacturerViewModel manufacturer)
+    private void ChangeEditedManufacturer(ManufacturerViewModel manufacturer)
     {
         editManufacturer = manufacturer;
     }

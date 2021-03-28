@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Globalization;
+using System.Threading;
 
 namespace EtkBlazorApp
 {
@@ -86,6 +88,8 @@ namespace EtkBlazorApp
             });
 
             app.ApplicationServices.GetService<CronTaskManager>();
+
+            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("ru-RU");
         }
     }
 }

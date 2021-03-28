@@ -1,4 +1,4 @@
-﻿using EtkBlazorApp.DataAccess;
+using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;

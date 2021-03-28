@@ -21,24 +21,19 @@ namespace EtkBlazorApp.BL
             this.correlator = correlator;
         }
 
-        public async Task UploadTemplate(Type templateType, Stream downloadFileStream, long streamLength)
+        public async Task UploadTemplate(Type templateType, Stream stream)
         {
             if (templateType == null) { throw new ArgumentNullException(nameof(templateType)); }
 
             string fileName = Path.GetTempFileName();
             using (var fs = File.Create(fileName))
             {
-                var buffer = new byte[streamLength];
-                await downloadFileStream.ReadAsync(buffer);
-                await fs.WriteAsync(buffer, 0, buffer.Length);
+                await stream.CopyToAsync(fs);
             }
 
-            //Скачали данные из потока и записали в временный файл
-            if (!File.Exists(fileName)) { return; }
-            
             try
             {
-                IPriceListTemplate templateInstance = (IPriceListTemplate)Activator.CreateInstance(templateType, fileName );
+                IPriceListTemplate templateInstance = (IPriceListTemplate)Activator.CreateInstance(templateType, fileName);
 
                 var data = await templateInstance.ReadPriceLines(null);
                 AddNewPriceLines(data);
@@ -68,11 +63,11 @@ namespace EtkBlazorApp.BL
             List<PriceLine> list = new List<PriceLine>();
 
             string fileName = Path.GetTempFileName();
-            using (var fileStream = File.Create(fileName))
+            using (var fs = File.Create(fileName))
             {
                 var buffer = new byte[streamLength];
                 await downloadFileStream.ReadAsync(buffer);
-                await fileStream.WriteAsync(buffer, 0, buffer.Length);
+                await fs.WriteAsync(buffer, 0, buffer.Length);
             }
 
             //Скачали данные из потока и записали в временный файл

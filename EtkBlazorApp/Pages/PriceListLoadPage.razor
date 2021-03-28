@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles = "Administrator, Manager")]
 @inject PriceListManager priceListManager
 @inject ITemplateStorage templateStorage
+@inject IToastService toast
 
 @using System.IO;
 @using System.Threading;
@@ -12,17 +13,16 @@
 {
     <IntermediateProgressBar />
 }
-else
-{
-    <button class="btn btn-success"
-            @onclick="LoadRemoteUriTemplate"
-            disabled="@(string.IsNullOrWhiteSpace(selectedTemplate?.RemoteUrl))">
-        Загрузить от поставщика
-    </button>
-    <InputFile OnChange="@UploadSelectedPriceListTemplateFile" disabled="@(selectedTemplate == null)"></InputFile>
 
-    <h2>Выберите шаблон загружаемого файла</h2>
-}
+<button class="btn btn-success"
+        @onclick="LoadRemoteUriTemplate"
+        disabled="@(string.IsNullOrWhiteSpace(selectedTemplate?.RemoteUrl))">
+    Загрузить от поставщика
+</button>
+<InputFile OnChange="@UploadSelectedPriceListTemplateFile" disabled="@(selectedTemplate == null)"></InputFile>
+
+<h2>Выберите шаблон загружаемого файла</h2>
+
 
 <div class="row">
     @foreach (var template in templates)
@@ -52,7 +52,7 @@ else
 
 @code
 {
-    const int MAX_UPLOAD_SIZE = 15_000_000; // 15 мб
+    const int MAX_UPLOAD_FILE_SIZE = 15_000_000; // 15 мб
 
     Dictionary<string, List<PriceListTemplateItemViewModel>> templates = null;
     PriceListTemplateItemViewModel selectedTemplate = null;
@@ -81,10 +81,8 @@ else
     {
         isFileLoading = true;
 
-        var stream = e.File.OpenReadStream(MAX_UPLOAD_SIZE);
-        long fileLength = e.File.Size;
-
-        await LoadRemoteTemplateFromStream(stream, fileLength);
+        var stream = e.File.OpenReadStream(MAX_UPLOAD_FILE_SIZE);
+        await LoadRemoteTemplateFromStream(stream);
     }
 
     private async Task LoadRemoteUriTemplate()
@@ -93,16 +91,26 @@ else
 
         var response = await (new HttpClient().GetAsync(selectedTemplate.RemoteUrl));
         var stream = await response.Content.ReadAsStreamAsync();
-        long fileLength = (long)response.Content.Headers.ContentLength;
-        await LoadRemoteTemplateFromStream(stream, fileLength);
+
+        await LoadRemoteTemplateFromStream(stream);
     }
 
-    private async Task LoadRemoteTemplateFromStream(Stream stream, long fileLength)
+    private async Task LoadRemoteTemplateFromStream(Stream stream)
     {
-        await priceListManager.UploadTemplate(selectedTemplate.Type, stream, fileLength);
+        try
+        {
+            await priceListManager.UploadTemplate(selectedTemplate.Type, stream);
+        }
+        catch(Exception ex)
+        {
+            toast.ShowError("Ошибка загрузки файла: " + ex.Message);
+        }
+        finally
+        {
+            isFileLoading = false;
+            selectedTemplate = null;
+            StateHasChanged();
+        }
 
-        isFileLoading = false;
-        selectedTemplate = null;
-        StateHasChanged();
     }
 }

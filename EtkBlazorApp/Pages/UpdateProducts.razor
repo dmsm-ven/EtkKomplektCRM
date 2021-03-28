@@ -34,7 +34,6 @@
     {
         try
         {
-
             await databaseManager.UpdatePriceAndStock(priceListManager.PriceLines, clearStockBeforeUpdate);
 
             toastService.ShowError($"Остатки и цены на сайте (из загруженных прайс-листов) обновлены", "Информация");

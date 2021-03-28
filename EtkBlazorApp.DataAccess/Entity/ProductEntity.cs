@@ -12,9 +12,13 @@ namespace EtkBlazorApp.DataAccess.Entity
         public string manufacturer { get; set; }
         public string sku { get; set; }
         public string ean { get; set; }
+        public string keyword { get; set; }
         public decimal price { get; set; }
+        public decimal base_price { get; set; }
+        public string base_currency_code { get; set; }
         public string url { get; set; }
         public string image { get; set; }
+        public string stock_status { get; set; }
         public int quantity { get; set; }
     }
 }
