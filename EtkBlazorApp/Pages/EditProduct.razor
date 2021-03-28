@@ -1,88 +1,91 @@
 ﻿@page "/edit-product";
-
-@using EtkBlazorApp.DataAccess
-@using EtkBlazorApp.Components;
 @inject IProductStorage productStorage
 @inject ISettingStorage settingStorage
 @inject ICurrencyChecker currencyChecker
+@inject IToastService toasts
 @attribute [Authorize]
 
 
-
 <h3>Редактирование товара</h3>
-<div class="row">
-    <div class="col-md-6">
-        <input type="url" class="form-control" id="product-uri" @bind="enteredUri">
-    </div>
-    <div class="col-md-3">
-        <button class="btn btn-primary px-2 py-1" @onclick="LoadProduct">Найти товар по URL</button>
-        @if (hasChanges)
-        {
-            <button class="btn btn-success px-2 py-1" @onclick="SaveChanges">Сохранить</button>
-        }
-    </div>
-</div>
-
 <div class="container">
+
+    <div class="row" style="margin-bottom: 20px;">
+        <div class="col-md-8">
+            <input type="url" class="form-control" id="product-uri" @bind="enteredUri">
+        </div>
+        <div class="col-md-4">
+            <div class="btn-group">
+                <button class="btn btn-primary px-2 py-1" @onclick="LoadProduct">Найти товар по URL</button>
+                @if (hasChanges)
+                {
+                    <button class="btn btn-success px-2 py-1" @onclick="SaveChanges">Сохранить</button>
+                }
+            </div>
+        </div>
+    </div>
+
     @if (editedProduct != null)
     {
+        <div class="row">
+            <div class="col-md-8">
+                <form>
+                    <div class="form-group">
+                        <label for="product-name">Наименование</label>
+                        <input type="text" class="form-control" id="product-name" @bind="@editedProduct.Name" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="product-model">Модель</label>
+                        <input type="text" class="form-control" id="product-model" @bind="@editedProduct.Model" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="product-sku">Артикул</label>
+                        <input type="text" class="form-control" id="product-sku" @bind="@editedProduct.Sku" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="product-quantity">Количество на складе</label>
+                        <input type="number" class="form-control" id="product-quantity" @bind="@editedProduct.Quantity">
+                    </div>
+                    <div class="form-group">
+                        <label for="product-stock-status">Статус на складе</label>
+                        <select class="form-control" @bind="editedProduct.StockStatus" id="product-stock-status">
+                            @foreach (var name in stockStatusNames)
+                            {
+                                <option value="@name" selected="@(name == editedProduct.StockStatus)">@name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="product-price">Цена товара, рублей</label>
+                        <input type="number" disabled="@editedProduct.IsPriceInCurrency" class="form-control" id="product-price" 
+                               @bind-value="@editedProduct.Price">
+                    </div>
 
-        <form>
-            <div class="form-group">
-                <label for="product-name">Наименование</label>
-                <input type="text" class="form-control" id="product-name" @bind="@editedProduct.Name" readonly>
-            </div>
-            <div class="form-group">
-                <label for="product-model">Модель</label>
-                <input type="text" class="form-control" id="product-model" @bind="@editedProduct.Model" readonly>
-            </div>
-            <div class="form-group">
-                <label for="product-sku">Артикул</label>
-                <input type="text" class="form-control" id="product-sku" @bind="@editedProduct.Sku" readonly>
-            </div>
-            <div class="form-group">
-                <label for="product-quantity">Количество на складе</label>
-                <input type="number" class="form-control" id="product-quantity" @bind="@editedProduct.Quantity">
-            </div>
-            <div class="form-group">
-                <label for="product-stock-status">Статус на складе</label>
-                <select class="form-control" @bind="editedProduct.StockStatus" id="product-stock-status">
-                    @foreach (var name in stockStatusNames)
-                    {
-                        <option value="@name" selected="@(name == editedProduct.StockStatus)">@name</option>
-                    }
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="product-price">Цена товара, рублей</label>
-                <input type="number" disabled="@editedProduct.IsPriceInCurrency" class="form-control" id="product-price" @bind="@editedProduct.Price">
-            </div>
-
-            <div class="form-group">
-                @if (editedProduct.IsPriceInCurrency == false)
-                {
-                    <label for="is-product-price-in-currency">Цена товара в валюте</label>
-                }
-                <input type="checkbox" id="is-product-price-in-currency" class="form-check" @bind="editedProduct.IsPriceInCurrency" />
-            </div>
-            @if (editedProduct.IsPriceInCurrency)
-            {
-                <div class="form-group">
-                    <label for="product-base-price">Цена товара (@editedProduct.BasePriceCurrency)</label>
-                    <input type="number" class="form-control" id="product-base-price" @bind="@editedProduct.BasePrice">
-                </div>
-                <div class="form-group">
-                    <label for="product-base-currency-code">Валюта цены</label>
-                    <select class="form-control" @bind="editedProduct.BasePriceCurrency" id="base-currency-code">
-                        @foreach (var currency in basePriceCurrencyNames)
+                    <div class="form-group">
+                        @if (editedProduct.IsPriceInCurrency == false)
                         {
-                            <option value="@currency" selected="@(currency == editedProduct.BasePriceCurrency)">@currency</option>
+                            <label for="is-product-price-in-currency">Цена товара в валюте</label>
                         }
-                    </select>
-                </div>
-            }
-        </form>
-
+                        <input type="checkbox" id="is-product-price-in-currency" class="form-check" @bind="editedProduct.IsPriceInCurrency" />
+                    </div>
+                    @if (editedProduct.IsPriceInCurrency)
+                    {
+                        <div class="form-group">
+                            <label for="product-base-price">Цена товара (@editedProduct.BasePriceCurrency)</label>
+                            <input type="number" class="form-control" id="product-base-price" @bind="editedProduct.BasePrice">
+                        </div>
+                        <div class="form-group">
+                            <label for="product-base-currency-code">Валюта цены</label>
+                            <select class="form-control" id="base-currency-code"  @bind="editedProduct.BasePriceCurrency">
+                                @foreach (var currency in basePriceCurrencyNames)
+                                {
+                                    <option value="@currency" selected="@(currency == editedProduct.BasePriceCurrency)">@currency</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                </form>
+            </div>
+        </div>
     }
 </div>
 
@@ -101,20 +104,6 @@
     {
         enteredUri = await settingStorage.GetValue("edit-product-page-last-uri");
         stockStatusNames = (await productStorage.GetStockStatuses()).Select(e => e.name).ToArray();
-    }
-
-    private async Task ConfirmProductChanges()
-    {
-        var entity = new ProductEntity()
-        {
-            product_id = editedProduct.Id,
-            price = editedProduct.Price,
-            quantity = editedProduct.Quantity,
-            stock_status = editedProduct.StockStatus,
-            base_price = editedProduct.BasePrice,
-            base_currency_code = editedProduct.StockStatus
-        };
-        await productStorage.UpdateDirectProduct(entity);
     }
 
     private async Task LoadProduct()
@@ -141,27 +130,28 @@
             await settingStorage.SetValue("edit-product-page-last-uri", editedProduct.Uri);
         }
 
-        editedProduct.PropertyChanged += FieldChanged;
         currentStateCode = GetCurrentStateCode();
-    }
-
-    private void FieldChanged(object o, System.ComponentModel.PropertyChangedEventArgs e)
-    {        
-        currentStateCode = GetCurrentStateCode();
-        if (editedProduct.IsPriceInCurrency)
-        {
-            decimal ratio = 77;//await currencyChecker.GetCurrencyRate(Enum.Parse<CurrencyType>(editedProduct.BasePriceCurrency));
-            editedProduct.Price = Math.Round(ratio * editedProduct.BasePrice, 2);
-        }
-        StateHasChanged();
     }
 
     private async Task SaveChanges()
     {
+        decimal priceInRub = editedProduct.Price;
+        if (editedProduct.IsPriceInCurrency)
+        {
+            decimal ratio = await currencyChecker.GetCurrencyRate(Enum.Parse<CurrencyType>(editedProduct.BasePriceCurrency));
+            priceInRub = Math.Round(ratio * editedProduct.BasePrice);
+            editedProduct.Price = priceInRub;
+        }
+        else
+        {
+            editedProduct.BasePriceCurrency = "RUB";
+            editedProduct.BasePrice = 0;
+            editedProduct.IsPriceInCurrency = false;
+        }
         var entity = new ProductEntity()
         {
             product_id = editedProduct.Id,
-            price = editedProduct.Price,
+            price = priceInRub,
             base_price = editedProduct.BasePrice,
             base_currency_code = editedProduct.BasePriceCurrency,
             quantity = editedProduct.Quantity,

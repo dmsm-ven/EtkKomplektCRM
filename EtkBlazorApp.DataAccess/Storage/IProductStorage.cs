@@ -70,7 +70,17 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task UpdateDirectProduct(ProductEntity product)
         {
-            throw new NotImplementedException();
+            var sb = new StringBuilder()
+                .AppendLine("UPDATE oc_product")
+                .AppendLine("SET price = @price,")
+                .AppendLine("base_price = @base_price,")
+                .AppendLine("base_currency_code = @base_currency_code,")
+                .AppendLine("quantity = @quantity,")
+                .AppendLine("stock_status_id = (SELECT stock_status_id FROM oc_stock_status WHERE name = @stock_status)")
+                .AppendLine("WHERE product_id = @product_id");
+
+            string sql = sb.ToString();
+            await database.SaveData(sql, product);
         }
 
         public async Task<List<StockStatusEntity>> GetStockStatuses()
