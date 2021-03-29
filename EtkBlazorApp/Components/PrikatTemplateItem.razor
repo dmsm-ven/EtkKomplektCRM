@@ -5,13 +5,13 @@
                style="display: inline-block;  margin: 2px 6px;"
                @bind="@Item.IsChecked" />
     </td>
-    <td width="45%"><p style="font-size: 15px; font-weight: bold; font-family: monospace;">@Item.Manufacturer</p></td>
+    <td width="35%"><p style="font-size: 15px; font-weight: bold; font-family: monospace;">@Item.Manufacturer</p></td>
 
     @if (Item.IsChecked)
     {
         <td width="20%"><input type="number" class="form-control" @bind-value="@Item.Discount1" /></td>
         <td width="20%"><input type="number" class="form-control" @bind-value="@Item.Discount2" /></td>
-        <td width="10%">
+        <td width="20%">
             <select @onchange="(e => Item.CurrencyCode = (string)e.Value)" class="form-control">
                 @foreach (var currencyCode in currencyCodeList)
                 {
@@ -24,7 +24,7 @@
     {
         <td width="20%"></td>
         <td width="20%"></td>
-        <td width="10%"></td>
+        <td width="20%"></td>
     }
 </tr>
 @if (ShowPriceExample && Item.IsChecked)

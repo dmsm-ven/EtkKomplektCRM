@@ -4,11 +4,14 @@ namespace EtkBlazorApp.BL
 {
     public class ReportManager
     {        
-        public PrikatReportFormatter Prikat { get; } 
+        public PrikatReportGenerator Prikat { get; } 
 
-        public ReportManager(ICurrencyChecker currencyCheker, ITemplateStorage templateStorage, IProductStorage productStorage)
+        public ReportManager(ICurrencyChecker currencyCheker, 
+            ITemplateStorage templateStorage,
+            IProductStorage productStorage, 
+            PriceListManager priceListManager)
         {
-            Prikat = new PrikatReportFormatter(currencyCheker, templateStorage, productStorage);
+            Prikat = new PrikatReportGenerator(currencyCheker, templateStorage, productStorage, priceListManager);
         }
     }
 }

@@ -8,7 +8,7 @@ namespace EtkBlazorApp.DataAccess
 {
     public interface IOrderStorage
     {
-        Task<List<OrderEntity>> GetLastOrders(int limit, string city = null);
+        Task<List<OrderEntity>> GetLastOrders(int limit, string number = null, string city = null, string client = null);
         Task<List<OrderDetailsEntity>> GetOrderDetails(int orderId);
         Task<OrderEntity> GetOrderById(int orderId);
     }
@@ -22,7 +22,7 @@ namespace EtkBlazorApp.DataAccess
             this.database = database;
         }
 
-        public async Task<List<OrderEntity>> GetLastOrders(int takeCount, string city = null)
+        public async Task<List<OrderEntity>> GetLastOrders(int takeCount, string order_id = null, string payment_city = null, string shipping_firstname = null)
         {
             if (takeCount <= 0 || takeCount >= 500)
             {
@@ -34,16 +34,33 @@ namespace EtkBlazorApp.DataAccess
                 .AppendLine("FROM oc_order o")
                 .AppendLine("LEFT JOIN oc_order_status s ON o.order_status_id = s.order_status_id");
 
-            if (!string.IsNullOrWhiteSpace(city))
+            Dictionary<string, string> filter = new Dictionary<string, string>()
             {
-                sb.AppendLine("WHERE o.payment_city = @City");
+                [nameof(order_id)] = order_id,
+                [nameof(payment_city)] = payment_city,
+                [nameof(shipping_firstname)] = shipping_firstname,
+            };
+
+            if (filter.Any(kvp => kvp.Value != null))
+            {
+                sb.Append($"WHERE ");
+                foreach(var kvp in filter.Where(kvp => kvp.Value != null))
+                {
+                    sb.Append($"o.{kvp.Key} LIKE @{kvp.Key} AND ");
+                }
+                sb.Remove(sb.Length - 5, 5);
+                sb.AppendLine();
             }
+            
             sb
                 .AppendLine("ORDER BY o.date_added DESC")
-                .AppendLine("LIMIT @TakeCount");
+                .AppendLine("LIMIT @takeCount");
 
             string sql = sb.ToString().Trim();
-            var orders = await database.LoadData<OrderEntity, dynamic>(sql, new { TakeCount = takeCount, City = city });
+
+            dynamic parameter = new { takeCount, order_id = $"%{order_id}%", payment_city = $"%{payment_city}%", shipping_firstname = $"%{shipping_firstname}%" };
+            var orders = await database.LoadData<OrderEntity, dynamic>(sql, parameter);
+
             return orders;
         }
 

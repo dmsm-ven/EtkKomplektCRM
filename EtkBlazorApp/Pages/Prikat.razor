@@ -4,6 +4,7 @@
 @inject ITemplateStorage templateStorage
 @inject IManufacturerStorage manufacturerStorage
 @inject IJSRuntime js
+@using System.IO;
 
 
 @if (itemsSource == null)
@@ -24,24 +25,28 @@ else
         <button type="button" class="btn btn-vi" style="width: 100%;" @onclick="GetReport" disabled="@reportButtonDisabled">Скачать выгрузку</button>
     </div>
     <hr />
-    <h3>Настройки выгрузки</h3>
-    <ul class="list-group">
+    <h3><button class="btn btn-outline-info btn-sm" @onclick="(() => hideSettingsBox = !hideSettingsBox)">Настройки выгрузки</button></h3>
+    <ul class="list-group" hidden="@hideSettingsBox">
         <li class="list-group-item">
-            <input class="form-check-input" type="checkbox" value="@removeEmptyStock" aria-label="">
-            Убрать товары с 0 остатка
+            <input class="form-check-input" type="checkbox" value="@reportSettingsHasStock" aria-label="">
+            Остаток > 0
+        </li>
+        <li class="list-group-item">
+            <input class="form-check-input" type="checkbox" value="@reportSettingsHasEan" aria-label="">
+            Обязательно есть EAN
         </li>
         <li class="list-group-item">
             <input class="form-check-input" type="checkbox" @onchange="@((e) => ShowPriceExample = (bool)e.Value)" aria-label="">
             Показать примеры цен
             @if (ShowPriceExample)
             {
-                <li class="list-group-item" style="border: none;">    
-                <input type="number" style="display: inline; margin: 2px; width: 100px;" class="form-control" name="example-price"@bind-value="ExamplePrice" />
+            <li class="list-group-item" style="border: none;">
+                <input type="number" style="display: inline; margin: 2px; width: 100px;" class="form-control" name="example-price" @bind-value="ExamplePrice" />
                 Тестовая цена
-                </li>
-            }
-        </li>
-    </ul>
+            </li>
+        }
+            </li>
+        </ul>
     }
 
     <div class="table-responsive">
@@ -72,13 +77,12 @@ else
 @code {
     List<PrikatManufacturerDiscountViewModel> itemsSource;
     List<PrikatManufacturerDiscountViewModel> orderedSource => itemsSource.OrderByDescending(t => t.IsChecked).ToList();
-
     [Inject] ReportManager ReportManager { get; set; }
-
     public bool ShowPriceExample { get; set; }
     public decimal ExamplePrice { get; set; } = 1000;
-
-    bool removeEmptyStock = true;
+    bool reportSettingsHasStock = false;
+    bool reportSettingsHasEan = false;
+    bool hideSettingsBox = true;
     bool inProgress = false;
     bool reportButtonDisabled => itemsSource == null || itemsSource.All(m => m.IsChecked == false);
 
@@ -86,15 +90,12 @@ else
     {
         inProgress = true;
         StateHasChanged();
-        string filePath = System.IO.Path.GetTempFileName() + ".csv";
 
-        await ReportManager.Prikat.Create(filePath, removeEmptyStock);
-
-        await js.InvokeVoidAsync("FileSaveAs", "prikat_report.csv", System.IO.File.ReadAllText(filePath));
+        string filePath = await ReportManager.Prikat.Create(reportSettingsHasStock, reportSettingsHasEan);
+        await js.InvokeAsync<object>("saveAsFile", Path.GetFileName(filePath), Convert.ToBase64String(File.ReadAllBytes(filePath)));
+        File.Delete(filePath);
 
         inProgress = false;
-        System.IO.File.Delete(filePath);
-
     }
 
     protected override async Task OnInitializedAsync()

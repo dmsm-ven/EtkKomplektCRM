@@ -3,6 +3,8 @@
 @inject ISettingStorage settingStorage
 @inject ICurrencyChecker currencyChecker
 @inject IToastService toasts
+@inject MyDbLogger log
+@inject AuthenticationStateProvider stateProvider
 @attribute [Authorize]
 
 
@@ -136,6 +138,7 @@
     private async Task SaveChanges()
     {
         decimal priceInRub = editedProduct.Price;
+        
         if (editedProduct.IsPriceInCurrency)
         {
             decimal ratio = await currencyChecker.GetCurrencyRate(Enum.Parse<CurrencyType>(editedProduct.BasePriceCurrency));
@@ -148,6 +151,7 @@
             editedProduct.BasePrice = 0;
             editedProduct.IsPriceInCurrency = false;
         }
+        
         var entity = new ProductEntity()
         {
             product_id = editedProduct.Id,
@@ -159,6 +163,11 @@
         };
 
         await productStorage.UpdateDirectProduct(entity);
+
+        var userData = await stateProvider.GetAuthenticationStateAsync();
+        string pUri = "https://etk-komplekt.ru/index.php?route=product/product&product_id=" + editedProduct.Id;
+        await log.Write(LogEntryGroupName.ProductUpdate, userData.User.Identity.Name, "Товар обновлен", editedProduct.Name + $" ({pUri})");
+
         currentStateCode = GetCurrentStateCode();
     }
 

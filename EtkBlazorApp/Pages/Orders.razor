@@ -8,25 +8,19 @@
 <h3>Заказы</h3>
 
 <div class="row">
-    <div class="col-md-3">
-        <label for="orders_per_page">Количество записей на странице</label>
-        <select id="orders_per_page" @bind="@TakeCount" @oninput="@ItemsPerPageChanged">
-            @foreach (var itemsPerPage in AvailableTakeCountList)
-            {
-                <option value="@itemsPerPage">@itemsPerPage</option>
-            }
-        </select>
+    <div class="form-inline">
+        <label for="order-number">Номер заказа</label>
+        <input class="form-control mx-3 my-1" type="text" id="order-number" @bind="numberFilter" />
     </div>
-    <div class="col-md-3">
-        <label for="city_list">Город</label>
-        <select id="city_list" @bind="@cityFilter" @oninput="@CityChanged">
-            <option value="">Все</option>
-            @foreach (var city in cityList)
-            {
-                <option value="@city">@city</option>
-            }
-        </select>
+    <div class="form-inline">
+        <label for="order-customer">Заказчик</label>
+        <input class="form-control mx-3 my-1" type="text" id="order-customer" @bind="cutomerFilter">
     </div>
+    <div class="form-inline">
+        <label for="order-city">Город</label>
+        <input class="form-control mx-3 my-1" type="text" id="order-city" @bind="cityFilter">
+    </div>
+    <button class="btn btn-primary py-2 px-2 mx-2 my-2" @onclick="@(() => LoadOrders())">Найти</button>
 </div>
 
 @if (orders == null)
@@ -70,26 +64,18 @@ else
     </div>
 }
 
-<EtkBlazorApp.Components.NewOrdersNotificator NewOrderPushed="@ShowNewOrder"
-                                              RefreshInterval="@TimeSpan.FromSeconds(15)" />
+<EtkBlazorApp.Components.NewOrdersNotificator NewOrderPushed="@ShowNewOrder" RefreshInterval="@TimeSpan.FromSeconds(15)" />
 
 @code {
     List<OrderViewModel> orders = null;
     OrderViewModel newOrder = null;
 
-    List<int> AvailableTakeCountList = new List<int>(new[] { 10, 50, 100 });
     List<string> cityList = null;
-    int TakeCount = 50;
+    List<string> customerList = null;
+
+    string numberFilter = null;
     string cityFilter = null;
-
-
-    private async Task ItemsPerPageChanged(ChangeEventArgs e)
-    {
-        orders = null;
-        TakeCount = int.Parse(e.Value.ToString());
-
-        await RefreshOrderList();
-    }
+    string cutomerFilter = null;
 
     private async Task ShowNewOrder(OrderViewModel order)
     {
@@ -104,23 +90,17 @@ else
         order = null;
     }
 
-    private async Task CityChanged(ChangeEventArgs e)
-    {
-        orders = null;
-        cityFilter = e.Value.ToString();
-
-        await RefreshOrderList();
-    }
-
     protected override async Task OnInitializedAsync()
     {
-        await RefreshOrderList();
-        cityList = orders.Select(o => o.City).Distinct().OrderBy(city => city).ToList();
+        await LoadOrders();
     }
 
-    private async Task RefreshOrderList()
+    private async Task LoadOrders()
     {
-        var data = (await _database.GetLastOrders(TakeCount, cityFilter))
+        orders = null;
+        StateHasChanged();
+
+        orders = (await _database.GetLastOrders(100, numberFilter, cityFilter, cutomerFilter))
             .Select(model => new OrderViewModel()
             {
                 City = model.payment_city,
@@ -129,8 +109,8 @@ else
                 OrderId = model.order_id.ToString(),
                 TotalPrice = model.total,
                 OrderStatus = model.order_status
-            });
-
-        orders = data.ToList();
+            })
+            .ToList();
+        StateHasChanged();
     }
 }

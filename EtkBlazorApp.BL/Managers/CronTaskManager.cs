@@ -45,7 +45,7 @@ namespace EtkBlazorApp.BL
 
             taskList.ForEach(t => t.SetManager(this));
 
-            checkTimer = new Timer(TimeSpan.FromSeconds(600).TotalMilliseconds);
+            checkTimer = new Timer(TimeSpan.FromSeconds(60).TotalMilliseconds);
             checkTimer.Elapsed += CheckTimer_Elapsed;
             checkTimer.Start();
         }
@@ -80,14 +80,12 @@ namespace EtkBlazorApp.BL
 
             if(taskDatabaseEntity.enabled == false && forceRun == false) { return; }
 
-            if (IsTimeToRun(taskDatabaseEntity.exec_time, startTime) || forceRun)
+            if (IsTimeToRun(taskDatabaseEntity, startTime) || forceRun)
             {
-                bool isDone = false;
-
                 var logEntry = new LogEntryEntity()
                 {
                     group_name = LogEntryGroupName.PereodicTask,
-                    message = "Обновления товаров из прайс-листа Symmetron",
+                    message = $"Задание {task.Prefix}",
                     date_time = DateTime.Now,
                     user = "Система"
                 };
@@ -100,14 +98,14 @@ namespace EtkBlazorApp.BL
 
                     await task.Execute();
 
-                    logEntry.title = $"{task.Prefix} выполнено успешно";
-                    logEntry.message += $" Выполнено за: {sw.Elapsed.TotalSeconds} секунд.";
+                    logEntry.title = $"Задание выполнено";
+                    logEntry.message += $" выполнено за: {(int)sw.Elapsed.TotalSeconds} сек.";
 
                     OnTaskComplete?.Invoke(task);
                 }
                 catch (Exception ex)
                 {
-                    logEntry.title = $"{task.Prefix} ошибка выполнения";
+                    logEntry.title = $"Ошибка выполнения задания {task.Prefix}";
                     logEntry.message += $" Ошибка: {ex.Message}";
                     OnTaskError?.Invoke(task);
                 }                 
@@ -126,9 +124,13 @@ namespace EtkBlazorApp.BL
             lastCheckDate = DateTime.Now.Date;
         }
 
-        private bool IsTimeToRun(TimeSpan taskTime, TimeSpan now)
+        private bool IsTimeToRun(CronTaskEntity task, TimeSpan now)
         {
-            return now.Hours == taskTime.Hours && now.Minutes == taskTime.Minutes;
+            if(Math.Abs((task.exec_time - now).TotalMilliseconds) <= checkTimer.Interval)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

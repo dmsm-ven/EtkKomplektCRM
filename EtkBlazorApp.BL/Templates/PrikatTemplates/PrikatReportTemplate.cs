@@ -14,13 +14,15 @@ namespace EtkBlazorApp.BL.Templates
         private string LENGTH_UNIT { get; } = "миллиметр";
         private string WEIGHT_UNIT { get; } = "килограмм";
 
-        public string Manufacturer { get; }      
-        public CurrencyType Currency { get; }
-
+        public bool IsProductInStock { get; set; }
+        public bool IsProductHasEan { get; set; }
         public decimal CurrencyRatio { get; set; }
         public decimal Discount1 { get; set; }
         public decimal Discount2 { get; set; }
+
         readonly int Precission;
+        public string Manufacturer { get; }
+        public CurrencyType Currency { get; }
 
         public PrikatReportTemplate(string manufacturer, CurrencyType currency)
         {
@@ -29,16 +31,21 @@ namespace EtkBlazorApp.BL.Templates
             Precission = Currency == CurrencyType.RUB ? 0 : 2;
         }        
 
-        public void AppendLines(List<ProductEntity> products, List<PriceLine> priceLines, bool removeZeroQuantity, StreamWriter writer)
+        public void AppendLines(List<ProductEntity> products, List<PriceLine> priceLines, StreamWriter writer)
         {
             foreach (var product in products)
             {
-                if (removeZeroQuantity && product.quantity <= 0)
+                if (IsProductInStock && product.quantity <= 0)
                 {
                     continue;
                 }
 
-                if ((bool)priceLines?.Any())
+                if(IsProductHasEan && string.IsNullOrWhiteSpace(product.ean))
+                {
+                    continue;
+                }
+
+                if (priceLines.Any())
                 {
                     var linkedPriceLine = priceLines?.FirstOrDefault(line => line.Sku.Equals(product.sku, StringComparison.OrdinalIgnoreCase) || (!string.IsNullOrEmpty(line.Model) && (line.Model.Equals(product.model, StringComparison.OrdinalIgnoreCase))) );
 
@@ -62,7 +69,7 @@ namespace EtkBlazorApp.BL.Templates
             }
         }
 
-        private void AppendLine(ProductEntity product, StreamWriter writer)
+        private void AppendLine(ProductEntity product, StreamWriter sw)
         {          
             decimal priceInCurrency = (Currency == CurrencyType.RUB) ? (int)product.price : Math.Round(product.price / CurrencyRatio, Precission);
             decimal price1 = Math.Round(priceInCurrency * ((100m + Discount1) / 100m), Precission);
@@ -70,37 +77,49 @@ namespace EtkBlazorApp.BL.Templates
             string recommendedPrice = price1.ToString($"F{Precission}", new CultureInfo("en-EN"));
             string prikatPrice = price2.ToString($"F{Precission}", new CultureInfo("en-EN"));
 
-            writer.Write(GLN + ";");   //GLN поставщика
-            writer.Write(";"); //Позиция
-            writer.Write(product.ean ?? ";"); //Штрихкод
-            writer.Write(";"); //Артикул товара покупателя
-            writer.Write(product.sku + ";"); //Артикул товара поставщика
-            writer.Write(product.name + ";"); //Наименование
-            writer.Write("1" + ";"); //Кол-во
-            writer.Write("шт." + ";"); //Единицы измерения
-            writer.Write(";"); //Товарная группа
-            writer.Write(Manufacturer + ";"); //Бренд
-            writer.Write(";"); //Суббренд
-            writer.Write(";"); //Вариант названия продукта
-            writer.Write(";"); //Функциональное название
-            writer.Write(DEFAULT_DIMENSIONS[0].ToString("F2", new CultureInfo("en-EN")) + ";"); //Глубина
-            writer.Write(LENGTH_UNIT + ";"); //Единицы измерения
-            writer.Write(DEFAULT_DIMENSIONS[1].ToString("F2", new CultureInfo("en-EN")) + ";"); //Ширина
-            writer.Write(LENGTH_UNIT + ";"); //Единицы измерения
-            writer.Write(DEFAULT_DIMENSIONS[2].ToString("F2", new CultureInfo("en-EN")) + ";"); //Высота
-            writer.Write(LENGTH_UNIT + ";"); //Единицы измерения
-            writer.Write(";"); //Объем
-            writer.Write(";"); //Единицы измерения
-            writer.Write(DEFAULT_DIMENSIONS[3].ToString("F4", new CultureInfo("en-EN")) + ";"); //Вес, брутто
-            writer.Write(WEIGHT_UNIT + ";"); //Единицы измерения
-            writer.Write(";"); //Страна производитель
-            writer.Write(";"); //Годен до
-            writer.Write(recommendedPrice + ";"); //Рекомендованная цена
-            writer.Write(prikatPrice + ";"); //Закупочная цена
-            writer.Write(product.quantity.ToString() + ";"); //Количество остатков на скаладе
-            writer.Write(Currency.ToString().ToLower() + ";"); //Рекомендованная валюта
-            writer.Write(Currency.ToString().ToLower() + ";"); //Закупчная валюта
-            writer.WriteLine();
+            WriteCell(sw, GLN);   //GLN поставщика
+            WriteCell(sw); //Позиция
+            WriteCell(sw, product.ean); //Штрихкод
+            WriteCell(sw); //Артикул товара покупателя
+            WriteCell(sw, product.sku); //Артикул товара поставщика
+            WriteCell(sw, product.name); //Наименование
+            WriteCell(sw, "1"); //Кол-во
+            WriteCell(sw, "шт."); //Единицы измерения
+            WriteCell(sw); //Товарная группа
+            WriteCell(sw, Manufacturer); //Бренд
+            WriteCell(sw); //Суббренд
+            WriteCell(sw); //Вариант названия продукта
+            WriteCell(sw); //Функциональное название
+            WriteCell(sw, DEFAULT_DIMENSIONS[0].ToString("F2", new CultureInfo("en-EN"))); //Глубина
+            WriteCell(sw, LENGTH_UNIT); //Единицы измерения
+            WriteCell(sw, DEFAULT_DIMENSIONS[1].ToString("F2", new CultureInfo("en-EN"))); //Ширина
+            WriteCell(sw, LENGTH_UNIT); //Единицы измерения
+            WriteCell(sw, DEFAULT_DIMENSIONS[2].ToString("F2", new CultureInfo("en-EN"))); //Высота
+            WriteCell(sw, LENGTH_UNIT); //Единицы измерения
+            WriteCell(sw); //Объем
+            WriteCell(sw); //Единицы измерения
+            WriteCell(sw, DEFAULT_DIMENSIONS[3].ToString("F4", new CultureInfo("en-EN"))); //Вес, брутто
+            WriteCell(sw, WEIGHT_UNIT); //Единицы измерения
+            WriteCell(sw); //Страна производитель
+            WriteCell(sw); //Годен до
+            WriteCell(sw, recommendedPrice); //Рекомендованная цена
+            WriteCell(sw, prikatPrice); //Закупочная цена
+            WriteCell(sw, product.quantity.ToString()); //Количество остатков на скаладе
+            WriteCell(sw, Currency.ToString().ToLower()); //Рекомендованная валюта
+            WriteCell(sw, Currency.ToString().ToLower()); //Закупчная валюта
+            sw.WriteLine();
+
+        }
+
+        private void WriteCell(StreamWriter sw, string value = null)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                sw.Write(value.Replace(";", " ")?.Trim());
+            }
+            sw.Write(";");
         }
     }
+
+
 }

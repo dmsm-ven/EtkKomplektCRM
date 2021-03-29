@@ -103,6 +103,11 @@ namespace EtkBlazorApp.BL
             return PriceLines.OrderBy(pl => pl.Template).Where(line => line.Template.GetType() == templateType).ToList();
         }
 
+        public List<PriceLine> PriceLinesOfManufacturer(string manufacturer)
+        {
+            return PriceLines.OrderBy(pl => pl.Manufacturer).Where(line => line.Manufacturer.Equals(manufacturer, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+
         private void AddNewPriceLines(List<PriceLine> newLines)
         {
             if (PriceLines.Count == 0)

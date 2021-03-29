@@ -76,7 +76,8 @@ namespace EtkBlazorApp.DataAccess
                 .AppendLine("base_price = @base_price,")
                 .AppendLine("base_currency_code = @base_currency_code,")
                 .AppendLine("quantity = @quantity,")
-                .AppendLine("stock_status_id = (SELECT stock_status_id FROM oc_stock_status WHERE name = @stock_status)")
+                .AppendLine("stock_status_id = (SELECT stock_status_id FROM oc_stock_status WHERE name = @stock_status),")
+                .AppendLine("date_modified = NOW()")
                 .AppendLine("WHERE product_id = @product_id");
 
             string sql = sb.ToString();

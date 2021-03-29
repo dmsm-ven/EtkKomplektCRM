@@ -1,5 +1,6 @@
 ﻿using EtkBlazorApp.BL.Templates;
 using EtkBlazorApp.DataAccess;
+using EtkBlazorApp.DataAccess.Entity;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,46 +10,62 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
 {
-    public class PrikatReportFormatter
+    public class PrikatReportGenerator
     {
         private readonly ICurrencyChecker currencyChecker;
         private readonly ITemplateStorage templateStorage;
         private readonly IProductStorage productStorage;
+        private readonly PriceListManager priceListManager;
 
-        public PrikatReportFormatter(ICurrencyChecker currencyChecker, ITemplateStorage templateStorage, IProductStorage productStorage)
+        public PrikatReportGenerator(ICurrencyChecker currencyChecker, 
+            ITemplateStorage templateStorage, 
+            IProductStorage productStorage, 
+            PriceListManager priceListManager)
         {
             this.currencyChecker = currencyChecker;
             this.templateStorage = templateStorage;
             this.productStorage = productStorage;
+            this.priceListManager = priceListManager;
         }
 
-        public async Task Create(string outputFileName, bool removeEmptyStock)
+        public async Task<string> Create(bool inStock, bool hasEan)
         {
-            await Task.Run(async() =>
+            var templateSource = (await templateStorage.GetPrikatTemplates()).Where(t => t.enabled);
+
+            string fileName = Path.GetTempPath() + $"prikat_{DateTime.Now.ToShortDateString().Replace(".", "_")}.csv";
+            await Task.Run(async () =>
             {
-                using (var sw = new StreamWriter(File.Open(outputFileName, FileMode.Create), new UTF8Encoding()))
+                using (var fs = new FileStream(fileName, FileMode.Create))
+                using (var sw = new StreamWriter(fs, Encoding.UTF8))
                 {
-                    var templateSource = (await templateStorage.GetPrikatTemplates()).Where(t => t.enabled);
                     foreach (var data in templateSource)
                     {
-                        CurrencyType currency = (CurrencyType)Enum.Parse(typeof(CurrencyType), data.currency_code);
-                        decimal currentCurrencyRate = await currencyChecker.GetCurrencyRate(currency);
-
-                        var template = new PrikatReportTemplate(data.manufacturer_name, currency)
-                        {
-                            Discount1 = data.discount1,
-                            Discount2 = data.discount2,
-                            CurrencyRatio = currentCurrencyRate
-                        };
-
-                        var products = await productStorage.ReadProducts(data.manufacturer_id);
-
-                        template.AppendLines(products, new List<PriceLine>(), removeEmptyStock, sw);
+                        await InsertTemplateInfo(inStock, hasEan, sw, data);
                     }
                 }
             });
-        }
-        
 
+            return fileName;
+        }
+
+        private async Task InsertTemplateInfo(bool inStock, bool hasEan, StreamWriter sw, PrikatReportTemplateEntity data)
+        {
+            var currency = Enum.Parse<CurrencyType>(data.currency_code);
+            decimal currentCurrencyRate = await currencyChecker.GetCurrencyRate(currency);
+
+            var template = new PrikatReportTemplate(data.manufacturer_name, currency)
+            {
+                Discount1 = data.discount1,
+                Discount2 = data.discount2,
+                CurrencyRatio = currentCurrencyRate,
+                IsProductHasEan = hasEan,
+                IsProductInStock = inStock
+            };
+
+            var products = await productStorage.ReadProducts(data.manufacturer_id);
+            var priceLines = priceListManager.PriceLinesOfManufacturer(data.manufacturer_name);
+
+            template.AppendLines(products, priceLines, sw);
+        }
     }
 }

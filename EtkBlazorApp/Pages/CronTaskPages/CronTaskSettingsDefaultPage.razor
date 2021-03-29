@@ -9,32 +9,29 @@
 <div class="container">
     <div class="row">
         <div class="col-md-6 offset-3">
-            <form>
-                <div class="form-group">
-                    <input type="checkbox" class="form-check-input" checked="@item.enabled" @onchange="@(e => item.enabled = (bool)e.Value)" />
-                    <span style="font-size: 16px; color: olive; margin-left: 25px; color: @(item.enabled ? "green" : "lightgray")">@(item.enabled ? "Включено" : "Выключено")</span>
-                </div>
-                <div class="form-group">
-                    <span>Выполнить в</span>
-                    <input type="time" @bind="ExecutionDateTime" class="form-control" />
-                </div>
-                <div class="btn-group" role="group" aria-label="Basic example" style="width: 100%">
-                    <button type="button" style="width: auto;" class="btn btn-primary" @onclick="SaveSettings">Сохранить</button>
-                </div>
-            </form>
+            <div class="form-group">
+                <input type="checkbox" class="form-check-input" checked="@item.enabled" @onchange="@(e => item.enabled = (bool)e.Value)" />
+                <span style="font-size: 16px; color: olive; margin-left: 25px; color: @(item.enabled ? "green" : "lightgray")">@(item.enabled ? "Включено" : "Выключено")</span>
+            </div>
+            <div class="form-group">
+                <span>Выполнить в</span>
+                <input type="time" @bind="ExecutionDateTime" class="form-control" />
+            </div>
+            <div class="btn-group" role="group" aria-label="Basic example" style="width: 100%">
+                @if (!isProgressBarVisible)
+                {
+                    <button class="btn btn-outline-dark btn-lg" @onclick="@(e => confirmDialog.Show())">Выполнить сейчас</button>
+                }
+            <button style="width: auto;" class="btn btn-primary" @onclick="SaveSettings">Сохранить</button>
+            </div>
         </div>
     </div>
-
-    @if (isProgressBarVisible)
-    {
-        <IntermediateProgressBar />
-    }
-    else
-    {
-        <div class="row py-4">
-            <button class="btn btn-outline-dark btn-lg" @onclick="@(e => confirmDialog.Show())">Выполнить сейчас</button>
-        </div>
-    }
+    <div class="row">
+        @if (isProgressBarVisible)
+        {
+            <IntermediateProgressBar></IntermediateProgressBar>
+        }
+    </div>
 </div>
 
 <ConfirmDialog @ref="confirmDialog"

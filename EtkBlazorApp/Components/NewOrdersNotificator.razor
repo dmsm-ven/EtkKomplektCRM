@@ -1,5 +1,6 @@
 ﻿@inject IToastService toastService
 @inject NewOrdersNotificationService newOrderNotificationService
+@implements IDisposable
 
 @code {
     [Parameter]
@@ -21,6 +22,11 @@
     private void NewOrderFound(OrderViewModel order)
     {
         InvokeAsync(async () => await NewOrderPushed.InvokeAsync(order));
+    }
+
+    public void Dispose()
+    {
+        newOrderNotificationService.OnNewOrderFound -= NewOrderFound;
     }
 
 }
