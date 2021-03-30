@@ -210,10 +210,6 @@ namespace EtkBlazorApp.DataAccess
             await database.SaveData<dynamic>(sql, new { });
         }
 
-        /// <summary>
-        /// Получение списка ID товаров которые участвуют акции на данный момент
-        /// </summary>
-        /// <returns></returns>
         private async Task<List<int>> GetDiscountProductIds()
         {
             var sql = "SELECT DISTINCT product_id FROM oc_product_special WHERE NOW() BETWEEN date_start AND date_end";

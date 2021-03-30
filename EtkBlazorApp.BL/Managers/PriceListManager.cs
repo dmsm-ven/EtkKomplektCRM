@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtkBlazorApp.DataAccess;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,12 +14,14 @@ namespace EtkBlazorApp.BL
         public List<LoadedFileData> LoadedFiles { get; }
 
         private readonly IPriceLineLoadCorrelator correlator;
+        private readonly ITemplateStorage templateStorage;
 
-        public PriceListManager(IPriceLineLoadCorrelator correlator)
+        public PriceListManager(IPriceLineLoadCorrelator correlator, ITemplateStorage templateStorage)
         {
             PriceLines = new List<PriceLine>();
             LoadedFiles = new List<LoadedFileData>();
             this.correlator = correlator;
+            this.templateStorage = templateStorage;
         }
 
         public async Task UploadTemplate(Type templateType, Stream stream)
@@ -38,10 +41,16 @@ namespace EtkBlazorApp.BL
                 var data = await templateInstance.ReadPriceLines(null);
                 AddNewPriceLines(data);
 
+                var guid = ((PriceListTemplateDescriptionAttribute)templateType
+                    .GetCustomAttributes(typeof(PriceListTemplateDescriptionAttribute), false)
+                    .FirstOrDefault())
+                    .Guid;
+                string templateTitle = (await templateStorage.GetPriceListTemplateById(guid)).title;
+
                 var fileData = new LoadedFileData(templateInstance)
                 {
                     RecordsInFile = data.Count,
-                    TemplateName = templateInstance.GetType().Name
+                    TemplateTitle = templateTitle
                 };
 
                 LoadedFiles.Add(fileData);
@@ -56,18 +65,17 @@ namespace EtkBlazorApp.BL
             }       
         }
 
-        public async Task<List<PriceLine>> ReadTemplateLines(Type templateType, Stream downloadFileStream, long streamLength)
+        public async Task<List<PriceLine>> ReadTemplateLines(Type templateType, Stream stream)
         {
             if (templateType == null) { throw new ArgumentNullException(nameof(templateType)); }
 
             List<PriceLine> list = new List<PriceLine>();
 
             string fileName = Path.GetTempFileName();
+
             using (var fs = File.Create(fileName))
             {
-                var buffer = new byte[streamLength];
-                await downloadFileStream.ReadAsync(buffer);
-                await fs.WriteAsync(buffer, 0, buffer.Length);
+                await stream.CopyToAsync(fs);
             }
 
             //Скачали данные из потока и записали в временный файл
@@ -84,6 +92,12 @@ namespace EtkBlazorApp.BL
             {
                 throw;
             }
+        }
+
+        public void RemovePriceListAll()
+        {
+            LoadedFiles.Clear();
+            PriceLines.Clear();
         }
 
         public void RemovePriceList(LoadedFileData data)

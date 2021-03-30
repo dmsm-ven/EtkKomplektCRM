@@ -5,15 +5,29 @@
     <div class="loaded-price-list-box">
         <h3>Загруженные прайс-листы</h3>
         <ul style="list-style-type: none;">
+
+            @if (priceListManager.LoadedFiles.Count > 1)
+            {
+            <li style="margin-bottom: 30px; border-bottom: 1px solid lightgray;">
+                <span class="oi oi-trash" @onclick="RemoveAll"></span>
+                <strong style="color:navy">Очистить все</strong>
+            </li>
+            }
+
             @foreach (var data in priceListManager.LoadedFiles)
             {
-                <li style="margin: 4px 8px;color: red;">
-                    <button class="btn btn-sm" @onclick="@(e => priceListManager.RemovePriceList(data))">
-                        Удалить
-                    </button>
-                    <strong style="color:black">@data.TemplateName</strong> @data.FileName<span style="color: navy"> (@data.RecordsInFile записей считано)</span>
+                <li style="margin-bottom: 15px;">
+                    <span class="oi oi-trash" @onclick="@(e => priceListManager.RemovePriceList(data))"></span>
+                    <strong style="color: navy">@data.TemplateTitle</strong>
                 </li>
             }
         </ul>
     </div>
 }
+
+@code {
+    private void RemoveAll()
+    {
+        priceListManager.RemovePriceListAll();
+    }
+} 

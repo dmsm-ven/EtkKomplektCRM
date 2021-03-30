@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
 {
@@ -40,5 +42,14 @@ namespace EtkBlazorApp.BL
 
         protected abstract Task Run();
 
+        protected string GetTemplateGuid(Type priceListTemplateType)
+        {
+            var id = ((PriceListTemplateDescriptionAttribute)priceListTemplateType
+                .GetCustomAttributes(typeof(PriceListTemplateDescriptionAttribute), false)
+                .FirstOrDefault())
+                .Guid;
+
+            return id;
+        }
     }
 }

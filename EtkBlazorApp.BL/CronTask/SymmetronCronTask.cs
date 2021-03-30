@@ -23,13 +23,13 @@ namespace EtkBlazorApp.BL
             var email = await Manager.settings.GetValue("task_symmetron_login");
             var password = await Manager.settings.GetValue("task_symmetron_password");
 
-            //TODO: тут нужно сделать что бы метод возращал Stream, и можно будет не сохранять/удалять файл лишний раз
-            //т.к. получается что файл сохраняется 2 раза тут и внутри метода "UploadPriceList"
             var tempFile = await EmailImapClient.DownloadLastSymmetronPriceListFromMail(imapServer, imapPort, email, password);
+
+            var templateType = typeof(PristPriceListTemplate);
 
             using (var fs = new FileStream(tempFile, FileMode.Open))
             {
-                var lines = await Manager.priceListManager.ReadTemplateLines(typeof(SymmetronPriceListTemplate), fs, fs.Length);
+                var lines = await Manager.priceListManager.ReadTemplateLines(templateType, fs);
                 await Manager.updateManager.UpdatePriceAndStock(lines, clearStockBeforeUpdate: false);
             }
 

@@ -15,7 +15,17 @@
         @(Item.enabled ? Item.exec_time.ToString(@"hh\:mm") : "-")
     </td>
     <td>
-        @(Item.enabled ? string.Format("{0} ч. {1} мин.", nextExecution.ToString("hh"), nextExecution.ToString("mm")) : "-")
+        @if (Item.enabled)
+        {
+        <span>@(string.Format("{0} ч. {1} мин.", nextExecution.ToString("hh"), nextExecution.ToString("mm")))</span>
+        <div class="progress">
+            <div class="progress-bar" role="progressbar" style="width: @(nextExecutionPercentLeft + "%")" aria-valuenow="@nextExecutionPercentLeft" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        }
+        else
+        {
+            <span>-</span>
+        }
     </td>
     <td>
         @(Item.last_exec_date_time != default ? Item.last_exec_date_time.ToString("dd.MM.yyyy HH:mm") : "-")
@@ -28,6 +38,8 @@
                              (DateTime.Now.AddDays(1).Date.AddTicks(Item.exec_time.Ticks) - DateTime.Now) :
                              (Item.exec_time - DateTime.Now.TimeOfDay);
 
+    int nextExecutionPercentLeft => (int)Math.Round(100 - (100d * (nextExecution.TotalSeconds / TimeSpan.FromHours(24).TotalSeconds)));
+
     [Parameter] public CronTaskEntity Item { get; set; }
 
     protected override void OnInitialized()
@@ -38,6 +50,7 @@
         {
             InvokeAsync(() => StateHasChanged());
         };
+        timeLeftRefresh.Start();
     }
 
     private async Task EnableStatusChanged(ChangeEventArgs e)

@@ -8,6 +8,7 @@
         Silver = 2,
         Bosch = 6,
         OdinC = 5,
-        OzonSeller =7
+        OzonSeller = 7,
+        Megeon = 8
     };
 }
