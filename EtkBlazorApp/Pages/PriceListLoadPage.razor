@@ -3,9 +3,10 @@
 @inject PriceListManager priceListManager
 @inject ITemplateStorage templateStorage
 @inject IToastService toast
+@inject ISettingStorage settingStorage
 
 @using System.IO;
-@using System.Threading;
+@using System.Net;
 
 
 
@@ -52,11 +53,11 @@
 
 @code
 {
-    const int MAX_UPLOAD_FILE_SIZE = 15_000_000; // 15 мб
+        const int MAX_UPLOAD_FILE_SIZE = 15_000_000; // 15 мб
 
-    Dictionary<string, List<PriceListTemplateItemViewModel>> templates = null;
-    PriceListTemplateItemViewModel selectedTemplate = null;
-    bool isFileLoading = false;
+        Dictionary<string, List<PriceListTemplateItemViewModel>> templates = null;
+        PriceListTemplateItemViewModel selectedTemplate = null;
+        bool isFileLoading = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -88,11 +89,24 @@
     private async Task LoadRemoteUriTemplate()
     {
         isFileLoading = true;
+        StateHasChanged();
 
-        var response = await (new HttpClient().GetAsync(selectedTemplate.RemoteUrl));
-        var stream = await response.Content.ReadAsStreamAsync();
+        using (var wc = new WebClient())
+        {
 
-        await LoadRemoteTemplateFromStream(stream);
+            string login = await settingStorage.GetValue($"price-list-template-credentials-{selectedTemplate.Title}-login");
+            string password = await settingStorage.GetValue($"price-list-template-credentials-{selectedTemplate.Title}-password");
+            bool hasCredentials = !string.IsNullOrWhiteSpace(login) && !string.IsNullOrWhiteSpace(password);
+            if (hasCredentials)
+            {
+                wc.Credentials = new NetworkCredential(login, password);
+            }
+
+            using (var ms = new MemoryStream(wc.DownloadData(new Uri(selectedTemplate.RemoteUrl))))
+            {
+                await LoadRemoteTemplateFromStream(ms);
+            }
+        }
     }
 
     private async Task LoadRemoteTemplateFromStream(Stream stream)
@@ -101,7 +115,7 @@
         {
             await priceListManager.UploadTemplate(selectedTemplate.Type, stream);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             toast.ShowError("Ошибка загрузки файла: " + ex.Message);
         }
