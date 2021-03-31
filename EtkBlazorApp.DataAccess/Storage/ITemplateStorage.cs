@@ -13,6 +13,7 @@ namespace EtkBlazorApp.DataAccess
         Task<PriceListTemplateEntity> GetPriceListTemplateById(string guid);
         Task<List<PrikatReportTemplateEntity>> GetPrikatTemplates();
         Task SavePrikatTemplate(PrikatReportTemplateEntity template);
+        Task ChangePriceListTemplateDiscount(string id, decimal discount);
     }
 
     public class TemplateStorage : ITemplateStorage
@@ -57,6 +58,12 @@ namespace EtkBlazorApp.DataAccess
                          "WHERE manufacturer_id = @manufacturer_id";
 
             await database.SaveData(sql, template);
+        }
+
+        public async Task ChangePriceListTemplateDiscount(string id, decimal discount)
+        {
+            string sql = "UPDATE etk_app_price_list_template SET discount = @discount WHERE id = @id";
+            await database.SaveData(sql, new { id, discount});
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿@inherits LayoutComponentBase
 @inject IToastService toastService
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject MyDbLogger logger
 
 @using System.Globalization
 
@@ -45,11 +44,6 @@
     public async Task LogOut()
     {
         await ((MyCustomAuthProvider)AuthenticationStateProvider).LogOutUser();
-    }
-
-    protected override void OnInitialized()
-    {
-        
     }
 }
 

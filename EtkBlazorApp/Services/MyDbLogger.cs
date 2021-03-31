@@ -1,22 +1,59 @@
-﻿using EtkBlazorApp.DataAccess;
+﻿using EtkBlazorApp.BL;
+using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
+using Microsoft.AspNetCore.Components.Authorization;
 using System;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.Services
 {
-    public class MyDbLogger
+    public class UserLogger
+    {
+        private readonly ILogStorage logStorage;
+        private readonly AuthenticationStateProvider userPrivder;
+
+        public UserLogger(ILogStorage logStorage, AuthenticationStateProvider userPrivder)
+        {
+            this.logStorage = logStorage;
+            this.userPrivder = userPrivder;
+        }
+
+        public async Task Write(LogEntryGroupName group, string title, string message)
+        {
+            var user = (await userPrivder.GetAuthenticationStateAsync()).User.Identity.Name;
+            var entity = new LogEntryEntity()
+            {
+                date_time = DateTime.Now,
+                user = user,
+                title = title,
+                group_name = group.GetDescriptionAttribute(),
+                message = message
+            };
+
+            await logStorage.Write(entity);
+        }
+    }
+
+    public class SystemEventsLogger
     {
         private readonly ILogStorage logStorage;
 
-        public MyDbLogger(ILogStorage logStorage)
+        public SystemEventsLogger(ILogStorage logStorage)
         {
             this.logStorage = logStorage;
         }
 
-        public async Task Write(LogEntryGroupName group, string user, string title, string message)
+        public async Task WriteSystemEvent(LogEntryGroupName group, string title, string message)
         {
-            await logStorage.Write(new LogEntryEntity() { date_time = DateTime.Now, user = user, title = title, group_name = group, message = message });
+            var entity = new LogEntryEntity()
+            {
+                date_time = DateTime.Now,
+                user = "System",
+                title = title,
+                group_name = group.GetDescriptionAttribute(),
+                message = message
+            };
+            await logStorage.Write(entity);
         }
     }
 }

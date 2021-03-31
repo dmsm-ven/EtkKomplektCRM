@@ -4,8 +4,7 @@
 @inject ISettingStorage settingStorage
 @inject ICurrencyChecker currencyChecker
 @inject IToastService toasts
-@inject MyDbLogger log
-@inject AuthenticationStateProvider stateProvider
+@inject UserLogger log
 @attribute [Authorize]
 
 
@@ -164,9 +163,8 @@
 
         await productStorage.UpdateDirectProduct(entity);
 
-        var userData = await stateProvider.GetAuthenticationStateAsync();
         string pUri = "https://etk-komplekt.ru/index.php?route=product/product&product_id=" + editedProduct.Id;
-        await log.Write(LogEntryGroupName.ProductUpdate, userData.User.Identity.Name, "Товар обновлен", editedProduct.Name + $" ({pUri})");
+        await log.Write(LogEntryGroupName.ProductUpdate, "Товар обновлен", editedProduct.Name + $" ({pUri})");
 
         currentStateCode = GetCurrentStateCode();
     }

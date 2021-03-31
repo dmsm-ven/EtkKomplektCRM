@@ -45,15 +45,16 @@ namespace EtkBlazorApp
             services.AddSingleton<ILogStorage, LogStorage>();
             services.AddSingleton<ISettingStorage, SettingStorage>();
             services.AddSingleton<IAuthStateProcessor, MyAuthStateProcessor>();
-            
+
+            services.AddSingleton<SystemEventsLogger>();
             services.AddSingleton<NewOrdersNotificationService>();
             services.AddSingleton<UpdateManager>();
             services.AddSingleton<OzonSellerApi>();
             services.AddSingleton<PriceListManager>();
-            services.AddSingleton<CronTaskManager>();
+            services.AddSingleton<CronTaskService>();
 
-            services.AddScoped<MyDbLogger>();                 
             services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();
+            services.AddScoped<UserLogger>();
             services.AddScoped<ReportManager>();      
 
             //Сторонние
@@ -87,7 +88,7 @@ namespace EtkBlazorApp
                 endpoints.MapFallbackToPage("/_Host");
             });
 
-            app.ApplicationServices.GetService<CronTaskManager>();
+            app.ApplicationServices.GetService<CronTaskService>();
 
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("ru-RU");
         }

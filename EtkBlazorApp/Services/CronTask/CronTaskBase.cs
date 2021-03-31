@@ -1,14 +1,15 @@
-﻿using System;
+﻿using EtkBlazorApp.BL;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.BL
+namespace EtkBlazorApp.Services
 {
     public abstract class CronTaskBase
     {
         public CronTaskPrefix Prefix { get; }
         public bool IsDoneToday { get; protected set; }
-        protected CronTaskManager Manager { get; private set; }
+        protected CronTaskService service { get; private set; }
 
         public CronTaskBase(CronTaskPrefix prefix)
         {
@@ -35,11 +36,6 @@ namespace EtkBlazorApp.BL
             IsDoneToday = false;
         }
 
-        public void SetManager(CronTaskManager manager)
-        {
-            Manager = manager;
-        }
-
         protected abstract Task Run();
 
         protected string GetTemplateGuid(Type priceListTemplateType)
@@ -50,6 +46,11 @@ namespace EtkBlazorApp.BL
                 .Guid;
 
             return id;
+        }
+
+        internal void SetService(CronTaskService cronTaskService)
+        {
+            service = cronTaskService;
         }
     }
 }

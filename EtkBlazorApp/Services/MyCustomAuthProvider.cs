@@ -1,7 +1,9 @@
+using EtkBlazorApp.BL;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -10,14 +12,15 @@ namespace EtkBlazorApp.Services
     public class MyCustomAuthProvider : AuthenticationStateProvider
     {
         private readonly IDatabaseAccess db;
+        private readonly ILogStorage log;
         private readonly IAuthStateProcessor auth;
-        private readonly MyDbLogger logger;
+        private readonly UserLogger logger;
         private readonly ProtectedLocalStorage storage;
 
-        public MyCustomAuthProvider(IAuthStateProcessor auth, MyDbLogger logger, ProtectedLocalStorage storage)
+        public MyCustomAuthProvider(IAuthStateProcessor auth, ILogStorage log, ProtectedLocalStorage storage)
         {
             this.storage = storage;
-            this.logger = logger;
+            this.log = log;
             this.auth = auth;
         }
 
@@ -41,10 +44,19 @@ namespace EtkBlazorApp.Services
         public async Task<AuthenticationState> AuthenticateUser(AppUser userData)
         {           
             string permission = await auth.GetUserPermission(userData.Login, userData.Password);
+            var logEntry = new LogEntryEntity()
+            {
+                group_name = LogEntryGroupName.Auth.GetDescriptionAttribute(),
+                user = userData.Login,
+                date_time = DateTime.Now
+            };
 
             if (string.IsNullOrWhiteSpace(permission))
             {
-                await logger.Write(LogEntryGroupName.Auth, userData.Login, "Неудача", $"Неудачная попытка входа {userData.Login}");
+                logEntry.title = "Ошибка";
+                logEntry.message = $"Неудачная попытка входа";
+                await log.Write(logEntry); 
+
                 return GetDefaultState();
             }        
 
@@ -58,8 +70,11 @@ namespace EtkBlazorApp.Services
 
             NotifyAuthenticationStateChanged(Task.FromResult(state));
 
-            await logger.Write(LogEntryGroupName.Auth, userData.Login, "Вход", $"Пользователь Вошел");
             await auth.UpdateUserLastLoginDate(userData.Login);
+
+            logEntry.title = "Вход";
+            logEntry.message = $"Пользователь успешно залогинился";
+            await log.Write(logEntry);
 
             return state;
         }  
@@ -71,9 +86,17 @@ namespace EtkBlazorApp.Services
             await storage.DeleteAsync("user_login");
             await storage.DeleteAsync("user_password");
 
-            await logger.Write(LogEntryGroupName.Auth, userName, "Выход", $"Пользователь вышел");
+            NotifyAuthenticationStateChanged(Task.FromResult(GetDefaultState()));
 
-            NotifyAuthenticationStateChanged(Task.FromResult(GetDefaultState()));            
+            var logEntry = new LogEntryEntity()
+            {
+                group_name = LogEntryGroupName.Auth.GetDescriptionAttribute(),
+                user = userName,
+                title = "Выход",
+                message = "Пользователь разлогинился",
+                date_time = DateTime.Now
+            };
+            await log.Write(logEntry);
         }
 
         private AuthenticationState GetDefaultState()

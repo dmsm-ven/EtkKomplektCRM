@@ -1,8 +1,8 @@
-﻿using System.Linq;
+﻿using EtkBlazorApp.BL;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.BL
+namespace EtkBlazorApp.Services
 {
     public class PristCronTask : CronTaskBase
     {
@@ -12,13 +12,13 @@ namespace EtkBlazorApp.BL
         {
             var templateType = typeof(PristPriceListTemplate);
             var templateGuid = GetTemplateGuid(templateType);
-            var templateInfo = await Manager.templates.GetPriceListTemplateById(templateGuid);
+            var templateInfo = await service.templates.GetPriceListTemplateById(templateGuid);
 
             var response = await (new HttpClient().GetAsync(templateInfo.remote_uri));
             using (var stream = await response.Content.ReadAsStreamAsync())
             {
-                var lines = await Manager.priceListManager.ReadTemplateLines(templateType, stream);
-                await Manager.updateManager.UpdatePriceAndStock(lines, clearStockBeforeUpdate: false);
+                var lines = await service.priceListManager.ReadTemplateLines(templateType, stream);
+                await service.updateManager.UpdatePriceAndStock(lines, clearStockBeforeUpdate: false);
             }
 
         }

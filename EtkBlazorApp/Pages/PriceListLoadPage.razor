@@ -1,6 +1,7 @@
 ﻿@page "/load-price-list"
 @attribute [Authorize(Roles = "Administrator, Manager")]
 @inject PriceListManager priceListManager
+@inject UserLogger logger
 @inject ITemplateStorage templateStorage
 @inject IToastService toast
 @inject ISettingStorage settingStorage
@@ -28,10 +29,10 @@
 <div class="row">
     @foreach (var template in templates)
     {
-    <CascadingValue Value="selectedTemplate">
-        <PriceListTemplateItem Items="@template.Value"
-                               CheckedChanged="(e => selectedTemplate = (PriceListTemplateItemViewModel)e)" />
-    </CascadingValue>
+        <CascadingValue Value="selectedTemplate">
+            <PriceListTemplateItem Items="@template.Value"
+                                   CheckedChanged="SelectedTemplateChanged" />
+        </CascadingValue>
     }
 </div>
 
@@ -41,6 +42,23 @@
 {
     <h4>Примечания к выбранному шаблону</h4>
     <textarea readonly class="price-list-template-description">@selectedTemplate.Description</textarea>
+    <p>
+        Наценка:
+        @if (editingTemplate == selectedTemplate)
+        {
+            <input type="number" style="display: inline; width: 80px;" class="form-control mx-2" @bind="editingTemplate.Discount" />
+            <button class="btn btn-outline-success" @onclick="SaveTemplateDiscount">
+                <span class="oi oi-circle-check" style="font-size: 16px;"></span>
+            </button>
+        }
+        else
+        {
+            <strong style="color: red;">@(selectedTemplate.Discount.ToString("G29"))%</strong>
+            <button class="btn btn-sm btn-outline-success mx-2" @onclick="(e => editingTemplate = selectedTemplate)">
+                <span class="oi oi-pencil"></span>
+            </button>
+        }
+    </p>
     @if (selectedTemplate.RemoteUrl != null)
     {
         <p>Прямая ссылка на файл: <a href="@selectedTemplate.RemoteUrl" target="_blank">@selectedTemplate.RemoteUrl</a></p>
@@ -58,6 +76,7 @@
     const int MAX_UPLOAD_FILE_SIZE = 15_000_000; // 15 мб
     Dictionary<string, List<PriceListTemplateItemViewModel>> templates = null;
     PriceListTemplateItemViewModel selectedTemplate = null;
+    PriceListTemplateItemViewModel editingTemplate = null;
     bool isFileLoading = false;
 
 
@@ -77,6 +96,8 @@
                 Title = t.title
             })
             .GroupBy(template => template.GroupName ?? "<Без группы>")
+            .OrderBy(g => g.Key == "Symmetron" ? 0 : 1)
+            .ThenBy(g => g.Key)
             .ToDictionary(i => i.Key, i => i.ToList());
     }
 
@@ -129,5 +150,19 @@
             StateHasChanged();
         }
 
+    }
+
+    private void SelectedTemplateChanged(PriceListTemplateItemViewModel e)
+    {
+        editingTemplate = null;
+        selectedTemplate = e;
+    }
+
+    private async Task SaveTemplateDiscount()
+    {
+        await templateStorage.ChangePriceListTemplateDiscount(selectedTemplate.Guid, selectedTemplate.Discount);
+        editingTemplate = null;
+        toast.ShowSuccess("Скидка изменена");
+        await logger.Write(LogEntryGroupName.TemplateUpdate, "Обновлено", $"Скидка для шаблона {selectedTemplate.Title} изменена на {selectedTemplate.Discount.ToString("G29")}");
     }
 }

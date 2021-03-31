@@ -40,7 +40,7 @@ input[type='radio'], input[type='checkbox'] {
     width: 100%;
     margin: 4px 12px;
     resize: none;
-    height: 90px;
+    height: 60px;
     border: 1px solid #dcdcdc;
     background: #f5faff;
     padding: 8px 2px 2px 8px;
@@ -351,6 +351,12 @@ h3 {
     font-size: 18px;
     color: #466085;
     margin: 12px auto;
+    text-align: center;
+}
+h3 {
+    font-size: 16px;
+    color: #466085;
+    margin: 10px auto;
     text-align: center;
 }
 /*----------------------------------------------------------------------------------------*/

@@ -24,21 +24,14 @@ namespace EtkBlazorApp.BL
 
             await Task.Run(() =>
             {
-                try
+                using (Excel = new ExcelPackage(new FileInfo(FileName)))
                 {
-                    using (Excel = new ExcelPackage(new FileInfo(FileName)))
+                    if (token.HasValue && token.Value.IsCancellationRequested)
                     {
-                        if (token.HasValue && token.Value.IsCancellationRequested)
-                        {
-                            throw new OperationCanceledException("Отменено пользователем");
-                        }
-
-                        lines = ReadDataFromExcel();
+                        throw new OperationCanceledException("Отменено пользователем");
                     }
-                }
-                catch(Exception ex)
-                {
-                    throw ex;
+
+                    lines = ReadDataFromExcel();
                 }
             });
 

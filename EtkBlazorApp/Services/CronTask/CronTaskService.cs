@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.DataAccess;
+﻿using EtkBlazorApp.BL;
+using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using System;
 using System.Collections.Generic;
@@ -8,16 +9,16 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Timers;
 
-namespace EtkBlazorApp.BL
+namespace EtkBlazorApp.Services
 {
-    public class CronTaskManager
+    public class CronTaskService
     {
         public event Action<CronTaskBase> OnTaskComplete;
         public event Action<CronTaskBase> OnTaskError;
 
         internal readonly ISettingStorage settings;
         internal readonly ITemplateStorage templates;
-        internal readonly ILogStorage logger;
+        internal readonly SystemEventsLogger logger;
         internal readonly UpdateManager updateManager;
         internal readonly PriceListManager priceListManager;
 
@@ -25,10 +26,10 @@ namespace EtkBlazorApp.BL
         private readonly Timer checkTimer;
         private readonly List<CronTaskBase> taskList;
 
-        public CronTaskManager(
+        public CronTaskService(
             ISettingStorage settings,
             ITemplateStorage templates,
-            ILogStorage logger,
+            SystemEventsLogger logger,
             UpdateManager updateManager, 
             PriceListManager priceListManager)
         {
@@ -43,7 +44,7 @@ namespace EtkBlazorApp.BL
                 .Select(tt => (CronTaskBase)Activator.CreateInstance(tt))
                 .ToList();
 
-            taskList.ForEach(t => t.SetManager(this));
+            taskList.ForEach(t => t.SetService(this));
 
             checkTimer = new Timer(TimeSpan.FromSeconds(60).TotalMilliseconds);
             checkTimer.Elapsed += CheckTimer_Elapsed;
@@ -82,36 +83,23 @@ namespace EtkBlazorApp.BL
 
             if (IsTimeToRun(taskDatabaseEntity, startTime) || forceRun)
             {
-                var logEntry = new LogEntryEntity()
-                {
-                    group_name = LogEntryGroupName.PereodicTask,
-                    message = $"Задание {task.Prefix}",
-                    date_time = DateTime.Now,
-                    user = "Система"
-                };
-
                 var sw = Stopwatch.StartNew();
 
                 try
                 {
                     taskDatabaseEntity.last_exec_date_time = DateTime.Now;
-
                     await task.Execute();
-
-                    logEntry.title = $"Задание выполнено";
-                    logEntry.message += $" выполнено за: {(int)sw.Elapsed.TotalSeconds} сек.";
-
                     OnTaskComplete?.Invoke(task);
+                    await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Успех", $"Задание {task.Prefix} выполнено");
+                    
                 }
                 catch (Exception ex)
-                {
-                    logEntry.title = $"Ошибка выполнения задания {task.Prefix}";
-                    logEntry.message += $" Ошибка: {ex.Message}";
+                {                    
                     OnTaskError?.Invoke(task);
+                    await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Ошибка", $"Ошибка выполнения задания '{task.Prefix}'. {ex.Message}");
                 }                 
 
-                await settings.UpdateCronTask(taskDatabaseEntity);
-                await logger.Write(logEntry);                            
+                await settings.UpdateCronTask(taskDatabaseEntity);                                            
             }
         }
 
