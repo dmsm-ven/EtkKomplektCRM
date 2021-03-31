@@ -1,4 +1,4 @@
-﻿<div class="col-lg-2 col-md-3 col-sm-6 col-xs-12 price-list-template-outer"
+﻿<div class="price-list-template-outer col-lg-2 col-md-3 col-sm-6 col-xs-12 @(Items.Contains(GlobalSelectedTemplate) ? "active" : string.Empty)"
      @onclick="BoxClicked">
     <div class="price-list-template-inner">
         <img class="brand-template-logo" src="@GroupImage" style="margin: 4px 8px 4px 2px;" />
@@ -13,7 +13,7 @@
                            @onchange="@(e => RadioButtonClicked(item))" />
                     @if (Items.Count > 1)
                     {
-                        <label for="@item.Guid" style="font-size: 11px; margin-left: 6px;">@item.Title</label>
+                        <label for="@item.Guid" class="price-list-template-title">@item.Title</label>
                     }
                 </li>
             }

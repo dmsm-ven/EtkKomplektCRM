@@ -29,6 +29,12 @@ input[type='radio'], input[type='checkbox'] {
 .list-group-item {
     padding-left: 30px
 }
+.price-list-template-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-left: 6px;
+    color: navy;
+}
 
 .price-list-template-description {
     width: 100%;
@@ -290,27 +296,32 @@ input[type='radio'], input[type='checkbox'] {
 .price-list-template-group {
     list-style-type: none;
     position: absolute;
-    top: 35px;
-    left: 115px;
+    top: 15px;
+    left: -25px;
     display: none;
 }
 
 .price-list-template-inner {
-    box-shadow: 0 6px 6px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 2px rgba(0,0,0,0.15);
     border: 1px solid #7a7171;
     border-radius: 6px;
     padding: 4px 8px;
 }
 
-.price-list-template-outer:hover .price-list-template-inner {
-    box-shadow: 0 6px 6px rgba(0,0,80,0.3);
-    border: 1px solid #000080;
+.price-list-template-outer:hover .price-list-template-inner, .price-list-template-outer.active .price-list-template-inner {
+    box-shadow: 0 4px 4px rgba(0,0,0,0.3);
+    border: 1px solid #e0e0ff;
     background-color: whitesmoke;
     transition: 200ms;
 }
 
 .price-list-template-outer:hover .price-list-template-group {
     display: block;
+    transition: 150ms;
+}
+
+.price-list-template-outer:hover img {
+    opacity: 0.4;
     transition: 150ms;
 }
 
@@ -454,6 +465,10 @@ app {
     color: red;
 }
 
+.task-tool-items-box input[@type='checkbox'] {
+    margin-right: 12px;
+}
+
 @media (max-width: 767.98px) {
     .main .top-row {
         display: none;
@@ -492,7 +507,8 @@ app {
     }
 }
 
-
-.task-tool-items-box input[@type='checkbox'] {
-    margin-right: 12px;
+@media (min-width: 1200px){
+    .price-list-template-outer{
+        max-width: 14%!important;
+    }
 }

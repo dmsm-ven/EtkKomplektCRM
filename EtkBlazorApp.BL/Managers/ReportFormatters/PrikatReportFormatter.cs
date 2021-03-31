@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.BL.Templates;
+using EtkBlazorApp.BL.Templates.PrikatTemplates;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using System;
@@ -53,7 +54,7 @@ namespace EtkBlazorApp.BL
             var currency = Enum.Parse<CurrencyType>(data.currency_code);
             decimal currentCurrencyRate = await currencyChecker.GetCurrencyRate(currency);
 
-            var template = new PrikatReportTemplate(data.manufacturer_name, currency)
+            var template = new DefaultPrikatReportTemplate(data.manufacturer_name, currency)
             {
                 Discount1 = data.discount1,
                 Discount2 = data.discount2,

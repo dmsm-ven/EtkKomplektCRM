@@ -7,24 +7,24 @@ using System.Linq;
 
 namespace EtkBlazorApp.BL.Templates
 {
-    public class PrikatReportTemplate
+    public abstract class PrikatReportTemplateBase
     {
-        private string GLN { get; } = "4607804947010";
-        private decimal[] DEFAULT_DIMENSIONS = new decimal[] { 150, 100, 100, 0.4m };
-        private string LENGTH_UNIT { get; } = "миллиметр";
-        private string WEIGHT_UNIT { get; } = "килограмм";
-
         public bool IsProductInStock { get; set; }
         public bool IsProductHasEan { get; set; }
         public decimal CurrencyRatio { get; set; }
         public decimal Discount1 { get; set; }
         public decimal Discount2 { get; set; }
 
-        readonly int Precission;
+        protected virtual string GLN { get; } = "4607804947010";
+        protected virtual decimal[] DEFAULT_DIMENSIONS { get; } = new decimal[] { 150, 100, 100, 0.4m };
+        protected virtual string LENGTH_UNIT { get; } = "миллиметр";
+        protected virtual string WEIGHT_UNIT { get; } = "килограмм";
+
+        protected int Precission { get; }
         public string Manufacturer { get; }
         public CurrencyType Currency { get; }
 
-        public PrikatReportTemplate(string manufacturer, CurrencyType currency)
+        public PrikatReportTemplateBase(string manufacturer, CurrencyType currency)
         {
             Manufacturer = manufacturer;
             Currency = currency;
@@ -69,7 +69,7 @@ namespace EtkBlazorApp.BL.Templates
             }
         }
 
-        private void AppendLine(ProductEntity product, StreamWriter sw)
+        protected virtual void AppendLine(ProductEntity product, StreamWriter sw)
         {          
             decimal priceInCurrency = (Currency == CurrencyType.RUB) ? (int)product.price : Math.Round(product.price / CurrencyRatio, Precission);
             decimal price1 = Math.Round(priceInCurrency * ((100m + Discount1) / 100m), Precission);
@@ -120,6 +120,4 @@ namespace EtkBlazorApp.BL.Templates
             sw.Write(";");
         }
     }
-
-
 }
