@@ -1,4 +1,5 @@
 ﻿@page "/edit-product";
+
 @inject IProductStorage productStorage
 @inject ISettingStorage settingStorage
 @inject ICurrencyChecker currencyChecker
@@ -94,7 +95,6 @@
 
 @code {
     string[] basePriceCurrencyNames = Enum.GetNames(typeof(CurrencyType));
-
     ProductViewModel editedProduct = null;
     string[] stockStatusNames = null;
     string enteredUri = null;
@@ -138,7 +138,7 @@
     private async Task SaveChanges()
     {
         decimal priceInRub = editedProduct.Price;
-        
+
         if (editedProduct.IsPriceInCurrency)
         {
             decimal ratio = await currencyChecker.GetCurrencyRate(Enum.Parse<CurrencyType>(editedProduct.BasePriceCurrency));
@@ -151,7 +151,7 @@
             editedProduct.BasePrice = 0;
             editedProduct.IsPriceInCurrency = false;
         }
-        
+
         var entity = new ProductEntity()
         {
             product_id = editedProduct.Id,

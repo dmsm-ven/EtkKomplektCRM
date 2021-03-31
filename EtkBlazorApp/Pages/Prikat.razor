@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles = "Administrator, Manager")]
 @inject IToastService toastService
 @inject ITemplateStorage templateStorage
+@inject ISettingStorage settingStorage
 @inject IManufacturerStorage manufacturerStorage
 @inject IJSRuntime js
 @using System.IO;
@@ -9,70 +10,75 @@
 
 @if (itemsSource == null)
 {
-<LoadingSpinner></LoadingSpinner>
+    <LoadingSpinner></LoadingSpinner>
 }
 else
 {
-<img style="height: 100px; margin: 0px auto 40px auto; display: block;" src="image/logotips/vse-instrumenti-logo-big.jpg" class="img-fluid" />
-<div class="container">
-    @if (inProgress)
+    <img style="height: 100px; margin: 0px auto 40px auto; display: block;" src="image/logotips/vse-instrumenti-logo-big.jpg" class="img-fluid" />
+    <div class="container">
+        @if (inProgress)
         {
-    <IntermediateProgressBar></IntermediateProgressBar>
-    }
-    else
-    {
-    <div class="row">
-        <button type="button" class="btn btn-vi" style="width: 100%;" @onclick="GetReport" disabled="@reportButtonDisabled">Скачать выгрузку</button>
-    </div>
-    <hr />
-    <h3><button class="btn btn-outline-info btn-sm" @onclick="(() => hideSettingsBox = !hideSettingsBox)">Настройки выгрузки</button></h3>
-    <ul class="list-group" hidden="@hideSettingsBox">
-        <li class="list-group-item">
-            <input class="form-check-input" type="checkbox" value="@reportSettingsHasStock" aria-label="">
-            Остаток > 0
-        </li>
-        <li class="list-group-item">
-            <input class="form-check-input" type="checkbox" value="@reportSettingsHasEan" aria-label="">
-            Обязательно есть EAN
-        </li>
-        <li class="list-group-item">
-            <input class="form-check-input" type="checkbox" @onchange="@((e) => ShowPriceExample = (bool)e.Value)" aria-label="">
-            Показать примеры цен
-            @if (ShowPriceExample)
-            {
-            <li class="list-group-item" style="border: none;">
-                <input type="number" style="display: inline; margin: 2px; width: 100px;" class="form-control" name="example-price" @bind-value="ExamplePrice" />
-                Тестовая цена
-            </li>
+            <IntermediateProgressBar></IntermediateProgressBar>
         }
-            </li>
-        </ul>
-    }
-
-    <div class="table-responsive">
-        <table class="table">
-            <thead class="thead-etk">
-                <tr>
-                    <th></th>
-                    <th>Производитель</th>
-                    <th>Закупочная цена</th>
-                    <th>Рекомендуемая цена</th>
-                    <th>Валюта выгрузки</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in orderedSource)
+        else
+        {
+            <div class="row">
+                <button type="button" class="btn btn-vi" style="width: 100%;" @onclick="GetReport" disabled="@reportButtonDisabled">Скачать выгрузку</button>
+            </div>
+            <hr />
+            <h3><button class="btn btn-outline-info btn-sm" @onclick="(() => hideSettingsBox = !hideSettingsBox)">Настройки выгрузки</button></h3>
+            <ul class="list-group" hidden="@hideSettingsBox">
+                <li class="list-group-item">
+                    <input class="form-check-input" type="checkbox"
+                           checked="@reportSettingsHasStock"
+                           @onchange="HasStockStateChanged" />
+                    Остаток > 0
+                </li>
+                <li class="list-group-item">
+                    <input class="form-check-input" type="checkbox"
+                           checked="@reportSettingsHasEan"
+                           @onchange="HasEanStateChanged" />
+                    Обязательно есть EAN
+                </li>
+                <li class="list-group-item">
+                    <input class="form-check-input" type="checkbox" @onchange="@((e) => ShowPriceExample = (bool)e.Value)" aria-label="">
+                    Показать примеры цен
+                    @if (ShowPriceExample)
                     {
-                <CascadingValue Value="@ShowPriceExample">
-                    <CascadingValue Value="@ExamplePrice">
-                        <PrikatTemplateItem Item="@item" ItemChanged="@(e => DiscountChanged(item))" />
-                    </CascadingValue>
-                </CascadingValue>
+
+                    <li class="list-group-item" style="border: none;">
+                        <input type="number" style="display: inline; margin: 2px; width: 100px;" class="form-control" name="example-price" @bind-value="ExamplePrice" />
+                        Тестовая цена
+                    </li>
+                }
+                    </li>
+                </ul>
+            }
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead class="thead-etk">
+                    <tr>
+                        <th></th>
+                        <th>Производитель</th>
+                        <th>Закупочная цена</th>
+                        <th>Рекомендуемая цена</th>
+                        <th>Валюта выгрузки</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in orderedSource)
+                    {
+                        <CascadingValue Value="@ShowPriceExample">
+                            <CascadingValue Value="@ExamplePrice">
+                                <PrikatTemplateItem Item="@item" ItemChanged="@(e => DiscountChanged(item))" />
+                            </CascadingValue>
+                        </CascadingValue>
                     }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 }
 @code {
     List<PrikatManufacturerDiscountViewModel> itemsSource;
@@ -98,19 +104,34 @@ else
         inProgress = false;
     }
 
+    private async Task HasStockStateChanged(ChangeEventArgs e)
+    {
+        reportSettingsHasStock = (bool)e.Value;
+        await settingStorage.SetValue<bool>("prikat-export-has-stock", reportSettingsHasStock);
+    }
+
+    private async Task HasEanStateChanged(ChangeEventArgs e)
+    {
+        reportSettingsHasEan = (bool)e.Value;
+        await settingStorage.SetValue<bool>("prikat-export-has-ean", reportSettingsHasEan);
+    }
+
     protected override async Task OnInitializedAsync()
     {
+        reportSettingsHasStock = await settingStorage.GetValue<bool>("prikat-export-has-stock");
+        reportSettingsHasEan = await settingStorage.GetValue<bool>("prikat-export-has-ean");
+
         itemsSource = (await templateStorage.GetPrikatTemplates())
-        .Select(t => new PrikatManufacturerDiscountViewModel()
-        {
-            IsChecked = t.enabled,
-            Discount1 = t.discount1,
-            Discount2 = t.discount2,
-            Manufacturer_id = t.manufacturer_id,
-            Manufacturer = t.manufacturer_name,
-            CurrencyCode = t.currency_code
-        })
-        .ToList();
+                .Select(t => new PrikatManufacturerDiscountViewModel()
+                {
+                    IsChecked = t.enabled,
+                    Discount1 = t.discount1,
+                    Discount2 = t.discount2,
+                    Manufacturer_id = t.manufacturer_id,
+                    Manufacturer = t.manufacturer_name,
+                    CurrencyCode = t.currency_code
+                })
+                .ToList();
     }
 
     private async Task DiscountChanged(PrikatManufacturerDiscountViewModel vmItem)

@@ -25,9 +25,11 @@
 input[type='radio'], input[type='checkbox'] {
     transform: scale(1.3);
 }
+
 .list-group-item {
     padding-left: 30px
 }
+
 .price-list-template-description {
     width: 100%;
     margin: 4px 12px;
@@ -39,6 +41,7 @@ input[type='radio'], input[type='checkbox'] {
     font-size: 12px;
     font-family: monospace;
 }
+
 .loaded-price-list-box {
     background: #c4ffbb;
     border: 1px solid #d0d0d0;
@@ -51,11 +54,13 @@ input[type='radio'], input[type='checkbox'] {
 .btn:disabled {
     opacity: 0.3;
 }
+
 .discount-list-separator {
     height: 3px;
     background: lightgray;
     margin: 20px 2px;
 }
+
 .btn-vi {
     background-color: #d60000;
     color: white;
@@ -83,10 +88,10 @@ input[type='radio'], input[type='checkbox'] {
     display: flex;
 }
 
-.prikat-manufacturer-discount-item:hover {
-    background-color: #DF5D5A;
-    transition: 100ms;
-}
+    .prikat-manufacturer-discount-item:hover {
+        background-color: #DF5D5A;
+        transition: 100ms;
+    }
 
 .ozon-manufacturer-discount-list {
     padding: 10px 4px;
@@ -188,7 +193,6 @@ input[type='radio'], input[type='checkbox'] {
     padding: 0px;
     font-size: 12px;
     padding: 6px 2px 0px 2px;
-
 }
 
 .product-item .product-price {
@@ -268,8 +272,8 @@ input[type='radio'], input[type='checkbox'] {
 }
 
 .brand-template-logo {
-    width: 120px;
-    height: 60px;
+    width: 100%;
+    height: auto;
     margin: 4px auto;
     border: 1px dashed rgba(255,255,255,0.25);
 }
@@ -281,6 +285,14 @@ input[type='radio'], input[type='checkbox'] {
 
 .price-list-template-outer {
     padding: 14px 8px;
+}
+
+.price-list-template-group {
+    list-style-type: none;
+    position: absolute;
+    top: 35px;
+    left: 115px;
+    display: none;
 }
 
 .price-list-template-inner {
@@ -295,6 +307,11 @@ input[type='radio'], input[type='checkbox'] {
     border: 1px solid #000080;
     background-color: whitesmoke;
     transition: 200ms;
+}
+
+.price-list-template-outer:hover .price-list-template-group {
+    display: block;
+    transition: 150ms;
 }
 
 .currency-top {

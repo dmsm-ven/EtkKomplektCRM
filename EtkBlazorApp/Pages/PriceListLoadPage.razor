@@ -28,8 +28,10 @@
 <div class="row">
     @foreach (var template in templates)
     {
+    <CascadingValue Value="selectedTemplate">
         <PriceListTemplateItem Items="@template.Value"
-                               CheckedChanged="(e => selectedTemplate = (PriceListTemplateItemViewModel)e)"></PriceListTemplateItem>
+                               CheckedChanged="(e => selectedTemplate = (PriceListTemplateItemViewModel)e)" />
+    </CascadingValue>
     }
 </div>
 
@@ -46,6 +48,7 @@
     <hr />
 }
 
+<LoadedPriceListDisplayer></LoadedPriceListDisplayer>
 @if (priceListManager.LoadedFiles != null && priceListManager.LoadedFiles.Any())
 {
     <a href="/update-products" class="btn btn-lg btn-outline-primary">Перейти к обновлению товаров</a>
@@ -53,11 +56,11 @@
 
 @code
 {
-        const int MAX_UPLOAD_FILE_SIZE = 15_000_000; // 15 мб
+    const int MAX_UPLOAD_FILE_SIZE = 15_000_000; // 15 мб
+    Dictionary<string, List<PriceListTemplateItemViewModel>> templates = null;
+    PriceListTemplateItemViewModel selectedTemplate = null;
+    bool isFileLoading = false;
 
-        Dictionary<string, List<PriceListTemplateItemViewModel>> templates = null;
-        PriceListTemplateItemViewModel selectedTemplate = null;
-        bool isFileLoading = false;
 
     protected override async Task OnInitializedAsync()
     {
