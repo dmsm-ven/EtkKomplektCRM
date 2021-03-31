@@ -1,0 +1,201 @@
+﻿@page "/accounts"
+@inject IAuthStateProcessor userStorage
+@inject IToastService toasts
+@attribute [Authorize(Roles = "Administrator")]
+@inject AuthenticationStateProvider stateProvider
+
+<h3>Учетные записи</h3>
+
+<div class="row" style="padding: 15px;">
+    
+    <div class="form-inline">
+        @if (newUser == null)
+        {
+            <button class="btn btn-sm btn-success" @onclick="@(e => newUser = new AppUser() { IsEnabled = true })">
+                <span class="oi oi-plus"></span>
+                Добавить
+            </button>
+        }
+        else
+        {
+            <button class="btn btn-sm btn-primary" @onclick="SaveNewUser">
+                <span class="oi oi-plus"></span>
+                Сохранить
+            </button>
+        }
+    </div>
+    @if (newUser != null)
+    {
+        <div class="form-inline mx-4 px-2">
+            <label for="new-user-login">Логин</label>
+            <input type="text" class="form-control mx-1" id="new-user-login" @bind="newUser.Login" />
+        </div>
+        <div class="form-inline mx-4 px-2">
+            <label for="new-user-password">Пароль</label>
+            <input type="text" class="form-control mx-1" id="new-user-password" @bind="newUser.Password" />
+        </div>
+        <div class="form-inline mx-4 px-2">
+            <label for="new-user-group">Группа</label>
+            <select class="form-control mx-1" @bind="newUser.GroupName" id="new-user-group">
+                @foreach (var gName in groups)
+                {
+                    <option>@gName</option>
+                }
+            </select>
+        </div>
+    }
+</div>
+<div class="table-responsive">
+    <table class="table users-table">
+        <thead class="thead-etk">
+            <tr>
+                <th>Включен</th>
+                <th>Логин</th>
+                <th>Группа</th>
+                <th>Дата создания</th>
+                <th>Дата последнего входа</th>
+                <th>Пароль</th>
+                <th>Удалить</th>
+                <th>Сохранить</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (users != null)
+            {
+                @foreach (var item in users)
+                {
+                <tr class="@(item.IsEnabled ? "enabled-user": "disabled-user") @(item == activeUser ? "current-user" : string.Empty)">
+                    <td>
+                        <input type="checkbox" class="form-check" @bind="item.IsEnabled" />
+                    </td>
+                    <td>@item.Login</td>
+                    <td>
+                        <select class="form-control" @bind="item.GroupName">
+                            @foreach (var gName in groups)
+                            {
+                                <option selected="@(gName == item.GroupName)">@gName</option>
+                            }
+                        </select>
+                    </td>
+                    <td>@item.CreatingDate</td>
+                    <td>@item.LastLoginDateTime</td>
+                    <td>
+                        @if (editUser == item)
+                        {
+                            <input type="password" class="form-control" @bind="item.Password" />
+                        }
+                        else
+                        {
+                            <button class="btn btn-secondary btn-sm" @onclick="@(e => editUser = item)">
+                                <span class="oi oi-pencil"></span>
+                            </button>
+                        }
+                    </td>
+                    <td>
+                        <button class="btn btn-success btn-sm" @onclick="@(e => ShowDeleteUserDialog(item))"><span class="oi oi-x"></span></button>
+                    </td>
+                    <td>
+                        <button class="btn btn-success btn-sm" @onclick="@(e => UpdateUser(item))"><span class="oi oi-check"></span></button>
+                    </td>
+                </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<DeleteConfirmDialog @ref="deleteConfirmDialog" 
+                     ConfirmationChanged="DeleteConfirmed"
+                     ConfirmationMessage="@(() => $"Удалить пользователя '{deleteUser.Login}' ?")"></DeleteConfirmDialog>
+
+<style>
+    tr.disabled-user td:not(:last-child) {
+        opacity: 0.4;
+    }
+
+    .current-user {
+        background-color: lemonchiffon;
+    }
+</style>
+
+@code {
+    DeleteConfirmDialog deleteConfirmDialog;
+
+    List<string> groups = null;
+    List<AppUser> users = null;
+    AppUser activeUser = null;
+    AppUser editUser = null;
+    AppUser newUser = null;
+    AppUser deleteUser = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var activeUserName = (await stateProvider.GetAuthenticationStateAsync()).User.Identity.Name;
+        users = (await userStorage.GetUsers()).Select(u => new AppUser()
+        {
+            Login = u.login,
+            Id = u.user_id,
+            LastLoginDateTime = u.last_login_date,
+            CreatingDate = u.creation_date,
+            GroupName = u.group_name,
+            IsEnabled = u.status
+        }).ToList();
+        groups = await userStorage.GetUserGroups();
+
+        activeUser = users.Single(u => u.Login == activeUserName);
+    }
+
+    public async Task UpdateUser(AppUser user)
+    {
+        if (!PasswordCheck(user)) { return; }
+
+        var updateData = new AppUserEntity()
+        {
+            user_id = user.Id,
+            status = user.IsEnabled,
+            group_name = user.GroupName,
+            password = user.Password
+        };
+        await userStorage.UpdateUser(updateData);
+
+        user.Password = null;
+        editUser = null;
+        toasts.ShowSuccess("Информация обновлена");
+    }
+
+    public async Task SaveNewUser()
+    {
+        if (!PasswordCheck(newUser)) { return; }
+
+        await userStorage.AddUser(new AppUserEntity() { login = newUser.Login, password = newUser.Password, group_name = newUser.GroupName });
+        users.Add(newUser);
+        newUser = null;
+    }
+
+    private bool PasswordCheck(AppUser user)
+    {
+        if (user.Password != null && user.Password.Length < 6)
+        {
+            toasts.ShowError("Минимальная длинна пароля 6 символов");
+            return false;
+        }
+        return true;
+    }
+
+    private void ShowDeleteUserDialog(AppUser user)
+    {
+        deleteUser = user;
+        deleteConfirmDialog.Show();
+    }
+
+    private async Task DeleteConfirmed(bool dialogResult)
+    {
+        if (dialogResult)
+        {
+            await userStorage.DeleteUser(deleteUser.Id);
+            toasts.ShowInfo($"Пользователь удален '{deleteUser.Login}'");
+            users.Remove(deleteUser);
+            deleteUser = null;
+        }
+    }
+}

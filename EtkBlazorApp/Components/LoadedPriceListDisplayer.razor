@@ -1,31 +1,30 @@
 ﻿@inject PriceListManager priceListManager
 
-@if (priceListManager.LoadedFiles != null && priceListManager.LoadedFiles.Any())
-{
-    <div class="loaded-price-list-box">
-        <h3>Загруженные прайс-листы</h3>
-        <ul style="list-style-type: none;">
+<div class="loaded-price-list-box">
+    <h2 style="margin: 6px auto;">Загруженные прайс-листы</h2>
 
-            @if (priceListManager.LoadedFiles.Count > 1)
-            {
+    <ul style="list-style-type: none;">
+
+        @if (priceListManager.LoadedFiles.Count > 1)
+        {
             <li style="margin-bottom: 30px; border-bottom: 1px solid lightgray;">
                 <span class="oi oi-trash" @onclick="RemoveAll"></span>
                 <strong style="color:navy">Очистить все</strong>
             </li>
-            }
+        }
 
-            @foreach (var data in priceListManager.LoadedFiles)
-            {
-                <li style="margin-bottom: 15px;">
-                    <span class="oi oi-trash" @onclick="@(e => priceListManager.RemovePriceList(data))"></span>
-                    <strong style="color: navy">@data.TemplateTitle</strong>
-                </li>
-            }
-        </ul>
-    </div>
-}
+        @foreach (var data in priceListManager.LoadedFiles)
+        {
+            <li style="margin-bottom: 15px;">
+                <span class="oi oi-trash" @onclick="@(e => priceListManager.RemovePriceList(data))"></span>
+                <strong style="color: navy">@data.TemplateTitle</strong>
+            </li>
+        }
+    </ul>
+</div>
 
 @code {
+
     private void RemoveAll()
     {
         priceListManager.RemovePriceListAll();

@@ -1,13 +1,21 @@
-﻿using System.Text;
+﻿using EtkBlazorApp.DataAccess.Entity;
+using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.DataAccess
 {
     public interface IAuthStateProcessor
     {
-        Task<int> GetUserBadPasswordTryCounter(string login);
         Task<string> GetUserPermission(string login, string password);
-        Task SetUserBadPasswordTryCounter(string login, int tryCount);
+        Task UpdateUserLastLoginDate(string login);
+
+        Task<List<AppUserEntity>> GetUsers();
+        Task UpdateUser(AppUserEntity user);
+        Task AddUser(AppUserEntity user);
+        Task DeleteUser(int user_id);
+        Task<List<string>> GetUserGroups();
     }
 
     public class MyAuthStateProcessor : IAuthStateProcessor
@@ -19,69 +27,73 @@ namespace EtkBlazorApp.DataAccess
             this.database = database;
         }
 
-        public async Task<int> GetUserBadPasswordTryCounter(string login)
-        {
-            dynamic param = new { login };
-
-            var sb = new StringBuilder()
-                .AppendLine(" SELECT IF( EXISTS(SELECT * FROM etk_app_ban_list WHERE login = @login),")
-                .AppendLine("(SELECT current_try_counter FROM etk_app_ban_list WHERE login = @login), ")
-                .AppendLine("-1)");
-
-            string sql = sb.ToString().Trim();
-            int tryCount = await database.GetScalar<int, dynamic>(sql, param);
-
-            if (tryCount == -1)
-            {
-                await database.SaveData<dynamic>("INSERT INTO etk_app_ban_list (login) VALUES (@login)", param);
-                tryCount = 0;
-            }
-
-            return tryCount;
-
-
-        }
-
         public async Task<string> GetUserPermission(string login, string password)
         {
             var sb = new StringBuilder()
                 .AppendLine("SELECT permission")
                 .AppendLine("FROM etk_app_user u")
                 .AppendLine("LEFT JOIN etk_app_user_group g ON u.user_group_id = g.user_group_id")
-                .AppendLine("WHERE u.status = 1 AND login = @login AND password = @password");
+                .AppendLine("WHERE u.status = 1 AND login = @login AND password = MD5(@password)");
 
             var sql = sb.ToString().Trim();
 
-            string passwordMd5 = CreateFromStringMD5(password);
-
-            var permission = await database.GetScalar<string, dynamic>(sql, new { login, password = passwordMd5 });
+            var permission = await database.GetScalar<string, dynamic>(sql, new { login, password });
 
             return permission;
         }
 
-        public async Task SetUserBadPasswordTryCounter(string login, int tryCount)
+        public async Task UpdateUserLastLoginDate(string login)
         {
-            string sql = "UPDATE etk_app_ban_list SET current_try_counter = @tryCount, last_access = NOW() WHERE login = @login";
-
-            await database.SaveData<dynamic>(sql, new { tryCount, login });
+            await database.SaveData<dynamic>("UPDATE etk_app_user SET last_login_date = NOW() WHERE login = @login", new { login });
         }
 
-        private string CreateFromStringMD5(string input)
+        public async Task<List<AppUserEntity>> GetUsers()
         {
-            // Use input string to calculate MD5 hash
-            using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
-            {
-                byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
-                byte[] hashBytes = md5.ComputeHash(inputBytes);
+            string sql = "SELECT u.*, g.name as group_name " +
+                         "FROM etk_app_user u " +
+                         "JOIN etk_app_user_group g ON u.user_group_id = g.user_group_id";
 
-                // Convert the byte array to hexadecimal string
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < hashBytes.Length; i++)
-                {
-                    sb.Append(hashBytes[i].ToString("X2"));
-                }
-                return sb.ToString().ToLower();
+            var users = await database.LoadData<AppUserEntity, dynamic>(sql, new { });
+
+            return users;
+        }
+
+        public async Task UpdateUser(AppUserEntity user)
+        {
+            var sb = new StringBuilder()
+                .AppendLine("UPDATE etk_app_user")
+                .AppendLine("SET user_group_id = (SELECT user_group_id FROM etk_app_user_group WHERE name = @group_name),")
+                .AppendLine("status = @status");
+
+            if(user.password != null)
+            {
+                sb.AppendLine(", password = MD5(@password)");
             }
+
+            sb.Append("WHERE user_id = @user_id");
+
+            string sql = sb.ToString();
+
+            await database.SaveData<dynamic>(sql, user);
+        }
+
+        public async Task AddUser(AppUserEntity user)
+        {
+            string sql = "INSERT INTO etk_app_user (login, password, user_group_id, status) VALUES " + 
+                         "(@login, MD5(@password), (SELECT user_group_id FROM etk_app_user_group WHERE name = @group_name), '1')";
+            await database.SaveData<dynamic>(sql, user);
+
+        }
+
+        public async Task DeleteUser(int user_id)
+        {
+            await database.SaveData<dynamic>("DELETE FROM etk_app_user WHERE user_id = @user_id", new { user_id });
+        }
+
+        public async Task<List<string>> GetUserGroups()
+        {
+            var groups = await database.LoadData<string, dynamic>("SELECT name FROM etk_app_user_group", new { });
+            return groups;
         }
     }
 }
