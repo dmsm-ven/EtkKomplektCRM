@@ -25,13 +25,21 @@
 
 <h2>Выберите шаблон загружаемого файла</h2>
 
+<div class="row">
+    <div class="input-group" style="width: 425px;">
+        <button type="button" style="margin-left: 8px;" class="btn btn-outline-primary" @onclick="@(e => ApplyFilter(null))">Поиск</button>
+        <input type="search" 
+               @onkeypress="ApplyFilter"
+               @oninput="@(ui => searchPhrase = (string)ui.Value)"
+               @bind="searchPhrase" class="form-control rounded mx-2" />
+    </div>
+</div>
 
 <div class="row">
-    @foreach (var template in templates)
+    @foreach (var template in filteredTemplates)
     {
         <CascadingValue Value="selectedTemplate">
-            <PriceListTemplateItem Items="@template.Value"
-                                   CheckedChanged="SelectedTemplateChanged" />
+            <PriceListTemplateItem Items="@template.Value" CheckedChanged="SelectedTemplateChanged" />
         </CascadingValue>
     }
 </div>
@@ -74,7 +82,9 @@
 @code
 {
     const int MAX_UPLOAD_FILE_SIZE = 15_000_000; // 15 мб
+    string searchPhrase;
     Dictionary<string, List<PriceListTemplateItemViewModel>> templates = null;
+    Dictionary<string, List<PriceListTemplateItemViewModel>> filteredTemplates;
     PriceListTemplateItemViewModel selectedTemplate = null;
     PriceListTemplateItemViewModel editingTemplate = null;
     bool isFileLoading = false;
@@ -99,6 +109,7 @@
             .OrderBy(g => g.Key == "Symmetron" ? 0 : 1)
             .ThenBy(g => g.Key)
             .ToDictionary(i => i.Key, i => i.ToList());
+        filteredTemplates = templates;
     }
 
     private async Task UploadSelectedPriceListTemplateFile(InputFileChangeEventArgs e)
@@ -164,5 +175,25 @@
         editingTemplate = null;
         toast.ShowSuccess("Скидка изменена");
         await logger.Write(LogEntryGroupName.TemplateUpdate, "Обновлено", $"Скидка для шаблона {selectedTemplate.Title} изменена на {selectedTemplate.Discount.ToString("G29")}");
+    }
+
+    private void ApplyFilter(KeyboardEventArgs e)
+    {
+        if (e == null || e.Key == "Enter")
+        {
+            if (!string.IsNullOrEmpty(searchPhrase))
+            {
+                filteredTemplates = templates
+                    .Where(g => g.Key.Contains(searchPhrase) ||
+                                g.Value.Any(t => t.Title.IndexOf(searchPhrase, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                                g.Value.Any(t => t.Manufacturer != null && t.Manufacturer.IndexOf(searchPhrase, StringComparison.OrdinalIgnoreCase) >= 0)
+                            )
+                    .ToDictionary(g => g.Key, g => g.Value);
+            }
+            else
+            {
+                filteredTemplates = templates;
+            }
+        }
     }
 }

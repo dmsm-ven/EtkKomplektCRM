@@ -11,10 +11,7 @@
                            disabled="@IsTemplateAlreadyLoaded(item)"
                            checked="@(GlobalSelectedTemplate == item)"
                            @onchange="@(e => RadioButtonClicked(item))" />
-                    @if (Items.Count > 1)
-                    {
-                        <label for="@item.Guid" class="price-list-template-title">@item.Title</label>
-                    }
+                    <label for="@item.Guid" class="price-list-template-title">@item.Title</label>
                 </li>
             }
         </ul>
@@ -38,7 +35,16 @@
 
     private async Task BoxClicked()
     {
-        SelectedTemplate = Items.First();
+        int currentTemplateIndex = Items.IndexOf(SelectedTemplate);
+        if (currentTemplateIndex == -1 || currentTemplateIndex == Items.Count - 1)
+        {
+            SelectedTemplate = Items.First();
+        }
+        else
+        {
+            SelectedTemplate = Items[currentTemplateIndex + 1];
+        }
+
         GlobalSelectedTemplate = SelectedTemplate;
         await CheckedChanged.InvokeAsync(SelectedTemplate);
     }

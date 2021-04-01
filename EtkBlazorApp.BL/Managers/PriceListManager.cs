@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.DataAccess;
+using EtkBlazorApp.DataAccess.Entity;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -37,20 +38,16 @@ namespace EtkBlazorApp.BL
             try
             {
                 IPriceListTemplate templateInstance = (IPriceListTemplate)Activator.CreateInstance(templateType, fileName);
+                var templateInfo = await GetTemplateDescription(templateType);
 
                 var data = await templateInstance.ReadPriceLines(null);
                 AddNewPriceLines(data);
-
-                var guid = ((PriceListTemplateDescriptionAttribute)templateType
-                    .GetCustomAttributes(typeof(PriceListTemplateDescriptionAttribute), false)
-                    .FirstOrDefault())
-                    .Guid;
-                string templateTitle = (await templateStorage.GetPriceListTemplateById(guid)).title;
+                ApplyDiscounts(data, templateInfo.discount);
 
                 var fileData = new LoadedFileData(templateInstance)
                 {
                     RecordsInFile = data.Count,
-                    TemplateTitle = templateTitle
+                    TemplateTitle = templateInfo.title
                 };
 
                 LoadedFiles.Add(fileData);
@@ -84,8 +81,11 @@ namespace EtkBlazorApp.BL
             try
             {
                 IPriceListTemplate templateInstance = (IPriceListTemplate)Activator.CreateInstance(templateType, fileName);
+                var templateInfo = await GetTemplateDescription(templateType);
 
                 list = await templateInstance.ReadPriceLines(null);
+                ApplyDiscounts(list, templateInfo.discount);
+
                 return list;
             }
             catch
@@ -120,6 +120,24 @@ namespace EtkBlazorApp.BL
         public List<PriceLine> PriceLinesOfManufacturer(string manufacturer)
         {
             return PriceLines.OrderBy(pl => pl.Manufacturer).Where(line => line.Manufacturer.Equals(manufacturer, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+
+        private void ApplyDiscounts(List<PriceLine> list, decimal discount)
+        {
+            if(discount == decimal.Zero) { return; }
+            foreach(var line in list.Where(line => line.Price.HasValue))
+            {
+                line.Price = Math.Round(line.Price.Value * (1m + (discount / 100m)), line.Currency == CurrencyType.RUB ? 0 : 2);
+            }
+        }
+
+        private async Task<PriceListTemplateEntity> GetTemplateDescription(Type templateType)
+        {
+            var guid = ((PriceListTemplateDescriptionAttribute)templateType
+                .GetCustomAttributes(typeof(PriceListTemplateDescriptionAttribute), false)
+                .FirstOrDefault()).Guid;
+            var info = (await templateStorage.GetPriceListTemplateById(guid));
+            return info;
         }
 
         private void AddNewPriceLines(List<PriceLine> newLines)
