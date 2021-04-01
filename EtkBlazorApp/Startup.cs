@@ -10,7 +10,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Globalization;
-using System.Threading;
 
 namespace EtkBlazorApp
 {
@@ -49,7 +48,7 @@ namespace EtkBlazorApp
             services.AddSingleton<SystemEventsLogger>();
             services.AddSingleton<NewOrdersNotificationService>();
             services.AddSingleton<UpdateManager>();
-            services.AddSingleton<OzonSellerApi>();
+            services.AddSingleton<OzonSellerManager>();
             services.AddSingleton<PriceListManager>();
             services.AddSingleton<CronTaskService>();
 

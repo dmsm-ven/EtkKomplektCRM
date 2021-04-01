@@ -102,10 +102,10 @@ input[type='radio'], input[type='checkbox'] {
 .ozon-manufacturer-discount-list {
     padding: 10px 4px;
     margin: 10px 15px;
-    background-color: #466085;
+    background-color: #46b6ff;
     border: 1px solid lightblue;
     border-radius: 4px;
-    color: white;
+    color: black;
     overflow-x: hidden;
     overflow-y: scroll;
     max-height: 800px;
@@ -120,6 +120,10 @@ input[type='radio'], input[type='checkbox'] {
     border-radius: 4px;
     display: flex;
 }
+
+    .ozon-manufacturer-discount-item:disabled{
+        opacity: 0.4;
+    }
 
     .ozon-manufacturer-discount-item:hover {
         background-color: #0088ff;

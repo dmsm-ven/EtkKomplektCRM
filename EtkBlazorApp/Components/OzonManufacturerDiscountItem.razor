@@ -1,15 +1,19 @@
-﻿<div class="ozon-manufacturer-discount-item" style="opacity: @(Item.IsChecked ? "1" : "0.6");">
+﻿@using System.ComponentModel;
+
+<div class="ozon-manufacturer-discount-item">
     <input type="checkbox"
            min="-99" max="999"
            style="display: inline-block; transform: scale(1.5); margin: 4px 10px;"
-           @bind="@Item.IsChecked" />
+           @onchange="(e => { Item.IsChecked = (bool)e.Value; OnItemChanged(); })"
+           checked="@Item.IsChecked" />
     <p style="display: inline-block; font-size: 20px; color: white; width: 100%;">
         @Item.Manufacturer
     </p>
     <input type="number"
            class="form-control"
            style="display: inline-block; width: auto; margin: 4px 10px;"
-           @bind-value="@Item.Discount" />
+           @onchange="(e => { Item.Discount = decimal.Parse(e.Value.ToString()); OnItemChanged(); })"
+           value="@Item.Discount" />
 </div>
 
 @code {
@@ -20,15 +24,9 @@
     [Parameter]
     public EventCallback ItemChanged { get; set; }
 
-    protected override void OnParametersSet()
-    {
-        Item.PropertyChanged += OnStateChanged;
-    }
-
-    private void OnStateChanged(object o, System.ComponentModel.PropertyChangedEventArgs e)
+    private void OnItemChanged()
     {
         ItemChanged.InvokeAsync();
-        StateHasChanged();
     }
 
 }

@@ -1,10 +1,11 @@
 ﻿@page "/ozon"
 @attribute [Authorize(Roles = "Administrator, Manager")]
-@inject IToastService toastService
+@inject IToastService toasts
 @inject IManufacturerStorage manufacturerStorage
 @inject ISettingStorage settings
+@inject OzonSellerManager ozonManager
 
-@if (manufacturerDiscounts == null)
+@if (orderedDiscountInfoSource == null)
 {
     <LoadingSpinner />
 }
@@ -15,10 +16,18 @@ else
         <div class="col-lg-6 col-md-8 col-sm-12">
             <div class="row">
                 <div class="col-md-6 col-sm-6">
-                    <button type="button" class="btn btn-primary" style="width: 100%;" disabled="@updateButtonDisabled">Обновить остатки</button>
-                </div>
-                <div class="col-md-6 col-sm-6">
-                    <button type="button" class="btn btn-primary" style="width: 100%;" disabled="@updateButtonDisabled">Обновить цены</button>
+                    @if (isUpdateInProgress)
+                    {
+                        <IntermediateProgressBar></IntermediateProgressBar>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-outline-primary btn-lg" 
+                            @onclick="UpdateOzonSellerData"
+                            disabled="@updateButtonDisabled">Обновить цены и остатки</button>
+
+                        <p>Последнее обновление: <storng>@lastUpdateDateTime</storng></p>
+                    }
                 </div>
             </div>
             <div class="row">
@@ -27,14 +36,9 @@ else
                         <div class="col-md-9">Производитель</div>
                         <div class="col-md-3">Наценка от сайта</div>
                     </div>
-                    @foreach (var item in manufacturerDiscounts)
+                    @foreach (var item in orderedDiscountInfoSource)
                     {
-                        @if (!hasSeparator && !item.IsChecked)
-                        {
-                            <hr class="discount-list-separator" />
-                            hasSeparator = true;
-                        }
-                        <OzonManufacturerDiscountItem Item="item" ItemChanged="DiscountChanged" />
+                        <OzonManufacturerDiscountItem Item="item" ItemChanged="ItemStateChanged" />
                     }
                 </div>
             </div>
@@ -43,56 +47,73 @@ else
 }
 
 @code {
+        bool isUpdateInProgress = false;
+        bool updateButtonDisabled => discountsInfoSource.All(m => m.IsChecked == false);
+        DateTime lastUpdateDateTime;
 
-    // ozon manager есть в etk-komplekt windows приложении
-    [Inject] OzonSellerApi ozonApi { get; set; }
-    [Inject] UpdateManager updateManager { get; set; }
-
-    bool hasSeparator = false;
-    bool needReloadSavedData = false;
-    bool updateButtonDisabled => manufacturerDiscounts.All(m => m.IsChecked == false);
-
-    private List<OzonManufacturerDiscountViewModel> manufacturerDiscounts = null;
-
-    private async Task DiscountChanged()
+    private List<OzonManufacturerDiscountViewModel> discountsInfoSource = null;
+    private List<OzonManufacturerDiscountViewModel> orderedDiscountInfoSource
     {
-        var checkedData = string.Join(";", manufacturerDiscounts.Where(m => m.IsChecked).Select(m => m.Id).OrderBy(id => id));
-        await settings.SetValue("ozon_checked_manufacturers", checkedData);
+        get
+        {
+            return discountsInfoSource == null ? null : discountsInfoSource
+            .OrderByDescending(d => d.IsChecked)
+            .ThenBy(d => d.Manufacturer)
+            .ToList();
+        }
+    }
 
-        var discountData = string.Join(";", manufacturerDiscounts.Select(m => $"{m.Id}={m.Discount}"));
-        await settings.SetValue("ozon_manufacturer_discounts", discountData);
+    private async Task ItemStateChanged()
+    {
+        var source = discountsInfoSource
+            .Where(m => m.IsChecked)
+            .OrderBy(m => m.Manufacturer)
+            .Select(m => $"{m.Manufacturer}={m.Discount}")
+            .ToList();
 
-        needReloadSavedData = true;
+        var checkedData = string.Join(";", source);
+        await settings.SetValue("ozon_seller_manufacturer_discounts", checkedData);
+
         StateHasChanged();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        hasSeparator = false;
+        var manufacturers = await manufacturerStorage.GetManufacturers();
+        string rawArray = await settings.GetValue("ozon_seller_manufacturer_discounts");
+        var mDiscount = string.IsNullOrWhiteSpace(rawArray) ?
+            new Dictionary<string, decimal>() :
+            rawArray.Split(";").Select(chunk => chunk.Split("=")).ToDictionary(x => x[0], x => decimal.Parse(x[1]));
 
-        if (firstRender || needReloadSavedData)
+        discountsInfoSource = manufacturers
+            .Select(manufacturer => new OzonManufacturerDiscountViewModel(manufacturer.name)
+            {
+                Id = manufacturer.manufacturer_id,
+                Discount = mDiscount.ContainsKey(manufacturer.name) ? mDiscount[manufacturer.name] : 0,
+                IsChecked = mDiscount.ContainsKey(manufacturer.name)
+            })
+            .ToList();
+
+        lastUpdateDateTime = await settings.GetValue<DateTime>("ozon_seller_last_update");
+    }
+
+    private async Task UpdateOzonSellerData()
+    {
+        isUpdateInProgress = true;
+        StateHasChanged();
+
+        try
         {
-            needReloadSavedData = false;
-
-            var manufacturers = await manufacturerStorage.GetManufacturers();
-            var discountData = (await settings.GetValue("ozon_manufacturer_discounts")).Split(';')
-                .Select(data => data.Split('='))
-                .Select(array => new { manufacturer_id = int.Parse(array[0]), discount = int.Parse(array[1]) })
-                .ToDictionary(i => i.manufacturer_id, i => i.discount);
-
-            var checkedManufacturers = (await settings.GetValue("ozon_checked_manufacturers")).Split(';').Select(i => int.Parse(i)).ToList();
-
-            manufacturerDiscounts = manufacturers
-                .Select(manufacturer => new OzonManufacturerDiscountViewModel(manufacturer.name)
-                {
-                    Id = manufacturer.manufacturer_id,
-                    Discount = discountData.ContainsKey(manufacturer.manufacturer_id) ? discountData[manufacturer.manufacturer_id] : 0,
-                    IsChecked = checkedManufacturers.Contains(manufacturer.manufacturer_id)
-                })
-                .OrderByDescending(item => item.IsChecked)
-                .ToList();
-
-            StateHasChanged();
+            await ozonManager.Update();
+            toasts.ShowSuccess("Обновление выполнено");
+        }
+        catch(Exception ex)
+        {
+            toasts.ShowError(ex.Message);
+        }
+        finally
+        {
+            isUpdateInProgress = false;
         }
     }
 }

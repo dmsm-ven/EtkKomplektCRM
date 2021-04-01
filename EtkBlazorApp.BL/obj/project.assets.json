@@ -1212,6 +1212,15 @@
           }
         }
       },
+      "System.Net.Http.Json/5.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net5.0/System.Net.Http.Json.dll": {}
+        },
+        "runtime": {
+          "lib/net5.0/System.Net.Http.Json.dll": {}
+        }
+      },
       "System.Net.NameResolution/4.0.0": {
         "type": "package",
         "dependencies": {
@@ -2074,6 +2083,21 @@
         },
         "runtime": {
           "bin/placeholder/EtkBlazorApp.DataAccess.dll": {}
+        }
+      },
+      "EtkBlazorApp.Integration/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v5.0",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "5.0.0",
+          "Newtonsoft.Json": "12.0.3",
+          "System.Net.Http.Json": "5.0.0"
+        },
+        "compile": {
+          "bin/placeholder/EtkBlazorApp.Integration.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/EtkBlazorApp.Integration.dll": {}
         }
       }
     }
@@ -4754,6 +4778,28 @@
         "system.net.http.nuspec"
       ]
     },
+    "System.Net.Http.Json/5.0.0": {
+      "sha512": "3CPSQpCzEmI9o+1G79TnPCjF40omCdnoXj2Rg76BDwGj5+LZnFPjV+t35eedlvl+uthmholk/XXxXTYgJWSexw==",
+      "type": "package",
+      "path": "system.net.http.json/5.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/net461/System.Net.Http.Json.dll",
+        "lib/net461/System.Net.Http.Json.xml",
+        "lib/net5.0/System.Net.Http.Json.dll",
+        "lib/net5.0/System.Net.Http.Json.xml",
+        "lib/netstandard2.0/System.Net.Http.Json.dll",
+        "lib/netstandard2.0/System.Net.Http.Json.xml",
+        "system.net.http.json.5.0.0.nupkg.sha512",
+        "system.net.http.json.nuspec",
+        "useSharedDesignerContext.txt",
+        "version.txt"
+      ]
+    },
     "System.Net.NameResolution/4.0.0": {
       "sha512": "JdqRdM1Qym3YehqdKIi5LHrpypP4JMfxKQSNCJ2z4WawkG0il+N3XfNeJOxll2XrTnG7WgYYPoeiu/KOwg0DQw==",
       "type": "package",
@@ -7185,6 +7231,11 @@
       "type": "project",
       "path": "../EtkBlazorApp.DataAccess/EtkBlazorApp.DataAccess.csproj",
       "msbuildProject": "../EtkBlazorApp.DataAccess/EtkBlazorApp.DataAccess.csproj"
+    },
+    "EtkBlazorApp.Integration/1.0.0": {
+      "type": "project",
+      "path": "../EtkBlazorApp.Integration/EtkBlazorApp.Integration.csproj",
+      "msbuildProject": "../EtkBlazorApp.Integration/EtkBlazorApp.Integration.csproj"
     }
   },
   "projectFileDependencyGroups": {
@@ -7192,6 +7243,7 @@
       "CsvHelper >= 21.1.0",
       "EPPlus >= 5.5.0",
       "EtkBlazorApp.DataAccess >= 1.0.0",
+      "EtkBlazorApp.Integration >= 1.0.0",
       "MailKit >= 2.10.1",
       "Newtonsoft.Json >= 12.0.3",
       "SharpCompress >= 0.28.1",
@@ -7231,6 +7283,9 @@
           "projectReferences": {
             "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.DataAccess\\EtkBlazorApp.DataAccess.csproj": {
               "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.DataAccess\\EtkBlazorApp.DataAccess.csproj"
+            },
+            "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Integration\\EtkBlazorApp.Integration.csproj": {
+              "projectPath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Integration\\EtkBlazorApp.Integration.csproj"
             }
           }
         }
