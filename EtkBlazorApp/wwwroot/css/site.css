@@ -313,7 +313,8 @@ input[type='radio'], input[type='checkbox'] {
 }
 
 .price-list-template-outer:hover .price-list-template-inner, .price-list-template-outer.active .price-list-template-inner {
-    box-shadow: 0 4px 4px rgba(0,0,0,0.3);
+    box-shadow: 4px 18px 8px #466085;
+    transform: translateY(-15px);
     border: 1px solid #e0e0ff;
     background-color: whitesmoke;
     transition: 200ms;

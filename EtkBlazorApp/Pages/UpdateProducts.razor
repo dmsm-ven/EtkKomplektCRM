@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles = "Administrator, Manager")]
 @inject IToastService toastService
 @inject ISettingStorage setting
+@inject IManufacturerStorage manufacturers
 
 <h3>Обновление цен и остатков</h3>
 
@@ -9,13 +10,17 @@
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-md-2">
-            <button class="btn btn-success btn-lg" @onclick="UpdateProductsPriceAndStock" disabled="@(priceListManager.PriceLines.Count == 0)">Обновить</button>
-        </div>
-        <div class="col-md-2">
-            <span>
-                <input type="checkbox" @bind="clearStockBeforeUpdate" /> &nbsp;&nbsp;Обнулять остатки
-            </span>
+        <div class="col-12 my-1">
+            <button class="btn btn-success btn-lg mx-2"
+                    @onclick="UpdateProductsPriceAndStock" disabled="@(priceListManager.PriceLines.Count == 0)">
+                Обновить
+            </button>
+
+            <input type="checkbox" @bind="clearStockBeforeUpdate" /> &nbsp;&nbsp;Обнулять остатки
+            @if (clearStockBeforeUpdate && !string.IsNullOrWhiteSpace(clearStockBrandsArrayString))
+            {
+                <div><small>Будут очищены остатки для следующих производителей: @clearStockBrandsArrayString</small></div>
+            }
         </div>
     </div>
 </div>
@@ -25,10 +30,29 @@
 
 @code {
     bool clearStockBeforeUpdate = false;
+    List<string> websiteManufacturers;
+
+    string clearStockBrandsArrayString
+    {
+        get
+        {
+            var priceLinesBrands = priceListManager.PriceLines.GroupBy(p => p.Manufacturer).Select(g => g.Key).OrderBy(m => m).ToList();
+            var affectedBrands = priceLinesBrands.Intersect(websiteManufacturers);
+            string joinedString = string.Join(", ", affectedBrands);
+            return joinedString;
+        }
+    }
 
     [Inject] PriceListManager priceListManager { get; set; }
     [Inject] UpdateManager databaseManager { get; set; }
     [Inject] ReportManager reportManager { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        websiteManufacturers = (await manufacturers.GetManufacturers())
+            .Select(m => m.name)
+            .ToList();
+    }
 
     private async Task UpdateProductsPriceAndStock()
     {
@@ -41,10 +65,6 @@
         catch (Exception ex)
         {
             toastService.ShowError($"При обновлении данных произошла ошибка\r\n" + ex.Message, "Ошибка обновления");
-        }
-        finally
-        {
-
         }
     }
 }

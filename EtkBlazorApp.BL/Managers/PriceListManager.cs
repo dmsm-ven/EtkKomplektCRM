@@ -158,7 +158,12 @@ namespace EtkBlazorApp.BL
                     {
                         linkedLine.Price = line.Price;
                     }
-                    if (line.Quantity.HasValue)
+
+                    if(line.Quantity.HasValue && linkedLine.Quantity.HasValue)
+                    {
+                        linkedLine.Quantity += line.Quantity;
+                    }
+                    else
                     {
                         linkedLine.Quantity = line.Quantity;
                     }

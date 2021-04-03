@@ -66,11 +66,11 @@
                 {
                 <tr class="@(item.IsEnabled ? "enabled-user": "disabled-user") @(item == activeUser ? "current-user" : string.Empty)">
                     <td>
-                        <input type="checkbox" class="form-check" @bind="item.IsEnabled" />
+                        <input type="checkbox" class="form-check" @bind="item.IsEnabled" disabled="@(item == activeUser)"/>
                     </td>
                     <td>@item.Login</td>
                     <td>
-                        <select class="form-control" @bind="item.GroupName">
+                        <select class="form-control" @bind="item.GroupName" disabled="@(item == activeUser)">
                             @foreach (var gName in groups)
                             {
                                 <option selected="@(gName == item.GroupName)">@gName</option>
@@ -92,7 +92,9 @@
                         }
                     </td>
                     <td>
-                        <button class="btn btn-success btn-sm" @onclick="@(e => ShowDeleteUserDialog(item))"><span class="oi oi-x"></span></button>
+                        <button class="btn btn-danger btn-sm" 
+                                disabled="@(item == activeUser)"
+                                @onclick="@(e => ShowDeleteUserDialog(item))"><span class="oi oi-x"></span></button>
                     </td>
                     <td>
                         <button class="btn btn-success btn-sm" @onclick="@(e => UpdateUser(item))"><span class="oi oi-check"></span></button>

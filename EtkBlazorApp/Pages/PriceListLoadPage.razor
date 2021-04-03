@@ -21,11 +21,11 @@
         disabled="@(string.IsNullOrWhiteSpace(selectedTemplate?.RemoteUrl))">
     Загрузить от поставщика
 </button>
-<InputFile OnChange="@UploadSelectedPriceListTemplateFile" disabled="@(selectedTemplate == null)"></InputFile>
+<InputFile OnChange="@UploadSelectedPriceListTemplateFile" disabled="@(selectedTemplate == null || isFileLoading)"></InputFile>
 
 <h2>Выберите шаблон загружаемого файла</h2>
 
-<div class="row">
+<div class="row my-2">
     <div class="input-group" style="width: 425px;">
         <button type="button" style="margin-left: 8px;" class="btn btn-outline-primary" @onclick="@(e => ApplyFilter(null))">Поиск</button>
         <input type="search" 
@@ -149,10 +149,15 @@
         try
         {
             await priceListManager.UploadTemplate(selectedTemplate.Type, stream);
+            toast.ShowSuccess("Файл считан", selectedTemplate.Title);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex.Message == "Value cannot be null. (Parameter 'templateType')")
         {
-            toast.ShowError("Ошибка загрузки файла: " + ex.Message);
+            toast.ShowError("Шаблон не реализован!", selectedTemplate.Title);
+        }
+        catch(Exception ex)
+        {
+            toast.ShowError("Ошибка загрузки файла: " + ex.Message, selectedTemplate.Title);
         }
         finally
         {

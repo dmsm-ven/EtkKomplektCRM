@@ -1,4 +1,5 @@
 ﻿@page "/edit-product";
+@page "/edit-product/keyword/{Keyword}";
 
 @inject IProductStorage productStorage
 @inject ISettingStorage settingStorage
@@ -98,19 +99,34 @@
     string[] stockStatusNames = null;
     string enteredUri = null;
 
+    [Parameter] public string Keyword { get; set; }
+
     int currentStateCode = 0;
     bool hasChanges => currentStateCode != 0 && currentStateCode != GetCurrentStateCode();
 
     protected override async Task OnInitializedAsync()
     {
-        enteredUri = await settingStorage.GetValue("edit-product-page-last-uri");
+        if (Keyword != null)
+        {
+            enteredUri = $"https://etk-komplekt.ru/{Keyword}";
+        }
+        else
+        {
+            enteredUri = await settingStorage.GetValue("edit-product-page-last-uri");
+        }
         stockStatusNames = (await productStorage.GetStockStatuses()).Select(e => e.name).ToArray();
+        if (!string.IsNullOrWhiteSpace(enteredUri))
+        {
+            await LoadProduct();
+        }
     }
 
     private async Task LoadProduct()
     {
         string keyword = new Uri(enteredUri).AbsolutePath.Trim('/', '?', '&');
         var entity = await productStorage.GetProductByKeyword(keyword);
+        if(entity == null) { return; }
+
         editedProduct = new ProductViewModel()
         {
             Id = entity.product_id,
