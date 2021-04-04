@@ -63,6 +63,7 @@ namespace EtkBlazorApp.DataAccess
             var sb = new StringBuilder()
                 .AppendLine("UPDATE etk_app_user")
                 .AppendLine("SET user_group_id = (SELECT user_group_id FROM etk_app_user_group WHERE name = @group_name),")
+                .AppendLine("ip = @ip,")
                 .AppendLine("status = @status");
 
             if(user.password != null)
@@ -79,8 +80,8 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task AddUser(AppUserEntity user)
         {
-            string sql = "INSERT INTO etk_app_user (login, password, user_group_id, status) VALUES " + 
-                         "(@login, MD5(@password), (SELECT user_group_id FROM etk_app_user_group WHERE name = @group_name), '1')";
+            string sql = "INSERT INTO etk_app_user (login, password, ip, user_group_id, status) VALUES " + 
+                         "(@login, MD5(@password), @ip, (SELECT user_group_id FROM etk_app_user_group WHERE name = @group_name), '1')";
             await database.SaveData<dynamic>(sql, user);
 
         }

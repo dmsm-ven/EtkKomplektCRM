@@ -93,9 +93,8 @@
     protected override async Task OnInitializedAsync()
     {
         templates = (await templateStorage.GetPriceListTemplates())
-            .Select(t => new PriceListTemplateItemViewModel()
+            .Select(t => new PriceListTemplateItemViewModel(t.id)
             {
-                Guid = t.id,
                 Description = t.description,
                 Discount = t.discount,
                 GroupName = t.group_name,
@@ -117,7 +116,7 @@
         isFileLoading = true;
 
         var stream = e.File.OpenReadStream(MAX_UPLOAD_FILE_SIZE);
-        await LoadRemoteTemplateFromStream(stream);
+        await LoadTemplateFromStream(stream);
     }
 
     private async Task LoadRemoteUriTemplate()
@@ -139,12 +138,12 @@
             var bytes = await Task.Run(() => wc.DownloadData(new Uri(selectedTemplate.RemoteUrl)));
             using (var ms = new MemoryStream(bytes))
             {
-                await LoadRemoteTemplateFromStream(ms);
+                await LoadTemplateFromStream(ms);
             }
         }
     }
 
-    private async Task LoadRemoteTemplateFromStream(Stream stream)
+    private async Task LoadTemplateFromStream(Stream stream)
     {
         try
         {
@@ -157,7 +156,7 @@
         }
         catch(Exception ex)
         {
-            toast.ShowError("Ошибка загрузки файла: " + ex.Message, selectedTemplate.Title);
+            toast.ShowError("Ошибка: " + ex.Message, selectedTemplate.Title);
         }
         finally
         {

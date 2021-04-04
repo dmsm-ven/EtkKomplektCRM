@@ -10,8 +10,8 @@ namespace EtkBlazorApp.DataAccess.Entity
     {
         public int template_id { get; set; }
         public int manufacturer_id { get; set; }        
-        public int discount1 { get; set; }
-        public int discount2 { get; set; }
+        public decimal discount1 { get; set; }
+        public decimal discount2 { get; set; }
         public bool enabled { get; set; }
 
         public string manufacturer_name { get; set; }

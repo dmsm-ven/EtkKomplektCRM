@@ -11,5 +11,6 @@ namespace EtkBlazorApp.DataAccess.Entity
         public DateTime last_login_date { get; set; }
         public string group_name { get; set; } 
         public bool status { get; set; }
+        public string ip { get; set; }
     }
 }

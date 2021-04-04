@@ -3,6 +3,7 @@ using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -11,16 +12,16 @@ namespace EtkBlazorApp.Services
 {
     public class MyCustomAuthProvider : AuthenticationStateProvider
     {
-        private readonly IDatabaseAccess db;
         private readonly ILogStorage log;
+        private readonly IHttpContextAccessor contextAccessor;
         private readonly IAuthStateProcessor auth;
-        private readonly UserLogger logger;
         private readonly ProtectedLocalStorage storage;
 
-        public MyCustomAuthProvider(IAuthStateProcessor auth, ILogStorage log, ProtectedLocalStorage storage)
+        public MyCustomAuthProvider(IAuthStateProcessor auth, ILogStorage log, IHttpContextAccessor contextAccessor, ProtectedLocalStorage storage)
         {
             this.storage = storage;
             this.log = log;
+            this.contextAccessor = contextAccessor;
             this.auth = auth;
         }
 
@@ -33,7 +34,8 @@ namespace EtkBlazorApp.Services
                 var state = await AuthenticateUser(new AppUser() 
                 { 
                     Login = login.Value, 
-                    Password = password.Value 
+                    Password = password.Value,
+                    UserIP = contextAccessor.HttpContext.Connection?.RemoteIpAddress.ToString()
                 });                
                 return state;           
             }
@@ -44,6 +46,7 @@ namespace EtkBlazorApp.Services
         public async Task<AuthenticationState> AuthenticateUser(AppUser userData)
         {           
             string permission = await auth.GetUserPermission(userData.Login, userData.Password);
+
             var logEntry = new LogEntryEntity()
             {
                 group_name = LogEntryGroupName.Auth.GetDescriptionAttribute(),
@@ -58,7 +61,16 @@ namespace EtkBlazorApp.Services
                 await log.Write(logEntry); 
 
                 return GetDefaultState();
-            }        
+            }
+
+            if (!string.IsNullOrWhiteSpace(userData.AllowedIp) && userData.AllowedIp != userData.UserIP)
+            {
+                logEntry.title = "Ошибка";
+                logEntry.message = $"Вход с данного IP запрещено";
+                await log.Write(logEntry);
+
+                return GetDefaultState();
+            }
 
             var identity = new ClaimsIdentity(new[]
             {

@@ -2,7 +2,7 @@
 
 namespace EtkBlazorApp.ViewModel
 {
-    public class OzonManufacturerDiscountViewModel : ViewModelBase
+    public class OzonManufacturerDiscountViewModel
     {
         public string Manufacturer { get; }
 

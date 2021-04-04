@@ -52,6 +52,7 @@
                 <th>Включен</th>
                 <th>Логин</th>
                 <th>Группа</th>
+                <th>Разрешенный IP</th>
                 <th>Дата создания</th>
                 <th>Дата последнего входа</th>
                 <th>Пароль</th>
@@ -76,6 +77,18 @@
                                 <option selected="@(gName == item.GroupName)">@gName</option>
                             }
                         </select>
+                    </td>
+                    <td>
+                        @if (!item.HasAllowedIp)
+                        {
+                            <input type="checkbox" checked="checked" class="form-check" style="display: inline;"
+                                   @onchange="@(e => item.HasAllowedIp = true)" />
+                             <label style="display: inline;">Все</label>
+                        }
+                        else
+                        {
+                            <input type="text" class="form-control"  maxlength="15" @bind="@item.AllowedIp" />
+                        }
                     </td>
                     <td>@item.CreatingDate</td>
                     <td>@item.LastLoginDateTime</td>
@@ -140,7 +153,8 @@
             LastLoginDateTime = u.last_login_date,
             CreatingDate = u.creation_date,
             GroupName = u.group_name,
-            IsEnabled = u.status
+            IsEnabled = u.status,
+            AllowedIp = u.ip
         }).ToList();
         groups = await userStorage.GetUserGroups();
 
@@ -156,7 +170,8 @@
             user_id = user.Id,
             status = user.IsEnabled,
             group_name = user.GroupName,
-            password = user.Password
+            password = user.Password,
+            ip = string.IsNullOrWhiteSpace(user.AllowedIp) ? null : user.AllowedIp
         };
         await userStorage.UpdateUser(updateData);
 
@@ -169,7 +184,9 @@
     {
         if (!PasswordCheck(newUser)) { return; }
 
-        await userStorage.AddUser(new AppUserEntity() { login = newUser.Login, password = newUser.Password, group_name = newUser.GroupName });
+        var entity = new AppUserEntity() { login = newUser.Login, password = newUser.Password, group_name = newUser.GroupName, ip = newUser.AllowedIp };
+
+        await userStorage.AddUser(entity);
         users.Add(newUser);
         newUser = null;
     }

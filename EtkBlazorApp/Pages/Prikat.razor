@@ -125,8 +125,8 @@ else
                 .Select(t => new PrikatManufacturerDiscountViewModel()
                 {
                     IsChecked = t.enabled,
-                    Discount1 = t.discount1,
-                    Discount2 = t.discount2,
+                    Discount1 = (int)t.discount1,
+                    Discount2 = (int)t.discount2,
                     Manufacturer_id = t.manufacturer_id,
                     Manufacturer = t.manufacturer_name,
                     CurrencyCode = t.currency_code
