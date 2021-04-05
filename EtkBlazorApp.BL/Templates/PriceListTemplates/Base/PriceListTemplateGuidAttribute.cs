@@ -3,11 +3,11 @@
 namespace EtkBlazorApp.BL
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public class PriceListTemplateDescriptionAttribute : Attribute
+    public class PriceListTemplateGuidAttribute : Attribute
     {
         public string Guid { get; }
 
-        public PriceListTemplateDescriptionAttribute(string guid)
+        public PriceListTemplateGuidAttribute(string guid)
         {
             Guid = guid;
         }

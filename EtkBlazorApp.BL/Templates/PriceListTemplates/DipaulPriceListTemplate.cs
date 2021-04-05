@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
-    [PriceListTemplateDescription("C53B8C85-3115-421F-A579-0B5BFFF6EF48")]
+    [PriceListTemplateGuid("C53B8C85-3115-421F-A579-0B5BFFF6EF48")]
     public class DipaulPriceListTemplate : ExcelPriceListTemplateBase
     {
         static readonly Dictionary<string, string> ValidManufacturersMap = new Dictionary<string, string>()
@@ -82,7 +82,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         }
     }
 
-    [PriceListTemplateDescription("5CFDD5BD-816C-44DC-8AF3-9418F4052BF2")]
+    [PriceListTemplateGuid("5CFDD5BD-816C-44DC-8AF3-9418F4052BF2")]
     public class HakkoPriceListTemplate : ExcelPriceListTemplateBase
     {
         public HakkoPriceListTemplate(string fileName) : base(fileName) { }

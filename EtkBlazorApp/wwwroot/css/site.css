@@ -5,18 +5,6 @@
     vertical-align: middle;
 }
 
-.oi-trash {
-    font-size: 28px;
-    color: blue;
-    margin-right: 6px;
-    cursor: pointer;
-}
-
-    .oi-trash:hover {
-        color: red;
-        transition: 125ms;
-    }
-
 .form-control:focus {
     outline: none;
     box-shadow: none;

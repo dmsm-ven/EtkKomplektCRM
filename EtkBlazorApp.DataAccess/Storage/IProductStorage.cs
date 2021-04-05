@@ -92,6 +92,11 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task<List<ProductEntity>> ReadProducts(List<int> allowedManufacturers = null)
         {
+            if(allowedManufacturers != null && allowedManufacturers.Count == 0)
+            {
+                return new List<ProductEntity>();
+            }
+
             var sb = new StringBuilder()
                     .AppendLine("SELECT p.*, d.name as name, m.name as manufacturer, url.keyword as url")
                     .AppendLine("FROM oc_product p")

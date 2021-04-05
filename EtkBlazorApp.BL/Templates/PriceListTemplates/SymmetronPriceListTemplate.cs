@@ -2,7 +2,7 @@
 
 namespace EtkBlazorApp.BL
 {
-    [PriceListTemplateDescription("3853B988-DB37-4B6E-861F-3000B643FAC4")]
+    [PriceListTemplateGuid("3853B988-DB37-4B6E-861F-3000B643FAC4")]
     public class SymmetronPriceListTemplate : ExcelPriceListTemplateBase
     {
         public SymmetronPriceListTemplate(string fileName) : base(fileName) { }
@@ -12,15 +12,15 @@ namespace EtkBlazorApp.BL
             var list = new List<PriceLine>();
             var tab = Excel.Workbook.Worksheets[0];
 
-            for (int i = 2; i < tab.Dimension.Rows; i++)
+            for (int row = 2; row < tab.Dimension.Rows; row++)
             {
                 var priceLine = new PriceLine(this)
                 {
-                    Name = tab.GetValue<string>(i, 1),
-                    Sku = tab.GetValue<string>(i, 3),
-                    Model = tab.GetValue<string>(i, 27),
-                    Manufacturer = tab.GetValue<string>(i, 26),
-                    Price = ParsePrice(tab.GetValue<string>(i, 13)),
+                    Name = tab.Cells[row, 1].ToString(),
+                    Sku = tab.Cells[row, 3].ToString(),
+                    Model = tab.Cells[row, 27].ToString(),
+                    Manufacturer = tab.Cells[row, 26].ToString(),
+                    Price = ParsePrice(tab.Cells[row, 13].ToString()),
                     Currency = CurrencyType.RUB
                 };
 

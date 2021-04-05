@@ -11,8 +11,11 @@ namespace EtkBlazorApp.BL
 {
     public class PriceListManager
     {
+        public event Action PriceListLoaded;
+
         public List<PriceLine> PriceLines { get; }
-        public List<LoadedFileData> LoadedFiles { get; }
+        public List<LoadedPriceListTemplateData> LoadedFiles { get; }
+        public decimal NDS { get; } = 1.2m;
 
         private readonly IPriceLineLoadCorrelator correlator;
         private readonly ITemplateStorage templateStorage;
@@ -20,14 +23,20 @@ namespace EtkBlazorApp.BL
         public PriceListManager(IPriceLineLoadCorrelator correlator, ITemplateStorage templateStorage)
         {
             PriceLines = new List<PriceLine>();
-            LoadedFiles = new List<LoadedFileData>();
+            LoadedFiles = new List<LoadedPriceListTemplateData>();
             this.correlator = correlator;
             this.templateStorage = templateStorage;
         }
 
+        /// <summary>
+        /// Считывает строки из прайс-листа и сохраняет их в списке. Этот метод специально для дальнейшнего ручного обновления товаров на сайте
+        /// </summary>
+        /// <param name="templateType"></param>
+        /// <param name="stream"></param>
+        /// <returns></returns>
         public async Task UploadTemplate(Type templateType, Stream stream)
         {
-            if (templateType == null) { throw new ArgumentNullException(nameof(templateType)); }
+            if (templateType == null) { throw new NotFoundedPriceListTemplateException(); }
 
             string fileName = Path.GetTempFileName();
             using (var fs = File.Create(fileName))
@@ -42,15 +51,11 @@ namespace EtkBlazorApp.BL
 
                 var data = await templateInstance.ReadPriceLines(null);
                 AddNewPriceLines(data);
-                ApplyDiscounts(data, templateInfo.discount);
+                ApplyDiscounts(data, templateInfo.discount, templateInfo.nds);
 
-                var fileData = new LoadedFileData(templateInstance)
-                {
-                    RecordsInFile = data.Count,
-                    TemplateTitle = templateInfo.title
-                };
+                LoadedFiles.Add(new LoadedPriceListTemplateData(templateInstance, templateInfo, data));
 
-                LoadedFiles.Add(fileData);
+                PriceListLoaded?.Invoke();
             }
             catch(Exception ex)
             {
@@ -62,6 +67,12 @@ namespace EtkBlazorApp.BL
             }       
         }
 
+        /// <summary>
+        /// Считывает строки из прайс-листа и возращает их напрямую, не добавляя в спиоск загруженных. Этот метод специально для автоматических задач
+        /// </summary>
+        /// <param name="templateType"></param>
+        /// <param name="stream"></param>
+        /// <returns></returns>
         public async Task<List<PriceLine>> ReadTemplateLines(Type templateType, Stream stream)
         {
             if (templateType == null) { throw new ArgumentNullException(nameof(templateType)); }
@@ -84,7 +95,7 @@ namespace EtkBlazorApp.BL
                 var templateInfo = await GetTemplateDescription(templateType);
 
                 list = await templateInstance.ReadPriceLines(null);
-                ApplyDiscounts(list, templateInfo.discount);
+                ApplyDiscounts(list, templateInfo.discount, templateInfo.nds);
 
                 return list;
             }
@@ -100,21 +111,10 @@ namespace EtkBlazorApp.BL
             PriceLines.Clear();
         }
 
-        public void RemovePriceList(LoadedFileData data)
+        public void RemovePriceList(LoadedPriceListTemplateData data)
         {
             LoadedFiles.Remove(data);
-            PriceLines.RemoveAll(line => line.Template == data.Template);
-        }
-
-        public void RemovePriceList(Type templateType)
-        {
-            PriceLines.RemoveAll(line => line.Template.GetType() == templateType);
-            LoadedFiles.Remove(LoadedFiles.FirstOrDefault(lf => lf.Template.GetType() == templateType));
-        }
-
-        public List<PriceLine> PriceLinesOfTemplate(Type templateType)
-        {
-            return PriceLines.OrderBy(pl => pl.Template).Where(line => line.Template.GetType() == templateType).ToList();
+            PriceLines.RemoveAll(line => line.Template == data.TemplateInstance);
         }
 
         public List<PriceLine> PriceLinesOfManufacturer(string manufacturer)
@@ -122,19 +122,40 @@ namespace EtkBlazorApp.BL
             return PriceLines.OrderBy(pl => pl.Manufacturer).Where(line => line.Manufacturer.Equals(manufacturer, StringComparison.OrdinalIgnoreCase)).ToList();
         }
 
-        private void ApplyDiscounts(List<PriceLine> list, decimal discount)
+        private void ApplyDiscounts(List<PriceLine> list, decimal discount, bool addNds)
         {
-            if(discount == decimal.Zero) { return; }
+            if(discount == decimal.Zero && addNds == false) { return; }
+
             foreach(var line in list.Where(line => line.Price.HasValue))
             {
-                line.Price = Math.Round(line.Price.Value * (1m + (discount / 100m)), line.Currency == CurrencyType.RUB ? 0 : 2);
+                if (addNds)
+                {
+                    line.Price = AddNds(line.Price.Value, line.Currency);
+                }
+                if(discount != decimal.Zero)
+                {
+                    line.Price = Math.Round(line.Price.Value * (1m + (discount / 100m)), line.Currency == CurrencyType.RUB ? 0 : 2);
+                }
+                
+            }
+        }
+
+        private decimal AddNds(decimal price, CurrencyType currencyType)
+        {
+            if (currencyType == CurrencyType.RUB)
+            {
+                return Math.Floor(price * NDS);
+            }
+            else
+            {
+                return Math.Round(price * NDS, 4);
             }
         }
 
         private async Task<PriceListTemplateEntity> GetTemplateDescription(Type templateType)
         {
-            var guid = ((PriceListTemplateDescriptionAttribute)templateType
-                .GetCustomAttributes(typeof(PriceListTemplateDescriptionAttribute), false)
+            var guid = ((PriceListTemplateGuidAttribute)templateType
+                .GetCustomAttributes(typeof(PriceListTemplateGuidAttribute), false)
                 .FirstOrDefault()).Guid;
             var info = (await templateStorage.GetPriceListTemplateById(guid));
             return info;

@@ -1,18 +1,20 @@
-﻿using System.Linq;
+﻿using EtkBlazorApp.DataAccess.Entity;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace EtkBlazorApp.BL
 {
-    public class LoadedFileData
+    public class LoadedPriceListTemplateData
     {
-        public string FileName => Template.FileName ?? string.Empty;
-        public int RecordsInFile { get; set; }
-        public string TemplateTitle { get; set; }
+        public List<PriceLine> ReadedPriceLines { get; }
+        public IPriceListTemplate TemplateInstance { get; }
+        public PriceListTemplateEntity TemplateDescription { get; }
 
-        public IPriceListTemplate Template { get; }
-
-        public LoadedFileData(IPriceListTemplate template)
+        public LoadedPriceListTemplateData(IPriceListTemplate template, PriceListTemplateEntity description, List<PriceLine> readedPriceLines)
         {
-            Template = template;
+            TemplateInstance = template;
+            TemplateDescription = description;
+            ReadedPriceLines = readedPriceLines;
         }
     }
 }

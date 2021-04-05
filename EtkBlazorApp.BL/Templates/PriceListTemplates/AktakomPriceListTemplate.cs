@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL.Templates
 {
-    [PriceListTemplateDescription("D31FFE97-53BC-41DC-9D54-43FABBC51BCD")]
+    [PriceListTemplateGuid("D31FFE97-53BC-41DC-9D54-43FABBC51BCD")]
     public class AktakomPriceListTemplate : CsvPriceListTemplateBase
     {
         public AktakomPriceListTemplate(string fileName) : base(fileName) { }
@@ -44,7 +44,8 @@ namespace EtkBlazorApp.BL.Templates
                         Model = sku,
                         Sku = sku,
                         Price = parsedPrice,
-                        Quantity = parsedQuantity
+                        Quantity = parsedQuantity,
+                        Manufacturer = "Aktakom"
                     };
                     list.Add(priceLine);
                 }

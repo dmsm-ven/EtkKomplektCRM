@@ -1,4 +1,6 @@
 ﻿@inject PriceListManager priceListManager
+@inject NavigationManager navigationManager
+@inject IJSRuntime js
 
 <div class="loaded-price-list-box">
     <h2 style="margin: 6px auto;">Загруженные прайс-листы</h2>
@@ -13,25 +15,52 @@
             </li>
         }
 
-        @foreach (var data in priceListManager.LoadedFiles)
-        {
+            @foreach (var data in priceListManager.LoadedFiles)
+            {
             <li style="margin-bottom: 15px;">
-                <span class="oi oi-trash" @onclick="@(e => priceListManager.RemovePriceList(data))"></span>
-                <strong style="color: navy">@data.TemplateTitle</strong>
+                <span class="oi oi-trash" @onclick="@(e => priceListManager.RemovePriceList(data))" title="Удалить загруженный прайс-лист"></span>
+                <span class="oi oi-spreadsheet" @onclick="@(e => MoveToPriceList(data))" title="Показать что загружено"></span>
+                <img class="brand-template-logo" src="@(data.TemplateDescription.image)" 
+                     title="@data.TemplateDescription.title"
+                     data-toggle="tooltip" data-placement="right"
+                     style="margin-left: 20px; width: 96px;" />
             </li>
-        }
+            }
     </ul>
 </div>
 
+<style>
+    .loaded-price-list-box .oi {
+        font-size: 28px;
+        color: blue;
+        margin-right: 6px;
+        cursor: pointer;
+        vertical-align: middle;
+    }
+
+    .loaded-price-list-box .oi:hover {
+        color: red;
+        transition: 125ms;
+    }
+</style>
 
 @code {
 
     List<string> manufacturers = null;
 
-    private void RemoveAll()
+    protected override void OnInitialized()
+    {
+        priceListManager.PriceListLoaded += () => StateHasChanged();
+    }
+
+        private void RemoveAll()
     {
         priceListManager.RemovePriceListAll();
     }
 
+    private async void MoveToPriceList(LoadedPriceListTemplateData info)
+    {
+        await js.InvokeAsync<object>("open", $"/loaded-price-list-details/{info.TemplateDescription.id}", "_blank");
+    }
 
 } 

@@ -1,14 +1,15 @@
 ﻿using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
 {
-    public abstract class ExcelPriceListTemplateBase : IPriceListTemplate
+
+    public abstract class ExcelPriceListTemplateBase : PriceListTemplateReaderBase, IPriceListTemplate
     {
         public string FileName { get;  }
 
@@ -20,7 +21,7 @@ namespace EtkBlazorApp.BL
         public async Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-            List<PriceLine> lines = null;
+            List<PriceLine> lines = new List<PriceLine>();
 
             await Task.Run(() =>
             {
@@ -31,7 +32,8 @@ namespace EtkBlazorApp.BL
                         throw new OperationCanceledException("Отменено пользователем");
                     }
 
-                    lines = ReadDataFromExcel();
+                    var readedLines = ReadDataFromExcel();
+                    lines.AddRange(readedLines.Where(line => line.Price.HasValue || line.Quantity.HasValue));
                 }
             });
 
@@ -39,18 +41,5 @@ namespace EtkBlazorApp.BL
         }
 
         protected abstract List<PriceLine> ReadDataFromExcel();
-    
-        protected virtual decimal? ParsePrice(string str)
-        {
-            if(!string.IsNullOrWhiteSpace(str))
-            {
-                if( decimal.TryParse(str.Replace(",", ".").Replace(" ", string.Empty), System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var price))
-                {
-                    return price;
-                }
-            }
-
-            return null;
-        }
     }
 }

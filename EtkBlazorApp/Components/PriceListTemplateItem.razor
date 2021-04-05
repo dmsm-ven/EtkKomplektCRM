@@ -30,7 +30,7 @@
 
     private bool IsTemplateAlreadyLoaded(PriceListTemplateItemViewModel template)
     {
-        return priceListManager.LoadedFiles.FirstOrDefault(lf => lf.Template.GetType() == template.Type) != null;
+        return priceListManager.LoadedFiles.FirstOrDefault(lf => lf.TemplateInstance.GetType() == template.Type) != null;
     }
 
     private async Task BoxClicked()

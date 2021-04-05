@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
-    [PriceListTemplateDescription("4EA34EEA-5407-4807-8E33-D8A8FA71ECBA")]
+    [PriceListTemplateGuid("4EA34EEA-5407-4807-8E33-D8A8FA71ECBA")]
     public class _1CPriceListTemplate : ExcelPriceListTemplateBase
     {
         const int START_ROW_NUMBER = 3;

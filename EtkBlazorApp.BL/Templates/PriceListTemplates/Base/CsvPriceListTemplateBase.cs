@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
 {
-    public abstract class CsvPriceListTemplateBase : IPriceListTemplate
+    public abstract class CsvPriceListTemplateBase : PriceListTemplateReaderBase, IPriceListTemplate
     {
         public string FileName { get; }
 

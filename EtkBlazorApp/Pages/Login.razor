@@ -3,6 +3,7 @@
 @inject NavigationManager navigation
 @inject ProtectedLocalStorage localStorage
 @inject IToastService toastService
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor contextAccessor
 
 <center style="background: linear-gradient(to right, #4bddc4 0%, #466085); padding: 20px 0px;">
     <div class="container">
@@ -39,6 +40,7 @@
 
     private async Task<bool> ValidateUser()
     {
+        user.UserIP = contextAccessor.HttpContext.Connection?.RemoteIpAddress.ToString();
         await ((MyCustomAuthProvider)authenticationStateProvider).AuthenticateUser(user);
 
         navigation.NavigateTo("/");

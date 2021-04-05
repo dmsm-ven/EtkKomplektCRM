@@ -32,10 +32,10 @@ namespace EtkBlazorApp
             services.AddHttpContextAccessor();
 
             //Приложение              
-            services.AddSingleton<IDatabaseProductCorrelator, HardOrdereSkuModelProductCorrelator>();
-            services.AddSingleton<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
-            services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
+            services.AddTransient<IDatabaseProductCorrelator, HardOrdereSkuModelProductCorrelator>();
+            services.AddTransient<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
 
+            services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
             services.AddSingleton<IDatabaseAccess, EtkDatabaseDapperAccess>();
             services.AddSingleton<IProductStorage, ProductStorage>();
             services.AddSingleton<ITemplateStorage, TemplateStorage>();

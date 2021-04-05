@@ -7,7 +7,7 @@
     <td>
         <div class="task-tool-items-box">
             <input type="checkbox" style="margin-right: 12px;" @onchange="EnableStatusChanged" checked="@Item.enabled" />
-            <a href="@("/task-settings/" + @Item.details_page)"><span class="oi oi-cog cog-icon" style="font-size: 1.2em;" aria-hidden="true"></span></a>
+            <a href="@("/cron-task/edit/" + @Item.details_page)"><span class="oi oi-cog cog-icon" style="font-size: 1.2em;" aria-hidden="true"></span></a>
             <span>@Item.name</span>
         </div>
     </td>

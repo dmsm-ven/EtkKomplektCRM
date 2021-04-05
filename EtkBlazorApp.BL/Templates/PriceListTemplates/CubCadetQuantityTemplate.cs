@@ -2,7 +2,7 @@
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
-    [PriceListTemplateDescription("9EEB7A82-1029-4C1F-A282-196C0907160B")]
+    [PriceListTemplateGuid("9EEB7A82-1029-4C1F-A282-196C0907160B")]
     public class CubCadetPriceListTemplate : ExcelPriceListTemplateBase
     {
         const int START_ROW_NUMBER = 7;
@@ -21,14 +21,12 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
                 if (!string.IsNullOrWhiteSpace(model))
                 {
-                    if (!int.TryParse(quantityString, out var quantity)) { quantity = 0; }
-
                     var priceLine = new PriceLine(this)
                     {
                         Manufacturer = "Cub Cadet",
                         Model = model,
                         Sku = model,
-                        Quantity = quantity
+                        Quantity = ParseQuantity(quantityString)
                     };
                     list.Add(priceLine);
                 }

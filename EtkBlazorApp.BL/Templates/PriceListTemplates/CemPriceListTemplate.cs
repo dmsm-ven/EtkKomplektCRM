@@ -3,7 +3,7 @@
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
 
-    [PriceListTemplateDescription("C594AA8D-6D76-42E2-A35C-B19AB4B0E780")]
+    [PriceListTemplateGuid("C594AA8D-6D76-42E2-A35C-B19AB4B0E780")]
     public class CemPriceListTemplate : ExcelPriceListTemplateBase
     {
         readonly int START_ROW_NUMBER = 19;

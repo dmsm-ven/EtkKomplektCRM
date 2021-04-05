@@ -40,8 +40,8 @@ namespace EtkBlazorApp.Services
 
         protected string GetTemplateGuid(Type priceListTemplateType)
         {
-            var id = ((PriceListTemplateDescriptionAttribute)priceListTemplateType
-                .GetCustomAttributes(typeof(PriceListTemplateDescriptionAttribute), false)
+            var id = ((PriceListTemplateGuidAttribute)priceListTemplateType
+                .GetCustomAttributes(typeof(PriceListTemplateGuidAttribute), false)
                 .FirstOrDefault())
                 .Guid;
 

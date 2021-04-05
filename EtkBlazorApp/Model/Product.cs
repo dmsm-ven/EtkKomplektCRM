@@ -11,10 +11,9 @@ namespace EtkBlazorApp.ViewModel
         public string Sku { get; set; }
         public string Uri { get; set; }
         public decimal BasePrice { get; set; }
+        public decimal Price { get; set; }
         public string BasePriceCurrency { get; set; }
-        public string StockStatus { get; set; }    
-        public decimal Price { get; set; }     
+        public string StockStatus { get; set; }   
         public int Quantity { get; set; }
-        public bool IsPriceInCurrency { get; set; }
     }
 }

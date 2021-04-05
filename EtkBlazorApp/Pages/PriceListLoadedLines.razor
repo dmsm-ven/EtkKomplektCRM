@@ -1,0 +1,46 @@
+﻿@page "/loaded-price-list-details/{TemplateGuid}"
+@inject PriceListManager manager
+
+<div style="overflow-y: visible; height: 900px;">
+    <table class="table table-striped table-bordered">
+        <thead class="thead-etk">
+            <tr>
+                <th>Товар</th>
+                <th>Артикул</th>
+                <th>Модель</th>
+                <th>Количество</th>
+                <th>Цена</th>
+                <th>Валюта</th>
+            </tr>
+        </thead>
+        <tbody>
+            <Virtualize Context="line" Items="@priceLines" ItemSize="20" TItem="PriceLine" OverscanCount="25" @key="TemplateGuid">
+                <tr @key="RowGuids[line].ToString()">
+                    <td>@line.Name</td>
+                    <td>@line.Sku</td>
+                    <td>@line.Model</td>
+                    <td>@line.Quantity</td>
+                    <td>@line.Price</td>
+                    <td>@line.Currency</td>
+                </tr>
+            </Virtualize>
+        </tbody>
+    </table>
+</div>
+
+@code {
+
+    [Parameter] public string TemplateGuid { get; set; }
+
+    List<PriceLine> priceLines = new List<PriceLine>();
+    Dictionary<PriceLine, Guid> RowGuids = new Dictionary<PriceLine, Guid>();
+
+    protected override void OnInitialized()
+    {
+        var data = manager.LoadedFiles.FirstOrDefault(p => p.TemplateDescription.id == TemplateGuid)?.ReadedPriceLines;
+
+        RowGuids = data.ToDictionary(i => i, i => Guid.NewGuid());
+
+        priceLines.AddRange(data);
+    }
+}

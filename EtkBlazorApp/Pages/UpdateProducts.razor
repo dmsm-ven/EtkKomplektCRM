@@ -3,6 +3,8 @@
 @inject IToastService toastService
 @inject ISettingStorage setting
 @inject IManufacturerStorage manufacturers
+@inject PriceListManager priceListManager
+@inject UpdateManager databaseManager
 
 <h3>Обновление цен и остатков</h3>
 
@@ -43,15 +45,14 @@
         }
     }
 
-    [Inject] PriceListManager priceListManager { get; set; }
-    [Inject] UpdateManager databaseManager { get; set; }
-    [Inject] ReportManager reportManager { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         websiteManufacturers = (await manufacturers.GetManufacturers())
             .Select(m => m.name)
             .ToList();
+
+        priceListManager.PriceListLoaded += () => StateHasChanged();
     }
 
     private async Task UpdateProductsPriceAndStock()

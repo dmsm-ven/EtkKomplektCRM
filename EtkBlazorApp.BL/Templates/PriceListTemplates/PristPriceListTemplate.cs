@@ -8,7 +8,7 @@ using System.Xml;
 
 namespace EtkBlazorApp.BL
 {
-    [PriceListTemplateDescription("438B5182-62DD-42C4-846F-4901C3B38B14")]
+    [PriceListTemplateGuid("438B5182-62DD-42C4-846F-4901C3B38B14")]
     public class PristPriceListTemplate : IPriceListTemplate
     {
         public string FileName { get; private set; }

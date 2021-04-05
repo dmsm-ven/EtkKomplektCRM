@@ -16,15 +16,21 @@ namespace EtkBlazorApp.ViewModel
         public string GroupName { get; set; }
         public decimal Discount { get; set; }
         public int PriceListType { get; set; }
+        public bool Nds { get; set; }
 
         public Type Type { get; private set; }
 
         public PriceListTemplateItemViewModel(string guid)
         {
+            if(System.Guid.Parse(guid) == System.Guid.Empty)
+            {
+                throw new ArgumentException(guid);
+            }
+
             Type = Assembly
-                .GetAssembly(typeof(PriceListTemplateDescriptionAttribute))
+                .GetAssembly(typeof(PriceListTemplateGuidAttribute))
                 .GetTypes()
-                .FirstOrDefault(type => type.GetCustomAttribute<PriceListTemplateDescriptionAttribute>()?.Guid == Guid);
+                .FirstOrDefault(type => type.GetCustomAttribute<PriceListTemplateGuidAttribute>()?.Guid == guid);
         }
 
     }

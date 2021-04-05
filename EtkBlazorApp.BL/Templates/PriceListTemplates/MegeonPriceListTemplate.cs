@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
-    [PriceListTemplateDescription("83488F9E-CCA7-4BDB-A6CC-7C3D4CF054EA")]
+    [PriceListTemplateGuid("83488F9E-CCA7-4BDB-A6CC-7C3D4CF054EA")]
     public class MegeonPriceListTemplate : ExcelPriceListTemplateBase
     {
         const int START_ROW_NUMBER = 2;
@@ -34,16 +34,13 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     parsedQuantity = 10;
                 }
 
-                decimal? parsedPrice = null;
-                if (decimal.TryParse(priceString, out var parsedPriceInRub)) { parsedPrice = parsedPriceInRub; }
-
                 var priceLine = new PriceLine(this)
                 {
                     Currency = CurrencyType.RUB,
                     Manufacturer = "Мегеон",
                     Model = skuNumber,
                     Sku = skuNumber,
-                    Price = parsedPrice,
+                    Price = ParsePrice(priceString),
                     Quantity = parsedQuantity
                 };
                 list.Add(priceLine);              

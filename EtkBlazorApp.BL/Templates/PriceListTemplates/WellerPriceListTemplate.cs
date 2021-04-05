@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
-    [PriceListTemplateDescription("2CA8AB25-8AA1-4008-977C-4253378E1BA1")]
+    [PriceListTemplateGuid("2CA8AB25-8AA1-4008-977C-4253378E1BA1")]
     public class WellerPriceListTemplate : ExcelPriceListTemplateBase
     {
         const int START_ROW_NUMBER = 15;
@@ -38,7 +38,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                         Sku = skuNumber,
                         Model = partNumber,
                         Price = priceInEuro,
-                        Currency = CurrencyType.EUR
+                        Currency = CurrencyType.EUR,
+                        Manufacturer = "Weller"
                     };
 
                     list.Add(priceLine);
@@ -49,7 +50,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         }
     }
 
-    [PriceListTemplateDescription("56CF16C1-CD99-41C1-909F-B3031695C0C5")]
+    [PriceListTemplateGuid("56CF16C1-CD99-41C1-909F-B3031695C0C5")]
     public class WellerStockPriceListTemplate : ExcelPriceListTemplateBase
     {
         const int START_ROW_NUMBER = 9;
@@ -85,7 +86,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                         Name = name,
                         Sku = skuNumber,
                         Model = skuNumber,
-                        Quantity = (int)quantity
+                        Quantity = (int)quantity,
+                        Manufacturer = "Weller"
                     };
                     list.Add(line);
                 }

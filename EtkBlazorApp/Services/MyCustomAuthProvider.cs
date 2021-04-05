@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -63,10 +64,12 @@ namespace EtkBlazorApp.Services
                 return GetDefaultState();
             }
 
-            if (!string.IsNullOrWhiteSpace(userData.AllowedIp) && userData.AllowedIp != userData.UserIP)
+            var userInfo = (await auth.GetUsers()).Single(u => u.login == userData.Login);
+
+            if (!string.IsNullOrWhiteSpace(userInfo.ip) && userInfo.ip != userData.UserIP)
             {
                 logEntry.title = "Ошибка";
-                logEntry.message = $"Вход с данного IP запрещено";
+                logEntry.message = $"Вход для IP {userData.UserIP} запрещен";
                 await log.Write(logEntry);
 
                 return GetDefaultState();
