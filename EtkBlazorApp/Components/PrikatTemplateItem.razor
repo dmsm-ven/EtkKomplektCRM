@@ -1,4 +1,6 @@
-﻿<tr style="opacity: @(Item.IsChecked ? "1" : "0.6");">
+﻿@using System.Globalization
+
+<tr style="opacity: @(Item.IsChecked ? "1" : "0.6");">
     <td width="5%">
         <input type="checkbox"
                style="display: inline-block;  margin: 2px 6px;"
@@ -13,11 +15,13 @@
     {
         <td width="20%">
             <input type="number" class="form-control" 
-                   value="@Item.Discount1" @onchange="@(e => { Item.Discount1 = int.Parse(e.Value.ToString()); Changed(); } )" />
+                   value="@Item.Discount1.ToString("G29", CultureInfo.InvariantCulture)"
+                   @onchange="@(e => { Item.Discount1 = decimal.Parse(e.Value.ToString(), CultureInfo.InvariantCulture); Changed(); } )" />
         </td>
         <td width="20%">
             <input type="number" class="form-control"
-                   value="@Item.Discount2" @onchange="@(e => { Item.Discount2 = int.Parse(e.Value.ToString()); Changed(); } )" />
+                   value="@Item.Discount2.ToString("G29", CultureInfo.InvariantCulture)"
+                   @onchange="@(e => { Item.Discount2 = decimal.Parse(e.Value.ToString(), CultureInfo.InvariantCulture); Changed(); } )" />
         </td>
         <td width="20%">
             <select @onchange="@(e => { Item.CurrencyCode = (string)e.Value; Changed(); })" class="form-control">
@@ -40,7 +44,7 @@
     <tr style="border-bottom: 2px solid black;">
         <td colspan="2">Пример цен</td>
         <td style="font-size: 0.8em;">@GetExampleStringPart(1)</td>
-        <td  style="font-size: 0.8em;">@GetExampleStringPart(2)</td>
+        <td style="font-size: 0.8em;">@GetExampleStringPart(2)</td>
         <td></td>
     </tr>
 }
@@ -61,7 +65,7 @@
 
     List<string> currencyCodeList = new List<string>(Enum.GetNames(typeof(CurrencyType)));
 
-    private string GetExampleStringPart(int index)
+    private MarkupString GetExampleStringPart(int index)
     {
         decimal priceExample1 = (ExamplePrice * (decimal)(1 + ((decimal)Item.Discount1 / 100)));
         decimal priceExample2 = priceExample1 * (decimal)(1 + ((decimal)Item.Discount2 / 100));
@@ -69,10 +73,10 @@
         string sign1 = Math.Sign(Item.Discount1) < 0 ? "-" : "+";
         string sign2 = Math.Sign(Item.Discount2) < 0 ? "-" : "+";
 
-        string part1 = $"{ExamplePrice} {sign1} {Math.Abs(Item.Discount1)}% = {priceExample1.ToString("N")}";
-        string part2 = $"{priceExample1} {sign2} {Math.Abs(Item.Discount2)}% = {priceExample2.ToString("N")}";
-        if(index == 1) { return part1; }
-        if(index == 2) { return part2; }
+        string part1 = $"{ExamplePrice.ToString("G29")} {sign1} {Math.Abs(Item.Discount1).ToString("G29")}% = <strong>{priceExample1.ToString("G29")}<strong>";
+        string part2 = $"{priceExample1.ToString("G29")} {sign2} {Math.Abs(Item.Discount2).ToString("G29")}% = <strong>{priceExample2.ToString("G29")}</strong>";
+        if(index == 1) { return (MarkupString)part1; }
+        if(index == 2) { return (MarkupString)part2; }
 
         throw new ArgumentOutOfRangeException();
     }

@@ -5,34 +5,52 @@
 @inject IManufacturerStorage manufacturers
 @inject PriceListManager priceListManager
 @inject UpdateManager databaseManager
+@inject UserLogger logger
 
 <h3>Обновление цен и остатков</h3>
-
-
 
 <div class="container-fluid">
     <div class="row">
         <div class="col-12 my-1">
-            <button class="btn btn-success btn-lg mx-2"
-                    @onclick="UpdateProductsPriceAndStock" disabled="@(priceListManager.PriceLines.Count == 0)">
-                Обновить
-            </button>
-
-            <input type="checkbox" @bind="clearStockBeforeUpdate" /> &nbsp;&nbsp;Обнулять остатки
-            @if (clearStockBeforeUpdate && !string.IsNullOrWhiteSpace(clearStockBrandsArrayString))
+            @if (inProgress)
             {
-                <div><small>Будут очищены остатки для следующих производителей: @clearStockBrandsArrayString</small></div>
+                <IntermediateProgressBar></IntermediateProgressBar>
+            }
+            else
+            {
+                <button class="btn btn-success btn-lg mx-2"
+                        @onclick="UpdateProductsPriceAndStock" disabled="@(priceListManager.PriceLines.Count == 0)">
+                    Обновить
+                </button>
+                <span><input type="checkbox" @bind="clearStockBeforeUpdate" />  Обнулять остатки</span>
+                if (clearStockBeforeUpdate && !string.IsNullOrWhiteSpace(clearStockBrandsArrayString))
+                {
+                    <div><small>Будут очищены остатки для следующих производителей: @clearStockBrandsArrayString</small></div>
+                }
             }
         </div>
     </div>
 </div>
 
-<LoadedPriceListDisplayer></LoadedPriceListDisplayer>
+@if (updateProgressSteps.Any())
+{
+    <div id="update-status">
+        @foreach (var step in updateProgressSteps)
+        {
+            <div class="alert alert-etk" role="alert">
+                @step
+            </div>
+        }
+    </div>
+}
 
+<LoadedPriceListDisplayer></LoadedPriceListDisplayer>
 
 @code {
     bool clearStockBeforeUpdate = false;
+    bool inProgress = false;
     List<string> websiteManufacturers;
+    List<string> updateProgressSteps = new List<string>();
 
     string clearStockBrandsArrayString
     {
@@ -45,27 +63,42 @@
         }
     }
 
-
     protected override async Task OnInitializedAsync()
     {
         websiteManufacturers = (await manufacturers.GetManufacturers())
             .Select(m => m.name)
             .ToList();
 
-        priceListManager.PriceListLoaded += () => StateHasChanged();
+        priceListManager.OnPriceListLoaded += () => StateHasChanged();
     }
 
     private async Task UpdateProductsPriceAndStock()
     {
         try
         {
-            await databaseManager.UpdatePriceAndStock(priceListManager.PriceLines, clearStockBeforeUpdate);
+            updateProgressSteps.Clear();
+            inProgress = true;
+            StateHasChanged();
 
-            toastService.ShowError($"Остатки и цены на сайте (из загруженных прайс-листов) обновлены", "Информация");
+            var progress = new Progress<string>((msg) =>
+            {
+                updateProgressSteps.Add($"[{DateTime.Now.ToString()}] " + msg);
+                StateHasChanged();
+            });
+
+            await databaseManager.UpdatePriceAndStock(priceListManager.PriceLines, clearStockBeforeUpdate, progress);
+
+            await logger.Write(LogEntryGroupName.PriceUpdate, "Выполнено", "Обновление цен выполнено");
+            toastService.ShowSuccess($"Остатки и цены на сайте etk-komplekt.ru обновлены", "Информация");
         }
         catch (Exception ex)
         {
             toastService.ShowError($"При обновлении данных произошла ошибка\r\n" + ex.Message, "Ошибка обновления");
+            await logger.Write(LogEntryGroupName.PriceUpdate, "Ошибка", $"Ошибка обновления цен: {ex.Message}");
+        }
+        finally
+        {
+            inProgress = false;
         }
     }
 }

@@ -65,13 +65,13 @@
             {
                 @foreach (var item in users)
                 {
-                <tr class="@(item.IsEnabled ? "enabled-user": "disabled-user") @(item == activeUser ? "current-user" : string.Empty)">
+                <tr class="@(item.IsEnabled ? "enabled-user": "disabled-user")">
                     <td>
-                        <input type="checkbox" class="form-check" @bind="item.IsEnabled" disabled="@(item == activeUser)"/>
+                        <input type="checkbox" class="form-check" @bind="item.IsEnabled" />
                     </td>
                     <td>@item.Login</td>
                     <td>
-                        <select class="form-control" @bind="item.GroupName" disabled="@(item == activeUser)">
+                        <select class="form-control" @bind="item.GroupName" >
                             @foreach (var gName in groups)
                             {
                                 <option selected="@(gName == item.GroupName)">@gName</option>
@@ -106,7 +106,6 @@
                     </td>
                     <td>
                         <button class="btn btn-danger btn-sm" 
-                                disabled="@(item == activeUser)"
                                 @onclick="@(e => ShowDeleteUserDialog(item))"><span class="oi oi-x"></span></button>
                     </td>
                     <td>
@@ -138,14 +137,12 @@
 
     List<string> groups = null;
     List<AppUser> users = null;
-    AppUser activeUser = null;
     AppUser editUser = null;
     AppUser newUser = null;
     AppUser deleteUser = null;
 
     protected override async Task OnInitializedAsync()
     {
-        var activeUserName = (await stateProvider.GetAuthenticationStateAsync()).User.Identity.Name;
         users = (await userStorage.GetUsers()).Select(u => new AppUser()
         {
             Login = u.login,
@@ -157,8 +154,6 @@
             AllowedIp = u.ip
         }).ToList();
         groups = await userStorage.GetUserGroups();
-
-        activeUser = users.Single(u => u.Login == activeUserName);
     }
 
     public async Task UpdateUser(AppUser user)

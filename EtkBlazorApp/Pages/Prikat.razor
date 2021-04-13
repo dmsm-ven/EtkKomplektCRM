@@ -26,31 +26,30 @@ else
                 <button type="button" class="btn btn-vi" style="width: 100%;" @onclick="GetReport" disabled="@reportButtonDisabled">Скачать выгрузку</button>
             </div>
             <hr />
-            <h3><button class="btn btn-outline-info btn-sm" @onclick="(() => hideSettingsBox = !hideSettingsBox)">Настройки выгрузки</button></h3>
-            <ul class="list-group" hidden="@hideSettingsBox">
-                <li class="list-group-item">
-                    <input class="form-check-input" type="checkbox"
-                           checked="@reportSettingsHasStock"
-                           @onchange="HasStockStateChanged" />
-                    Остаток > 0
-                </li>
-                <li class="list-group-item">
-                    <input class="form-check-input" type="checkbox"
-                           checked="@reportSettingsHasEan"
-                           @onchange="HasEanStateChanged" />
-                    Обязательно есть EAN
-                </li>
-                <li class="list-group-item">
-                    <input class="form-check-input" type="checkbox" @onchange="@((e) => ShowPriceExample = (bool)e.Value)" aria-label="">
-                    Показать примеры цен
-                    @if (ShowPriceExample)
-                    {
-
-                    <li class="list-group-item" style="border: none;">
-                        <input type="number" style="display: inline; margin: 2px; width: 100px;" class="form-control" name="example-price" @bind-value="ExamplePrice" />
-                        Тестовая цена
-                    </li>
+            <h3>
+                <button class="btn btn-outline-info btn-sm" @onclick="(() => hideSettingsBox = !hideSettingsBox)">Настройки выгрузки</button>
+            </h3>
+            <div class="form-inline">
+                <input class="form-check-input" type="checkbox" @onchange="@((e) => ShowPriceExample = (bool)e.Value)">
+                <label class="mx-2">Показать пример цен</label>
+                @if (ShowPriceExample)
+                {
+                    <label class="mx-2">Тестовая цена</label>
+                    <input type="number" style="display: inline; margin: 2px; width: 100px;" class="form-control" name="example-price" @bind-value="ExamplePrice" />
                 }
+            </div>
+                <ul class="list-group" hidden="@hideSettingsBox">
+                    <li class="list-group-item">
+                        <input class="form-check-input" type="checkbox"
+                               checked="@reportSettingsHasStock"
+                               @onchange="HasStockStateChanged" />
+                        Остаток > 0
+                    </li>
+                    <li class="list-group-item">
+                        <input class="form-check-input" type="checkbox"
+                               checked="@reportSettingsHasEan"
+                               @onchange="HasEanStateChanged" />
+                        Обязательно есть EAN
                     </li>
                 </ul>
             }
@@ -61,8 +60,8 @@ else
                     <tr>
                         <th></th>
                         <th>Производитель</th>
-                        <th>Закупочная цена</th>
-                        <th>Рекомендуемая цена</th>
+                        <th>Закупочная цена<br /><small>(наценка к цене от сайта)</small></th>
+                        <th>Рекомендуемая цена<br /><small>(наценка к закупочной цене)</small></th>
                         <th>Валюта выгрузки</th>
                     </tr>
                 </thead>
@@ -125,8 +124,8 @@ else
                 .Select(t => new PrikatManufacturerDiscountViewModel()
                 {
                     IsChecked = t.enabled,
-                    Discount1 = (int)t.discount1,
-                    Discount2 = (int)t.discount2,
+                    Discount1 = t.discount1,
+                    Discount2 = t.discount2,
                     Manufacturer_id = t.manufacturer_id,
                     Manufacturer = t.manufacturer_name,
                     CurrencyCode = t.currency_code

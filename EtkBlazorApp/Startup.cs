@@ -34,6 +34,7 @@ namespace EtkBlazorApp
             //Приложение              
             services.AddTransient<IDatabaseProductCorrelator, HardOrdereSkuModelProductCorrelator>();
             services.AddTransient<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
+            services.AddTransient<IOzonProductCorrelator, SimpleOzonProductCorrelator>();
 
             services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
             services.AddSingleton<IDatabaseAccess, EtkDatabaseDapperAccess>();

@@ -3,6 +3,11 @@ using System.Linq;
 
 namespace EtkBlazorApp.BL
 {
+    public interface IPriceLineLoadCorrelator
+    {
+        PriceLine FindCorrelation(PriceLine line, List<PriceLine> priceLines);
+    }
+
     public class SimplePriceLineLoadCorrelator : IPriceLineLoadCorrelator
     {
         public PriceLine FindCorrelation(PriceLine line, List<PriceLine> priceLines)

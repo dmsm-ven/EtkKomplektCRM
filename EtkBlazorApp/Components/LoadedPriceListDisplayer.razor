@@ -50,17 +50,24 @@
 
     protected override void OnInitialized()
     {
-        priceListManager.PriceListLoaded += () => StateHasChanged();
+        priceListManager.OnPriceListLoaded += () => StateHasChanged();
     }
 
-        private void RemoveAll()
+    private void RemoveAll()
     {
         priceListManager.RemovePriceListAll();
     }
 
     private async void MoveToPriceList(LoadedPriceListTemplateData info)
     {
-        await js.InvokeAsync<object>("open", $"/loaded-price-list-details/{info.TemplateDescription.id}", "_blank");
+        try
+        {
+            await js.InvokeVoidAsync("open", $"/loaded-price-list-details/{info.TemplateDescription.id}", "_blank");
+        }
+        catch
+        {
+
+        }
     }
 
 } 

@@ -1,5 +1,6 @@
 ﻿using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
+using EtkBlazorApp.Integration.Ozon;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,11 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
 {
+    public interface IDatabaseProductCorrelator
+    {
+        Task<List<ProductUpdateData>> GetCorrelationData(IEnumerable<ProductEntity> products, IEnumerable<PriceLine> priceLines);
+    }
+
     public class SimpleDatabaseProductCorrelator : IDatabaseProductCorrelator
     {
         public async Task<List<ProductUpdateData>> GetCorrelationData(IEnumerable<ProductEntity> products, IEnumerable<PriceLine> priceLines)
@@ -105,4 +111,6 @@ namespace EtkBlazorApp.BL
             return list;
         }
     }
+
+    
 }

@@ -8,6 +8,7 @@ namespace EtkBlazorApp.DataAccess
     {
         Task SaveManufacturer(ManufacturerEntity manufacturer);
         Task<List<ManufacturerEntity>> GetManufacturers();
+        Task<List<MonobrandEntity>> GetMonobrands();
     }
 
     public class ManufacturerStorage : IManufacturerStorage
@@ -36,5 +37,15 @@ namespace EtkBlazorApp.DataAccess
             var manufacturers = await database.LoadData<ManufacturerEntity, dynamic>(sql, new { });
             return manufacturers;
         }            
+    
+        public async Task<List<MonobrandEntity>> GetMonobrands()
+        {
+            string sql = "SELECT etk_app_monobrand.*, oc_manufacturer.name as manufacturer_name " +
+                "FROM etk_app_monobrand " +
+                "LEFT JOIN oc_manufacturer ON oc_manufacturer.manufacturer_id = etk_app_monobrand.manufacturer_id";
+            var monobrands = await database.LoadData<MonobrandEntity, dynamic>(sql, new { });
+
+            return monobrands;
+        }
     }
 }

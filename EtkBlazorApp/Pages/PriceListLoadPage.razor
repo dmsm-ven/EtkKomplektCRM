@@ -6,10 +6,6 @@
 @inject IToastService toast
 @inject ISettingStorage settingStorage
 
-@using System.IO;
-@using System.Net;
-
-
 
 @if (isFileLoading)
 {
@@ -114,6 +110,7 @@
             .OrderBy(g => g.Key == "Symmetron" ? 0 : 1)
             .ThenBy(g => g.Key)
             .ToDictionary(i => i.Key, i => i.ToList());
+
         filteredTemplates = templates;
     }
 

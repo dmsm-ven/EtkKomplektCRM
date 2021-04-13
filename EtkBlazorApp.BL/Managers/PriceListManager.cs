@@ -11,7 +11,7 @@ namespace EtkBlazorApp.BL
 {
     public class PriceListManager
     {
-        public event Action PriceListLoaded;
+        public event Action OnPriceListLoaded;
 
         public List<PriceLine> PriceLines { get; }
         public List<LoadedPriceListTemplateData> LoadedFiles { get; }
@@ -54,12 +54,10 @@ namespace EtkBlazorApp.BL
                 ApplyDiscounts(data, templateInfo.discount, templateInfo.nds);
 
                 LoadedFiles.Add(new LoadedPriceListTemplateData(templateInstance, templateInfo, data));
-
-                PriceListLoaded?.Invoke();
             }
-            catch(Exception ex)
+            catch
             {
-
+                throw;
             }
             finally
             {
@@ -105,6 +103,30 @@ namespace EtkBlazorApp.BL
             }
         }
 
+        /// <summary>
+        /// Применить наценки/скидки/НДС к загруженным ценам
+        /// </summary>
+        /// <param name="list"></param>
+        /// <param name="discount"></param>
+        /// <param name="addNds"></param>
+        private void ApplyDiscounts(List<PriceLine> list, decimal discount, bool addNds)
+        {
+            if (discount == decimal.Zero && addNds == false) { return; }
+
+            foreach (var line in list.Where(line => line.Price.HasValue))
+            {
+                if (addNds)
+                {
+                    line.Price = AddNds(line.Price.Value, line.Currency);
+                }
+                if (discount != decimal.Zero)
+                {
+                    line.Price = Math.Round(line.Price.Value * (1m + (discount / 100m)), line.Currency == CurrencyType.RUB ? 0 : 2);
+                }
+
+            }
+        }
+
         public void RemovePriceListAll()
         {
             LoadedFiles.Clear();
@@ -120,24 +142,6 @@ namespace EtkBlazorApp.BL
         public List<PriceLine> PriceLinesOfManufacturer(string manufacturer)
         {
             return PriceLines.OrderBy(pl => pl.Manufacturer).Where(line => line.Manufacturer.Equals(manufacturer, StringComparison.OrdinalIgnoreCase)).ToList();
-        }
-
-        private void ApplyDiscounts(List<PriceLine> list, decimal discount, bool addNds)
-        {
-            if(discount == decimal.Zero && addNds == false) { return; }
-
-            foreach(var line in list.Where(line => line.Price.HasValue))
-            {
-                if (addNds)
-                {
-                    line.Price = AddNds(line.Price.Value, line.Currency);
-                }
-                if(discount != decimal.Zero)
-                {
-                    line.Price = Math.Round(line.Price.Value * (1m + (discount / 100m)), line.Currency == CurrencyType.RUB ? 0 : 2);
-                }
-                
-            }
         }
 
         private decimal AddNds(decimal price, CurrencyType currencyType)

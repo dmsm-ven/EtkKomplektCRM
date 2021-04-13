@@ -28,7 +28,7 @@ namespace EtkBlazorApp.BL.Templates
         {
             Manufacturer = manufacturer;
             Currency = currency;
-            Precission = Currency == CurrencyType.RUB ? 0 : 2;
+            Precission = (Currency == CurrencyType.RUB ? 0 : 2);
         }        
 
         public void AppendLines(List<ProductEntity> products, List<PriceLine> priceLines, StreamWriter writer)
@@ -74,6 +74,7 @@ namespace EtkBlazorApp.BL.Templates
             decimal priceInCurrency = (Currency == CurrencyType.RUB) ? (int)product.price : Math.Round(product.price / CurrencyRatio, Precission);
             decimal price1 = Math.Round(priceInCurrency * ((100m + Discount1) / 100m), Precission);
             decimal price2 = Math.Round((price1 * (100m + Discount2)) / 100m, Precission);
+            
             string recommendedPrice = price1.ToString($"F{Precission}", new CultureInfo("en-EN"));
             string prikatPrice = price2.ToString($"F{Precission}", new CultureInfo("en-EN"));
 

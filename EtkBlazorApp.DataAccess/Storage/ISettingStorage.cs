@@ -15,8 +15,9 @@ namespace EtkBlazorApp.DataAccess
         public Task<string> GetValue(string name);
         public Task<T> GetValue<T>(string name);
 
-        public Task SetValue(string name, string value);
+        public Task SetValue(string name, string value);       
         public Task SetValue<T>(string name, T value);
+        public Task SetValueToDateTimeNow(string name);
 
         public Task<List<CronTaskEntity>> GetCronTasks();
         public Task<CronTaskEntity> GetCronTaskById(int id);
@@ -77,6 +78,24 @@ namespace EtkBlazorApp.DataAccess
             }         
         }
 
+        public async Task SetValueToDateTimeNow(string name)
+        {
+            string checkSql = "SELECT COUNT(*) FROM etk_app_setting WHERE name = @name";
+
+            bool recordExists = (await database.GetScalar<int, dynamic>(checkSql, new { name })) > 0;
+
+            if (recordExists)
+            {
+                string updateQuery = $"UPDATE etk_app_setting SET value = NOW() WHERE name = @name";
+                await database.SaveData<dynamic>(updateQuery, new { name });
+            }
+            else
+            {
+                var insertQuery = $"INSERT INTO etk_app_setting (name, value) VALUES (@name, NOW())";
+                await database.SaveData<dynamic>(insertQuery, new { name });
+            }
+        }
+
         public async Task SetValue<T>(string name, T value)
         {
             var converter = TypeDescriptor.GetConverter(typeof(T));
@@ -119,5 +138,7 @@ namespace EtkBlazorApp.DataAccess
 
             await database.SaveData(sql, task);
         }
+
+
     }
 }

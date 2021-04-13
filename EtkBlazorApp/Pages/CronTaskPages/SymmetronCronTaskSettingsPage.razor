@@ -40,23 +40,20 @@
                     <input type="password" class="form-control" id="password" placeholder="Пароль от почтового ящика" @bind="password">
                 </div>
                 <div class="btn-group" role="group" aria-label="Basic example" style="width: 100%">
-                    <button type="button" style="width: 100%;" class="btn btn-secondary @(checkConnectionCss)" @onclick="CheckConnection">@checkConnectionMessage</button>
-                    <button type="button" style="width: auto;" class="btn btn-primary" @onclick="SaveSettings">Сохранить</button>
+                    @if (isProgressBarVisible)
+                    {
+                        <IntermediateProgressBar />
+                    }
+                    else
+                    {
+                        <button class="btn btn-outline-dark btn-lg" @onclick="@(e => confirmDialog.Show())">Выполнить сейчас</button>
+                        <button type="button" style="width: 100%;" class="btn btn-secondary @(checkConnectionCss)" @onclick="CheckConnection">@checkConnectionMessage</button>
+                        <button type="button" style="width: auto;" class="btn btn-primary" @onclick="SaveSettings">Сохранить</button>
+                    }
                 </div>
             </form>
         </div>
     </div>
-
-    @if (isProgressBarVisible)
-    {
-        <IntermediateProgressBar />
-    }
-    else
-    {
-    <div class="row py-4">
-        <button class="btn btn-outline-dark btn-lg" @onclick="@(e => confirmDialog.Show())">Выполнить сейчас</button>
-    </div>
-    }
 </div>
 
 <ConfirmDialog @ref="confirmDialog"

@@ -22,12 +22,13 @@ else
                     }
                     else
                     {
-                        <button type="button" class="btn btn-outline-primary btn-lg" 
-                            @onclick="UpdateOzonSellerData"
-                            disabled="@updateButtonDisabled">Обновить цены и остатки</button>
-
-                        <p>Последнее обновление: <storng>@lastUpdateDateTime</storng></p>
+                        <button type="button" class="btn btn-outline-primary btn-lg"
+                                @onclick="UpdateOzonButtonClick"
+                                disabled="@updateButtonDisabled">
+                            Обновить цены и остатки
+                        </button>
                     }
+                    <p>Последнее обновление: <storng>@lastUpdateDateTime</storng></p>
                 </div>
             </div>
             <div class="row">
@@ -46,10 +47,16 @@ else
     </div>
 }
 
+<ConfirmDialog @ref="confirmDialog" 
+               ConfirmationChanged="ConfirmStateChanged"
+               ConfirmationMessage="@(() => "Сегодня обновление уже выполнялось. Выполнить еще раз ?")"></ConfirmDialog>
+
 @code {
-        bool isUpdateInProgress = false;
-        bool updateButtonDisabled => discountsInfoSource.All(m => m.IsChecked == false);
-        DateTime lastUpdateDateTime;
+    bool isUpdateInProgress = false;
+    bool updateButtonDisabled => discountsInfoSource.All(m => m.IsChecked == false);
+    DateTime lastUpdateDateTime;
+
+    ConfirmDialog confirmDialog;
 
     private List<OzonManufacturerDiscountViewModel> discountsInfoSource = null;
     private List<OzonManufacturerDiscountViewModel> orderedDiscountInfoSource
@@ -94,26 +101,47 @@ else
             })
             .ToList();
 
+        await RefreshLastUpdateLabel();
+    }
+
+    private async Task UpdateOzonButtonClick()
+    {
+        if(lastUpdateDateTime.Date == DateTime.Now.Date)
+        {
+            confirmDialog.Show();
+        }
+        else
+        {
+            await ConfirmStateChanged(status: true);
+        }
+    }
+
+    private async Task RefreshLastUpdateLabel()
+    {
         lastUpdateDateTime = await settings.GetValue<DateTime>("ozon_seller_last_update");
     }
 
-    private async Task UpdateOzonSellerData()
+    private async Task ConfirmStateChanged(bool status)
     {
-        isUpdateInProgress = true;
-        StateHasChanged();
+        if (status)
+        {
+            try
+            {
+                isUpdateInProgress = true;
+                StateHasChanged();
+                await ozonManager.Update();
+                toasts.ShowSuccess("Обновление выполнено");
+            }
+            catch (Exception ex)
+            {
+                toasts.ShowError(ex.Message);
+            }
+            finally
+            {
+                isUpdateInProgress = false;
+            }
 
-        try
-        {
-            await ozonManager.Update();
-            toasts.ShowSuccess("Обновление выполнено");
-        }
-        catch(Exception ex)
-        {
-            toasts.ShowError(ex.Message);
-        }
-        finally
-        {
-            isUpdateInProgress = false;
+            await RefreshLastUpdateLabel();
         }
     }
 }

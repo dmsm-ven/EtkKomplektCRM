@@ -98,7 +98,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (Keyword != null)
+        if (!string.IsNullOrWhiteSpace(Keyword))
         {
             enteredUri = $"https://etk-komplekt.ru/{Keyword}";
         }
