@@ -27,6 +27,8 @@ namespace EtkBlazorApp.ViewModel
                 throw new ArgumentException(guid);
             }
 
+            Guid = guid;
+
             Type = Assembly
                 .GetAssembly(typeof(PriceListTemplateGuidAttribute))
                 .GetTypes()

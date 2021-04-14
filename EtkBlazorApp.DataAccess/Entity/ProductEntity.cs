@@ -20,5 +20,10 @@ namespace EtkBlazorApp.DataAccess.Entity
         public string image { get; set; }
         public string stock_status { get; set; }
         public int quantity { get; set; }
+
+        public decimal length { get; set; }
+        public decimal width { get; set; }
+        public decimal height { get; set; }
+        public decimal weight { get; set; }
     }
 }

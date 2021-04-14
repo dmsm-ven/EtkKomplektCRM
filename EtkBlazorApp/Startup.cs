@@ -44,7 +44,7 @@ namespace EtkBlazorApp
             services.AddSingleton<IManufacturerStorage, ManufacturerStorage>();
             services.AddSingleton<ILogStorage, LogStorage>();
             services.AddSingleton<ISettingStorage, SettingStorage>();
-            services.AddSingleton<IAuthStateProcessor, MyAuthStateProcessor>();
+            services.AddSingleton<IAuthenticationDataStorage, AuthenticationDataStorage>();
 
             services.AddSingleton<SystemEventsLogger>();
             services.AddSingleton<NewOrdersNotificationService>();

@@ -24,14 +24,14 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 string sku = tab.Cells[i, 1].GetValue<string>().ToString().Insert(1, " ").Insert(5, " ").Insert(9, " ");
                 string stockStatusCode = tab.Cells[i, 2].GetValue<string>();
-                string priceString = tab.Cells[i, 3].ToString();
+                decimal price = tab.Cells[i, 3].GetValue<decimal>();
 
                 var priceLine = new PriceLine(this)
                 {
                     Currency = CurrencyType.RUB,
                     Model = sku,
                     Sku = sku,
-                    Price = ParsePrice(priceString),
+                    Price = price,
                     Quantity = stockStatusCodeToQuantity[stockStatusCode],
                     Manufacturer = "Bosch"
                 };

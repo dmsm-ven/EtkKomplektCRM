@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.DataAccess
 {
-    public interface IAuthStateProcessor
+    public interface IAuthenticationDataStorage
     {
         Task<string> GetUserPermission(string login, string password);
         Task UpdateUserLastLoginDate(string login);
@@ -18,11 +18,11 @@ namespace EtkBlazorApp.DataAccess
         Task<List<string>> GetUserGroups();
     }
 
-    public class MyAuthStateProcessor : IAuthStateProcessor
+    public class AuthenticationDataStorage : IAuthenticationDataStorage
     {
         private readonly IDatabaseAccess database;
 
-        public MyAuthStateProcessor(IDatabaseAccess database)
+        public AuthenticationDataStorage(IDatabaseAccess database)
         {
             this.database = database;
         }

@@ -16,7 +16,7 @@ namespace EtkBlazorApp.BL.Templates
         public decimal Discount2 { get; set; }
 
         protected virtual string GLN { get; } = "4607804947010";
-        protected virtual decimal[] DEFAULT_DIMENSIONS { get; } = new decimal[] { 150, 100, 100, 0.4m };
+        protected virtual decimal[] DEFAULT_DIMENSIONS { get; } = new decimal[] { 150, 100, 100, 0.4m }; 
         protected virtual string LENGTH_UNIT { get; } = "миллиметр";
         protected virtual string WEIGHT_UNIT { get; } = "килограмм";
 
@@ -78,6 +78,11 @@ namespace EtkBlazorApp.BL.Templates
             string recommendedPrice = price1.ToString($"F{Precission}", new CultureInfo("en-EN"));
             string prikatPrice = price2.ToString($"F{Precission}", new CultureInfo("en-EN"));
 
+            string length = (product.length != decimal.Zero ? product.length : DEFAULT_DIMENSIONS[0]).ToString("F2", new CultureInfo("en-EN"));
+            string width = (product.width != decimal.Zero ? product.width : DEFAULT_DIMENSIONS[1]).ToString("F2", new CultureInfo("en-EN"));
+            string height = (product.height != decimal.Zero ? product.height : DEFAULT_DIMENSIONS[2]).ToString("F2", new CultureInfo("en-EN"));
+            string weight = (product.weight != decimal.Zero ? product.weight : DEFAULT_DIMENSIONS[3]).ToString("F4", new CultureInfo("en-EN"));
+
             WriteCell(sw, GLN);   //GLN поставщика
             WriteCell(sw); //Позиция
             WriteCell(sw, product.ean); //Штрихкод
@@ -91,15 +96,15 @@ namespace EtkBlazorApp.BL.Templates
             WriteCell(sw); //Суббренд
             WriteCell(sw); //Вариант названия продукта
             WriteCell(sw); //Функциональное название
-            WriteCell(sw, DEFAULT_DIMENSIONS[0].ToString("F2", new CultureInfo("en-EN"))); //Глубина
+            WriteCell(sw, length); //Глубина
             WriteCell(sw, LENGTH_UNIT); //Единицы измерения
-            WriteCell(sw, DEFAULT_DIMENSIONS[1].ToString("F2", new CultureInfo("en-EN"))); //Ширина
+            WriteCell(sw, width); //Ширина
             WriteCell(sw, LENGTH_UNIT); //Единицы измерения
-            WriteCell(sw, DEFAULT_DIMENSIONS[2].ToString("F2", new CultureInfo("en-EN"))); //Высота
+            WriteCell(sw, height); //Высота
             WriteCell(sw, LENGTH_UNIT); //Единицы измерения
             WriteCell(sw); //Объем
             WriteCell(sw); //Единицы измерения
-            WriteCell(sw, DEFAULT_DIMENSIONS[3].ToString("F4", new CultureInfo("en-EN"))); //Вес, брутто
+            WriteCell(sw, weight); //Вес, брутто
             WriteCell(sw, WEIGHT_UNIT); //Единицы измерения
             WriteCell(sw); //Страна производитель
             WriteCell(sw); //Годен до

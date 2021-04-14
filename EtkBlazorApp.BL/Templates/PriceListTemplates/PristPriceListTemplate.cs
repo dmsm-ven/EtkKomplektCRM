@@ -13,6 +13,8 @@ namespace EtkBlazorApp.BL
     {
         public string FileName { get; private set; }
 
+        readonly string[] INVALID_BRANDS = new[] { "ERSA", "TDK-Lambda", "Weller", "ProsKit", "Bernstein"  };
+
         public PristPriceListTemplate(string uri)
         {
             FileName = uri;
@@ -25,7 +27,7 @@ namespace EtkBlazorApp.BL
 
             var list = new List<PriceLine>();
 
-            foreach (var offer in offers.Where(offer => !(new[] { "ERSA", "TDK-Lambda" }.Contains(offer.Vendor))))
+            foreach (var offer in offers.Where(offer => !INVALID_BRANDS.Contains(offer.Vendor)))
             {
                 var priceLine = new PriceLine(this)
                 {

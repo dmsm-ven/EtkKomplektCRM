@@ -9,13 +9,13 @@
 
         @if (priceListManager.LoadedFiles.Count > 1)
         {
-            <li style="margin-bottom: 30px; border-bottom: 1px solid lightgray;">
+            <li style="margin-bottom: 30px; border-bottom: 2px solid lightgray; padding-bottom: 6px;">
                 <span class="oi oi-trash" @onclick="RemoveAll"></span>
-                <strong style="color:navy">Очистить все</strong>
+                <strong style="color:navy">Очистить все загруженные прайс-листы</strong>
             </li>
         }
 
-            @foreach (var data in priceListManager.LoadedFiles)
+            @foreach (var data in priceListManager.LoadedFiles.OrderByDescending(pl => pl.DateAdded))
             {
             <li style="margin-bottom: 15px;">
                 <span class="oi oi-trash" @onclick="@(e => priceListManager.RemovePriceList(data))" title="Удалить загруженный прайс-лист"></span>
@@ -24,6 +24,7 @@
                      title="@data.TemplateDescription.title"
                      data-toggle="tooltip" data-placement="right"
                      style="margin-left: 20px; width: 96px;" />
+                <span>Добавлен: <i>@data.DateAdded</i></span>
             </li>
             }
     </ul>

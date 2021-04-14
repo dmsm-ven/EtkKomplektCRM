@@ -92,9 +92,9 @@ namespace EtkBlazorApp.BL
                     progress?.Report($"Обновление сайта {monobrand.website}");
                     await Task.Delay(TimeSpan.FromSeconds(1));
 
-                    //var result = await new WebClient().DownloadStringTaskAsync(apiUri);
+                    var result = await new WebClient().DownloadStringTaskAsync(apiUri);
                 }
-                catch
+                catch(Exception ex)
                 {
 
                 }

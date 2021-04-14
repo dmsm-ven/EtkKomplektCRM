@@ -15,10 +15,10 @@ namespace EtkBlazorApp.Services
     {
         private readonly ILogStorage log;
         private readonly IHttpContextAccessor contextAccessor;
-        private readonly IAuthStateProcessor auth;
+        private readonly IAuthenticationDataStorage auth;
         private readonly ProtectedLocalStorage storage;
 
-        public MyCustomAuthProvider(IAuthStateProcessor auth, ILogStorage log, IHttpContextAccessor contextAccessor, ProtectedLocalStorage storage)
+        public MyCustomAuthProvider(IAuthenticationDataStorage auth, ILogStorage log, IHttpContextAccessor contextAccessor, ProtectedLocalStorage storage)
         {
             this.storage = storage;
             this.log = log;

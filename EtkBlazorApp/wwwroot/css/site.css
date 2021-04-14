@@ -26,12 +26,7 @@ input[type='radio'], input[type='checkbox'] {
 .list-group-item {
     padding-left: 30px
 }
-.price-list-template-title {
-    font-size: 14px;
-    font-weight: bold;
-    margin-left: 6px;
-    color: navy;
-}
+
 
 .price-list-template-description {
     width: 100%;
@@ -302,6 +297,17 @@ input[type='radio'], input[type='checkbox'] {
     display: none;
 }
 
+.price-list-template-title {
+    font-size: 12px;
+    margin: 2px 2px 4px 6px;
+    color: navy;
+    font-weight: 600;
+}
+
+price-list-template-group li {
+    white-space: nowrap;
+}
+
 .price-list-template-inner {
     box-shadow: 0 2px 2px rgba(0,0,0,0.15);
     border: 1px solid #7a7171;
@@ -323,7 +329,7 @@ input[type='radio'], input[type='checkbox'] {
 }
 
 .price-list-template-outer:hover img {
-    opacity: 0.4;
+    opacity: 0.15;
     transition: 150ms;
 }
 

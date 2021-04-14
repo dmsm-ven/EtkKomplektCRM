@@ -1,8 +1,9 @@
 ﻿@page "/accounts"
-@inject IAuthStateProcessor userStorage
+@inject IAuthenticationDataStorage userStorage
 @inject IToastService toasts
 @attribute [Authorize(Roles = "Administrator")]
 @inject AuthenticationStateProvider stateProvider
+@inject UserLogger logger 
 
 <h3>Учетные записи</h3>
 
@@ -11,7 +12,7 @@
     <div class="form-inline">
         @if (newUser == null)
         {
-            <button class="btn btn-sm btn-success" @onclick="@(e => newUser = new AppUser() { IsEnabled = true })">
+            <button class="btn btn-sm btn-success" @onclick="@(e => newUser = new AppUser() { IsEnabled = true, GroupName = groups.First() })">
                 <span class="oi oi-plus"></span>
                 Добавить
             </button>
@@ -34,12 +35,12 @@
             <label for="new-user-password">Пароль</label>
             <input type="text" class="form-control mx-1" id="new-user-password" @bind="newUser.Password" />
         </div>
-        <div class="form-inline mx-4 px-2">
+        <div class="form-inline mx-4 px-2" style="padding-right: 12px;">
             <label for="new-user-group">Группа</label>
-            <select class="form-control mx-1" @bind="newUser.GroupName" id="new-user-group">
+            <select class="form-control mx-1" @onchange="@(e => newUser.GroupName = (string)e.Value)" id="new-user-group">
                 @foreach (var gName in groups)
                 {
-                    <option>@gName</option>
+                    <option value="@gName" selected="@(newUser.GroupName == gName)">@gName</option>
                 }
             </select>
         </div>
@@ -71,10 +72,10 @@
                     </td>
                     <td>@item.Login</td>
                     <td>
-                        <select class="form-control" @bind="item.GroupName" >
+                        <select class="form-control" @onchange="@(e => item.GroupName = (string)e.Value)" >
                             @foreach (var gName in groups)
                             {
-                                <option selected="@(gName == item.GroupName)">@gName</option>
+                                <option value="@gName" selected="@(gName == item.GroupName)">@gName</option>
                             }
                         </select>
                     </td>
@@ -169,6 +170,7 @@
             ip = string.IsNullOrWhiteSpace(user.AllowedIp) ? null : user.AllowedIp
         };
         await userStorage.UpdateUser(updateData);
+        await logger.Write(LogEntryGroupName.Accounts, "Аккаунт обновлен", user.Login);
 
         user.Password = null;
         editUser = null;
@@ -179,10 +181,17 @@
     {
         if (!PasswordCheck(newUser)) { return; }
 
-        var entity = new AppUserEntity() { login = newUser.Login, password = newUser.Password, group_name = newUser.GroupName, ip = newUser.AllowedIp };
+        var entity = new AppUserEntity()
+        {
+            login = newUser.Login,
+            password = newUser.Password,
+            group_name = newUser.GroupName,
+            ip = newUser.AllowedIp
+        };
 
         await userStorage.AddUser(entity);
         users.Add(newUser);
+        await logger.Write(LogEntryGroupName.Accounts, "Аккаунт добавлен", newUser.Login);
         newUser = null;
     }
 
@@ -208,6 +217,7 @@
         {
             await userStorage.DeleteUser(deleteUser.Id);
             toasts.ShowInfo($"Пользователь удален '{deleteUser.Login}'");
+            await logger.Write(LogEntryGroupName.Accounts, "Аккаунт удален", deleteUser.Login);
             users.Remove(deleteUser);
             deleteUser = null;
         }

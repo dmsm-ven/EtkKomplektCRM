@@ -6,9 +6,9 @@
         <span class="navbar-toggler-icon"></span>
     </button>
     <p>
-        <span class="oi oi-euro currency-top">&nbsp;&nbsp;@euro.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)</span>
+        <span class="oi oi-euro currency-top">&nbsp;&nbsp;@eur</span>
         &nbsp; &nbsp;
-        <span class="oi oi-dollar currency-top">&nbsp;&nbsp;@usd.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)</span>
+        <span class="oi oi-dollar currency-top">&nbsp;&nbsp;@usd</span>
     </p>
 </div>
 
@@ -21,7 +21,7 @@
         </li>
         <li class="nav-item px-3">
             <NavLink class="nav-link" href="load-price-list">
-                <span class="oi oi-spreadsheet" style="width: 100%;" aria-hidden="true"><span style="margin-left: 15px;">Прайс-листы</span></span> 
+                <span class="oi oi-spreadsheet" style="width: 100%;" aria-hidden="true"><span style="margin-left: 15px;">Прайс-листы</span></span>
             </NavLink>
         </li>
         <li class="nav-item px-3">
@@ -36,17 +36,17 @@
         </li>
         <li class="nav-item px-3">
             <NavLink class="nav-link" href="ozon">
-                <img src="image/logotips/ozon-logo.png" class="nav-menu-image" /> Ozon
+                <img src="image/logotips/ozon-logo.png" class="nav-menu-image" /> Озон
             </NavLink>
         </li>
         <li class="nav-item px-3">
             <NavLink class="nav-link" href="edit-product">
-                <span class="oi oi-box" aria-hidden="true"></span> Товары
+                <span class="oi oi-box" aria-hidden="true"></span> Правка товара
             </NavLink>
         </li>
         <li class="nav-item px-3">
             <NavLink class="nav-link" href="manufacturers">
-                <span class="oi oi-layers" aria-hidden="true"></span> Производители
+                <span class="oi oi-layers" aria-hidden="true"></span> Сроки поставки
             </NavLink>
         </li>
         <li class="nav-item px-3">
@@ -54,13 +54,14 @@
                 <span class="oi oi-task" aria-hidden="true"></span> Заказы
             </NavLink>
         </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="cron-task">
+                <span class="oi oi-timer" aria-hidden="true"></span> Задачи
+            </NavLink>
+        </li>
         <AuthorizeView Roles="Administrator">
             <Authorized>
-                <li class="nav-item px-3">
-                    <NavLink class="nav-link" href="cron-task">
-                        <span class="oi oi-timer" aria-hidden="true"></span> Задачи
-                    </NavLink>
-                </li>
+
                 <li class="nav-item px-3">
                     <NavLink class="nav-link" href="accounts">
                         <span class="oi oi-person" aria-hidden="true"></span> Пользователи
@@ -81,16 +82,18 @@
 
     string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
-    decimal? euro = 0, usd = 0;
+    string usd;
+    string eur;
 
     void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        euro = await currencyService.GetCurrencyRate(CurrencyType.EUR);
-        usd = await currencyService.GetCurrencyRate(CurrencyType.USD);
+        eur = (await currencyService.GetCurrencyRate(CurrencyType.EUR)).ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+        usd = (await currencyService.GetCurrencyRate(CurrencyType.USD)).ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
     }
+
 }

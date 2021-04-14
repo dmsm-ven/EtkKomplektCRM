@@ -1,7 +1,7 @@
 ﻿@page "/cron-task"
 @inject ISettingStorage settings
 @inject CronTaskService taskManager
-@attribute [Authorize(Roles = "Administrator")]
+@attribute [Authorize(Roles = "Administrator, Manager")]
 
 <h3>Переодические задачи</h3>
 @if (cronTaskList == null)
@@ -18,7 +18,6 @@ else
                 <th>Запускается в</th>
                 <th>Следующий через</th>
                 <th>Последний запуск</th>
-
             </tr>
         </thead>
         <tbody>

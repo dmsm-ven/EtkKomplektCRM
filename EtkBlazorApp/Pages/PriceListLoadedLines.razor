@@ -1,13 +1,44 @@
 ﻿@page "/loaded-price-list-details/{TemplateGuid}"
 @inject PriceListManager manager
+@inject IManufacturerStorage manufacturerStorage
+
+@if (!string.IsNullOrWhiteSpace(singleManufacturer))
+{
+    <h2>Производитель "@singleManufacturer"</h2>
+}
+else
+{
+<div class="price-list-template-manufacturers">
+    <button type="button" class="btn btn-@(filteredManufacturer == null ? "warning" : "primary") mx-1 my-2" @onclick="@(e => ApplyManufacturerFilter(null))">
+        Все <span class="badge badge-pill badge-info">@source.Count</span>
+    </button>
+
+    @foreach (var kvp in productsByBrand)
+    {
+        <button type="button" class="btn btn-@(filteredManufacturer == kvp.Key ? "warning" : "primary") mx-1 my-2" @onclick="@(e => ApplyManufacturerFilter(kvp.Key))">
+            @kvp.Key <span class="badge badge-pill badge-info">@kvp.Value</span>
+        </button>
+    }
+</div>
+}
 
 <div style="overflow-y: visible; height: 900px;">
     <table class="table table-striped table-bordered">
         <thead class="thead-etk">
             <tr>
+                @if (hasManufacturerColumn)
+                {
+                    <th>Производитель</th>
+                }
+                @if (hasNameColumn)
+                {
                 <th>Товар</th>
+                }
                 <th>Артикул</th>
-                <th>Модель</th>
+                @if (hasModelColumn)
+                {
+                    <th>Модель</th>
+                }
                 <th>Количество</th>
                 <th>Цена</th>
                 <th>Валюта</th>
@@ -16,9 +47,20 @@
         <tbody>
             <Virtualize Context="line" Items="@priceLines" ItemSize="20" TItem="PriceLine" OverscanCount="25" @key="TemplateGuid">
                 <tr @key="RowGuids[line].ToString()">
+                    @if (hasManufacturerColumn)
+                    {
+                        <td>@line.Manufacturer</td>
+
+                    }
+                    @if (hasNameColumn)
+                    {
                     <td>@line.Name</td>
+                    }
                     <td>@line.Sku</td>
-                    <td>@line.Model</td>
+                    @if (hasModelColumn)
+                    {
+                        <td>@line.Model</td>
+                    }
                     <td>@line.Quantity</td>
                     <td>@line.Price</td>
                     <td>@line.Currency</td>
@@ -32,15 +74,58 @@
 
     [Parameter] public string TemplateGuid { get; set; }
 
+    List<PriceLine> source = new List<PriceLine>();
     List<PriceLine> priceLines = new List<PriceLine>();
-    Dictionary<PriceLine, Guid> RowGuids = new Dictionary<PriceLine, Guid>();
 
-    protected override void OnInitialized()
+    Dictionary<PriceLine, Guid> RowGuids = new Dictionary<PriceLine, Guid>();
+    Dictionary<string, int> productsByBrand;
+
+    string filteredManufacturer;
+    string singleManufacturer;
+    bool hasManufacturerColumn;
+    bool hasModelColumn;
+    bool hasNameColumn;
+
+    protected override async Task OnInitializedAsync()
     {
         var data = manager.LoadedFiles.FirstOrDefault(p => p.TemplateDescription.id == TemplateGuid)?.ReadedPriceLines;
 
         RowGuids = data.ToDictionary(i => i, i => Guid.NewGuid());
 
         priceLines.AddRange(data);
+        source.AddRange(data);
+
+        var groupByBrand = priceLines.GroupBy(l => l.Manufacturer);
+
+        hasManufacturerColumn = groupByBrand.Count() > 1;
+        hasModelColumn = priceLines.Any(pl => pl.Model != pl.Sku);
+        hasNameColumn = priceLines.Any(pl => pl.Name != null);
+
+        if (!hasManufacturerColumn)
+        {
+            singleManufacturer = groupByBrand.SingleOrDefault().Key;
+        }
+        else
+        {
+            var allowedManufacturers = (await manufacturerStorage.GetManufacturers()).Select(m => m.name).ToList();
+            productsByBrand = groupByBrand
+                .Where(m => allowedManufacturers.Contains(m.Key))
+                .OrderByDescending(i => i.Count())
+                .ToDictionary(i => i.Key, j => j.Count());
+        }
+    }
+
+    private void ApplyManufacturerFilter(string manufacturer)
+    {
+        if (manufacturer == null)
+        {
+            filteredManufacturer = null;
+            priceLines = source;
+        }
+        else
+        {
+            filteredManufacturer = manufacturer;
+            priceLines = source.Where(pl => pl.Manufacturer.Equals(manufacturer)).ToList();
+        }
     }
 }

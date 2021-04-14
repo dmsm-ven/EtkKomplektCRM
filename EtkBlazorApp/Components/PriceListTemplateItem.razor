@@ -19,18 +19,23 @@
 </div>
 
 @code {
-    [Inject] PriceListManager priceListManager { get; set; }
-    [Parameter] public List<PriceListTemplateItemViewModel> Items { get; set; }
-    [Parameter] public EventCallback<PriceListTemplateItemViewModel> CheckedChanged { get; set; }
-    [CascadingParameter] PriceListTemplateItemViewModel GlobalSelectedTemplate { get; set; }
-    PriceListTemplateItemViewModel SelectedTemplate { get; set; }
+        [Inject] PriceListManager priceListManager { get; set; }
+        [Parameter] public List<PriceListTemplateItemViewModel> Items { get; set; }
+        [Parameter] public EventCallback<PriceListTemplateItemViewModel> CheckedChanged { get; set; }
+        [CascadingParameter] PriceListTemplateItemViewModel GlobalSelectedTemplate { get; set; }
+        PriceListTemplateItemViewModel SelectedTemplate { get; set; }
 
-    private string GroupName => Items.FirstOrDefault()?.GroupName;
-    private string GroupImage => Items.FirstOrDefault()?.Image;
+    private string GroupImage
+    {
+        get
+        {
+            return Items.OrderBy(i => i.GroupName == i.Title ? 0 : 1).FirstOrDefault().Image;
+        }
+    }
 
     private bool IsTemplateAlreadyLoaded(PriceListTemplateItemViewModel template)
     {
-        return priceListManager.LoadedFiles.FirstOrDefault(lf => lf.TemplateInstance.GetType() == template.Type) != null;
+        return priceListManager.LoadedFiles.Any(td => td?.TemplateDescription?.id == template?.Guid);
     }
 
     private async Task BoxClicked()
@@ -38,15 +43,24 @@
         int currentTemplateIndex = Items.IndexOf(SelectedTemplate);
         if (currentTemplateIndex == -1 || currentTemplateIndex == Items.Count - 1)
         {
-            SelectedTemplate = Items.First();
+            if (!IsTemplateAlreadyLoaded(Items.First()))
+            {
+                SelectedTemplate = Items.First();
+            }
         }
         else
         {
-            SelectedTemplate = Items[currentTemplateIndex + 1];
+            if (!IsTemplateAlreadyLoaded(Items[currentTemplateIndex + 1]))
+            {
+                SelectedTemplate = Items[currentTemplateIndex + 1];
+            }
         }
 
-        GlobalSelectedTemplate = SelectedTemplate;
-        await CheckedChanged.InvokeAsync(SelectedTemplate);
+        if (!IsTemplateAlreadyLoaded(SelectedTemplate))
+        {
+            GlobalSelectedTemplate = SelectedTemplate;
+            await CheckedChanged.InvokeAsync(SelectedTemplate);
+        }
     }
 
     private async Task RadioButtonClicked(PriceListTemplateItemViewModel item)

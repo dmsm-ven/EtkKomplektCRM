@@ -23,6 +23,11 @@ namespace EtkBlazorApp.BL
         TemplateUpdate,
 
         [Description("Задание")]
-        CronTask
+        CronTask,
+
+        [Description("Аккаунты")]
+        Accounts
+
+
     }
 }
