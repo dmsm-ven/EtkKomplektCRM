@@ -61,7 +61,6 @@
         </li>
         <AuthorizeView Roles="Administrator">
             <Authorized>
-
                 <li class="nav-item px-3">
                     <NavLink class="nav-link" href="accounts">
                         <span class="oi oi-person" aria-hidden="true"></span> Пользователи
@@ -90,7 +89,7 @@
         collapseNavMenu = !collapseNavMenu;
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
         eur = (await currencyService.GetCurrencyRate(CurrencyType.EUR)).ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
         usd = (await currencyService.GetCurrencyRate(CurrencyType.USD)).ToString("F2", System.Globalization.CultureInfo.InvariantCulture);

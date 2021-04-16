@@ -16,7 +16,7 @@
                     <strong>@context.User.Identity.Name</strong>
                     <small style="color: #9e9e9e;">@($"({context.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role).Value})")</small>
                     &nbsp;&nbsp;
-                    <a href="/logout" @onclick="LogOut">Выйти</a>
+                    <a href="/" @onclick="LogOut">Выйти</a>
                 </p>
             </div>
 

@@ -3,11 +3,12 @@ using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using Microsoft.AspNetCore.Components.Authorization;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.Services
 {
-    public class UserLogger
+    public class UserLogger 
     {
         private readonly ILogStorage logStorage;
         private readonly AuthenticationStateProvider userPrivder;
@@ -34,7 +35,7 @@ namespace EtkBlazorApp.Services
         }
     }
 
-    public class SystemEventsLogger
+    public class SystemEventsLogger 
     {
         private readonly ILogStorage logStorage;
 

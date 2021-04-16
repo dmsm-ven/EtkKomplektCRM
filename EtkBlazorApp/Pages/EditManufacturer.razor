@@ -3,6 +3,7 @@
 @using EtkBlazorApp.DataAccess
 @using EtkBlazorApp.Components;
 @inject IManufacturerStorage _database
+@inject UserLogger logger
 
 
 <h1>Производители</h1>
@@ -90,7 +91,9 @@ else
     private async Task ConfirmManufacturerChanges(ManufacturerViewModel manufacturer)
     {
         var data = new ManufacturerEntity() { manufacturer_id = manufacturer.manufacturer_id, shipment_period = manufacturer.shipment_period };
+
         await _database.SaveManufacturer(data);
+        await logger.Write(LogEntryGroupName.ManufacturerUpdate, "Обновление", $"Срок поставки для производителя «{data.name}» измнен на {data.shipment_period} дн.");
         editManufacturer = null;
     }
 

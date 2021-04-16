@@ -28,7 +28,10 @@ namespace EtkBlazorApp.BL
             this.correlator = correlator;
         }
 
-        public async Task UpdatePriceAndStock(IEnumerable<PriceLine> priceLines, bool clearStockBeforeUpdate, IProgress<string> progress = null)
+        public async Task UpdatePriceAndStock(
+            IEnumerable<PriceLine> priceLines, 
+            bool clearStockBeforeUpdate, 
+            IProgress<string> progress = null)
         {
             //TODO тут надо будет проверить, т.к. нужно следить что бы в прайс-листах (и шаблонах соответственно) имя производителя точно совпадало с именем из базы данных 
             //Иначе товары не будут загружены и соответственно не обновлены
