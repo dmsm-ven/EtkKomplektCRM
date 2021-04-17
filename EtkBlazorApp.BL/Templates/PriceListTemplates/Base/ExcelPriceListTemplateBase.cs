@@ -21,7 +21,7 @@ namespace EtkBlazorApp.BL
         public async Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-            List<PriceLine> lines = new List<PriceLine>();
+            var list = new List<PriceLine>();
 
             await Task.Run(() =>
             {
@@ -33,13 +33,15 @@ namespace EtkBlazorApp.BL
                     }
 
                     var readedLines = ReadDataFromExcel();
-                    lines.AddRange(readedLines.Where(line => line.Price.HasValue || line.Quantity.HasValue));
+                    list.AddRange(readedLines.Where(line => line.Price.HasValue || line.Quantity.HasValue));
                 }
             });
 
-            return lines;
+            return list;
         }
 
         protected abstract List<PriceLine> ReadDataFromExcel();
+
+        protected ExcelWorksheet tab => Excel.Workbook.Worksheets[0]; 
     }
 }

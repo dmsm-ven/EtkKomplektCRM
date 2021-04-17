@@ -123,16 +123,6 @@
                      ConfirmationChanged="DeleteConfirmed"
                      ConfirmationMessage="@(() => $"Удалить пользователя '{deleteUser.Login}' ?")"></DeleteConfirmDialog>
 
-<style>
-    tr.disabled-user td:not(:last-child) {
-        opacity: 0.4;
-    }
-
-    .current-user {
-        background-color: lemonchiffon;
-    }
-</style>
-
 @code {
     DeleteConfirmDialog deleteConfirmDialog;
 

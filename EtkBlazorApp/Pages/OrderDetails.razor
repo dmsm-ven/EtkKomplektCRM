@@ -1,6 +1,6 @@
 ﻿@page "/order/{id:int}"
 @inject IOrderStorage database
-@inject IJSRuntime js
+@inject NavigationManager navigationManager
 @attribute [Authorize(Roles = "Administrator, Manager")]
 
 @if (order == null)
@@ -9,7 +9,9 @@
 }
 else
 {
-    <h1>Детали заказа <button class="btn btn-sm btn-secondary" @onclick="Print"><span class="oi oi-print"></span></button></h1>
+    <h1>Детали заказа <button class="btn btn-sm btn-secondary" @onclick="GoToPrintPage"><span class="oi oi-print"></span></button></h1>
+    
+
     <div class="container-fluid">
 
         <h3>Основные данные</h3>
@@ -94,13 +96,19 @@ else
                             <td>@detail.Sum.ToString("C0")</td>
                         </tr>
                     }
-                    <tr style=" border-top: 2px solid #33121933">
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td style="color: red;font-weight: bold;">@order.OrderDetails.Sum(od => od.Quantity)</td>
+                    <tr>
+                        <td colspan="5"></td>
+                        <td style="color: red; font-weight: bold;">@order.ProductsTotalQuantity</td>
+                        <td style="color: red; font-weight: bold;">@order.ProductsTotalCost.ToString("C0")</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5"></td>
+                        <td style="color: red; font-weight: bold;">Доставка</td>
+                        <td style="color: red; font-weight: bold;">@order.ShipmentCost.ToString("C0")</td>
+                    </tr>
+                    <tr style="border-top: 2px solid #33121933">
+                        <td colspan="5"></td>
+                        <td style="color: red; font-weight: bold;">ИТОГО</td>
                         <td style="color: red; font-weight: bold;">@order.TotalPrice.ToString("C0")</td>
                     </tr>
                 </tbody>
@@ -157,9 +165,9 @@ else
         order = orderData;
     }
 
-    private async Task Print()
+    private void GoToPrintPage()
     {
-        //await js.InvokeVoidAsync("printMainContent", new object[] { ((LayoutComponentBase)this).Body.ToString() });
+        navigationManager.NavigateTo(navigationManager.Uri + "/print");
     }
 }
 

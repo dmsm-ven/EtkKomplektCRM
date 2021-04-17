@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace EtkBlazorApp.ViewModel
 {
@@ -19,6 +20,9 @@ namespace EtkBlazorApp.ViewModel
         public string PaymentMethod { get; set; }
 
         public bool IsDone => Equals(OrderStatus, "Завершен");
+        public decimal ShipmentCost => TotalPrice - OrderDetails.Sum(od => od.Sum);
+        public int ProductsTotalQuantity => OrderDetails.Sum(od => od.Quantity);
+        public decimal ProductsTotalCost => OrderDetails.Sum(od => od.Sum);
 
         public List<OrderDetailsViewModel> OrderDetails { get; set; } 
     }

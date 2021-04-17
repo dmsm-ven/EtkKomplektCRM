@@ -10,7 +10,6 @@ namespace EtkBlazorApp.BL
         protected override List<PriceLine> ReadDataFromExcel()
         {
             var list = new List<PriceLine>();
-            var tab = Excel.Workbook.Worksheets[0];
 
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {

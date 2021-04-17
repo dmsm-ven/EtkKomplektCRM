@@ -8,7 +8,11 @@ namespace EtkBlazorApp.DataAccess
     {
         Task SaveManufacturer(ManufacturerEntity manufacturer);
         Task<List<ManufacturerEntity>> GetManufacturers();
+
         Task<List<MonobrandEntity>> GetMonobrands();
+        Task UpdateMonobrand(MonobrandEntity monobrand);
+        Task DeleteMonobrand(int id);
+        Task AddMonobrand();
     }
 
     public class ManufacturerStorage : IManufacturerStorage
@@ -41,11 +45,34 @@ namespace EtkBlazorApp.DataAccess
         public async Task<List<MonobrandEntity>> GetMonobrands()
         {
             string sql = "SELECT etk_app_monobrand.*, oc_manufacturer.name as manufacturer_name " +
-                "FROM etk_app_monobrand " +
-                "LEFT JOIN oc_manufacturer ON oc_manufacturer.manufacturer_id = etk_app_monobrand.manufacturer_id";
+                         "FROM etk_app_monobrand " +
+                         "LEFT JOIN oc_manufacturer ON oc_manufacturer.manufacturer_id = etk_app_monobrand.manufacturer_id";
             var monobrands = await database.LoadData<MonobrandEntity, dynamic>(sql, new { });
 
             return monobrands;
+        }
+
+        public async Task UpdateMonobrand(MonobrandEntity monobrand)
+        {
+            string sql = "UPDATE etk_app_monobrand SET " +
+                "manufacturer_id = @manufacturer_id, " +
+                "website = @website, " +
+                "currency_code = @currency_code " +
+                "WHERE monobrand_id = @monobrand_id";
+
+            await database.SaveData(sql, monobrand);
+        }
+
+        public async Task DeleteMonobrand(int monobrand_id)
+        {
+            string sql = "DELETE FROM etk_app_monobrand WHERE monobrand_id = @monobrand_id";
+
+            await database.SaveData<dynamic>(sql, new { monobrand_id });
+        }
+
+        public async Task AddMonobrand()
+        {
+            await database.SaveData("INSERT INTO etk_app_monobrand (website, currency_code) VALUES ('https://', 'RUB')", new { });
         }
     }
 }

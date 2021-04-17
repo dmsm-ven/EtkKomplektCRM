@@ -64,7 +64,10 @@ namespace EtkBlazorApp.BL
             };
 
             var products = await productStorage.ReadProducts(data.manufacturer_id);
-            var priceLines = priceListManager.PriceLinesOfManufacturer(data.manufacturer_name);
+            var priceLines = priceListManager.PriceLines
+                .Where(line => line.Manufacturer.Equals(data.manufacturer_name, StringComparison.OrdinalIgnoreCase) ||
+                               line.Manufacturer.Equals(PrikatReportTemplateBase.PRIKAT_ONLY_PREFIX + data.manufacturer_name, StringComparison.OrdinalIgnoreCase))
+                .ToList();
 
             template.AppendLines(products, priceLines, sw);
         }

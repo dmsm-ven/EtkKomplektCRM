@@ -15,6 +15,12 @@ namespace EtkBlazorApp.BL
 
         readonly string[] INVALID_BRANDS = new[] { "ERSA", "TDK-Lambda", "Weller", "ProsKit", "Bernstein"  };
 
+        readonly Dictionary<string, string> BrandMap = new Dictionary<string, string>()
+        {
+            ["Teledyne LeCroy"] = "LeCroy",
+            ["Keysight Technologies"] = "Keysight"
+        };
+
         public PristPriceListTemplate(string uri)
         {
             FileName = uri;
@@ -33,7 +39,7 @@ namespace EtkBlazorApp.BL
                 {
                     Name = offer.Name,
                     Currency = offer.Currency,
-                    Manufacturer = offer.Vendor,
+                    Manufacturer = BrandMap.ContainsKey(offer.Vendor) ? BrandMap[offer.Vendor] : offer.Vendor,
                     Model = offer.Model,
                     Sku = offer.Model,
                     Price = offer.Price,

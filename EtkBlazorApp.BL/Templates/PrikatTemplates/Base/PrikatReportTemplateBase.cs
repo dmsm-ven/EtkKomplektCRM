@@ -9,6 +9,8 @@ namespace EtkBlazorApp.BL.Templates
 {
     public abstract class PrikatReportTemplateBase
     {
+        public static string PRIKAT_ONLY_PREFIX  => "PRIKAT_ONLY-";
+
         public bool IsProductInStock { get; set; }
         public bool IsProductHasEan { get; set; }
         public decimal CurrencyRatio { get; set; }

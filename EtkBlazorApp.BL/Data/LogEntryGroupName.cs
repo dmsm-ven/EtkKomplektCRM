@@ -26,8 +26,9 @@ namespace EtkBlazorApp.BL
         CronTask,
 
         [Description("Аккаунты")]
-        Accounts
+        Accounts,
 
-
+        [Description("ВсеИнструменты")]
+        Prikat
     }
 }
