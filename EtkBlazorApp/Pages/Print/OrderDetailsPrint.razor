@@ -1,29 +1,31 @@
 ﻿@page "/order/{id:int}/print"
 @inject IOrderStorage orders
 @layout PrintBlankLayout
+@using System.Web
 
 @if (order != null)
 {
 <h1>Заказ @Id от @order.DateTime</h1>
-<p style="font-size: 18px;"><strong>Заказчик:</strong> @order.Customer</p>
-<p><strong>Телефон:</strong> @order.CustomerPhoneNumber</p>
-<p><strong>Email:</strong> @order.CustomerEmail</p>
-<p><strong>Метод оплаты:</strong> @order.PaymentMethod</p>
-<p><strong>Адрес доставки:</strong> @order.ShippingAddress</p>
-<p><strong>Метод доставки:</strong> @order.ShippingMethod</p>
-<p><strong>Город:</strong> @order.City</p>
-<p><strong>Примечание к заказу:</strong> @order.Comment</p>
+<div class="order-general-info">
+    <p style="font-size: 18px;"><strong>Заказчик: </strong>@(HttpUtility.HtmlDecode(order.Customer))</p>
+    <p><strong>Телефон: </strong>@order.CustomerPhoneNumber</p>
+    <p><strong>Email: </strong>@order.CustomerEmail</p>
+    <p><strong>Метод оплаты: </strong>@order.PaymentMethod</p>
+    <p><strong>Адрес доставки: </strong>@order.ShippingAddress</p>
+    <p><strong>Метод доставки: </strong>@(HttpUtility.HtmlDecode(order.ShippingMethod))</p>
+    <p><strong>Город: </strong> @order.City</p>
+    <p><strong>Примечание к заказу: </strong> @order.Comment</p>
+</div>
 
 <h2>Заказ</h2>
-
-<table class="table table-striped">
+<table class="table table-bordered">
     <thead>
         <tr>
             <th>Производитель</th>
             <th>Товар</th>
             <th>Модель</th>
             <th>Артикул</th>
-            <th>Цена (за ед., на момент заказа)</th>
+            <th>Цена</th>
             <th>Количество</th>
             <th>Сумма</th>
         </tr>
@@ -33,8 +35,8 @@
         {
             <tr>
                 <td>@item.Manufacturer</td>
-                <td>@item.ProductName</td>
-                <td>@item.Model</td>
+                <td>@(HttpUtility.HtmlDecode(item.ProductName))</td>
+                <td>@(HttpUtility.HtmlDecode(item.Model))</td>
                 <td>@item.Sku</td>
                 <td>@item.Price.ToString("C0")</td>
                 <td>@item.Quantity</td>
@@ -42,15 +44,23 @@
             </tr>
         }
         <tr>
-            <td colspan="7" style="text-align: right; font-size: 18px; color: red; font-weight: bold">Доставка @order.ShipmentCost.ToString("C0")</td>
+            <td colspan="7" style="text-align: right; font-size: 16px; font-weight: bold">Доставка: @order.ShipmentCost.ToString("C0")</td>
         </tr>
         <tr>
-            <td style="text-align: right; font-size: 24px; color: red; font-weight: bold">ИТОГО @order.TotalPrice.ToString("C0")</td>
+            <td style="text-align: right; font-size: 20px; font-weight: bold">ИТОГО: @order.TotalPrice.ToString("C0")</td>
         </tr>
     </tbody>
 </table>
 }
 
+<style>
+    .order-general-info {
+        padding: 8px 0px;
+    }
+    .order-general-info p {
+        margin: 10px 0px;
+    }
+</style>
 
 @code {
     [Parameter]

@@ -11,6 +11,7 @@ namespace EtkBlazorApp.DataAccess
         Task<List<OrderEntity>> GetLastOrders(int limit, string number = null, string city = null, string client = null);
         Task<List<OrderDetailsEntity>> GetOrderDetails(int orderId);
         Task<OrderEntity> GetOrderById(int orderId);
+        Task<List<OrderEntity>> GetLinkedOrders(OrderEntity order);
     }
 
     public class OrderStorage : IOrderStorage
@@ -78,11 +79,22 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task<OrderEntity> GetOrderById(int orderId)
         {
-            var sql = $"SELECT * FROM oc_order WHERE order_id = @Id";
+            var sql = "SELECT * FROM oc_order WHERE order_id = @orderId";
 
-            var order = (await database.LoadData<OrderEntity, dynamic>(sql, new { Id = orderId })).FirstOrDefault();
+            var order = (await database.LoadData<OrderEntity, dynamic>(sql, new { orderId })).FirstOrDefault();
 
             return order;
+        }
+
+        public async Task<List<OrderEntity>> GetLinkedOrders(OrderEntity order)
+        {
+            var sql = "SELECT * FROM oc_order " +
+                      "WHERE (email = @email OR telephone = @telephone OR ip = @ip) AND order_id != @order_id " +
+                      "ORDER BY date_added DESC";
+
+            var linkedOrders = await database.LoadData<OrderEntity, OrderEntity>(sql, order);
+
+            return linkedOrders;
         }
     }
 }
