@@ -12,7 +12,6 @@
         public bool IsSpecialLine { get; set; }
         public StockPartner? StockPartner { get; set; }
 
-
         public PriceLine(IPriceListTemplate template)
         {
             Template = template;

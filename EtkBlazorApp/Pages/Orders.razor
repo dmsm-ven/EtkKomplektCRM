@@ -35,8 +35,6 @@ else
                 <tr>
                     <th>№ заказа</th>
                     <th>Дата/Время</th>
-                    <th>Завершен</th>
-                    <th>Статус заказа</th>
                     <th>Заказчик</th>
                     <th>Город</th>
                     <th>Сумма</th>
@@ -44,21 +42,17 @@ else
                 </tr>
             </thead>
             <tbody>
-
                 @foreach (var order in orders)
                 {
                     <tr class="@(order == newOrder ? "new-order-row" : string.Empty)">
                         <td>@order.OrderId</td>
-                        <td>@order.DateTime.ToString("f")</td>
-                        <td><input type="checkbox" value="@order.IsDone" disabled /></td>
-                        <td>@order.OrderStatus</td>
+                        <td>@order.DateTime.ToString("dd.MM.yyyy | hh:mm")</td>
                         <td>@order.Customer</td>
                         <td>@order.City</td>
                         <td>@order.TotalPrice.ToString("C0")</td>
                         <td><a href="/order/@order.OrderId" target="_blank" class="btn btn-info btn-sm"><i class="oi oi-eye"></i></a></td>
                     </tr>
                 }
-
             </tbody>
         </table>
     </div>

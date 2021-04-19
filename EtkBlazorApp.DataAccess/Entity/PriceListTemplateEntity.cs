@@ -15,6 +15,7 @@ namespace EtkBlazorApp.DataAccess.Entity
         public string image { get; set; }
 
         public string remote_uri { get; set; }
+        public string remote_uri_method { get; set; }
         public string group_name { get; set; }
         public decimal discount { get; set; }
         public bool nds { get; set; }

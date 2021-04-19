@@ -13,10 +13,11 @@ namespace EtkBlazorApp.ViewModel
         public string Description { get; set; }
         public string Image { get; set; }
         public string RemoteUrl { get; set; }
+        public string RemoteUrlMethod { get; set; }
         public string GroupName { get; set; }
-        public decimal Discount { get; set; }
-        public int PriceListType { get; set; }
+        public decimal Discount { get; set; }       
         public bool Nds { get; set; }
+        public PriceListType PriceListType { get; set; }
 
         public Type Type { get; private set; }
 
@@ -34,6 +35,13 @@ namespace EtkBlazorApp.ViewModel
                 .GetTypes()
                 .FirstOrDefault(type => type.GetCustomAttribute<PriceListTemplateGuidAttribute>()?.Guid == guid);
         }
+    }
 
+    public enum PriceListType
+    {
+        None = 0,
+        Price = 1,
+        Quantity = 2,
+        Both = 3
     }
 }

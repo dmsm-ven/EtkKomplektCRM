@@ -11,21 +11,22 @@
         <div class="btn-group">
             <button class="btn btn-primary p-2 m-1" @onclick="AddMonobrand">
                 Добавить новый
-                <i class="oi oi-plus"></i>
+                <span class="oi oi-plus"></span>
             </button>
             <button class="btn btn-danger p-2 m-1" disabled="@(selectedMonobrand == null)" @onclick="@(e => confirmDialog.Show())">
                 Удалить
-                <i class="oi oi-delete"></i>
+                <span class="oi oi-delete"></span>
             </button>
-
         </div>
     </div>
+    
     <div class="row">
         <div class="table-responsive">
             <table class="table">
                 <thead>
                     <tr>
                         <th>Вебсайт</th>
+                        <th></th>
                         <th>Производитель</th>
                         <th>Валюта</th>
                     </tr>
@@ -36,6 +37,11 @@
                         <tr class="@((selectedMonobrand == monobrand ? "selected-monobrand" : ""))"
                             @onclick="(e => selectedMonobrand = monobrand)">
                             <td><input type="url" class="form-control" @bind="monobrand.WebsiteUri"/></td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary" target="_blank" href="@monobrand.WebsiteUri">
+                                    <span class="oi oi-external-link"></span>
+                                </a>
+                            </td>
                             <td>
                                 <select class="form-control" @onchange="ManufacturerChanged" >
                                     @foreach (var brandInfo in manufacturers)

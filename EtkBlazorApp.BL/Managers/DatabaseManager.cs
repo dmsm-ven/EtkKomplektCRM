@@ -99,7 +99,7 @@ namespace EtkBlazorApp.BL
                 }
                 catch(Exception ex)
                 {
-
+                    progress?.Report($"Ошибка обновления сайта {monobrand.website}. " + ex.Message);
                 }
             }
         }

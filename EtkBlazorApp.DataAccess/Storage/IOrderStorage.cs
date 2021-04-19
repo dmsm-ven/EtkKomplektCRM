@@ -89,7 +89,7 @@ namespace EtkBlazorApp.DataAccess
         public async Task<List<OrderEntity>> GetLinkedOrders(OrderEntity order)
         {
             var sql = "SELECT * FROM oc_order " +
-                      "WHERE (email = @email OR telephone = @telephone OR ip = @ip) AND order_id != @order_id " +
+                      "WHERE (email = @email OR telephone = @telephone OR ip = @ip) " +
                       "ORDER BY date_added DESC";
 
             var linkedOrders = await database.LoadData<OrderEntity, OrderEntity>(sql, order);

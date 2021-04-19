@@ -4,7 +4,7 @@
 @inject UserLogger logger
 @inject ITemplateStorage templateStorage
 @inject IToastService toast
-@inject ISettingStorage settingStorage
+@inject RemoteTemplateFileLoaderFactory remoteTemplateFileLoaderFactory
 
 
 @if (isFileLoading)
@@ -46,29 +46,32 @@
 {
     <h4>Примечания к выбранному шаблону <storng>(@selectedTemplate.Title)</storng></h4>
     <textarea readonly class="price-list-template-description">@selectedTemplate.Description</textarea>  
-    @if (selectedTemplate.Nds)
+    @if (selectedTemplate.PriceListType == PriceListType.Price || selectedTemplate.PriceListType == PriceListType.Both)
     {
-    <p>
-        <strong style="color: red;">прибавляется НДС</strong>
-    </p>
-    }   
-    <p>
-        Наценка:
-        @if (editingTemplate == selectedTemplate)
+        @if (selectedTemplate.Nds)
         {
-            <input type="number" style="display: inline; width: 80px;" class="form-control mx-2" @bind="editingTemplate.Discount" />
-            <button class="btn btn-outline-success" @onclick="SaveTemplateDiscount">
-                <span class="oi oi-circle-check" style="font-size: 16px;"></span>
-            </button>
-        }
-        else
-        {
-            <strong style="color: red;">@(selectedTemplate.Discount.ToString("G29"))%</strong>
-            <button class="btn btn-sm btn-outline-success mx-2" @onclick="(e => editingTemplate = selectedTemplate)">
-                <span class="oi oi-pencil"></span>
-            </button>
-        }
-    </p>
+        <p>
+            <strong style="color: red;">прибавляется НДС</strong>
+        </p>
+        }   
+        <p>
+            Наценка:
+            @if (editingTemplate == selectedTemplate)
+            {
+                <input type="number" style="display: inline; width: 80px;" class="form-control mx-2" @bind="editingTemplate.Discount" />
+                <button class="btn btn-outline-success" @onclick="SaveTemplateDiscount">
+                    <span class="oi oi-circle-check" style="font-size: 16px;"></span>
+                </button>
+            }
+            else
+            {
+                <strong style="color: red;">@(selectedTemplate.Discount.ToString("G29"))%</strong>
+                <button class="btn btn-sm btn-outline-success mx-2" @onclick="(e => editingTemplate = selectedTemplate)">
+                    <span class="oi oi-pencil"></span>
+                </button>
+            }
+        </p>
+    }
     @if (selectedTemplate.RemoteUrl != null)
     {
         <p>Прямая ссылка на файл: <a href="@selectedTemplate.RemoteUrl" target="_blank">@selectedTemplate.RemoteUrl</a></p>
@@ -76,7 +79,7 @@
     <hr />
 }
 
-@if (priceListManager.LoadedFiles != null && priceListManager.LoadedFiles.Any())
+@if (priceListManager.LoadedFiles.Any())
 {
     <a href="/update-products" class="btn btn-lg btn-outline-primary">Перейти к обновлению товаров</a>
 }
@@ -101,8 +104,9 @@
                 GroupName = t.group_name,
                 Image = t.image,
                 Manufacturer = t.manufacturer,
-                PriceListType = t.price_list_type,
+                PriceListType = (PriceListType)t.price_list_type,
                 RemoteUrl = t.remote_uri,
+                RemoteUrlMethod = t.remote_uri_method,
                 Title = t.title,
                 Nds = t.nds
             })
@@ -127,22 +131,10 @@
         isFileLoading = true;
         StateHasChanged();
 
-        using (var wc = new WebClient())
+        IRemoteTemplateFileLoader loader = remoteTemplateFileLoaderFactory.GetMethod(selectedTemplate.RemoteUrlMethod, selectedTemplate.RemoteUrl, selectedTemplate.Guid);
+        using (var ms = new MemoryStream(await loader.GetBytes()))
         {
-
-            string login = await settingStorage.GetValue($"price-list-template-credentials-{selectedTemplate.Title}-login");
-            string password = await settingStorage.GetValue($"price-list-template-credentials-{selectedTemplate.Title}-password");
-            bool hasCredentials = !string.IsNullOrWhiteSpace(login) && !string.IsNullOrWhiteSpace(password);
-            if (hasCredentials)
-            {
-                wc.Credentials = new NetworkCredential(login, password);
-            }
-
-            var bytes = await Task.Run(() => wc.DownloadData(new Uri(selectedTemplate.RemoteUrl)));
-            using (var ms = new MemoryStream(bytes))
-            {
-                await LoadTemplateFromStream(ms);
-            }
+            await LoadTemplateFromStream(ms);
         }
     }
 

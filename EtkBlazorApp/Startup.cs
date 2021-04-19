@@ -1,5 +1,6 @@
 using Blazored.Toast;
 using EtkBlazorApp.BL;
+using EtkBlazorApp.BL.Templates.PriceListTemplates;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.Integration.Ozon;
 using EtkBlazorApp.Services;
@@ -52,6 +53,7 @@ namespace EtkBlazorApp
             services.AddSingleton<OzonSellerManager>();
             services.AddSingleton<PriceListManager>();
             services.AddSingleton<CronTaskService>();
+            services.AddSingleton<RemoteTemplateFileLoaderFactory>();
 
             services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();
             services.AddScoped<UserLogger>();

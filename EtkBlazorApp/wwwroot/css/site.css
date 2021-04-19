@@ -340,7 +340,7 @@ price-list-template-group li {
     transition: 150ms;
 }
 tr.selected-monobrand {
-    background: #655d77;
+    background: #e8e8e8;
 }
 
 .currency-top {
