@@ -33,22 +33,26 @@
                 {
             <div class="form-group">
                 <label for="product-name">Наименование</label>
-                <input type="text" class="form-control" id="product-name" @bind="@editedProduct.Name" readonly>
+                <input type="text" class="form-control" id="product-name" value="@(HttpUtility.HtmlDecode(editedProduct.Name))" readonly>
             </div>
             <div class="form-row">
-                <div class="form-group col-md-6">
+                <div class="form-group col-md-4">
                     <label for="product-model">Модель</label>
-                    <input type="text" class="form-control" id="product-model" @bind="@editedProduct.Model" readonly>
+                    <input type="text" class="form-control" id="product-model" value="@(HttpUtility.HtmlDecode(editedProduct.Model))" readonly>
                 </div>
-                <div class="form-group col-md-6">
+                <div class="form-group col-md-4">
                     <label for="product-sku">Артикул</label>
-                    <input type="text" class="form-control" id="product-sku" @bind="@editedProduct.Sku" readonly>
+                    <input type="text" class="form-control" id="product-sku" value="@editedProduct.Sku" readonly>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="product-ean">EAN</label>
+                    <input type="text" class="form-control" id="product-ean" value="@editedProduct.EAN" readonly>
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group col-md-6">
                     <label for="product-quantity">Количество</label>
-                    <input type="number" min="0" max="999" class="form-control" id="product-quantity" @bind="@editedProduct.Quantity">
+                    <input type="number" min="0" max="99999" class="form-control" id="product-quantity" @bind="@editedProduct.Quantity">
                 </div>
                 <div class="form-group col-md-6">
                     <label for="product-stock-status">Статус на складе</label>
@@ -129,6 +133,7 @@
             Name = entity.name,
             Model = entity.model,
             Sku = entity.sku,
+            EAN = entity.ean,
             Quantity = entity.quantity,
             BasePrice = entity.base_currency_code == CurrencyType.RUB.ToString() ? entity.price : entity.base_price,
             BasePriceCurrency = entity.base_currency_code,
@@ -169,7 +174,7 @@
         await productStorage.UpdateDirectProduct(entity);
 
         string pUri = "https://etk-komplekt.ru/index.php?route=product/product&product_id=" + editedProduct.Id;
-        await log.Write(LogEntryGroupName.ProductUpdate, "Товар обновлен", editedProduct.Name + $" ({pUri})");
+        await log.Write(LogEntryGroupName.ProductUpdate, "Товар обновлен", $"{HttpUtility.HtmlDecode(editedProduct.Name)} ({pUri})");
 
         currentStateCode = GetCurrentStateCode();
     }

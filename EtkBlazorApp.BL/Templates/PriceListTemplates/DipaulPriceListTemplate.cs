@@ -37,10 +37,10 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     manufacturer = ValidManufacturersMap[manufacturer];
                 }
 
-                string skuNumber = tab.Cells[row, 0].ToString();
-                string productName = tab.Cells[row, 1].ToString();
-                string quantityString = tab.Cells[row, 3].ToString();
-                string priceString = tab.Cells[row, 4].ToString();
+                string skuNumber = tab.GetValue<string>(row, 1);
+                string productName = tab.GetValue<string>(row, 2);
+                string quantityString = tab.GetValue<string>(row, 4);
+                string priceString = tab.GetValue<string>(row, 5);
                 string model = Regex.Match(productName, "^(.*?), ").Groups[1].Value;
                 string currencyTypeString = tab.Cells[row, 5]?.ToString()?.Replace("руб.", "RUB");
 
@@ -94,9 +94,9 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int row = 1; row < tab.Dimension.Rows; row++)
             {
-                string skuNumber = tab.Cells[row, 0].ToString();
-                string name = tab.Cells[row, 1].ToString();
-                string priceString = tab.Cells[row, 2].ToString();
+                string skuNumber = tab.GetValue<string>(row, 1);
+                string name = tab.GetValue<string>(row, 2);
+                string priceString = tab.GetValue<string>(row, 3);
 
                 if (decimal.TryParse(priceString, out var price))
                 {

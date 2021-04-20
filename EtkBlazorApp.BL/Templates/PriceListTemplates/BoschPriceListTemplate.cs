@@ -20,11 +20,11 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             var list = new List<PriceLine>();
             var tab = Excel.Workbook.Worksheets[0];
 
-            for (int i = 2; i < tab.Dimension.Rows; i++)
+            for (int row = 2; row < tab.Dimension.Rows; row++)
             {
-                string sku = tab.Cells[i, 1].GetValue<string>().ToString().Insert(1, " ").Insert(5, " ").Insert(9, " ");
-                string stockStatusCode = tab.Cells[i, 2].GetValue<string>();
-                decimal price = tab.Cells[i, 3].GetValue<decimal>();
+                string sku = tab.GetValue<string>(row, 1).ToString().Insert(1, " ").Insert(5, " ").Insert(9, " ");
+                string stockStatusCode = tab.GetValue<string>(row, 2);
+                decimal price = tab.GetValue<decimal>(row, 3);
 
                 var priceLine = new PriceLine(this)
                 {

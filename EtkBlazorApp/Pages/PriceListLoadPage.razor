@@ -2,22 +2,34 @@
 @attribute [Authorize(Roles = "Administrator, Manager")]
 @inject PriceListManager priceListManager
 @inject UserLogger logger
+@inject RemoteTemplateFileLoaderFactory remoteTemplateFileLoaderFactory
 @inject ITemplateStorage templateStorage
 @inject IToastService toast
-@inject RemoteTemplateFileLoaderFactory remoteTemplateFileLoaderFactory
+@using System.Threading
 
-
-@if (isFileLoading)
+@if (isBusy)
 {
-    <IntermediateProgressBar />
+    if (isFileUploading)
+    {
+        <h3>Загрузка файла на сервер</h3>
+        <BootstrapProgressBar CurrentProgress="uploadPercent"></BootstrapProgressBar>
+        @*<button class="btn btn-outline-info" @onclick="@(e => cts?.Cancel())">
+            Отменить загрузку
+        </button>*@
+    }
+    if (isIntermediateProgress)
+    {
+        <h3>Обработка данных</h3>
+        <IntermediateProgressBar></IntermediateProgressBar>
+    }
 }
 
-<button class="btn btn-success"
-        @onclick="LoadRemoteUriTemplate"
-        disabled="@(string.IsNullOrWhiteSpace(selectedTemplate?.RemoteUrl) || isFileLoading)">
+
+<button class="btn btn-success" @onclick="LoadRemoteUriTemplate" disabled="@(string.IsNullOrWhiteSpace(selectedTemplate?.RemoteUrl) || isBusy)">
     Загрузить от поставщика
 </button>
-<InputFile OnChange="@UploadSelectedPriceListTemplateFile" disabled="@(selectedTemplate == null || isFileLoading)"></InputFile>
+<InputFile OnChange="@UploadSelectedPriceListTemplateFile" disabled="@(selectedTemplate == null || isBusy)">
+</InputFile>
 
 <h2>Выберите шаблон загружаемого файла</h2>
 
@@ -45,15 +57,15 @@
 @if (selectedTemplate != null)
 {
     <h4>Примечания к выбранному шаблону <storng>(@selectedTemplate.Title)</storng></h4>
-    <textarea readonly class="price-list-template-description">@selectedTemplate.Description</textarea>  
+    <textarea readonly class="price-list-template-description">@selectedTemplate.Description</textarea>
     @if (selectedTemplate.PriceListType == PriceListType.Price || selectedTemplate.PriceListType == PriceListType.Both)
     {
         @if (selectedTemplate.Nds)
         {
-        <p>
-            <strong style="color: red;">прибавляется НДС</strong>
-        </p>
-        }   
+            <p>
+                <strong style="color: red;">прибавляется НДС</strong>
+            </p>
+        }
         <p>
             Наценка:
             @if (editingTemplate == selectedTemplate)
@@ -87,15 +99,23 @@
 @code
 {
     const int MAX_UPLOAD_FILE_SIZE = 15_000_000; // 15 мб
-    string searchPhrase;
+    const int UPLOAD_BUFFER_SIZE = 64_000; // 64 кб
+
     Dictionary<string, List<PriceListTemplateItemViewModel>> templates = null;
     Dictionary<string, List<PriceListTemplateItemViewModel>> filteredTemplates;
     PriceListTemplateItemViewModel selectedTemplate = null;
     PriceListTemplateItemViewModel editingTemplate = null;
-    bool isFileLoading = false;
+
+    string searchPhrase;
+    CancellationTokenSource cts;
+    bool isIntermediateProgress = false;
+    bool isFileUploading = false;
+    bool isBusy => isIntermediateProgress || isFileUploading;
+    int uploadPercent = 0;
 
     protected override async Task OnInitializedAsync()
     {
+        cts = new CancellationTokenSource();
         templates = (await templateStorage.GetPriceListTemplates())
             .Select(t => new PriceListTemplateItemViewModel(t.id)
             {
@@ -120,15 +140,33 @@
 
     private async Task UploadSelectedPriceListTemplateFile(InputFileChangeEventArgs e)
     {
-        isFileLoading = true;
+        isFileUploading = true;
+        uploadPercent = 0;
+        var bytes = new byte[(int)e.File.Size];
 
-        var stream = e.File.OpenReadStream(MAX_UPLOAD_FILE_SIZE);
-        await LoadTemplateFromStream(stream);
+        using (var uploadStream = e.File.OpenReadStream(MAX_UPLOAD_FILE_SIZE, cts.Token))
+        {
+            int readed = 0;
+
+            while ((readed += await uploadStream.ReadAsync(bytes, readed, Math.Min(UPLOAD_BUFFER_SIZE, bytes.Length - readed))) < bytes.Length)
+            {
+                uploadPercent = (int)(((double)readed / bytes.Length) * 100);
+                StateHasChanged();
+            }
+        }
+
+        isFileUploading = false;
+        StateHasChanged();
+
+        using (var ms = new MemoryStream(bytes))
+        {
+            await LoadTemplateFromStream(ms);
+        }
     }
 
     private async Task LoadRemoteUriTemplate()
     {
-        isFileLoading = true;
+        isIntermediateProgress = true;
         StateHasChanged();
 
         IRemoteTemplateFileLoader loader = remoteTemplateFileLoaderFactory.GetMethod(selectedTemplate.RemoteUrl, selectedTemplate.RemoteUrlMethod, selectedTemplate.Guid);
@@ -140,23 +178,30 @@
 
     private async Task LoadTemplateFromStream(Stream stream)
     {
+        isIntermediateProgress = true;
+        StateHasChanged();
+
         try
         {
             await priceListManager.UploadTemplate(selectedTemplate.Type, stream);
             int readedLines = priceListManager.LoadedFiles.Last().ReadedPriceLines.Count;
+
+            await logger.Write(LogEntryGroupName.PriceListTemplateLoad, "Файл загружен", $"Загружен прайс-лист '{selectedTemplate.Type} ({readedLines} строк)'");
             toast.ShowSuccess($"Файл считан ({readedLines} строк)", selectedTemplate.Title);
         }
-        catch(NotFoundedPriceListTemplateException)
+        catch (NotFoundedPriceListTemplateException)
         {
+            await logger.Write(LogEntryGroupName.PriceListTemplateLoad, "Ошибка загрузки", $"Шаблон для '{selectedTemplate.Type}' не реализован'");
             toast.ShowError($"Шаблон не реализован!", selectedTemplate.Title);
         }
         catch (Exception ex)
         {
+            await logger.Write(LogEntryGroupName.PriceListTemplateLoad, "Ошибка загрузки", $"Ошибка загрузки файла с шаблоном {selectedTemplate.Title}. Ошибка: {ex.Message}");
             toast.ShowError("Ошибка: " + ex.Message, selectedTemplate.Title);
         }
         finally
         {
-            isFileLoading = false;
+            isIntermediateProgress = false;
             selectedTemplate = null;
             StateHasChanged();
         }
@@ -174,7 +219,7 @@
         await templateStorage.ChangePriceListTemplateDiscount(selectedTemplate.Guid, selectedTemplate.Discount);
         editingTemplate = null;
         toast.ShowSuccess("Скидка изменена");
-        await logger.Write(LogEntryGroupName.TemplateUpdate, "Обновлено", $"Скидка для шаблона {selectedTemplate.Title} изменена на {selectedTemplate.Discount.ToString("G29")}");
+        await logger.Write(LogEntryGroupName.TemplateUpdate, "Обновлено", $"Скидка для шаблона {selectedTemplate.Title} ({selectedTemplate.Guid}) изменена на {selectedTemplate.Discount.ToString("G29")}");
     }
 
     private void ApplyFilter(KeyboardEventArgs e)

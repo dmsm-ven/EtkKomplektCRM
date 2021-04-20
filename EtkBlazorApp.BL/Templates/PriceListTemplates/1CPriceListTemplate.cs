@@ -18,30 +18,22 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int row = START_ROW_NUMBER; row < tab.Dimension.Rows; row++)
             {
-                string skuNumber = tab.Cells[row, 0].ToString()?.Trim('.', ' ');
-                string quantityString = tab.Cells[row, 10].ToString();
-                string name = tab.Cells[row, 3]?.ToString();
+                string skuNumber = tab.GetValue<string>(row, 1).Trim('.', ' ');
+                string name = tab.GetValue<string>(row, 4);
+                int quantity = tab.GetValue<int>(row, 11);
+                
+                if (string.IsNullOrWhiteSpace(skuNumber)) { continue; }
 
-                int? parsedQuantity = null;
-                if (decimal.TryParse(quantityString, out var quantity))
+                var priceLine = new PriceLine(this)
                 {
-                    parsedQuantity = Math.Max((int)quantity, 0);
-                }
+                    IsSpecialLine = true,
+                    Name = name,
+                    Sku = skuNumber,
+                    Model = skuNumber,
+                    Quantity = quantity
+                };
 
-                if (!string.IsNullOrWhiteSpace(skuNumber) && parsedQuantity.HasValue)
-                {
-                    var priceLine = new PriceLine(this)
-                    {
-                        IsSpecialLine = true,
-                        Name = name,
-                        Sku = skuNumber,
-                        Model = skuNumber,
-                        Quantity = parsedQuantity
-                    };
-
-                    list.Add(priceLine);
-                }
-
+                list.Add(priceLine);
             }
 
             // Для Testo удаляем пробелы а моделях

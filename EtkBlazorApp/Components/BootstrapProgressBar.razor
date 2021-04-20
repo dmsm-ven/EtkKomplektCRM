@@ -1,0 +1,7 @@
+﻿<div class="progress">
+    <div class="progress-bar" role="progressbar" style="width: @(CurrentProgress)%;" aria-valuenow="@CurrentProgress" aria-valuemin="0" aria-valuemax="100">@(CurrentProgress)%</div>
+</div>
+
+@code {
+    [Parameter] public int CurrentProgress { get; set; }
+}

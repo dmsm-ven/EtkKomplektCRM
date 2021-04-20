@@ -19,13 +19,10 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int row = START_ROW_NUMBER; row < tab.Dimension.Rows; row++)
             {
-                string quantityString = tab.Cells[row, 10].ToString().Trim();
-                string priceInRUR = tab.Cells[row, 9].ToString().Trim();
-                string name = tab.Cells[row, 0].ToString().Trim();
-                string sku = SKU_PREFIX + tab.Cells[row, 3].ToString().Trim();
-
-                if (decimal.TryParse(priceInRUR.Trim(), out decimal price)) { }
-                if (int.TryParse(quantityString, out int quantity)) { }
+                string name = tab.GetValue<string>(row, 1);
+                string sku = SKU_PREFIX + tab.GetValue<string>(row, 4);
+                decimal priceInRUR = tab.GetValue<decimal>(row, 10);
+                int quantity = tab.GetValue<int>(row, 11);
 
                 var priceLine = new PriceLine(this)
                 {
@@ -34,7 +31,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Manufacturer = "CEM",
                     Model = sku,
                     Sku = sku,
-                    Price = price,
+                    Price = priceInRUR,
                     Quantity = quantity
                 };
 

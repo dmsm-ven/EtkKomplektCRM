@@ -29,6 +29,9 @@ namespace EtkBlazorApp.BL
         Accounts,
 
         [Description("ВсеИнструменты")]
-        Prikat
+        Prikat,
+
+        [Description("Загрузка шаблона")]
+        PriceListTemplateLoad
     }
 }

@@ -16,8 +16,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int row = START_ROW_NUMBER; row < tab.Dimension.Rows; row++)
             {
-                string model = tab.Cells[row, 1].ToString();
-                string quantityString = tab.Cells[row, 4].ToString();
+                string model = tab.GetValue<string>(row, 1);
+                int? quantity = ParseQuantity(tab.GetValue<string>(row, 4));
 
                 if (!string.IsNullOrWhiteSpace(model))
                 {
@@ -26,7 +26,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                         Manufacturer = "Cub Cadet",
                         Model = model,
                         Sku = model,
-                        Quantity = ParseQuantity(quantityString)
+                        Quantity = quantity
                     };
                     list.Add(priceLine);
                 }

@@ -88,7 +88,7 @@
         email = await settings.GetValue("task_symmetron_login");
         password = await settings.GetValue("task_symmetron_password");
 
-        Item = (await settings.GetCronTasks()).Single(t => t.details_page.Equals("symmetron"));
+        Item = (await settings.GetCronTasks()).Single(t => t.task_id == (int)CronTaskPrefix.Symmetron);
     }
 
     private async Task CheckConnection()

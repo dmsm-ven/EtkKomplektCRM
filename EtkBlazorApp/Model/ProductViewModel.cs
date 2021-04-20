@@ -9,6 +9,7 @@ namespace EtkBlazorApp.ViewModel
         public string Name { get; set; }
         public string Model { get; set; }
         public string Sku { get; set; }
+        public string EAN { get; set; }
         public string Uri { get; set; }
         public decimal Price { get; set; }
         public decimal BasePrice { get; set; }
