@@ -193,5 +193,15 @@ namespace EtkBlazorApp.BL
                 PriceLines.Add(line);
             }
         }
+    
+        public static string GetPriceListGuidByType(Type priceListTemplateType)
+        {
+            var id = ((PriceListTemplateGuidAttribute)priceListTemplateType
+                .GetCustomAttributes(typeof(PriceListTemplateGuidAttribute), false)
+                .FirstOrDefault())
+                .Guid;
+
+            return id;
+        }
     }
 }

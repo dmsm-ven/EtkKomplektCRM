@@ -13,7 +13,7 @@ namespace EtkBlazorApp.Services
         protected override async Task Run()
         {
             var templateType = typeof(MegeonPriceListTemplate);
-            var templateGuid = GetTemplateGuid(templateType);
+            var templateGuid = PriceListManager.GetPriceListGuidByType(templateType);
             var templateInfo = await service.templates.GetPriceListTemplateById(templateGuid);
 
             IRemoteTemplateFileLoader loader = service.remoteTemplateLoaderFactory.GetMethod(templateInfo.remote_uri);

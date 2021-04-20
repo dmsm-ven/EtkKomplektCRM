@@ -11,7 +11,7 @@ namespace EtkBlazorApp.Services
         protected override async Task Run()
         {
             var templateType = typeof(PristPriceListTemplate);
-            var templateGuid = GetTemplateGuid(templateType);
+            var templateGuid = PriceListManager.GetPriceListGuidByType(templateType);
             var templateInfo = await service.templates.GetPriceListTemplateById(templateGuid);
 
             var response = await (new HttpClient().GetAsync(templateInfo.remote_uri));

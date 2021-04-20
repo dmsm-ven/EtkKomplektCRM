@@ -1,4 +1,4 @@
-﻿@page "/cron-task/edit/silver"
+﻿@page "/cron-task/edit/megeon"
 
 @inject ISettingStorage settings
 @inject IToastService toasts
@@ -69,10 +69,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        item = (await settings.GetCronTasks()).Single(t => t.task_id == (int)CronTaskPrefix.Silver);
+        item = (await settings.GetCronTasks()).Single(t => t.task_id == (int)CronTaskPrefix.Megeon);
         executionDateTime = executionDateTime + item.exec_time;
 
-        templateGuid = PriceListManager.GetPriceListGuidByType(typeof(MeanWellPriceListTemplate));
+        templateGuid = PriceListManager.GetPriceListGuidByType(typeof(MegeonPriceListTemplate));
         login = await settings.GetValue($"price-list-template-credentials-{templateGuid}-login");
         password = await settings.GetValue($"price-list-template-credentials-{templateGuid}-password");
     }

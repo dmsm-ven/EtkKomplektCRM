@@ -38,15 +38,5 @@ namespace EtkBlazorApp.Services
         }
 
         protected abstract Task Run();
-
-        protected string GetTemplateGuid(Type priceListTemplateType)
-        {
-            var id = ((PriceListTemplateGuidAttribute)priceListTemplateType
-                .GetCustomAttributes(typeof(PriceListTemplateGuidAttribute), false)
-                .FirstOrDefault())
-                .Guid;
-
-            return id;
-        }
     }
 }
