@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.BL;
+using EtkBlazorApp.BL.Templates.PriceListTemplates;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using System;
@@ -14,37 +15,37 @@ namespace EtkBlazorApp.Services
     public class CronTaskService
     {
         public event Action<CronTaskBase> OnTaskComplete;
-        public event Action<CronTaskBase> OnTaskError;
+        public event Action<CronTaskBase> OnTaskExecutionError;
 
-        internal readonly ISettingStorage settings;
+        private readonly ISettingStorage settingStorage;
         internal readonly ITemplateStorage templates;
         internal readonly SystemEventsLogger logger;
         internal readonly UpdateManager updateManager;
         internal readonly PriceListManager priceListManager;
+        internal readonly RemoteTemplateFileLoaderFactory remoteTemplateLoaderFactory;
 
         private DateTime lastCheckDate;
         private readonly Timer checkTimer;
         private readonly List<CronTaskBase> taskList;
 
         public CronTaskService(
-            ISettingStorage settings,
+            ISettingStorage settingStorage,
             ITemplateStorage templates,
             SystemEventsLogger logger,
             UpdateManager updateManager, 
-            PriceListManager priceListManager)
+            PriceListManager priceListManager,
+            RemoteTemplateFileLoaderFactory remoteTemplateLoaderFactory)
         {
-            this.settings = settings;
+            this.settingStorage = settingStorage;
             this.templates = templates;
             this.logger = logger;
             this.updateManager = updateManager;
             this.priceListManager = priceListManager;
-
+            this.remoteTemplateLoaderFactory = remoteTemplateLoaderFactory;
             taskList = Assembly.GetAssembly(typeof(CronTaskBase)).GetTypes()
                 .Where(tt => tt.IsClass && !tt.IsAbstract && tt.IsSubclassOf(typeof(CronTaskBase)))
-                .Select(tt => (CronTaskBase)Activator.CreateInstance(tt))
+                .Select(tt => (CronTaskBase)Activator.CreateInstance(tt, new object[] { this }))
                 .ToList();
-
-            taskList.ForEach(t => t.SetService(this));
 
             checkTimer = new Timer(TimeSpan.FromSeconds(60).TotalMilliseconds);
             checkTimer.Elapsed += CheckTimer_Elapsed;
@@ -77,7 +78,7 @@ namespace EtkBlazorApp.Services
 
         private async Task ExecuteTask(CronTaskBase task, TimeSpan startTime, bool forceRun = false)
         {
-            var taskDatabaseEntity = await settings.GetCronTaskById((int)task.Prefix);
+            var taskDatabaseEntity = await settingStorage.GetCronTaskById((int)task.Prefix);
 
             if(taskDatabaseEntity.enabled == false && forceRun == false) { return; }
 
@@ -90,16 +91,16 @@ namespace EtkBlazorApp.Services
                     taskDatabaseEntity.last_exec_date_time = DateTime.Now;
                     await task.Execute();
                     OnTaskComplete?.Invoke(task);
-                    await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Успех", $"Задание {task.Prefix} выполнено");
+                    await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {task.Prefix} выполнено");
                     
                 }
                 catch (Exception ex)
                 {                    
-                    OnTaskError?.Invoke(task);
+                    OnTaskExecutionError?.Invoke(task);
                     await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Ошибка", $"Ошибка выполнения задания '{task.Prefix}'. {ex.Message}");
                 }                 
 
-                await settings.UpdateCronTask(taskDatabaseEntity);                                            
+                await settingStorage.UpdateCronTask(taskDatabaseEntity);                                            
             }
         }
 
@@ -114,7 +115,7 @@ namespace EtkBlazorApp.Services
 
         private bool IsTimeToRun(CronTaskEntity task, TimeSpan now)
         {
-            if(Math.Abs((task.exec_time - now).TotalMilliseconds) <= checkTimer.Interval)
+            if(now >= task.exec_time && Math.Abs((task.exec_time - now).TotalMilliseconds) <= checkTimer.Interval)
             {
                 return true;
             }

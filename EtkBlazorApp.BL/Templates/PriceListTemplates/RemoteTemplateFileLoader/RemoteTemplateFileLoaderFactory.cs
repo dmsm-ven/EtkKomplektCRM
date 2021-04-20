@@ -16,7 +16,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             this.storage = storage;
         }
 
-        public IRemoteTemplateFileLoader GetMethod(string methodName, string remoteUri, string guid)
+        public IRemoteTemplateFileLoader GetMethod(string remoteUri, string methodName = null, string guid = null)
         {
             if (string.IsNullOrWhiteSpace(methodName))
             {

@@ -72,7 +72,7 @@ namespace EtkBlazorApp.BL
             await Task.Delay(TimeSpan.FromSeconds(1));
             await UpdateMonobrands(affectedBrandsIds, progress);
 
-            progress.Report("Обновление завершено");
+            progress?.Report("Обновление завершено");
         }
 
         private async Task UpdateMonobrands(List<int> affectedBrandsIds, IProgress<string> progress = null)

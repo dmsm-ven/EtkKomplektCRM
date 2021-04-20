@@ -6,7 +6,7 @@ namespace EtkBlazorApp.Services
 {
     public class PristCronTask : CronTaskBase
     {
-        public PristCronTask() : base(CronTaskPrefix.Prist) { }
+        public PristCronTask(CronTaskService service) : base(service, CronTaskPrefix.Prist) { }
 
         protected override async Task Run()
         {
@@ -20,7 +20,6 @@ namespace EtkBlazorApp.Services
                 var lines = await service.priceListManager.ReadTemplateLines(templateType, stream);
                 await service.updateManager.UpdatePriceAndStock(lines, clearStockBeforeUpdate: false);
             }
-
         }
     }
 }

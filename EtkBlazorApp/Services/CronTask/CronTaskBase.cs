@@ -11,9 +11,10 @@ namespace EtkBlazorApp.Services
         public bool IsDoneToday { get; protected set; }
         protected CronTaskService service { get; private set; }
 
-        public CronTaskBase(CronTaskPrefix prefix)
+        public CronTaskBase(CronTaskService service, CronTaskPrefix prefix)
         {
-            Prefix = prefix;
+            this.service = service;
+            this.Prefix = prefix;
         }
 
         public async Task Execute()
@@ -46,11 +47,6 @@ namespace EtkBlazorApp.Services
                 .Guid;
 
             return id;
-        }
-
-        internal void SetService(CronTaskService cronTaskService)
-        {
-            service = cronTaskService;
         }
     }
 }

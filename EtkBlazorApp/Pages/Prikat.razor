@@ -100,6 +100,24 @@ else
     bool inProgress = false;
     bool reportButtonDisabled => itemsSource == null || itemsSource.All(m => m.IsChecked == false);
 
+    protected override async Task OnInitializedAsync()
+    {
+        reportSettingsHasStock = await settingStorage.GetValue<bool>("prikat-export-has-stock");
+        reportSettingsHasEan = await settingStorage.GetValue<bool>("prikat-export-has-ean");
+
+        itemsSource = (await templateStorage.GetPrikatTemplates())
+                .Select(t => new PrikatManufacturerDiscountViewModel()
+                {
+                    IsChecked = t.enabled || (t.discount1 != decimal.Zero || t.discount2 != decimal.Zero),
+                    Discount1 = t.discount1,
+                    Discount2 = t.discount2,
+                    Manufacturer_id = t.manufacturer_id,
+                    Manufacturer = t.manufacturer_name,
+                    CurrencyCode = t.currency_code
+                })
+                .ToList();
+    }
+
     private async Task GetReport()
     {
         inProgress = true;
@@ -133,24 +151,6 @@ else
     {
         reportSettingsHasEan = (bool)e.Value;
         await settingStorage.SetValue<bool>("prikat-export-has-ean", reportSettingsHasEan);
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        reportSettingsHasStock = await settingStorage.GetValue<bool>("prikat-export-has-stock");
-        reportSettingsHasEan = await settingStorage.GetValue<bool>("prikat-export-has-ean");
-
-        itemsSource = (await templateStorage.GetPrikatTemplates())
-                .Select(t => new PrikatManufacturerDiscountViewModel()
-                {
-                    IsChecked = t.enabled,
-                    Discount1 = t.discount1,
-                    Discount2 = t.discount2,
-                    Manufacturer_id = t.manufacturer_id,
-                    Manufacturer = t.manufacturer_name,
-                    CurrencyCode = t.currency_code
-                })
-                .ToList();
     }
 
     private async Task DiscountChanged(PrikatManufacturerDiscountViewModel vmItem)

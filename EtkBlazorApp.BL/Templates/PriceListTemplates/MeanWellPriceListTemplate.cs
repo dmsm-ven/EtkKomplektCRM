@@ -19,25 +19,24 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             var tab = Excel.Workbook.Worksheets[0];
 
-            for (int row = 1; row < tab.Dimension.Rows; row++)
+            for (int row = 3; row < tab.Dimension.Rows; row++)
             {
-                string manufacturer = tab.Cells[row, 0].ToString();
-                string skuNumber = tab.Cells[row, 1]?.ToString();
-                string quantityString = tab.Cells[row, 5]?.ToString();
+                string manufacturer = tab.GetValue<string>(row, 1);
+                string skuNumber = tab.GetValue<string>(row, 2);
+                int quantityString = tab.GetValue<int>(row, 6);
 
-                string regularPriceString = tab.Cells[row, 6]?.ToString();
-                string discountPriceString = tab.Cells[row, 7]?.ToString();
+                decimal regularPriceString = tab.GetValue<decimal>(row, 7);
+                decimal discountPriceString = tab.GetValue<decimal>(row, 8);
 
-                string priceString = new string[] { regularPriceString, discountPriceString }
-                    .FirstOrDefault(s => !string.IsNullOrWhiteSpace(s));
+                decimal priceString = new decimal[] { regularPriceString, discountPriceString }.Max();
 
                 if (manufacturer.Equals("MeanWell", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(skuNumber))
                 {
                     var priceLine = new PriceLine(this)
                     {
-                        Quantity = ParseQuantity(quantityString),
+                        Quantity = quantityString,
                         Currency = CurrencyType.USD,
-                        Price = ParsePrice(priceString),
+                        Price = priceString,
                         Manufacturer = "Mean Well",
                         Sku = skuNumber,
                         Model = skuNumber
