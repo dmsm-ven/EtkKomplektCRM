@@ -10,7 +10,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Timers;
 
-namespace EtkBlazorApp.Services
+namespace EtkBlazorApp.BL.CronTask
 {
     public class CronTaskService
     {

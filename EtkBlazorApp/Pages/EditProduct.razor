@@ -143,7 +143,7 @@
             BasePrice = entity.base_currency_code == CurrencyType.RUB.ToString() ? entity.price : entity.base_price,
             BasePriceCurrency = entity.base_currency_code,
             StockStatus = entity.stock_status,
-            DateModified = entity.date_modified
+            DateModified = entity.date_modified.HasValue ? entity.date_modified.ToString() : string.Empty
         };
 
         if (entity != null)

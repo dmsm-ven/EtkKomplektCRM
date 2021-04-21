@@ -49,7 +49,8 @@ namespace EtkBlazorApp.BL.Templates
 
                 if (priceLines.Any())
                 {
-                    var linkedPriceLine = priceLines?.FirstOrDefault(line => line.Sku.Equals(product.sku, StringComparison.OrdinalIgnoreCase) || (!string.IsNullOrEmpty(line.Model) && (line.Model.Equals(product.model, StringComparison.OrdinalIgnoreCase))) );
+                    var linkedPriceLine = priceLines?
+                        .FirstOrDefault(line => line.Sku.Equals(product.sku, StringComparison.OrdinalIgnoreCase) || (!string.IsNullOrEmpty(line.Model) && (line.Model.Equals(product.model, StringComparison.OrdinalIgnoreCase))) );
 
                     if (linkedPriceLine != null)
                     {
@@ -57,6 +58,7 @@ namespace EtkBlazorApp.BL.Templates
                         {
                             product.name = linkedPriceLine.Name;
                         }
+                        product.price = linkedPriceLine.Price.Value * CurrencyRatio;
                     }
                     else
                     {

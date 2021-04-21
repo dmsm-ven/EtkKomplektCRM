@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.Services
+namespace EtkBlazorApp.BL.CronTask
 {
     public abstract class CronTaskBase
     {

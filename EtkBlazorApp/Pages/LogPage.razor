@@ -121,11 +121,15 @@ else
 
         IEnumerable<LogEntryEntity> data = await database.GetLogItems(MAX_ITEMS, filterMaxDays);
         users = data.Select(item => item.user).OrderBy(u => u).Distinct().ToList();
-        users = data.Select(item => item.user).OrderBy(u => u).Distinct().ToList();
 
         if (!string.IsNullOrWhiteSpace(selectedUser))
         {
             data = data.Where(entry => entry?.user != null && entry.user.Equals(selectedUser, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if(selectedGroup != null)
+        {
+            data = data.Where(entry => entry.group_name == selectedGroup.GetDescriptionAttribute()).ToList();
         }
 
         entries = data.ToList();

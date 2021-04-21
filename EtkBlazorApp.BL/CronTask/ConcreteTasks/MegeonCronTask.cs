@@ -1,10 +1,6 @@
-﻿using EtkBlazorApp.BL;
-using EtkBlazorApp.BL.Templates.PriceListTemplates;
-using System.IO;
-using System.Net;
-using System.Threading.Tasks;
+﻿using EtkBlazorApp.BL.Templates.PriceListTemplates;
 
-namespace EtkBlazorApp.Services
+namespace EtkBlazorApp.BL.CronTask
 {
     public class MegeonCronTask : CronTaskByPriceListBase
     {

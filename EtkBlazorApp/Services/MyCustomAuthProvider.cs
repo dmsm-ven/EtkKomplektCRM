@@ -30,6 +30,7 @@ namespace EtkBlazorApp.Services
         {
             var login = await storage.GetAsync<string>("user_login");
             var password = await storage.GetAsync<string>("user_password");
+            
             if (login.Success && password.Success)
             {
                 var state = await AuthenticateUser(new AppUser() 

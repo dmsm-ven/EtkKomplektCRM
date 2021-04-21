@@ -49,6 +49,9 @@
                ConfirmationTitle="Подтверждение" />
 
 @code {
+    //TODO: тут и в других страницах задачах меняет только пару полей, и скорее всего
+    //нужно что бы базовый класс CronTaskSettingsDefaultPage вмещал в себя просто RenderFragment небольшой дополнительной части
+    //иначе получается 90% повторения кода из той страницы
     private DateTime executionDateTime = new DateTime();
     private DateTime ExecutionDateTime
     {

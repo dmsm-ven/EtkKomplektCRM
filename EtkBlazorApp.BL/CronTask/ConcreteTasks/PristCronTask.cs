@@ -1,6 +1,4 @@
-﻿using EtkBlazorApp.BL;
-
-namespace EtkBlazorApp.Services
+﻿namespace EtkBlazorApp.BL.CronTask
 {
     public class PristCronTask : CronTaskByPriceListBase
     {

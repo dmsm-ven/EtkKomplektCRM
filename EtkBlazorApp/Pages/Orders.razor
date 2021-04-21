@@ -46,7 +46,7 @@ else
                 {
                     <tr class="@(order == newOrder ? "new-order-row" : string.Empty)">
                         <td>@order.OrderId</td>
-                        <td>@order.DateTime.ToString("dd.MM.yyyy | hh:mm")</td>
+                        <td>@order.DateTime.ToString("dd.MM.yyyy | HH:mm")</td>
                         <td>@order.Customer</td>
                         <td>@order.City</td>
                         <td>@order.TotalPrice.ToString("C0")</td>

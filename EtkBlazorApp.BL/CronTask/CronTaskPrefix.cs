@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.Services
+namespace EtkBlazorApp.BL.CronTask
 {
     //Цифровое значение должно соответствовать ID задачи в таблице etk_app_cron_task
     public enum CronTaskPrefix

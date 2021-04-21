@@ -1,5 +1,6 @@
 using Blazored.Toast;
 using EtkBlazorApp.BL;
+using EtkBlazorApp.BL.CronTask;
 using EtkBlazorApp.BL.Templates.PriceListTemplates;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.Integration.Ozon;

@@ -26,6 +26,6 @@ namespace EtkBlazorApp.DataAccess.Entity
         public decimal height { get; set; }
         public decimal weight { get; set; }
 
-        public string date_modified { get; set; }
+        public DateTime? date_modified { get; set; }
     }
 }

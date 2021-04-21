@@ -14,10 +14,14 @@ namespace EtkBlazorApp.BL
         {
             var list = new List<PriceLine>();
 
-            for (int row = 0; row < tab.Dimension.Rows; row++)
+            var tab = Excel.Workbook.Worksheets.First(t => t.Name.Contains("DIN"));
+
+            for (int row = 2; row < tab.Dimension.Rows; row++)
             {
-                string skuNumber = tab.GetValue<string>(row, 0).ToString();
-                decimal price = tab.GetValue<decimal>(row, 1);
+                string skuNumber = tab.GetValue<string>(row, 1);
+                decimal price = tab.GetValue<decimal>(row, 6); // под заказ
+
+                if (string.IsNullOrWhiteSpace(skuNumber)) { continue; }
 
                 var priceLine = new PriceLine(this)
                 {

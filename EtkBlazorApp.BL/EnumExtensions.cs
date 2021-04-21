@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp
+namespace EtkBlazorApp.BL
 {
-    public static class StringHelper
+    public static class EnumExtensions
     {
         public static string GetDescriptionAttribute(this Enum currentEnum)
         {
@@ -21,25 +22,6 @@ namespace EtkBlazorApp
                 }
             }
             return currentEnum.ToString();
-        }
-
-        public static string ToStringValue(this bool value)
-        {
-            return value ? "1" : "0";
-        }
-
-        /// <summary>
-        /// Если входящая строка равна "1" то возращает false, иначе false
-        /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
-        public static bool ToBooleanNumber(this string str)
-        {
-            if (!string.IsNullOrWhiteSpace(str))
-            {
-                return str == "1";
-            }
-            return false;
         }
     }
 }
