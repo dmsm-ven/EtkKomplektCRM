@@ -35,26 +35,25 @@ namespace EtkBlazorApp
             //Приложение              
             services.AddTransient<IDatabaseProductCorrelator, HardOrdereSkuModelProductCorrelator>();
             services.AddTransient<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
-            services.AddTransient<IOzonProductCorrelator, SimpleOzonProductCorrelator>();
+            services.AddTransient<IOzonProductCorrelator, SimpleOzonProductCorrelator>();       
+            services.AddTransient<IDatabaseAccess, EtkDatabaseDapperAccess>();
+            services.AddTransient<IProductStorage, ProductStorage>();
+            services.AddTransient<ITemplateStorage, TemplateStorage>();
+            services.AddTransient<IOrderStorage, OrderStorage>();
+            services.AddTransient<IManufacturerStorage, ManufacturerStorage>();
+            services.AddTransient<ILogStorage, LogStorage>();
+            services.AddTransient<ISettingStorage, SettingStorage>();
+            services.AddTransient<IAuthenticationDataStorage, AuthenticationDataStorage>();
+            services.AddTransient<RemoteTemplateFileLoaderFactory>();
 
             services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
-            services.AddSingleton<IDatabaseAccess, EtkDatabaseDapperAccess>();
-            services.AddSingleton<IProductStorage, ProductStorage>();
-            services.AddSingleton<ITemplateStorage, TemplateStorage>();
-            services.AddSingleton<IOrderStorage, OrderStorage>();
-            services.AddSingleton<IManufacturerStorage, ManufacturerStorage>();
-            services.AddSingleton<ILogStorage, LogStorage>();
-            services.AddSingleton<ISettingStorage, SettingStorage>();
-            services.AddSingleton<IAuthenticationDataStorage, AuthenticationDataStorage>();
-
             services.AddSingleton<SystemEventsLogger>();
             services.AddSingleton<NewOrdersNotificationService>();
             services.AddSingleton<UpdateManager>();
             services.AddSingleton<OzonSellerManager>();
             services.AddSingleton<PriceListManager>();
             services.AddSingleton<CronTaskService>();
-            services.AddSingleton<RemoteTemplateFileLoaderFactory>();
-
+            
             services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();
             services.AddScoped<UserLogger>();
             services.AddScoped<ReportManager>();      

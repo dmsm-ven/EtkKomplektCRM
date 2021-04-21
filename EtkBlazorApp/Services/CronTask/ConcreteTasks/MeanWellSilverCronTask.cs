@@ -5,22 +5,16 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.Services
 {
-    public class MeanWellSilverCronTask : CronTaskBase
+    public class MeanWellSilverCronTask : CronTaskByPriceListBase
     {
-        public MeanWellSilverCronTask(CronTaskService service) : base(service, CronTaskPrefix.Silver) { }
-
-        protected override async Task Run()
+        public MeanWellSilverCronTask(CronTaskService service) : base(typeof(MeanWellPriceListTemplate), service, CronTaskPrefix.Silver)
         {
-            var templateType = typeof(MeanWellPriceListTemplate);
-            var templateGuid = PriceListManager.GetPriceListGuidByType(templateType);
-            var templateInfo = await service.templates.GetPriceListTemplateById(templateGuid);
 
-            IRemoteTemplateFileLoader loader = service.remoteTemplateLoaderFactory.GetMethod(templateInfo.remote_uri, templateInfo.remote_uri_method, templateGuid);
-            using (var ms = new MemoryStream(await loader.GetBytes()))
-            {
-                var lines = await service.priceListManager.ReadTemplateLines(templateType, ms);
-                await service.updateManager.UpdatePriceAndStock(lines, clearStockBeforeUpdate: false);
-            }
         }
     }
+
+
+
+
+
 }

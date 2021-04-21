@@ -56,7 +56,7 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task<ProductEntity> GetProductByKeyword(string keyword)
         {
-            string sql = "SELECT p.product_id, d.name, p.sku, p.model, p.quantity, p.price, p.base_price, p.base_currency_code, s.name as stock_status, url.keyword as keyword " +
+            string sql = "SELECT p.product_id, d.name, p.sku, p.model, p.quantity, p.price, p.base_price, p.base_currency_code, p.date_modified, s.name as stock_status, url.keyword as keyword " +
                          "\nFROM oc_product p " +
                          "\nJOIN oc_url_alias url ON url.query = CONCAT('product_id=', p.product_id) " +
                          "\nLEFT JOIN oc_product_description d ON p.product_id = d.product_id " +

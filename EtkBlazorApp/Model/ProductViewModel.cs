@@ -16,5 +16,6 @@ namespace EtkBlazorApp.ViewModel
         public string BasePriceCurrency { get; set; }
         public string StockStatus { get; set; }   
         public int Quantity { get; set; }
+        public string DateModified { get; set; }
     }
 }

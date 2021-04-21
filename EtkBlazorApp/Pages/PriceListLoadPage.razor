@@ -41,6 +41,10 @@
                @oninput="@(ui => searchPhrase = (string)ui.Value)"
                @bind="searchPhrase" class="form-control rounded mx-2" />
     </div>
+    @*<div class="float-right">
+        <label for="chbx-only-remote-files">С файлами по ссылке</label>
+        <input type="checkbox" class="form-check" @bind="showOnlyWithRemoteFile" />
+    </div>*@
 </div>
 
 <div class="row">
@@ -107,6 +111,7 @@
     PriceListTemplateItemViewModel editingTemplate = null;
 
     string searchPhrase;
+    //bool showOnlyWithRemoteFile = false;
     CancellationTokenSource cts;
     bool isIntermediateProgress = false;
     bool isFileUploading = false;

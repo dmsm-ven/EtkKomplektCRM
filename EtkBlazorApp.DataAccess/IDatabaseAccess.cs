@@ -56,6 +56,4 @@ namespace EtkBlazorApp.DataAccess
             }
         }
     }
-
-
 }
