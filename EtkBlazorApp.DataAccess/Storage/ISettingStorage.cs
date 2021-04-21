@@ -138,6 +138,5 @@ namespace EtkBlazorApp.DataAccess
 
             await database.SaveData(sql, task);
         }
-
     }
 }
