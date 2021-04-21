@@ -14,7 +14,7 @@ namespace EtkBlazorApp.DataAccess
         Task<ProductEntity> GetProductByKeyword(string keyword);
         Task UpdateProductsStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate);
         Task UpdateProductsPrice(List<ProductUpdateData> data);
-        Task<List<ProductEntity>> ReadProducts(List<int> allowedManufacturers = null);
+        Task<List<ProductEntity>> ReadProducts(IEnumerable<int> allowedManufacturers = null);
         Task<List<ProductEntity>> ReadProducts(int manufacturer_id);
         Task UpdateDirectProduct(ProductEntity product);
         Task<List<StockStatusEntity>> GetStockStatuses();
@@ -90,9 +90,9 @@ namespace EtkBlazorApp.DataAccess
             return data;
         }
 
-        public async Task<List<ProductEntity>> ReadProducts(List<int> allowedManufacturers = null)
+        public async Task<List<ProductEntity>> ReadProducts(IEnumerable<int> allowedManufacturers = null)
         {
-            if(allowedManufacturers != null && allowedManufacturers.Count == 0)
+            if(allowedManufacturers != null && allowedManufacturers.Count() == 0)
             {
                 return new List<ProductEntity>();
             }
@@ -152,7 +152,8 @@ namespace EtkBlazorApp.DataAccess
                     sb.AppendLine($"WHEN '{productInfo.product_id}' THEN '{productInfo.price.Value.ToString(new CultureInfo("en-EN"))}'");
                 }
 
-                sb.AppendLine("ELSE base_price").AppendLine("END, date_modified = NOW()");
+                sb.AppendLine("ELSE base_price")
+                  .AppendLine("END, date_modified = NOW()");
 
                 if (onlyOneCurrency)
                 {

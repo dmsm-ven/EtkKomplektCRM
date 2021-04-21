@@ -46,6 +46,7 @@ namespace EtkBlazorApp
             services.AddTransient<ISettingStorage, SettingStorage>();
             services.AddTransient<IAuthenticationDataStorage, AuthenticationDataStorage>();
             services.AddTransient<RemoteTemplateFileLoaderFactory>();
+            
 
             services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
             services.AddSingleton<SystemEventsLogger>();

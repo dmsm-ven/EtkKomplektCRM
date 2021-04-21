@@ -2,6 +2,7 @@
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Threading.Tasks;
 
@@ -11,21 +12,17 @@ namespace EtkBlazorApp.Services
     {
         private readonly ILogStorage logStorage;
         private readonly AuthenticationStateProvider stateProvider;
-        private string userLogin;
 
         public UserLogger(ILogStorage logStorage, AuthenticationStateProvider stateProvider)
         {
             this.logStorage = logStorage;
             this.stateProvider = stateProvider;
-
-            stateProvider.AuthenticationStateChanged += async (e) =>
-            {
-                userLogin = (await e).User.Identity.Name;
-            };
         }
 
         public async Task Write(LogEntryGroupName group, string title, string message)
         {
+            var userLogin = (await stateProvider.GetAuthenticationStateAsync()).User.Identity.Name;
+
             var entity = new LogEntryEntity()
             {
                 date_time = DateTime.Now,

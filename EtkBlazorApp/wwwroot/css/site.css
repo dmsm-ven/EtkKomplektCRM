@@ -5,6 +5,11 @@ tr.disabled-user td:not(:last-child) {
     opacity: 0.4;
 }
 
+.manufacturers-shipment-period-table td {
+    padding: 2px;
+    vertical-align: middle;
+}
+
 .current-user {
     background-color: lemonchiffon;
 }

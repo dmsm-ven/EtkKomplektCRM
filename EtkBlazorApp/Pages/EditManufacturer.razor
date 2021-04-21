@@ -4,6 +4,7 @@
 @using EtkBlazorApp.Components;
 @inject IManufacturerStorage _database
 @inject UserLogger logger
+@attribute [Authorize]
 
 
 <h1>Производители</h1>
@@ -13,70 +14,48 @@
 }
 else
 {
-    <AuthorizeView Roles="Administrator, Manager">
-        <Authorized>
-            <h3>Список производителей на сайте</h3>
-            <div class="row">
-                <table class="table table-hover" style="width: 100%">
-                    <thead class="thead-etk">
-                        <tr>
-                            <th>Производитель</th>
-                            <th>Срок поставки (дней)</th>
-                            <th>Следующая поставка</th>
-                            <th>Изменить</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in manufacturers)
-                        {
-                            <tr>
-                                <td><a href="@item.Uri" target="_blank">@item.name</a></td>
+    <h3>Список производителей на сайте</h3>
+    <div class="row">
+        <table class="table table-hover manufacturers-shipment-period-table" style="width: 100%">
+            <thead class="thead-etk">
+                <tr>
+                    <th>Производитель</th>
+                    <th>Срок поставки (дней)</th>
+                    <th>Следующая дата поставка</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in manufacturers)
+                {
+                    <tr>
+                        <td><a href="@item.Uri" target="_blank">@item.name</a></td>
 
-                                @if (editManufacturer != item)
-                                {
-                                    <td>@item.shipment_period</td>
-                                    <td>@item.NextShipmentDate.ToShortDateString()</td>
-                                    <td><button class="btn-secondary btn-sm" @onclick="@(e => ChangeEditedManufacturer(item))">Изменить</button></td>
-                                }
-                                else
-                                {
-                                    <td><input @bind="item.shipment_period" /></td>
-                                    <td>@item.NextShipmentDate.ToShortDateString()</td>
-                                    <td><button class="btn-info btn-sm" @onclick="@(e => ConfirmManufacturerChanges(item))">Подтвердить</button></td>
-                                }
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </Authorized>
-        <NotAuthorized>
-            <h3>Список производителей на сайте</h3>
-            <div class="row">
-                <table class="table table-hover" style="width: 100%">
-                    <thead class="thead-etk">
-                        <tr>
-                            <th>Производитель</th>
-                            <th>Срок поставки (дней)</th>
-                            <th>Следующая поставка</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in manufacturers)
+                        @if (editManufacturer != item)
                         {
-                        <tr>
-                            <td><a href="@item.Uri" target="_blank">@item.name</a></td>
                             <td>@item.shipment_period</td>
                             <td>@item.NextShipmentDate.ToShortDateString()</td>
-                        </tr>
+                            <td>
+                                <button class="btn-secondary btn-sm" @onclick="@(e => ChangeEditedManufacturer(item))">
+                                    <span class="oi oi-pencil"></span>
+                                </button>
+                            </td>
                         }
-                    </tbody>
-                </table>
-            </div>
-
-        </NotAuthorized>
-    </AuthorizeView>
+                        else
+                        {
+                            <td><input @bind="item.shipment_period" /></td>
+                            <td>@item.NextShipmentDate.ToShortDateString()</td>
+                            <td>
+                                <button class="btn-info btn-sm" @onclick="@(e => ConfirmManufacturerChanges(item))">Подтвердить</button>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
+
 
 @code {
 

@@ -82,8 +82,8 @@
 
             var progress = new Progress<string>((msg) =>
             {
-                updateProgressSteps.Add($"[{DateTime.Now.ToString()}] " + msg);
-                StateHasChanged();
+                updateProgressSteps.Add($"[{DateTime.Now.ToString()}] " + msg);                            
+                StateHasChanged();            
             });
 
             await databaseManager.UpdatePriceAndStock(priceListManager.PriceLines, clearStockBeforeUpdate, progress);

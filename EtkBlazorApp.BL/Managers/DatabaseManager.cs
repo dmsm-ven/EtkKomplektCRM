@@ -38,44 +38,51 @@ namespace EtkBlazorApp.BL
             //Проблема с Bosch, и возможно другими брендами где pl.manufacturer = null
 
             progress?.Report("Подготовка списка производителей для обновления");
-            await Task.Delay(TimeSpan.FromSeconds(1));
-            var affectedBrands = priceLines.Select(pl => pl.Manufacturer).Distinct().ToList();
-            var affectedBrandsIds = (await manufacturerStorage.GetManufacturers())
-                .Where(m => affectedBrands.Contains(m.name))
-                .Select(m => m.manufacturer_id)
-                .ToList();
+            int [] affectedBrandsIds = await GetAffectedBrandIds(priceLines);
 
             progress?.Report("Загрузка товаров");
-            await Task.Delay(TimeSpan.FromSeconds(1));
             var products = await productsStorage.ReadProducts(affectedBrandsIds);
-       
+
             progress?.Report("Сопоставление товаров для обновления");
-            await Task.Delay(TimeSpan.FromSeconds(1));
             var data = await correlator.GetCorrelationData(products, priceLines);
-            
+
             progress?.Report("Обновление цен etk-komplekt.ru");
-            await Task.Delay(TimeSpan.FromSeconds(1));
             await productsStorage.UpdateProductsPrice(data);
 
             progress?.Report("Обновление остатков etk-komplekt.ru");
-            await Task.Delay(TimeSpan.FromSeconds(1));
             await productsStorage.UpdateProductsStock(data, clearStockBeforeUpdate);
 
             if (data.Any(line => line.price.HasValue))
             {
                 progress?.Report("Пересчет цен товаров в валюте");
-                await Task.Delay(TimeSpan.FromSeconds(1));
                 await new WebClient().DownloadStringTaskAsync(CurrencyPlusUri);
             }
 
             progress?.Report("Обновление монобренд сайтов");
-            await Task.Delay(TimeSpan.FromSeconds(1));
             await UpdateMonobrands(affectedBrandsIds, progress);
 
             progress?.Report("Обновление завершено");
         }
 
-        private async Task UpdateMonobrands(List<int> affectedBrandsIds, IProgress<string> progress = null)
+        private async Task<int[]> GetAffectedBrandIds(IEnumerable<PriceLine> priceLines)
+        {
+            var allManufacturers = await manufacturerStorage.GetManufacturers();
+
+            var affectedBrands = priceLines.Select(pl => pl.Manufacturer).Distinct().ToList();
+            if (affectedBrands.Contains("Bosch"))
+            {
+                affectedBrands.Add("Dremel");
+            }
+
+            var affectedBrandsIds = allManufacturers
+                .Where(m => affectedBrands.Contains(m.name))
+                .Select(m => m.manufacturer_id)
+                .ToList();
+
+            return affectedBrandsIds.ToArray();
+        }
+
+        private async Task UpdateMonobrands(IEnumerable<int> affectedBrandsIds, IProgress<string> progress = null)
         {
             var monobrands = await manufacturerStorage.GetMonobrands();
             var affectedMonobrands = monobrands
