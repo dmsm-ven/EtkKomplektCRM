@@ -10,14 +10,11 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("C53B8C85-3115-421F-A579-0B5BFFF6EF48")]
     public class DipaulPriceListTemplate : ExcelPriceListTemplateBase
     {
-        static readonly Dictionary<string, string> ValidManufacturersMap = new Dictionary<string, string>()
+        public DipaulPriceListTemplate(string fileName) : base(fileName) 
         {
-            ["Hakko"] = "Hakko",
-            ["Keysight"] = "Keysight",
-            ["ITECH ВЭД"] = "ITECH"
-        };
-
-        public DipaulPriceListTemplate(string fileName) : base(fileName) { }
+            ValidManufacturerNames.AddRange(new[] { "Hakko", "Keysight", "ITECH" });
+            ManufacturerNameMap["ITECH ВЭД"] = "ITECH";
+        }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {
@@ -28,14 +25,9 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 string manufacturer = tab.Cells[row, 2].ToString();
 
-                if (!ValidManufacturersMap.ContainsKey(manufacturer))
-                {
-                    continue;
-                }
-                else
-                {
-                    manufacturer = ValidManufacturersMap[manufacturer];
-                }
+                manufacturer = ManufacturerNameMap.ContainsKey(manufacturer) ? ManufacturerNameMap[manufacturer] : manufacturer;
+
+                if (!ValidManufacturerNames.Contains(manufacturer)) { continue; }
 
                 string skuNumber = tab.GetValue<string>(row, 1);
                 string productName = tab.GetValue<string>(row, 2);

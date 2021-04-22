@@ -6,7 +6,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("83488F9E-CCA7-4BDB-A6CC-7C3D4CF054EA")]
     public class MegeonPriceListTemplate : ExcelPriceListTemplateBase
     {
-        const int START_ROW_NUMBER = 2;
         const string MODEL_REGEX = @"МЕГЕОН \S+";
 
         public MegeonPriceListTemplate(string fileName) : base(fileName) { }
@@ -17,7 +16,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             var tab = Excel.Workbook.Worksheets[0];
 
-            for (int row = START_ROW_NUMBER; row < tab.Dimension.Rows; row++)
+            for (int row = 2; row < tab.Dimension.Rows; row++)
             {
                 var cell = ((dynamic)tab.Cells.Value);
                 string nameWithoutAddSpace = Regex.Replace(cell[row, 1], " {2,}", " ").Trim();

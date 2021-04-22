@@ -8,22 +8,19 @@ using System.Xml;
 
 namespace EtkBlazorApp.BL
 {
+    //TODO тут нужно разбить класс, не должно быть что шаблон считывает данные
     [PriceListTemplateGuid("438B5182-62DD-42C4-846F-4901C3B38B14")]
-    public class PristPriceListTemplate : IPriceListTemplate
+    public class PristPriceListTemplate : PriceListTemplateReaderBase, IPriceListTemplate
     {
         public string FileName { get; private set; }
-
-        readonly string[] INVALID_BRANDS = new[] { "ERSA", "TDK-Lambda", "Weller", "ProsKit", "Bernstein"  };
-
-        readonly Dictionary<string, string> BrandMap = new Dictionary<string, string>()
-        {
-            ["Teledyne LeCroy"] = "LeCroy",
-            ["Keysight Technologies"] = "Keysight"
-        };
 
         public PristPriceListTemplate(string uri)
         {
             FileName = uri;
+            ManufacturerNameMap["Teledyne LeCroy"] = "LeCroy";
+            ManufacturerNameMap["Keysight Technologies"] = "Keysight";
+
+            SkipManufacturerNames.AddRange(new[] { "ERSA", "TDK-Lambda", "Weller", "ProsKit", "Bernstein" });
         }
 
         public async Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)
@@ -33,13 +30,16 @@ namespace EtkBlazorApp.BL
 
             var list = new List<PriceLine>();
 
-            foreach (var offer in offers.Where(offer => !INVALID_BRANDS.Contains(offer.Vendor)))
+            foreach (var offer in offers)
             {
+                string manufacturer = ManufacturerNameMap.ContainsKey(offer.Vendor) ? ManufacturerNameMap[offer.Vendor] : offer.Vendor;
+                if (SkipManufacturerNames.Contains(manufacturer)) { continue; }
+
                 var priceLine = new PriceLine(this)
                 {
                     Name = offer.Name,
                     Currency = offer.Currency,
-                    Manufacturer = BrandMap.ContainsKey(offer.Vendor) ? BrandMap[offer.Vendor] : offer.Vendor,
+                    Manufacturer = manufacturer,
                     Model = offer.Model,
                     Sku = offer.Model,
                     Price = offer.Price,

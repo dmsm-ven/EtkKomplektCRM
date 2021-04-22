@@ -12,6 +12,9 @@ namespace EtkBlazorApp.DataAccess
     {
         Task<List<ProductEntity>> GetLastAddedProducts(int count);
         Task<ProductEntity> GetProductByKeyword(string keyword);
+        Task<ProductEntity> GetProductByModel(string model);
+        Task<ProductEntity> GetProductBySku(string sku);
+
         Task UpdateProductsStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate);
         Task UpdateProductsPrice(List<ProductUpdateData> data);
         Task<List<ProductEntity>> ReadProducts(IEnumerable<int> allowedManufacturers = null);
@@ -66,6 +69,28 @@ namespace EtkBlazorApp.DataAccess
 
             var product = (await database.LoadData<ProductEntity, dynamic>(sql, new { keyword })).FirstOrDefault();
             return product;
+        }
+
+        public async Task<ProductEntity> GetProductByModel(string model) => await GetProductByField(nameof(model), model);
+        
+        public async Task<ProductEntity> GetProductBySku(string sku) => await GetProductByField(nameof(sku), sku);
+
+        private async Task<ProductEntity> GetProductByField(string fieldName, string fieldValue)
+        {
+            string sql = "SELECT p.*, url.keyword as keyword " +
+                         "FROM oc_product p " +
+                         "JOIN oc_url_alias url ON url.query = CONCAT('product_id=', p.product_id) " +
+                         $"WHERE p.{fieldName} = @fieldValue ";
+
+            try
+            {
+                var product = (await database.LoadData<ProductEntity, dynamic>(sql, new { fieldValue })).SingleOrDefault();
+                return product;
+            }
+            catch (InvalidOperationException)
+            {
+                return null;
+            }
         }
 
         public async Task UpdateDirectProduct(ProductEntity product)
@@ -178,9 +203,7 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task UpdateProductsStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate)
         {
-            List<ProductUpdateData> source = data
-                .Where(d => d.quantity.HasValue)
-                .ToList();
+            List<ProductUpdateData> source = data.Where(d => d.quantity.HasValue).ToList();
 
             if (source.Count == 0) { return; }
 
@@ -205,11 +228,11 @@ namespace EtkBlazorApp.DataAccess
                 var clearStockQueryBuilder = new StringBuilder()
                     .AppendLine("UPDATE oc_product")
                     .AppendLine("SET quantity = 0")
-                    .AppendLine($"WHERE manufacturer_id IN (SELECT manufacturer_id FROM oc_manufacturer WHERE product_id IN ({idsArray}));");
+                    .AppendLine($"WHERE manufacturer_id IN (SELECT DISTINCT manufacturer_id FROM oc_manufacturer WHERE product_id IN ({idsArray}));");
                 
-
                 sb.Insert(0, clearStockQueryBuilder.ToString());
             }
+
 
             string sql = sb.ToString();
 

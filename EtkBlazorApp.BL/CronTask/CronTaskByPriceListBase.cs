@@ -25,7 +25,7 @@ namespace EtkBlazorApp.BL.CronTask
             using (var ms = new MemoryStream(await loader.GetBytes()))
             {
                 var lines = await service.priceListManager.ReadTemplateLines(templateType, ms);
-                await service.updateManager.UpdatePriceAndStock(lines, clearStockBeforeUpdate: false);
+                await service.updateManager.UpdatePriceAndStock(lines, clearStockBeforeUpdate: true);
             }
         }
     }

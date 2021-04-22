@@ -14,7 +14,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         protected override List<PriceLine> ReadDataFromExcel()
         {
             var list = new List<PriceLine>();
-            var tab = Excel.Workbook.Worksheets[0];
 
             for (int row = 0; row < tab.Dimension.Rows; row++)
             {
@@ -48,7 +47,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         protected override List<PriceLine> ReadDataFromExcel()
         {
             var list = new List<PriceLine>();
-            var tab = Excel.Workbook.Worksheets[0];
 
             for (int row = 0; row < tab.Dimension.Rows; row++)
             {
@@ -76,9 +74,10 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("FFA35661-230F-431F-AEA0-BC57F4A7C8AE")]
     public class WihaQuantity2Template : ExcelPriceListTemplateBase
     {
-        static readonly string[] VALID_MANUFACTURERS = new[] { "Wiha", "Schut" };
-
-        public WihaQuantity2Template(string fileName) : base(fileName) { }
+        public WihaQuantity2Template(string fileName) : base(fileName)
+        {
+            ValidManufacturerNames.AddRange(new[] { "Wiha", "Schut" });
+        }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {
@@ -96,10 +95,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string manufacturer = tab.GetValue<string>(row, 1);
                 string quantityString = tab.GetValue<string>(row, 4);
 
-                if (!VALID_MANUFACTURERS.Contains(manufacturer, StringComparer.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
+                if (!ValidManufacturerNames.Contains(manufacturer, StringComparer.OrdinalIgnoreCase)) { continue; }
 
                 if (decimal.TryParse(quantityString, out var quantity))
                 {

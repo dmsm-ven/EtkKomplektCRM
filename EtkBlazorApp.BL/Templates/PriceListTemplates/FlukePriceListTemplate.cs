@@ -14,7 +14,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         protected override List<PriceLine> ReadDataFromExcel()
         {
             var list = new List<PriceLine>();
-            var tab = Excel.Workbook.Worksheets[0];
 
             for (int row = 1; row < tab.Dimension.Rows; row++)
             {

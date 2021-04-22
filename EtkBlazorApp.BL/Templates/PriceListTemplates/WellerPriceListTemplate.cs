@@ -6,16 +6,13 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("2CA8AB25-8AA1-4008-977C-4253378E1BA1")]
     public class WellerPriceListTemplate : ExcelPriceListTemplateBase
     {
-        const int START_ROW_NUMBER = 15;
-
         public WellerPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {
             var list = new List<PriceLine>();
-            var tab = Excel.Workbook.Worksheets[0];
 
-            for (int i = START_ROW_NUMBER; i < tab.Dimension.Rows; i++)
+            for (int i = 15; i < tab.Dimension.Rows; i++)
             {
                 string skuNumber = tab.GetValue<string>(i, 0);
                 if (Regex.IsMatch(skuNumber, @"^(\d){6,}N$"))
@@ -53,8 +50,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("56CF16C1-CD99-41C1-909F-B3031695C0C5")]
     public class WellerStockPriceListTemplate : ExcelPriceListTemplateBase
     {
-        const int START_ROW_NUMBER = 9;
-
         public WellerStockPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
@@ -62,11 +57,11 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             var list = new List<PriceLine>();
             var tab = Excel.Workbook.Worksheets[0];
 
-            for (int i = START_ROW_NUMBER; i < tab.Dimension.Rows; i++)
+            for (int row = 9; row < tab.Dimension.Rows; row++)
             {
-                string skuNumber = tab.GetValue<string>(i, 1);
-                string name = tab.GetValue<string>(i, 2);
-                string quantityString = tab.GetValue<string>(i, 5);
+                string skuNumber = tab.GetValue<string>(row, 1);
+                string name = tab.GetValue<string>(row, 2);
+                string quantityString = tab.GetValue<string>(row, 5);
 
                 if (string.IsNullOrWhiteSpace(skuNumber)) { continue; }
 

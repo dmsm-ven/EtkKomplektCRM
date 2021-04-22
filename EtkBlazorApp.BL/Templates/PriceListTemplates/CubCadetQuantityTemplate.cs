@@ -5,7 +5,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("9EEB7A82-1029-4C1F-A282-196C0907160B")]
     public class CubCadetPriceListTemplate : ExcelPriceListTemplateBase
     {
-        const int START_ROW_NUMBER = 7;
         public CubCadetPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
@@ -14,7 +13,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             var tab = Excel.Workbook.Worksheets[0];
 
-            for (int row = START_ROW_NUMBER; row < tab.Dimension.Rows; row++)
+            for (int row = 7; row < tab.Dimension.Rows; row++)
             {
                 string model = tab.GetValue<string>(row, 1);
                 int? quantity = ParseQuantity(tab.GetValue<string>(row, 4));

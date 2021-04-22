@@ -56,7 +56,7 @@ namespace EtkBlazorApp.BL.Templates
                     {
                         if (!string.IsNullOrWhiteSpace(linkedPriceLine.Name))
                         {
-                            product.name = linkedPriceLine.Name;
+                            product.name = linkedPriceLine.Name.Replace(";", " ").Trim();
                         }
                         product.price = linkedPriceLine.Price.Value * CurrencyRatio;
                     }

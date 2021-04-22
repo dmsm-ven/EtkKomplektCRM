@@ -15,11 +15,11 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         {
             var list = new List<PriceLine>();
 
-            for (int row = 0; row < tab.Dimension.Rows; row++)
+            for (int row = 2; row < tab.Dimension.Rows; row++)
             {
-                string skuNumber = tab.GetValue<string>(row, 0);               
-                string manufacturer = tab.GetValue<string>(row, 8).Trim();
-                decimal price = tab.GetValue<decimal>(row, 3);
+                string skuNumber = tab.GetValue<string>(row, 1);               
+                string manufacturer = tab.GetValue<string>(row, 9).Trim();
+                decimal price = tab.GetValue<decimal>(row, 4);
 
                 var priceLine = new PriceLine(this)
                 {
@@ -40,22 +40,22 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("C1412CC4-79E5-467F-A8E9-ACF18E320B92")]
     public class ZubrQuantityPriceListTemplate : ExcelPriceListTemplateBase
     {
-        public ZubrQuantityPriceListTemplate(string fileName) : base(fileName) { }
+        public ZubrQuantityPriceListTemplate(string fileName) : base(fileName) 
+        {
+            ValidManufacturerNames.Add("Зубр");
+        }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {
             var list = new List<PriceLine>();
 
-            for (int row = 0; row < tab.Dimension.Rows; row++)
+            for (int row = 2; row < tab.Dimension.Rows; row++)
             {
-                string skuNumber = tab.GetValue<string>(row, 0);
-                string quantityString = tab.GetValue<string>(row, 12);
-                string manufacturer = tab.GetValue<string>(row, 8).Trim();
+                string skuNumber = tab.GetValue<string>(row, 1);
+                string quantityString = tab.GetValue<string>(row, 13);
+                string manufacturer = tab.GetValue<string>(row, 9).Trim();
 
-                if (!manufacturer.Equals("Зубр", StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                };
+                if (!ValidManufacturerNames.Contains(manufacturer, StringComparer.OrdinalIgnoreCase)) { continue; }
 
                 int parsedQuantity = (quantityString == "Есть" ? 10 : 0);
 

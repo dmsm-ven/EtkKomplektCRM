@@ -1,6 +1,7 @@
 ﻿@page "/loaded-price-list-details/{TemplateGuid}"
 @inject PriceListManager manager
 @inject IManufacturerStorage manufacturerStorage
+@inject IProductStorage productStorage
 @inject IJSRuntime js
 
 @if (!string.IsNullOrWhiteSpace(singleManufacturer))
@@ -63,7 +64,7 @@ else
                     <td>@line.Name</td>
                     }
                     <td>
-                        <button class="btn btn-sm btn-outline-primary mx-1" @onclick="@( e => SearchSkuOnWebsite(line.Sku))">
+                        <button class="btn btn-sm btn-outline-primary mx-1" @onclick="@( e => SearchSkuOnWebsite("findBySku", line.Sku))">
                             <span class="oi oi-magnifying-glass"></span>
                         </button>
                         @line.Sku
@@ -71,7 +72,7 @@ else
                     @if (hasModelColumn)
                     {
                     <td>
-                        <button class="btn btn-sm btn-outline-primary mx-1" @onclick="@( e => SearchSkuOnWebsite(line.Model))">
+                        <button class="btn btn-sm btn-outline-primary mx-1" @onclick="@( e => SearchSkuOnWebsite("findByModel", line.Model))">
                             <span class="oi oi-magnifying-glass"></span>
                         </button>
                         @line.Model
@@ -141,9 +142,20 @@ else
                 .ToDictionary(i => i.Key, j => j.Count());
         }
     }
-    private async Task SearchSkuOnWebsite(string searchString)
+    private async Task SearchSkuOnWebsite(string tag, string searchString)
     {
+        if (string.IsNullOrWhiteSpace(searchString)) { return; }
+
+        ProductEntity bySku = await productStorage.GetProductBySku(searchString);
+        ProductEntity byModel = await productStorage.GetProductByModel(searchString);
+        ProductEntity findedProduct = (tag == "findBySku") ? (bySku ?? byModel) : (byModel ?? bySku);
+
         string searchUri = "https://etk-komplekt.ru/index.php?route=product/search&search=" + HttpUtility.HtmlEncode(searchString);
+        if (findedProduct != null)
+        {
+            searchUri = $"https://etk-komplekt.ru/index.php?route=product/product&product_id={findedProduct.product_id}";
+        }
+
         await js.InvokeVoidAsync("open", searchUri, "_blank");
     }
 

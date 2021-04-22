@@ -14,7 +14,7 @@ namespace EtkBlazorApp.BL
         {
             var list = new List<PriceLine>();
 
-            for (int row = 0; row < tab.Dimension.Rows; row++)
+            for (int row = 2; row < tab.Dimension.Rows; row++)
             {
                 string fullName = tab.GetValue<string>(row, 0).Trim();
         

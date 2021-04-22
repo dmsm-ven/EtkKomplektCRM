@@ -6,12 +6,10 @@ namespace EtkBlazorApp.BL
     [PriceListTemplateGuid("3853B988-DB37-4B6E-861F-3000B643FAC4")]
     public class SymmetronPriceListTemplate : ExcelPriceListTemplateBase
     {
-        readonly Dictionary<string, string> ManufacturerMap = new Dictionary<string, string>()
+        public SymmetronPriceListTemplate(string fileName) : base(fileName) 
         {
-            ["Pro'skit"] = "Pro'sKit"
-        };
-
-        public SymmetronPriceListTemplate(string fileName) : base(fileName) { }
+            ManufacturerNameMap["Pro'skit"] = "Pro'sKit";
+        }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {
@@ -24,7 +22,7 @@ namespace EtkBlazorApp.BL
                 int quantity = tab.GetValue<int>(row, 10);
                 decimal? priceInCurrency = ParsePrice(tab.GetValue<string>(row, 11));                
                 decimal? priceInRub = ParsePrice(tab.GetValue<string>(row, 13));
-                string manufacturer = tab.GetValue<string>(row, 26);
+                string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 26));
                 string model = tab.GetValue<string>(row, 27);
 
                 CurrencyType priceCurreny = CurrencyType.RUB;
@@ -32,8 +30,7 @@ namespace EtkBlazorApp.BL
                 {
                     priceCurreny = parsedCurrency;
                 }
-                manufacturer = ManufacturerMap.ContainsKey(manufacturer) ? ManufacturerMap[manufacturer] : manufacturer;
-                
+                          
                 var priceLine = new PriceLine(this)
                 {
                     Name = name,

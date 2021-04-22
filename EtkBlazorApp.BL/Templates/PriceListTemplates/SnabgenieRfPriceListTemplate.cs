@@ -14,7 +14,7 @@ namespace EtkBlazorApp.BL
         {
             var list = new List<PriceLine>();
 
-            for (int row = 1; row < tab.Dimension.Rows; row++)
+            for (int row = 2; row < tab.Dimension.Rows; row++)
             {
                 string skuNumber = tab.GetValue<string>(row, 0);
                 string manufacturer = tab.GetValue<string>(row, 1);

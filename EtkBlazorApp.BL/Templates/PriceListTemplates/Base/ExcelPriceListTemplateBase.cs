@@ -43,5 +43,6 @@ namespace EtkBlazorApp.BL
         protected abstract List<PriceLine> ReadDataFromExcel();
 
         protected ExcelWorksheet tab => Excel.Workbook.Worksheets[0]; 
+
     }
 }

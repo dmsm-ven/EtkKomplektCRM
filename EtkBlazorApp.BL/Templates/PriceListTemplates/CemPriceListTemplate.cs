@@ -6,7 +6,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("C594AA8D-6D76-42E2-A35C-B19AB4B0E780")]
     public class CemPriceListTemplate : ExcelPriceListTemplateBase
     {
-        readonly int START_ROW_NUMBER = 19;
         readonly string SKU_PREFIX = "CEM-";
 
         public CemPriceListTemplate(string fileName) : base(fileName) { }
@@ -17,7 +16,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             var tab = Excel.Workbook.Worksheets[0];
 
-            for (int row = START_ROW_NUMBER; row < tab.Dimension.Rows; row++)
+            for (int row = 19; row < tab.Dimension.Rows; row++)
             {
                 string name = tab.GetValue<string>(row, 1);
                 string sku = SKU_PREFIX + tab.GetValue<string>(row, 4);

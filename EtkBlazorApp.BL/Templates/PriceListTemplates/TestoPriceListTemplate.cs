@@ -14,7 +14,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             var list = new List<PriceLine>();
             var tab = Excel.Workbook.Worksheets[0];
 
-            for (int row = 1; row < tab.Dimension.Rows; row++)
+            for (int row = 2; row < tab.Dimension.Rows; row++)
             {
                 string model = tab.GetValue<string>(row, 0).Replace(" ", string.Empty);
                 string name = tab.GetValue<string>(row, 1);
@@ -34,7 +34,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     list.Add(priceLine);
                 }
 
-
             }
 
             return list;
@@ -44,10 +43,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("04DC88D7-BC69-4746-BBF5-EE600D8575C6")]
     public class TestoPriceListTemplate : ExcelPriceListTemplateBase
     {
-        static readonly string[] InvalidTabNames = new string[]
-        {
-            "Поверка", "3-rd party", "Оглавление"
-        };
+        private readonly string[] InvalidTabNames = new string[] { "Поверка", "3-rd party", "Оглавление" };
 
         public TestoPriceListTemplate(string fileName) : base(fileName) { }
 
@@ -59,7 +55,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             foreach (var tab in tables)
             {
-                for (int row = 1; row < tab.Dimension.Rows; row++)
+                for (int row = 2; row < tab.Dimension.Rows; row++)
                 {
                     string model = tab.GetValue<string>(row, 0).Replace(" ", "").Trim();
 
