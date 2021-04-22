@@ -35,6 +35,10 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        cronTaskList = await settings.GetCronTasks();
+        cronTaskList = (await settings.GetCronTasks())
+            .OrderBy(ct => ct.enabled ? 0 : 1)
+            .ThenBy(ct => ct.exec_time)
+            .ThenBy(ct => ct.name)
+            .ToList();
     }
 } 

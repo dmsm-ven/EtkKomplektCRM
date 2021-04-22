@@ -1,6 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @inject IToastService toastService
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserLogger userLogger
 
 @using System.Globalization
 
@@ -43,6 +44,7 @@
     decimal usd, euro;
     public async Task LogOut()
     {
+        await userLogger.Write(LogEntryGroupName.Auth, "Выход", $"Пользователь вышел");
         await ((MyCustomAuthProvider)AuthenticationStateProvider).LogOutUser();
     }
 }

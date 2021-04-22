@@ -9,12 +9,13 @@ namespace EtkBlazorApp.BL.CronTask
     public enum CronTaskPrefix
     {
         Symmetron = 1,
-        Silver = 2,
+        MeanWell_Silver = 2,
         Prist = 3,
         MarsComponent = 4,
         OdinC = 5,
         Bosch = 6,        
         OzonSeller = 7,
-        Megeon = 8
+        Megeon = 8,
+        MeanWell_Partner = 9,
     };
 }

@@ -21,9 +21,9 @@ namespace EtkBlazorApp.BL.CronTask
         {
             try
             {
-                await Run();
-                //Ставим флаг что задание выполнено (даже в случае ошибки, что бы не вызывать выполнение каждые раз, даже если не получилось выполнить)
                 IsDoneToday = true;
+                await Run();
+                
             }
             catch
             {

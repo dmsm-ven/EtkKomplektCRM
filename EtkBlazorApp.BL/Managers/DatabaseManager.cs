@@ -75,7 +75,7 @@ namespace EtkBlazorApp.BL
             }
 
             var affectedBrandsIds = allManufacturers
-                .Where(m => affectedBrands.Contains(m.name))
+                .Where(m => affectedBrands.Contains(m.name, StringComparer.OrdinalIgnoreCase))
                 .Select(m => m.manufacturer_id)
                 .ToList();
 

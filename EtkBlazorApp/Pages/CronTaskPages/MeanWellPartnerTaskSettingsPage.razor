@@ -1,4 +1,4 @@
-﻿@page "/cron-task/edit/mean-well-silver"
+﻿@page "/cron-task/edit/mean-well-partner"
 
 @inject ISettingStorage settings
 @inject IToastService toasts
@@ -73,10 +73,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        item = (await settings.GetCronTasks()).Single(t => t.task_id == (int)CronTaskPrefix.MeanWell_Silver);
+        item = (await settings.GetCronTasks()).Single(t => t.task_id == (int)CronTaskPrefix.MeanWell_Partner);
         executionDateTime = executionDateTime + item.exec_time;
 
-        templateGuid = PriceListManager.GetPriceListGuidByType(typeof(MeanWellSilverPriceListTemplate));
+        templateGuid = PriceListManager.GetPriceListGuidByType(typeof(MeanWellPartnerPriceListTemplate));
         login = await settings.GetValue($"price-list-template-credentials-{templateGuid}-login");
         password = await settings.GetValue($"price-list-template-credentials-{templateGuid}-password");
     }

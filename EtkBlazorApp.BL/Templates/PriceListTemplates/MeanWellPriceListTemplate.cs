@@ -9,15 +9,13 @@ using System.Threading.Tasks;
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
     [PriceListTemplateGuid("3D41DDC2-BB5C-4D6A-8129-C486BD953A3D")]
-    public class MeanWellPriceListTemplate : ExcelPriceListTemplateBase
+    public class MeanWellSilverPriceListTemplate : ExcelPriceListTemplateBase
     {
-        public MeanWellPriceListTemplate(string fileName) : base(fileName) { }
+        public MeanWellSilverPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {
             var list = new List<PriceLine>();
-
-            var tab = Excel.Workbook.Worksheets[0];
 
             for (int row = 3; row < tab.Dimension.Rows; row++)
             {
@@ -50,40 +48,33 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     }
 
     [PriceListTemplateGuid("2231E716-3643-4EDE-B6D0-764DB3B4DF68")]
-    public class MeanWellPartnerPriceListTemplate : CsvPriceListTemplateBase
+    public class MeanWellPartnerPriceListTemplate : ExcelPriceListTemplateBase
     {
         public MeanWellPartnerPriceListTemplate(string fileName) : base(fileName) { }
 
-        public override async Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)
+        protected override List<PriceLine> ReadDataFromExcel()
         {
             var list = new List<PriceLine>();
 
-            var data = (await ReadCsvLines())
-                .Select(row => new
-                {
-                    Sku = row[0].ToString(),
-                    Model = row[1].ToString(),
-                    Price = row[7].ToString(),
-                    PartSize = row[5].ToString()
-                })
-                .GroupBy(row => row.Sku)
-                .Select(g => g.OrderBy(a => a.PartSize).First())
-                .ToList();
-
-            foreach (var row in data)
+            for (int row = 2; row < tab.Dimension.Rows; row++)
             {
-                if (row.PartSize != "1") { continue; }            
+                string sku = tab.GetValue<string>(row, 1);
+                string model = tab.GetValue<string>(row, 2);
+                int partSize = tab.GetValue<int>(row, 6);
+                var currency = Enum.Parse<CurrencyType>(tab.GetValue<string>(row, 7));
+                decimal priceBezNds = tab.GetValue<decimal>(row, 8);
+                
+                if(partSize != 1) { continue; }
                 
                 var priceLine = new PriceLine(this)
                 {
-                    Currency = CurrencyType.USD,
-                    Price = ParsePrice(row.Price),
+                    Currency = currency,
+                    Price = priceBezNds,
                     Manufacturer = "Mean Well",
-                    Sku = row.Sku,
-                    Model = row.Model
+                    Sku = sku,
+                    Model = model                   
                 };
                 list.Add(priceLine);
-
             }
 
             return list;

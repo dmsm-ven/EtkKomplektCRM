@@ -57,7 +57,7 @@
         get
         {
             var priceLinesBrands = priceListManager.PriceLines.GroupBy(p => p.Manufacturer).Select(g => g.Key).OrderBy(m => m).ToList();
-            var affectedBrands = priceLinesBrands.Intersect(websiteManufacturers);
+            var affectedBrands = priceLinesBrands.Intersect(websiteManufacturers, StringComparer.OrdinalIgnoreCase);
             string joinedString = string.Join(", ", affectedBrands);
             return joinedString;
         }

@@ -137,6 +137,6 @@ namespace EtkBlazorApp.DataAccess
                                                 "WHERE task_id = @task_id";
 
             await database.SaveData(sql, task);
-        }
+        }  
     }
 }

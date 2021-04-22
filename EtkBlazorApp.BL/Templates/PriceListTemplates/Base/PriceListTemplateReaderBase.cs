@@ -5,7 +5,7 @@ namespace EtkBlazorApp.BL
 {
     public abstract class PriceListTemplateReaderBase
     {
-        protected virtual decimal? ParsePrice(string str)
+        protected virtual decimal? ParsePrice(string str, bool canBenNull = false)
         {
             decimal? price = null;
             if (!string.IsNullOrWhiteSpace(str))
@@ -16,7 +16,7 @@ namespace EtkBlazorApp.BL
                 }
             }
 
-            return price;
+            return canBenNull ? price : (price ?? 0);
         }
 
         protected virtual int? ParseQuantity(string str)

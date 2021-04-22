@@ -80,7 +80,7 @@ namespace EtkBlazorApp.BL.CronTask
         {
             var taskDatabaseEntity = await settingStorage.GetCronTaskById((int)task.Prefix);
 
-            if(taskDatabaseEntity.enabled == false && forceRun == false) { return; }
+            if(taskDatabaseEntity == null || (!taskDatabaseEntity.enabled && !forceRun)) { return; }
 
             if (IsTimeToRun(taskDatabaseEntity, startTime) || forceRun)
             {

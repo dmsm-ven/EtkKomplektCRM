@@ -5,6 +5,57 @@ using System.Linq;
 
 namespace EtkBlazorApp.BL
 {
+    [PriceListTemplateGuid("6C238D2C-145E-4320-B4E3-DCA8B8FAECB0")]
+    public class PraktikaQuantityPriceListTemplate : ExcelPriceListTemplateBase
+    {
+        private Dictionary<string, int> QuantityMap = new Dictionary<string, int>()
+        {
+            ["нет"] = 0,
+            ["*"] = 5,
+            ["**"] = 10,
+            ["***"] = 30,
+            ["****"] = 40,
+            ["*****"] = 50,
+            ["******"] = 100
+        };
+
+        public PraktikaQuantityPriceListTemplate(string fileName) : base(fileName) { }
+
+        protected override List<PriceLine> ReadDataFromExcel()
+        {
+            var list = new List<PriceLine>();
+
+            for (int row = 2; row < tab.Dimension.Rows; row++)
+            {
+                string manufacturer = tab.GetValue<string>(row, 2);
+                string skuNumber = tab.GetValue<string>(row, 4);
+                string name = tab.GetValue<string>(row, 5);
+                decimal? price = ParsePrice(tab.GetValue<string>(row, 7));
+                string quantityString = tab.GetValue<string>(row, 8);
+                
+                int quantity = QuantityMap[quantityString];
+
+                if (string.IsNullOrEmpty(skuNumber)) { continue; }
+
+                var priceLine = new PriceLine(this)
+                {
+                    Quantity = quantity,
+                    Name = name,
+                    Sku = skuNumber,
+                    Model = skuNumber,
+                    Currency = CurrencyType.RUB,
+                    Price = price,
+                    Manufacturer = manufacturer
+                };
+                list.Add(priceLine);
+            }
+
+            return list;
+        }
+    }
+
+    #region Старые прайс-листы, похоже они не нужны (на 22.04.2021)
+    /*
     [PriceListTemplateGuid("2F924D38-47F6-4AC1-B439-B3B7056BC858")]
     public class NorthArrowsPriceListTemplate : ExcelPriceListTemplateBase
     {       
@@ -256,5 +307,6 @@ namespace EtkBlazorApp.BL
             return list;
         }
     }
-
+    */
+    #endregion
 }

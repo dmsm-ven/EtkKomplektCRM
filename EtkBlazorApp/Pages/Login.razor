@@ -1,9 +1,11 @@
 ﻿@page "/login"
+@using Microsoft.AspNetCore.Http
+@inject ILogStorage log
+@inject IHttpContextAccessor httpContext
 @inject AuthenticationStateProvider authenticationStateProvider
 @inject NavigationManager navigation
 @inject ProtectedLocalStorage localStorage
-@inject IToastService toastService
-@inject Microsoft.AspNetCore.Http.IHttpContextAccessor contextAccessor
+@inject UserLogger userLogger
 
 <center style="background: linear-gradient(to right, #4bddc4 0%, #466085); padding: 20px 0px;">
     <div class="container">
@@ -38,15 +40,35 @@
 
     private AppUser user = new AppUser();
 
+    protected override void OnInitialized()
+    {
+        user.UserIP = httpContext.HttpContext.Connection.RemoteIpAddress.ToString();
+    }
+
     private async Task<bool> ValidateUser()
     {
-        user.UserIP = contextAccessor.HttpContext.Connection?.RemoteIpAddress.ToString();
         await ((MyCustomAuthProvider)authenticationStateProvider).AuthenticateUser(user);
 
         navigation.NavigateTo("/");
-
         await localStorage.SetAsync("user_login", user.Login);
         await localStorage.SetAsync("user_password", user.Password);
+
+        var state = await authenticationStateProvider.GetAuthenticationStateAsync();
+        if (state.User.Identity.IsAuthenticated)
+        {
+            await userLogger.Write(LogEntryGroupName.Auth, "Вход", $"Пользователь вошел. IP {user.UserIP}");
+        }
+        else
+        {
+            await log.Write(new LogEntryEntity()
+            {
+                group_name = LogEntryGroupName.Auth.GetDescriptionAttribute(),
+                title = "Ошибка входа",
+                message = $"Вход не выполнен. Логин ({user.Login}) Пароль ({user.Password}) IP ({user.UserIP})",
+                user = "Не авторизован",
+                date_time = DateTime.Now
+            });
+        }
 
         return await Task.FromResult(true);
     }

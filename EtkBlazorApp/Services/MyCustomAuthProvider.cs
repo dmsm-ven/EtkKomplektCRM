@@ -13,51 +13,35 @@ namespace EtkBlazorApp.Services
 {
     public class MyCustomAuthProvider : AuthenticationStateProvider
     {
-        private readonly ILogStorage log;
         private readonly IHttpContextAccessor contextAccessor;
         private readonly IAuthenticationDataStorage auth;
         private readonly ProtectedLocalStorage storage;
-        AuthenticationState currentState = null;
 
         public MyCustomAuthProvider(
             IAuthenticationDataStorage auth, 
-            ILogStorage log, 
             IHttpContextAccessor contextAccessor, 
             ProtectedLocalStorage storage)
         {
             this.storage = storage;
-            this.log = log;
             this.contextAccessor = contextAccessor;
             this.auth = auth;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            if(currentState != null) { return currentState; }
-
             var login = await storage.GetAsync<string>("user_login");
             var password = await storage.GetAsync<string>("user_password");
             
             if (login.Success && password.Success)
             {
-                currentState = await AuthenticateUser(new AppUser() 
+                var state = await AuthenticateUser(new AppUser() 
                 { 
                     Login = login.Value, 
                     Password = password.Value,
                     UserIP = contextAccessor.HttpContext.Connection?.RemoteIpAddress.ToString()
                 });
 
-                var logEntry = new LogEntryEntity()
-                {
-                    group_name = LogEntryGroupName.Auth.GetDescriptionAttribute(),
-                    user = login.Value,
-                    title = "Вход",
-                    message = "Пользователь вошел",
-                    date_time = DateTime.Now
-                };
-                await log.Write(logEntry);
-
-                return currentState;           
+                return state;           
             }
 
             return GetDefaultState();            
@@ -95,25 +79,11 @@ namespace EtkBlazorApp.Services
         }  
         
         public async Task LogOutUser()
-        {            
-            string userName = (await storage.GetAsync<string>("user_login")).Value ?? string.Empty;
-          
+        {                      
             await storage.DeleteAsync("user_login");
             await storage.DeleteAsync("user_password");
 
-            NotifyAuthenticationStateChanged(Task.FromResult(GetDefaultState()));
-            currentState = null;
-
-            var logEntry = new LogEntryEntity()
-            {
-                group_name = LogEntryGroupName.Auth.GetDescriptionAttribute(),
-                user = userName,
-                title = "Выход",
-                message = "Пользователь разлогинился",
-                date_time = DateTime.Now
-            };
-            await log.Write(logEntry);
-            
+            NotifyAuthenticationStateChanged(Task.FromResult(GetDefaultState()));            
         }
 
         private AuthenticationState GetDefaultState()
