@@ -103,7 +103,7 @@
 @code
 {
     const int MAX_UPLOAD_FILE_SIZE = 15_000_000; // 15 мб
-    const int UPLOAD_BUFFER_SIZE = 64_000; // 64 кб
+    const int UPLOAD_BUFFER_SIZE = 32_000; // 32 кб
 
     Dictionary<string, List<PriceListTemplateItemViewModel>> templates = null;
     Dictionary<string, List<PriceListTemplateItemViewModel>> filteredTemplates;
@@ -165,7 +165,7 @@
 
         using (var ms = new MemoryStream(bytes))
         {
-            await LoadTemplateFromStream(ms);
+            await LoadTemplateFromStream(ms, e.File.Name);
         }
     }
 
@@ -177,26 +177,26 @@
         IRemoteTemplateFileLoader loader = remoteTemplateFileLoaderFactory.GetMethod(selectedTemplate.RemoteUrl, selectedTemplate.RemoteUrlMethod, selectedTemplate.Guid);
         using (var ms = new MemoryStream(await loader.GetBytes()))
         {
-            await LoadTemplateFromStream(ms);
+            await LoadTemplateFromStream(ms, Path.GetFileName(selectedTemplate.RemoteUrl));
         }
     }
 
-    private async Task LoadTemplateFromStream(Stream stream)
+    private async Task LoadTemplateFromStream(Stream stream, string fileName)
     {
         isIntermediateProgress = true;
         StateHasChanged();
 
         try
         {
-            await priceListManager.UploadTemplate(selectedTemplate.Type, stream);
+            await priceListManager.UploadTemplate(selectedTemplate.Type, stream, fileName);
             int readedLines = priceListManager.LoadedFiles.Last().ReadedPriceLines.Count;
 
-            await logger.Write(LogEntryGroupName.PriceListTemplateLoad, "Файл загружен", $"Загружен прайс-лист '{selectedTemplate.Type} ({readedLines} строк)'");
+            await logger.Write(LogEntryGroupName.PriceListTemplateLoad, "Файл загружен", $"Загружен прайс-лист '{selectedTemplate.Title} ({readedLines} строк)'");
             toast.ShowSuccess($"Файл считан ({readedLines} строк)", selectedTemplate.Title);
         }
         catch (NotFoundedPriceListTemplateException)
         {
-            await logger.Write(LogEntryGroupName.PriceListTemplateLoad, "Ошибка загрузки", $"Шаблон для '{selectedTemplate.Type}' не реализован'");
+            await logger.Write(LogEntryGroupName.PriceListTemplateLoad, "Ошибка загрузки", $"Шаблон для '{selectedTemplate.Title}' не реализован'");
             toast.ShowError($"Шаблон не реализован!", selectedTemplate.Title);
         }
         catch (Exception ex)

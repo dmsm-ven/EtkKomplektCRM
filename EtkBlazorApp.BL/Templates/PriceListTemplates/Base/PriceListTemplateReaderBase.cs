@@ -29,7 +29,7 @@ namespace EtkBlazorApp.BL
             return manufacturerName;
         }
 
-        protected virtual decimal? ParsePrice(string str, bool canBenNull = false)
+        protected virtual decimal? ParsePrice(string str, bool canBeNull = false)
         {
             decimal? price = null;
             if (!string.IsNullOrWhiteSpace(str))
@@ -40,19 +40,21 @@ namespace EtkBlazorApp.BL
                 }
             }
 
-            return canBenNull ? price : (price ?? 0);
+            return canBeNull ? price : (price ?? 0);
         }
 
-        protected virtual int? ParseQuantity(string str)
+        protected virtual int? ParseQuantity(string str, bool canBeNull = false)
         {
+            int? quantity = null;
             if (!string.IsNullOrWhiteSpace(str))
             {
-                if (decimal.TryParse(str, System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var quantity))
+                if (decimal.TryParse(str, System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var parsedQuantity))
                 {
-                    return Math.Max((int)quantity, 0);
+                    quantity = Math.Max((int)parsedQuantity, 0);
                 }
             }
-            return null;
+
+            return canBeNull ? quantity : (quantity ?? 0);
         }
     }
 }

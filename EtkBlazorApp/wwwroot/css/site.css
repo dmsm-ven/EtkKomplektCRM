@@ -1,6 +1,13 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+.brand-template-logo {
+    width: 100%;
+    height: auto;
+    margin: 4px auto;
+    border: 1px dashed rgba(255,255,255,0.25);
+}
+
 tr.disabled-user td:not(:last-child) {
     opacity: 0.4;
 }
@@ -52,7 +59,7 @@ input[type='radio'], input[type='checkbox'] {
     font-family: monospace;
 }
 
-.loaded-price-list-box {
+.loaded-price-list-displayer {
     background: whitesmoke;
     border: 1px solid #d0d0d0;
     border-radius: 8px;
@@ -283,13 +290,6 @@ input[type='radio'], input[type='checkbox'] {
 .shop-account-row {
     margin: 10px 4px;
     padding: 5px;
-}
-
-.brand-template-logo {
-    width: 100%;
-    height: auto;
-    margin: 4px auto;
-    border: 1px dashed rgba(255,255,255,0.25);
 }
 
 .price-list-template-inner:disabled, .price-list-template-outer:disabled {

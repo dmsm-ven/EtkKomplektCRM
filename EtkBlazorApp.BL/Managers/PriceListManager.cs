@@ -34,26 +34,28 @@ namespace EtkBlazorApp.BL
         /// <param name="templateType"></param>
         /// <param name="stream"></param>
         /// <returns></returns>
-        public async Task UploadTemplate(Type templateType, Stream stream)
+        public async Task UploadTemplate(Type templateType, Stream stream, string fileName)
         {
             if (templateType == null) { throw new NotFoundedPriceListTemplateException(); }
 
-            string fileName = Path.GetTempFileName();
-            using (var fs = File.Create(fileName))
+            string filePath = Path.GetTempFileName().Replace(".tmp", Path.GetExtension(fileName));
+
+            using (var fs = File.Create(filePath))
             {
                 await stream.CopyToAsync(fs);
             }
 
             try
             {
-                IPriceListTemplate templateInstance = (IPriceListTemplate)Activator.CreateInstance(templateType, fileName);
+                IPriceListTemplate templateInstance = (IPriceListTemplate)Activator.CreateInstance(templateType, filePath);
                 var templateInfo = await GetTemplateDescription(templateType);
 
                 var data = await templateInstance.ReadPriceLines(null);
                 AddNewPriceLines(data);
                 ApplyDiscounts(data, templateInfo.discount, templateInfo.nds);
 
-                LoadedFiles.Add(new LoadedPriceListTemplateData(templateInstance, templateInfo, data));
+                var loadedFileInfo = new LoadedPriceListTemplateData(templateInstance, templateInfo, data, fileName);
+                LoadedFiles.Add(loadedFileInfo);
             }
             catch
             {
@@ -61,7 +63,7 @@ namespace EtkBlazorApp.BL
             }
             finally
             {
-                File.Delete(fileName);
+                File.Delete(filePath);
             }       
         }
 

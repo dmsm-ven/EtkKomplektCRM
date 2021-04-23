@@ -73,7 +73,6 @@ namespace EtkBlazorApp.BL.CronTask
 
                 await ExecuteTask(task, currentTime);           
             }
-
         }
 
         private async Task ExecuteTask(CronTaskBase task, TimeSpan startTime, bool forceRun = false)

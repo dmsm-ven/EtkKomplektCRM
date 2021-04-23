@@ -2,44 +2,70 @@
 @inject NavigationManager navigationManager
 @inject IJSRuntime js
 
-<div class="loaded-price-list-box">
+<div class="loaded-price-list-displayer">
     <h2 style="margin: 6px auto;">Загруженные прайс-листы</h2>
 
-    <ul style="list-style-type: none;">
+    @if (priceListManager.LoadedFiles.Count > 1)
+    {
+        <div>
+            <span class="oi oi-trash" @onclick="RemoveAll"></span>
+            <strong style="color:navy">Очистить все загруженные прайс-листы</strong>
+        </div>
+        <hr />
+    }
 
-        @if (priceListManager.LoadedFiles.Count > 1)
-        {
-            <li style="margin-bottom: 30px; border-bottom: 2px solid lightgray; padding-bottom: 6px;">
-                <span class="oi oi-trash" @onclick="RemoveAll"></span>
-                <strong style="color:navy">Очистить все загруженные прайс-листы</strong>
-            </li>
-        }
-
-            @foreach (var data in priceListManager.LoadedFiles.OrderByDescending(pl => pl.DateAdded))
-            {
-            <li style="margin-bottom: 15px;">
-                <span class="oi oi-trash" @onclick="@(e => priceListManager.RemovePriceList(data))" title="Удалить загруженный прайс-лист"></span>
-                <span class="oi oi-spreadsheet" @onclick="@(e => MoveToPriceList(data))" title="Показать что загружено"></span>
-                <img class="brand-template-logo" src="@(data.TemplateDescription.image)" 
-                     title="@data.TemplateDescription.title"
-                     data-toggle="tooltip" data-placement="right"
-                     style="margin-left: 20px; width: 96px;" />
-                <span>Добавлен: <i>@data.DateAdded</i></span>
-            </li>
-            }
-    </ul>
+    @foreach (var data in priceListManager.LoadedFiles.OrderByDescending(pl => pl.DateAdded))
+    {
+<div class="display-item">
+    <div style="width: auto; display: inline-block;">
+        <span class="oi oi-trash" style="vertical-align: super;" @onclick="@(e => priceListManager.RemovePriceList(data))" title="Удалить загруженный прайс-лист"></span>
+    </div>
+    <div style="width: auto; display: inline-block;">
+        <img class="brand-template-list-logo" src="@(data.TemplateDescription.image)" title="@data.TemplateDescription.title" />
+    </div>
+    <div style="width: auto; display: inline-block;">
+        <p><span class="oi oi-small oi-spreadsheet" @onclick="@(e => MoveToPriceList(data))" title="Показать что загружено"></span>Загруженные строки</p>
+        <p><span class="oi oi-small oi-file" title="Название файла при загрузке"></span>@data.FileName</p>
+        <p><span class="oi oi-small oi-calendar" title="Дата загрузки"></span>@data.DateAdded</p>
+    </div>
+</div>
+        <hr />
+    }
 </div>
 
 <style>
-    .loaded-price-list-box .oi {
-        font-size: 28px;
-        color: blue;
-        margin-right: 6px;
-        cursor: pointer;
-        vertical-align: middle;
+    .loaded-price-list-displayer display-item {
+        display: block;
+        margin: 8px 2px;
     }
 
-    .loaded-price-list-box .oi:hover {
+    .loaded-price-list-displayer img {
+        width: 120px;
+        height: auto;
+        margin: auto 4px;
+        border: 3px solid #c0c0c0;
+        border-radius: 4px;
+        vertical-align: bottom;
+    }
+
+    .loaded-price-list-displayer p {
+        font-size: 14px;
+        margin: 2px 0px 4px 2px;
+    }
+
+    .loaded-price-list-displayer .oi {
+        font-size: 28px;
+        color: blue;
+        margin: 6px;
+        cursor: pointer;
+    }
+
+    .loaded-price-list-displayer .oi-small {
+        font-size: 18px;
+        margin-right: 5px;
+    }
+
+    .loaded-price-list-displayer .oi:hover {
         color: red;
         transition: 125ms;
     }
@@ -71,4 +97,4 @@
         }
     }
 
-} 
+}
