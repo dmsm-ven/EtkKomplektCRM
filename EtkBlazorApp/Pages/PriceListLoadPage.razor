@@ -13,9 +13,6 @@
     {
         <h3>Загрузка файла на сервер</h3>
         <BootstrapProgressBar CurrentProgress="uploadPercent"></BootstrapProgressBar>
-        @*<button class="btn btn-outline-info" @onclick="@(e => cts?.Cancel())">
-            Отменить загрузку
-        </button>*@
     }
     if (isIntermediateProgress)
     {
@@ -35,16 +32,33 @@
 
 <div class="row my-2">
     <div class="input-group" style="width: 425px;">
-        <button type="button" style="margin-left: 8px;" class="btn btn-outline-primary" @onclick="@(e => ApplyFilter(null))">Поиск</button>
+        <button type="button" style="margin-left: 8px;" class="btn btn-outline-primary">
+            <span class="oi oi-magnifying-glass"></span>
+        </button>
         <input type="search"
                @onkeypress="ApplyFilter"
-               @oninput="@(ui => searchPhrase = (string)ui.Value)"
+               @oninput="@(e => searchPhrase = (string)e.Value)"
                @bind="searchPhrase" class="form-control rounded mx-2" />
     </div>
-    @*<div class="float-right">
-        <label for="chbx-only-remote-files">С файлами по ссылке</label>
-        <input type="checkbox" class="form-check" @bind="showOnlyWithRemoteFile" />
-    </div>*@
+    <div class="d-inline">
+        <div class="btn-group-toggle" data-toggle="buttons">
+            <label class="btn btn-outline-primary @(filterHasPrice ? "active" : "")">
+                <input type="checkbox" checked="@filterHasPrice" autocomplete="off" 
+                       style="cursor: pointer;"
+                       @onchange="@(e => { filterHasPrice = (bool)e.Value; ApplyFilter(null); })"> Цена
+            </label>
+            <label class="btn btn-outline-primary @(filterHasQuantity ? "active" : "")">
+                <input type="checkbox" checked="@filterHasQuantity" autocomplete="off" 
+                       style="cursor: pointer;"
+                       @onchange="@(e => { filterHasQuantity = (bool)e.Value; ApplyFilter(null); })"> Остатки
+            </label>
+            <label class="btn btn-outline-primary @(filterHasUri ? "active" : "")">
+                <input type="checkbox" checked="@filterHasUri" autocomplete="off" 
+                       style="cursor: pointer;"
+                       @onchange="@(e => { filterHasUri = (bool)e.Value; ApplyFilter(null); })"> Ссылка
+            </label>
+        </div>
+    </div>
 </div>
 
 <div class="row">
@@ -95,32 +109,29 @@
     <hr />
 }
 
-@if (priceListManager.LoadedFiles.Any())
-{
-    <a href="/update-products" class="btn btn-lg btn-outline-primary">Перейти к обновлению товаров</a>
-}
-
 @code
 {
     const int MAX_UPLOAD_FILE_SIZE = 15_000_000; // 15 мб
-    const int UPLOAD_BUFFER_SIZE = 32_000; // 32 кб
+    const int UPLOAD_BUFFER_SIZE = 16_000; // 32 кб
 
     Dictionary<string, List<PriceListTemplateItemViewModel>> templates = null;
     Dictionary<string, List<PriceListTemplateItemViewModel>> filteredTemplates;
     PriceListTemplateItemViewModel selectedTemplate = null;
     PriceListTemplateItemViewModel editingTemplate = null;
 
-    string searchPhrase;
-    //bool showOnlyWithRemoteFile = false;
-    CancellationTokenSource cts;
     bool isIntermediateProgress = false;
     bool isFileUploading = false;
     bool isBusy => isIntermediateProgress || isFileUploading;
     int uploadPercent = 0;
 
+    string searchPhrase;
+    bool filterHasPrice;
+    bool filterHasQuantity;
+    bool filterHasUri;
+    bool hasCheckedFilter => filterHasPrice || filterHasQuantity || filterHasUri;
+
     protected override async Task OnInitializedAsync()
     {
-        cts = new CancellationTokenSource();
         templates = (await templateStorage.GetPriceListTemplates())
             .Select(t => new PriceListTemplateItemViewModel(t.id)
             {
@@ -149,7 +160,7 @@
         uploadPercent = 0;
         var bytes = new byte[(int)e.File.Size];
 
-        using (var uploadStream = e.File.OpenReadStream(MAX_UPLOAD_FILE_SIZE, cts.Token))
+        using (var uploadStream = e.File.OpenReadStream(MAX_UPLOAD_FILE_SIZE))
         {
             int readed = 0;
 
@@ -229,21 +240,34 @@
 
     private void ApplyFilter(KeyboardEventArgs e)
     {
-        if (e == null || e.Key == "Enter")
+        if (string.IsNullOrWhiteSpace(searchPhrase) && !hasCheckedFilter)
         {
-            if (!string.IsNullOrEmpty(searchPhrase))
-            {
-                filteredTemplates = templates
-                    .Where(g => g.Key.Contains(searchPhrase) ||
-                                g.Value.Any(t => t.Title.IndexOf(searchPhrase, StringComparison.OrdinalIgnoreCase) >= 0) ||
-                                g.Value.Any(t => t.Manufacturer != null && t.Manufacturer.IndexOf(searchPhrase, StringComparison.OrdinalIgnoreCase) >= 0)
-                            )
-                    .ToDictionary(g => g.Key, g => g.Value);
-            }
-            else
-            {
-                filteredTemplates = templates;
-            }
+            filteredTemplates = templates;
+        }
+        else if(!string.IsNullOrWhiteSpace(searchPhrase))
+        {
+            var titlePredicate = new Func<List<PriceListTemplateItemViewModel>, bool>((v) => v.Any(t => t.Title.IndexOf(searchPhrase, StringComparison.OrdinalIgnoreCase) >= 0));
+            var descriptionPredicate = new Func<List<PriceListTemplateItemViewModel>, bool>((v) => v.Any(t => t.Description.IndexOf(searchPhrase, StringComparison.OrdinalIgnoreCase) >= 0));
+
+            filteredTemplates = templates
+                .Where(g => titlePredicate(g.Value) || descriptionPredicate(g.Value))
+                .ToDictionary(g => g.Key, g => g.Value);
+        }
+        else if (hasCheckedFilter)
+        {
+            searchPhrase = string.Empty;
+
+            var pricePredicate = new Func<List<PriceListTemplateItemViewModel>, bool>((v) 
+                => filterHasPrice ? (v.Any(t => t.PriceListType == PriceListType.Both || t.PriceListType == PriceListType.Price)) : false);
+            var quantityPredicate = new Func<List<PriceListTemplateItemViewModel>, bool>((v) 
+                => filterHasQuantity ? (v.Any(t => t.PriceListType == PriceListType.Both || t.PriceListType == PriceListType.Quantity)) : false);
+            var uriPredicate = new Func<List<PriceListTemplateItemViewModel>, bool>((v) 
+                => filterHasUri ? (v.Any(t => !string.IsNullOrWhiteSpace(t.RemoteUrl))) : false);
+
+            filteredTemplates = templates
+                .Where(g => pricePredicate(g.Value) || quantityPredicate(g.Value) || uriPredicate(g.Value))
+                .ToDictionary(g => g.Key, g => g.Value);
         }
     }
+
 }

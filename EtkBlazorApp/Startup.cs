@@ -34,7 +34,7 @@ namespace EtkBlazorApp
             services.AddHttpContextAccessor();
 
             //Приложение              
-            services.AddTransient<IDatabaseProductCorrelator, HardOrdereSkuModelProductCorrelator>();
+            services.AddTransient<IDatabaseProductCorrelator, FullCompareProductCorrelator>();
             services.AddTransient<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
             services.AddTransient<IOzonProductCorrelator, SimpleOzonProductCorrelator>();       
             services.AddTransient<IDatabaseAccess, EtkDatabaseDapperAccess>();

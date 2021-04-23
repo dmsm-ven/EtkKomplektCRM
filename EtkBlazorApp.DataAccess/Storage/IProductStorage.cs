@@ -26,7 +26,7 @@ namespace EtkBlazorApp.DataAccess
     public class ProductStorage : IProductStorage
     {
         private readonly IDatabaseAccess database;
-        
+
         public ProductStorage(IDatabaseAccess database)
         {
             this.database = database;
@@ -72,7 +72,7 @@ namespace EtkBlazorApp.DataAccess
         }
 
         public async Task<ProductEntity> GetProductByModel(string model) => await GetProductByField(nameof(model), model);
-        
+
         public async Task<ProductEntity> GetProductBySku(string sku) => await GetProductByField(nameof(sku), sku);
 
         private async Task<ProductEntity> GetProductByField(string fieldName, string fieldValue)
@@ -117,7 +117,7 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task<List<ProductEntity>> ReadProducts(IEnumerable<int> allowedManufacturers = null)
         {
-            if(allowedManufacturers != null && allowedManufacturers.Count() == 0)
+            if (allowedManufacturers != null && allowedManufacturers.Count() == 0)
             {
                 return new List<ProductEntity>();
             }
@@ -138,7 +138,7 @@ namespace EtkBlazorApp.DataAccess
 
             sb.Append("ORDER BY m.name, d.name");
 
-            string sql = sb.ToString().Trim(); 
+            string sql = sb.ToString().Trim();
 
             var products = await database.LoadData<ProductEntity, dynamic>(sql, new { });
 
@@ -154,7 +154,7 @@ namespace EtkBlazorApp.DataAccess
         public async Task UpdateProductsPrice(List<ProductUpdateData> data)
         {
             List<int> discountProductIds = await GetDiscountProductIds();
-            
+
             List<ProductUpdateData> source = data
                 .Where(d => d.price.HasValue && !discountProductIds.Contains(d.product_id))
                 .ToList();
@@ -163,7 +163,8 @@ namespace EtkBlazorApp.DataAccess
                 .GroupBy(p => p.currency_code)
                 .ToDictionary(g => g.Key, g => g.Select(p => p.product_id).OrderBy(id => id).ToList());
             bool onlyOneCurrency = idsGroupedByCurrency.Keys.Count == 1;
- 
+            bool onlyInRubCurrency = onlyOneCurrency && idsGroupedByCurrency.Keys.First() == "RUB";
+
             string idsArray = string.Join(",", source.Select(d => d.product_id).Distinct().OrderBy(id => id));
 
             if (source.Count == 0) { return; }
@@ -172,29 +173,33 @@ namespace EtkBlazorApp.DataAccess
                 .AppendLine("UPDATE oc_product")
                 .AppendLine("SET base_price = CASE product_id");
 
-                foreach (var productInfo in source)
-                {
-                    sb.AppendLine($"WHEN '{productInfo.product_id}' THEN '{productInfo.price.Value.ToString(new CultureInfo("en-EN"))}'");
-                }
+            foreach (var productInfo in source)
+            {
+                sb.AppendLine($"WHEN '{productInfo.product_id}' THEN '{productInfo.price.Value.ToString(new CultureInfo("en-EN"))}'");
+            }
 
-                sb.AppendLine("ELSE base_price")
-                  .AppendLine("END, date_modified = NOW()");
+            sb.AppendLine("ELSE base_price")
+              .AppendLine("END, date_modified = NOW()");
 
-                if (onlyOneCurrency)
+            if (onlyOneCurrency)
+            {
+                sb.AppendLine($", base_currency_code = '{idsGroupedByCurrency.Keys.First()}'");
+                if (onlyInRubCurrency)
                 {
-                    sb.AppendLine($", base_currency_code = '{idsGroupedByCurrency.Keys.First()}'");
+                    sb.AppendLine($", price = base_price");
                 }
-                sb.AppendLine($"WHERE product_id IN ({idsArray});");
+            }
+            sb.AppendLine($"WHERE product_id IN ({idsArray});");
 
-                if (!onlyOneCurrency)
+            if (!onlyOneCurrency)
+            {
+                //Обновляем тип валюты товара
+                foreach (var kvp in idsGroupedByCurrency)
                 {
-                    //Обновляем тип валюты товара
-                    foreach (var kvp in idsGroupedByCurrency)
-                    {
-                        string currencyIdsArray = string.Join(",", source.Select(d => d.product_id).Distinct().OrderBy(id => id));
-                        sb.AppendLine($"UPDATE oc_product SET base_currency_code = '{kvp.Key}' WHERE product_id IN ({currencyIdsArray});");
-                    }
+                    string currencyIdsArray = string.Join(",", source.Select(d => d.product_id).Distinct().OrderBy(id => id));
+                    sb.AppendLine($"UPDATE oc_product SET base_currency_code = '{kvp.Key}' WHERE product_id IN ({currencyIdsArray});");
                 }
+            }
 
             var sql = sb.ToString();
 
@@ -229,7 +234,7 @@ namespace EtkBlazorApp.DataAccess
                     .AppendLine("UPDATE oc_product")
                     .AppendLine("SET quantity = 0")
                     .AppendLine($"WHERE manufacturer_id IN (SELECT DISTINCT manufacturer_id FROM oc_manufacturer WHERE product_id IN ({idsArray}));");
-                
+
                 sb.Insert(0, clearStockQueryBuilder.ToString());
             }
 

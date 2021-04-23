@@ -22,7 +22,7 @@ namespace EtkBlazorApp.BL
 
         protected string MapManufacturerName(string manufacturerName)
         {
-            if (ManufacturerNameMap.Any() && ManufacturerNameMap.ContainsKey(manufacturerName))
+            if (!string.IsNullOrWhiteSpace(manufacturerName) && ManufacturerNameMap.Any() && ManufacturerNameMap.ContainsKey(manufacturerName))
             {
                 return ManufacturerNameMap[manufacturerName];
             }
@@ -51,6 +51,10 @@ namespace EtkBlazorApp.BL
                 if (decimal.TryParse(str, System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var parsedQuantity))
                 {
                     quantity = Math.Max((int)parsedQuantity, 0);
+                }
+                else if(QuantityMap.ContainsKey(str))
+                {
+                    quantity = QuantityMap[str];
                 }
             }
 

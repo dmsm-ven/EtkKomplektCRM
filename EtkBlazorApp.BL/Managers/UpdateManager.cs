@@ -52,15 +52,14 @@ namespace EtkBlazorApp.BL
             progress?.Report("Обновление остатков etk-komplekt.ru");
             await productsStorage.UpdateProductsStock(data, clearStockBeforeUpdate);
 
-            if (data.Any(line => line.price.HasValue))
+            if (data.Any(line => line.price.HasValue) && data.Any(pl => pl.currency_code != "RUB"))
             {
                 progress?.Report("Пересчет цен товаров в валюте");
                 await new WebClient().DownloadStringTaskAsync(CurrencyPlusUri);
             }
-
-            progress?.Report("Обновление монобренд сайтов");
+          
             await UpdateMonobrands(affectedBrandsIds, progress);
-
+            
             progress?.Report("Обновление завершено");
         }
 
@@ -89,8 +88,9 @@ namespace EtkBlazorApp.BL
                 .Where(monobrand => affectedBrandsIds.Contains(monobrand.manufacturer_id))
                 .ToList();
 
-            if(affectedMonobrands.Count == 0) { return; }        
+            if(affectedMonobrands.Count == 0) { return; }
 
+            progress?.Report("Обновление монобренд сайтов");
             string key = await settingStorage.GetValue("monobrand_updater_key");
             foreach (var monobrand in affectedMonobrands)
             {

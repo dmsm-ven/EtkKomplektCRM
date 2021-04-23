@@ -31,20 +31,24 @@
         </div>
     </div>
 </div>
-
-@if (updateProgressSteps.Any())
-{
-    <div id="update-status">
-        @foreach (var step in updateProgressSteps)
-        {
-            <div class="alert alert-etk" role="alert">
-                @step
-            </div>
-        }
+<div class="row">
+    <div class="col-md-@(updateProgressSteps.Any() ? "8" : "12")">
+        <LoadedPriceListDisplayer></LoadedPriceListDisplayer>
     </div>
-}
-
-<LoadedPriceListDisplayer></LoadedPriceListDisplayer>
+    @if (updateProgressSteps.Any())
+    {
+        <div class="col-md-4">
+            <div id="update-status">
+                @foreach (var step in updateProgressSteps)
+                {
+                    <div class="alert alert-etk" role="alert">
+                        @step
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
 
 @code {
     bool clearStockBeforeUpdate = false;

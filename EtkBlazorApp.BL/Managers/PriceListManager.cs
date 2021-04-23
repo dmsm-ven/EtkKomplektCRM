@@ -28,34 +28,46 @@ namespace EtkBlazorApp.BL
             this.templateStorage = templateStorage;
         }
 
-        /// <summary>
-        /// Считывает строки из прайс-листа и сохраняет их в списке. Этот метод специально для дальнейшнего ручного обновления товаров на сайте
-        /// </summary>
-        /// <param name="templateType"></param>
-        /// <param name="stream"></param>
-        /// <returns></returns>
         public async Task UploadTemplate(Type templateType, Stream stream, string fileName)
         {
-            if (templateType == null) { throw new NotFoundedPriceListTemplateException(); }
+            var data = await ReadTemplateLines(templateType, stream, fileName, addFileData: true);
+            AddNewPriceLines(data);
+        }
 
-            string filePath = Path.GetTempFileName().Replace(".tmp", Path.GetExtension(fileName));
+        public async Task<List<PriceLine>> ReadTemplateLines(Type templateType, Stream stream, string fileName = null, bool addFileData = false)
+        {
+            if (templateType == null) { throw new ArgumentNullException(nameof(templateType)); }
+
+            List<PriceLine> list = new List<PriceLine>();
+
+            string filePath = Path.GetTempFileName();
+            if (fileName != null)
+            {
+                filePath = filePath.Replace(".tmp", Path.GetExtension(fileName));
+            }
 
             using (var fs = File.Create(filePath))
             {
                 await stream.CopyToAsync(fs);
             }
 
+            if (!File.Exists(filePath)) { return list; }
+
             try
             {
                 IPriceListTemplate templateInstance = (IPriceListTemplate)Activator.CreateInstance(templateType, filePath);
                 var templateInfo = await GetTemplateDescription(templateType);
 
-                var data = await templateInstance.ReadPriceLines(null);
-                AddNewPriceLines(data);
-                ApplyDiscounts(data, templateInfo.discount, templateInfo.nds);
+                list = await templateInstance.ReadPriceLines(null);
+                ApplyDiscounts(list, templateInfo.discount, templateInfo.nds);
 
-                var loadedFileInfo = new LoadedPriceListTemplateData(templateInstance, templateInfo, data, fileName);
-                LoadedFiles.Add(loadedFileInfo);
+                if (addFileData)
+                {
+                    var loadedFileInfo = new LoadedPriceListTemplateData(templateInstance, templateInfo, list, fileName);
+                    LoadedFiles.Add(loadedFileInfo);
+                }
+
+                return list;
             }
             catch
             {
@@ -64,44 +76,6 @@ namespace EtkBlazorApp.BL
             finally
             {
                 File.Delete(filePath);
-            }       
-        }
-
-        /// <summary>
-        /// Считывает строки из прайс-листа и возращает их напрямую, не добавляя в спиоск загруженных. Этот метод специально для автоматических задач
-        /// </summary>
-        /// <param name="templateType"></param>
-        /// <param name="stream"></param>
-        /// <returns></returns>
-        public async Task<List<PriceLine>> ReadTemplateLines(Type templateType, Stream stream)
-        {
-            if (templateType == null) { throw new ArgumentNullException(nameof(templateType)); }
-
-            List<PriceLine> list = new List<PriceLine>();
-
-            string fileName = Path.GetTempFileName();
-
-            using (var fs = File.Create(fileName))
-            {
-                await stream.CopyToAsync(fs);
-            }
-
-            //Скачали данные из потока и записали в временный файл
-            if (!File.Exists(fileName)) { return list; }
-
-            try
-            {
-                IPriceListTemplate templateInstance = (IPriceListTemplate)Activator.CreateInstance(templateType, fileName);
-                var templateInfo = await GetTemplateDescription(templateType);
-
-                list = await templateInstance.ReadPriceLines(null);
-                ApplyDiscounts(list, templateInfo.discount, templateInfo.nds);
-
-                return list;
-            }
-            catch
-            {
-                throw;
             }
         }
 
@@ -113,9 +87,12 @@ namespace EtkBlazorApp.BL
         /// <param name="addNds"></param>
         private void ApplyDiscounts(List<PriceLine> list, decimal discount, bool addNds)
         {
-            if (discount == decimal.Zero && addNds == false) { return; }
+            var source = list.Where(line => line.Price.HasValue);
+            bool emptyDiscount = (discount == decimal.Zero && addNds == false);
 
-            foreach (var line in list.Where(line => line.Price.HasValue))
+            if (emptyDiscount || source.Count() == 0) { return; }
+
+            foreach (var line in source)
             {
                 if (addNds)
                 {
@@ -181,7 +158,7 @@ namespace EtkBlazorApp.BL
                         linkedLine.Price = line.Price;
                     }
 
-                    if(line.Quantity.HasValue && linkedLine.Quantity.HasValue)
+                    if (line.Quantity.HasValue && linkedLine.Quantity.HasValue)
                     {
                         linkedLine.Quantity += line.Quantity;
                     }
@@ -195,7 +172,7 @@ namespace EtkBlazorApp.BL
                 PriceLines.Add(line);
             }
         }
-    
+
         public static string GetPriceListGuidByType(Type priceListTemplateType)
         {
             var id = ((PriceListTemplateGuidAttribute)priceListTemplateType
