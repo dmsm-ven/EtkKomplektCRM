@@ -32,7 +32,8 @@ namespace EtkBlazorApp.BL
 
             foreach (var offer in offers)
             {
-                string manufacturer = ManufacturerNameMap.ContainsKey(offer.Vendor) ? ManufacturerNameMap[offer.Vendor] : offer.Vendor;
+                string manufacturer = MapManufacturerName(offer.Vendor);
+
                 if (SkipManufacturerNames.Contains(manufacturer)) { continue; }
 
                 var priceLine = new PriceLine(this)

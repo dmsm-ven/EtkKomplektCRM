@@ -21,53 +21,33 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             var list = new List<PriceLine>();
             var tab = Excel.Workbook.Worksheets[0];
 
-            for (int row = 1; row < tab.Dimension.Rows; row++)
+            for (int row = 2; row < tab.Dimension.Rows; row++)
             {
-                string manufacturer = tab.Cells[row, 2].ToString();
+                string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 3));
 
-                manufacturer = ManufacturerNameMap.ContainsKey(manufacturer) ? ManufacturerNameMap[manufacturer] : manufacturer;
-
-                if (!ValidManufacturerNames.Contains(manufacturer)) { continue; }
+                if (!ValidManufacturerNames.Contains(manufacturer, StringComparer.OrdinalIgnoreCase)) { continue; }
 
                 string skuNumber = tab.GetValue<string>(row, 1);
                 string productName = tab.GetValue<string>(row, 2);
-                string quantityString = tab.GetValue<string>(row, 4);
-                string priceString = tab.GetValue<string>(row, 5);
+                int? quantity = ParseQuantity(tab.GetValue<string>(row, 4));
+                decimal? price = ParsePrice(tab.GetValue<string>(row, 5));
                 string model = Regex.Match(productName, "^(.*?), ").Groups[1].Value;
-                string currencyTypeString = tab.Cells[row, 5]?.ToString()?.Replace("руб.", "RUB");
+                string currencyTypeString = tab.GetValue<string>(row, 6);
 
-                CurrencyType? priceCurreny = null;
-                if (!string.IsNullOrEmpty(currencyTypeString))
-                {
-                    priceCurreny = Enum.Parse<CurrencyType>(currencyTypeString);
-                }
+                CurrencyType priceCurreny = CurrencyType.RUB;
+                if(!Enum.TryParse(currencyTypeString, out priceCurreny)) { }
 
-                decimal? parsedPrice = null;
-                if (priceCurreny.HasValue && decimal.TryParse(priceString, out var price))
+                var priceLine = new PriceLine(this)
                 {
-                    parsedPrice = price;
-                }
-
-                int? parsedQuantity = null;
-                if (int.TryParse(quantityString, out var quantity))
-                {
-                    parsedQuantity = Math.Max(quantity, 0);
-                }
-
-                if (parsedPrice.HasValue || parsedQuantity.HasValue)
-                {
-                    var priceLine = new PriceLine(this)
-                    {
-                        Name = productName,
-                        Manufacturer = manufacturer,
-                        Model = model,
-                        Sku = skuNumber,
-                        Price = parsedPrice,
-                        Currency = priceCurreny.Value,
-                        Quantity = parsedQuantity
-                    };
-                    list.Add(priceLine);
-                }
+                    Name = productName,
+                    Manufacturer = manufacturer,
+                    Model = model,
+                    Sku = skuNumber,
+                    Price = price,
+                    Currency = priceCurreny,
+                    Quantity = quantity
+                };
+                list.Add(priceLine);
             }
 
             return list;

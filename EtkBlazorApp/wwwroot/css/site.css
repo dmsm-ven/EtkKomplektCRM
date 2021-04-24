@@ -292,8 +292,9 @@ input[type='radio'], input[type='checkbox'] {
     padding: 5px;
 }
 
-.price-list-template-inner:disabled, .price-list-template-outer:disabled {
+.price-list-template-inner.already-loaded {
     opacity: 0.4;
+    background: lightgray;
     transition: 500ms;
 }
 

@@ -1,6 +1,6 @@
-﻿<div class="price-list-template-outer col-lg-2 col-md-3 col-sm-6 col-xs-12 @(Items.Contains(GlobalSelectedTemplate) ? "active" : string.Empty)"
+﻿<div class="price-list-template-outer col-lg-2 col-md-3 col-sm-6 col-xs-12 @outerDivCss"
      @onclick="BoxClicked">
-    <div class="price-list-template-inner">
+    <div class="price-list-template-inner @innerDivCss">
         <img class="brand-template-logo" src="@GroupImage" style="margin: 4px 8px 4px 2px;" />
         <ul class="price-list-template-group">
             @foreach (var item in Items)
@@ -19,11 +19,15 @@
 </div>
 
 @code {
-        [Inject] PriceListManager priceListManager { get; set; }
-        [Parameter] public List<PriceListTemplateItemViewModel> Items { get; set; }
-        [Parameter] public EventCallback<PriceListTemplateItemViewModel> CheckedChanged { get; set; }
-        [CascadingParameter] PriceListTemplateItemViewModel GlobalSelectedTemplate { get; set; }
-        PriceListTemplateItemViewModel SelectedTemplate { get; set; }
+    [Inject] PriceListManager priceListManager { get; set; }
+    [Parameter] public List<PriceListTemplateItemViewModel> Items { get; set; }
+    [Parameter] public EventCallback<PriceListTemplateItemViewModel> CheckedChanged { get; set; }
+    [CascadingParameter] PriceListTemplateItemViewModel GlobalSelectedTemplate { get; set; }
+    PriceListTemplateItemViewModel SelectedTemplate { get; set; }
+
+    string outerDivCss => Items.Contains(GlobalSelectedTemplate) ? "active" : string.Empty;
+    string innerDivCss => Items.All(item => IsTemplateAlreadyLoaded(item)) ? "already-loaded" : string.Empty;
+
 
     private string GroupImage
     {

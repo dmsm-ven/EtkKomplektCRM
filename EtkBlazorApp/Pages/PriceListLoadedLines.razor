@@ -7,11 +7,12 @@
 
 @if (templateInformation != null)
 {
-    <img src="" class="rounded mx-auto d-block" alt="...">
+    <img src="@templateInformation.image" 
+         style="width: 300px; margin-bottom: 20px; border: 1px solid lightgray;"
+         class="rounded mx-auto d-block">
 }
 @if (!string.IsNullOrWhiteSpace(singleManufacturer))
 {
-
     <h2>Производитель "@singleManufacturer"</h2>
 }
 else
@@ -152,6 +153,7 @@ else
                 .ToDictionary(i => i.Key, j => j.Count());
         }
     }
+    
     private async Task SearchSkuOnWebsite(string tag, string searchString)
     {
         if (string.IsNullOrWhiteSpace(searchString)) { return; }

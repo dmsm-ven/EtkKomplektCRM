@@ -57,25 +57,11 @@ namespace EtkBlazorApp.DataAccess
             return products.ToList();
         }
 
-        public async Task<ProductEntity> GetProductByKeyword(string keyword)
-        {
-            string sql = "SELECT p.product_id, d.name, p.sku, p.model, p.quantity, p.price, p.base_price, p.base_currency_code, p.date_modified, s.name as stock_status, url.keyword as keyword " +
-                         "\nFROM oc_product p " +
-                         "\nJOIN oc_url_alias url ON url.query = CONCAT('product_id=', p.product_id) " +
-                         "\nLEFT JOIN oc_product_description d ON p.product_id = d.product_id " +
-                         "\nLEFT JOIN oc_stock_status s ON s.stock_status_id = p.stock_status_id " +
-                         "\nWHERE url.keyword = @keyword " +
-                         "\nLIMIT 1";
+        public async Task<ProductEntity> GetProductByModel(string model) => await GetSingleProductOrNullByField(nameof(model), model);
 
-            var product = (await database.LoadData<ProductEntity, dynamic>(sql, new { keyword })).FirstOrDefault();
-            return product;
-        }
+        public async Task<ProductEntity> GetProductBySku(string sku) => await GetSingleProductOrNullByField(nameof(sku), sku);
 
-        public async Task<ProductEntity> GetProductByModel(string model) => await GetProductByField(nameof(model), model);
-
-        public async Task<ProductEntity> GetProductBySku(string sku) => await GetProductByField(nameof(sku), sku);
-
-        private async Task<ProductEntity> GetProductByField(string fieldName, string fieldValue)
+        private async Task<ProductEntity> GetSingleProductOrNullByField(string fieldName, string fieldValue)
         {
             string sql = "SELECT p.*, url.keyword as keyword " +
                          "FROM oc_product p " +
@@ -91,6 +77,20 @@ namespace EtkBlazorApp.DataAccess
             {
                 return null;
             }
+        }
+
+        public async Task<ProductEntity> GetProductByKeyword(string keyword)
+        {
+            string sql = "SELECT p.product_id, d.name, p.sku, p.model, p.quantity, p.price, p.base_price, p.base_currency_code, p.date_modified, s.name as stock_status, url.keyword as keyword " +
+                         "\nFROM oc_product p " +
+                         "\nJOIN oc_url_alias url ON url.query = CONCAT('product_id=', p.product_id) " +
+                         "\nLEFT JOIN oc_product_description d ON p.product_id = d.product_id " +
+                         "\nLEFT JOIN oc_stock_status s ON s.stock_status_id = p.stock_status_id " +
+                         "\nWHERE url.keyword = @keyword " +
+                         "\nLIMIT 1";
+
+            var product = (await database.LoadData<ProductEntity, dynamic>(sql, new { keyword })).FirstOrDefault();
+            return product;
         }
 
         public async Task UpdateDirectProduct(ProductEntity product)
@@ -196,7 +196,7 @@ namespace EtkBlazorApp.DataAccess
                 //Обновляем тип валюты товара
                 foreach (var kvp in idsGroupedByCurrency)
                 {
-                    string currencyIdsArray = string.Join(",", source.Select(d => d.product_id).Distinct().OrderBy(id => id));
+                    string currencyIdsArray = string.Join(",", kvp.Value.OrderBy(id => id));
                     sb.AppendLine($"UPDATE oc_product SET base_currency_code = '{kvp.Key}' WHERE product_id IN ({currencyIdsArray});");
                 }
             }
@@ -212,7 +212,7 @@ namespace EtkBlazorApp.DataAccess
 
             if (source.Count == 0) { return; }
 
-            string pidArray = string.Join(",", source.Select(ud => ud.product_id).Distinct());
+            string pidArray = string.Join(",", source.Select(ud => ud.product_id).OrderBy(pid => pid).Distinct());
 
             var sb = new StringBuilder()
                 .AppendLine("UPDATE oc_product")
@@ -229,11 +229,10 @@ namespace EtkBlazorApp.DataAccess
 
             if (clearStockBeforeUpdate)
             {
-                string idsArray = string.Join(",", source.Select(d => d.product_id).Distinct().OrderBy(id => id));
                 var clearStockQueryBuilder = new StringBuilder()
                     .AppendLine("UPDATE oc_product")
                     .AppendLine("SET quantity = 0")
-                    .AppendLine($"WHERE manufacturer_id IN (SELECT DISTINCT manufacturer_id FROM oc_manufacturer WHERE product_id IN ({idsArray}));");
+                    .AppendLine($"WHERE manufacturer_id IN (SELECT DISTINCT manufacturer_id FROM oc_product WHERE product_id IN ({pidArray}));");
 
                 sb.Insert(0, clearStockQueryBuilder.ToString());
             }

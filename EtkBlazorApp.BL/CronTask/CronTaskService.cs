@@ -26,7 +26,8 @@ namespace EtkBlazorApp.BL.CronTask
 
         private DateTime lastCheckDate;
         private readonly Timer checkTimer;
-        private readonly List<CronTaskBase> taskList;
+        private readonly List<CronTaskBase> tasks;
+        private readonly Dictionary<CronTaskBase, bool> isDoneToday;
 
         public CronTaskService(
             ISettingStorage settingStorage,
@@ -42,10 +43,11 @@ namespace EtkBlazorApp.BL.CronTask
             this.updateManager = updateManager;
             this.priceListManager = priceListManager;
             this.remoteTemplateLoaderFactory = remoteTemplateLoaderFactory;
-            taskList = Assembly.GetAssembly(typeof(CronTaskBase)).GetTypes()
+            tasks = Assembly.GetAssembly(typeof(CronTaskBase)).GetTypes()
                 .Where(tt => tt.IsClass && !tt.IsAbstract && tt.IsSubclassOf(typeof(CronTaskBase)))
                 .Select(tt => (CronTaskBase)Activator.CreateInstance(tt, new object[] { this }))
                 .ToList();
+            isDoneToday = tasks.ToDictionary(t => t, state => false);
 
             checkTimer = new Timer(TimeSpan.FromSeconds(60).TotalMilliseconds);
             checkTimer.Elapsed += CheckTimer_Elapsed;
@@ -54,7 +56,7 @@ namespace EtkBlazorApp.BL.CronTask
 
         public async Task ExecuteImmediately(int task_id)
         {
-            var task = taskList.FirstOrDefault(t => t.Prefix == (CronTaskPrefix)task_id);
+            var task = tasks.FirstOrDefault(t => t.Prefix == (CronTaskPrefix)task_id);
             if(task != null)
             {
                 await ExecuteTask(task, DateTime.Now.TimeOfDay, forceRun: true);
@@ -67,9 +69,9 @@ namespace EtkBlazorApp.BL.CronTask
 
             TimeSpan currentTime = DateTime.Now.TimeOfDay;
 
-            foreach(var task in taskList)
+            foreach(var task in tasks)
             {
-                if (task.IsDoneToday) { continue; }
+                if (isDoneToday[task]) { continue; }
 
                 await ExecuteTask(task, currentTime);           
             }
@@ -88,9 +90,11 @@ namespace EtkBlazorApp.BL.CronTask
                 try
                 {
                     taskDatabaseEntity.last_exec_date_time = DateTime.Now;
-                    await task.Execute();
+                    isDoneToday[task] = true;
+                    await task.Run();
+                    sw.Stop();
                     OnTaskComplete?.Invoke(task);
-                    await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {task.Prefix} выполнено");
+                    await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {task.Prefix} выполнено. Длительность выполнения {sw.Elapsed.TotalSeconds} секунд.");
                     
                 }
                 catch (Exception ex)
@@ -105,9 +109,12 @@ namespace EtkBlazorApp.BL.CronTask
 
         private void ResetIfNewDay()
         {
-            if (lastCheckDate > DateTime.Now.Date)
+            if (lastCheckDate != DateTime.Now.Date)
             {
-                taskList.ForEach(t => t.Reset());
+                foreach(var task in tasks)
+                {
+                    isDoneToday[task] = false;
+                }
             }
             lastCheckDate = DateTime.Now.Date;
         }

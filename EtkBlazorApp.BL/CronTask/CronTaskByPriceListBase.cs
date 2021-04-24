@@ -16,7 +16,7 @@ namespace EtkBlazorApp.BL.CronTask
             this.templateType = templateType;
         }
 
-        protected override async Task Run()
+        public override async Task Run()
         {
             var templateGuid = PriceListManager.GetPriceListGuidByType(templateType);
             var templateInfo = await service.templates.GetPriceListTemplateById(templateGuid);
