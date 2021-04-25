@@ -102,7 +102,6 @@ namespace EtkBlazorApp.BL
 			}
 
 			return null;
-		}
-				
+		}				
     }
 }
