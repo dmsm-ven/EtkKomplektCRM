@@ -177,9 +177,11 @@
         StateHasChanged();
 
         IRemoteTemplateFileLoader loader = remoteTemplateFileLoaderFactory.GetMethod(selectedTemplate.RemoteUrl, selectedTemplate.RemoteUrlMethod, selectedTemplate.Guid);
-        using (var ms = new MemoryStream(await loader.GetBytes()))
+        var fileInfo = await loader.GetFile();
+
+        using (var ms = new MemoryStream(fileInfo.Bytes))
         {
-            await LoadTemplateFromStream(ms, Path.GetFileName(selectedTemplate.RemoteUrl));
+            await LoadTemplateFromStream(ms, fileInfo.FileName);
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -13,12 +14,14 @@ namespace EtkBlazorApp.BL
             this.remoteUri = remoteUri;
         }
 
-        public async Task<byte[]> GetBytes()
+        public async Task<RemoteTemplateFileResponse> GetFile()
         {
             using (var wc = new WebClient())
             {
                 var bytes = await Task.Run(() => wc.DownloadData(new Uri(remoteUri)));
-                return bytes;
+                string fileName = Path.GetFileName(remoteUri);
+
+                return new RemoteTemplateFileResponse(bytes, fileName);
             }
         }
     }

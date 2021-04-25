@@ -25,8 +25,12 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             switch (methodName)
             {
-                case "HttpGetWithCredentials": 
+                case "HttpGet":
+                    return new DefaultRemoteTemplateFileLoader(remoteUri);
+                case "HttpGetWithCredentials":
                     return new HttpGetWithCredentialsRemoteTemplateFileLoader(remoteUri, guid, storage);
+                case "YandexDisk":
+                    return new YandexDiskRemoteTemplateFileLoader(remoteUri);
             }
 
             throw new NotSupportedException($"Шаблон '{methodName}' не поддерживается");

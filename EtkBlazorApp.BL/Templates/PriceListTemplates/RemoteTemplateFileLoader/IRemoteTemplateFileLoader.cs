@@ -8,6 +8,18 @@ namespace EtkBlazorApp.BL
 {
     public interface IRemoteTemplateFileLoader
     {
-        Task<byte[]> GetBytes(); 
+        Task<RemoteTemplateFileResponse> GetFile(); 
+    }
+
+    public class RemoteTemplateFileResponse
+    {
+        public string FileName { get; }
+        public byte[] Bytes { get; }
+
+        public RemoteTemplateFileResponse(byte[] bytes, string fileName)
+        {
+            Bytes = bytes;
+            FileName = fileName;
+        }
     }
 }

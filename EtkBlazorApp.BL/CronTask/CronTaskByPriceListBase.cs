@@ -22,9 +22,11 @@ namespace EtkBlazorApp.BL.CronTask
             var templateInfo = await service.templates.GetPriceListTemplateById(templateGuid);
 
             var loader = service.remoteTemplateLoaderFactory.GetMethod(templateInfo.remote_uri, templateInfo.remote_uri_method, templateGuid);
-            using (var ms = new MemoryStream(await loader.GetBytes()))
+            var response = await loader.GetFile();
+
+            using (var ms = new MemoryStream(response.Bytes))
             {
-                var lines = await service.priceListManager.ReadTemplateLines(templateType, ms);
+                var lines = await service.priceListManager.ReadTemplateLines(templateType, ms, response.FileName);
                 await service.updateManager.UpdatePriceAndStock(lines, clearStockBeforeUpdate: true);
             }
         }

@@ -12,28 +12,23 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         protected override List<PriceLine> ReadDataFromExcel()
         {
             var list = new List<PriceLine>();
-            var tab = Excel.Workbook.Worksheets[0];
 
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
-                string model = tab.GetValue<string>(row, 0).Replace(" ", string.Empty);
-                string name = tab.GetValue<string>(row, 1);
-                string quantityString = tab.GetValue<string>(row, 3);
+                string model = tab.GetValue<string>(row, 1).Replace(" ", string.Empty);
+                string name = tab.GetValue<string>(row, 2);
+                int? quantity = ParseQuantity(tab.GetValue<string>(row, 4));
 
-                if (decimal.TryParse(quantityString, out var quantity))
+                var priceLine = new PriceLine(this)
                 {
-                    var priceLine = new PriceLine(this)
-                    {
-                        Manufacturer = "Testo",
-                        Name = name,
-                        Model = model,
-                        Sku = model,
-                        Quantity = (int)quantity
-                    };
+                    Manufacturer = "Testo",
+                    Name = name,
+                    Model = model,
+                    Sku = model,
+                    Quantity = quantity
+                };
 
-                    list.Add(priceLine);
-                }
-
+                list.Add(priceLine);
             }
 
             return list;

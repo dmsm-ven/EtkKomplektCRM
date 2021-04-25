@@ -91,10 +91,12 @@ namespace EtkBlazorApp.BL.CronTask
                 {
                     taskDatabaseEntity.last_exec_date_time = DateTime.Now;
                     isDoneToday[task] = true;
+
                     await task.Run();
+
                     sw.Stop();
                     OnTaskComplete?.Invoke(task);
-                    await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {task.Prefix} выполнено. Длительность выполнения {sw.Elapsed.TotalSeconds} секунд.");
+                    await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {task.Prefix} выполнено. Длительность выполнения {(int)sw.Elapsed.TotalSeconds} сек.");
                     
                 }
                 catch (Exception ex)

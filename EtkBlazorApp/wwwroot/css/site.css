@@ -12,9 +12,13 @@ tr.disabled-user td:not(:last-child) {
     opacity: 0.4;
 }
 
-.manufacturers-shipment-period-table td, .orders-table td, .uploaded-price-list-lines-table {
+.manufacturers-shipment-period-table td, .orders-table td, .uploaded-price-list-lines-table td, .log-table td {
     padding: 4px 2px;
     vertical-align: middle;
+}
+.log-table td, .uploaded-price-list-lines-table td {
+    white-space: nowrap;
+    padding-right: 24px;
 }
 
 .current-user {
