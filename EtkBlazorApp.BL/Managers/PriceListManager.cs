@@ -1,7 +1,9 @@
 ﻿using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
+using Microsoft.AspNetCore.StaticFiles;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -28,37 +30,50 @@ namespace EtkBlazorApp.BL
             this.templateStorage = templateStorage;
         }
 
+        public static string GetPriceListGuidByType(Type priceListTemplateType)
+        {
+            var id = ((PriceListTemplateGuidAttribute)priceListTemplateType
+                .GetCustomAttributes(typeof(PriceListTemplateGuidAttribute), false)
+                .FirstOrDefault())
+                .Guid;
+
+            return id;
+        }
+
+        public void RemovePriceListAll()
+        {
+            LoadedFiles.Clear();
+            PriceLines.Clear();
+        }
+
+        public void RemovePriceList(LoadedPriceListTemplateData data)
+        {
+            LoadedFiles.Remove(data);
+            PriceLines.RemoveAll(line => line.Template == data.TemplateInstance);
+        }
+
         public async Task UploadTemplate(Type templateType, Stream stream, string fileName)
         {
             var data = await ReadTemplateLines(templateType, stream, fileName, addFileData: true);
             AddNewPriceLines(data);
         }
 
-        public async Task<List<PriceLine>> ReadTemplateLines(Type templateType, Stream stream, string fileName = null, bool addFileData = false)
+        public async Task<List<PriceLine>> ReadTemplateLines(Type templateType, Stream stream, string fileName, bool addFileData = false)
         {
             if (templateType == null) { throw new ArgumentNullException(nameof(templateType)); }
 
-            List<PriceLine> list = new List<PriceLine>();
-
-            string filePath = Path.GetTempFileName();
-            if (fileName != null)
-            {
-                filePath = filePath.Replace(".tmp", Path.GetExtension(fileName));
-            }
-
+            string filePath = Path.Combine(Path.GetTempPath(), fileName);
             using (var fs = File.Create(filePath))
             {
                 await stream.CopyToAsync(fs);
             }
-
-            if (!File.Exists(filePath)) { return list; }
 
             try
             {
                 IPriceListTemplate templateInstance = (IPriceListTemplate)Activator.CreateInstance(templateType, filePath);
                 var templateInfo = await GetTemplateDescription(templateType);
 
-                list = await templateInstance.ReadPriceLines(null);
+                var list = await templateInstance.ReadPriceLines(null);
                 ApplyDiscounts(list, templateInfo.discount, templateInfo.nds);
 
                 if (addFileData)
@@ -106,18 +121,12 @@ namespace EtkBlazorApp.BL
             }
         }
 
-        public void RemovePriceListAll()
-        {
-            LoadedFiles.Clear();
-            PriceLines.Clear();
-        }
-
-        public void RemovePriceList(LoadedPriceListTemplateData data)
-        {
-            LoadedFiles.Remove(data);
-            PriceLines.RemoveAll(line => line.Template == data.TemplateInstance);
-        }
-
+        /// <summary>
+        /// Прибавить НДС к загруженному прайс-листу
+        /// </summary>
+        /// <param name="price"></param>
+        /// <param name="currencyType"></param>
+        /// <returns></returns>
         private decimal AddNds(decimal price, CurrencyType currencyType)
         {
             if (currencyType == CurrencyType.RUB)
@@ -132,10 +141,8 @@ namespace EtkBlazorApp.BL
 
         private async Task<PriceListTemplateEntity> GetTemplateDescription(Type templateType)
         {
-            var guid = ((PriceListTemplateGuidAttribute)templateType
-                .GetCustomAttributes(typeof(PriceListTemplateGuidAttribute), false)
-                .FirstOrDefault()).Guid;
-            var info = (await templateStorage.GetPriceListTemplateById(guid));
+            var guid = GetPriceListGuidByType(templateType);
+            var info = await templateStorage.GetPriceListTemplateById(guid);
             return info;
         }
 
@@ -173,14 +180,6 @@ namespace EtkBlazorApp.BL
             }
         }
 
-        public static string GetPriceListGuidByType(Type priceListTemplateType)
-        {
-            var id = ((PriceListTemplateGuidAttribute)priceListTemplateType
-                .GetCustomAttributes(typeof(PriceListTemplateGuidAttribute), false)
-                .FirstOrDefault())
-                .Guid;
-
-            return id;
-        }
+      
     }
 }

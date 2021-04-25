@@ -10,6 +10,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         public MarsKomponentPriceListTemplate(string fileName) : base(fileName) 
         {
             ManufacturerNameMap["PROSKIT"] = "Pro'sKit";
+            ManufacturerNameMap["MASTECH"] = "Mastech";
             ValidManufacturerNames.AddRange(new [] { "Pro'sKit", "Mastech", "UNI-T" });
         }
 
@@ -19,9 +20,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int row = 11; row < tab.Dimension.Rows; row++)
             {
-                string manufacturer = tab.GetValue<string>(row, 9);
-
-                manufacturer = ManufacturerNameMap.ContainsKey(manufacturer) ? ManufacturerNameMap[manufacturer] : manufacturer;
+                string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 9));
                 if (!ValidManufacturerNames.Contains(manufacturer)) { continue; }           
 
                 string prefix = $"{manufacturer} ";

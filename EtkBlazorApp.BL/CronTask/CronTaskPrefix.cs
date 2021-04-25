@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 namespace EtkBlazorApp.BL.CronTask
 {
     //Цифровое значение должно соответствовать ID задачи в таблице etk_app_cron_task
+    //TODO: тут возможно стоит убрать из программы, и перенести на создание напрямую из программы
     public enum CronTaskPrefix
     {
         Symmetron = 1,
@@ -17,5 +18,6 @@ namespace EtkBlazorApp.BL.CronTask
         OzonSeller = 7,
         Megeon = 8,
         MeanWell_Partner = 9,
+        Testo_Quantity = 10,
     };
 }

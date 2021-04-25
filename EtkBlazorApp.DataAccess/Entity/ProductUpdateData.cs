@@ -6,5 +6,6 @@
         public decimal? price { get; set; }
         public int? quantity { get; set; }
         public string currency_code { get; set; }
+        public int? stock_partner { get; set; }
     }
 }

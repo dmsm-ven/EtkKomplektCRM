@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace EtkBlazorApp.ViewModel
+namespace EtkBlazorApp
 {
     public class OrderViewModel
     {

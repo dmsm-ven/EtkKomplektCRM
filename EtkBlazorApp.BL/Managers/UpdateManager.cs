@@ -52,6 +52,12 @@ namespace EtkBlazorApp.BL
             progress?.Report("Обновление остатков etk-komplekt.ru");
             await productsStorage.UpdateProductsStock(data, clearStockBeforeUpdate);
 
+            if (data.Any(data => data.stock_partner != null))
+            {
+                progress?.Report("Обновление дополнительных складов etk-komplekt.ru");
+                await productsStorage.UpdateProductsStockPartner(data);
+            }
+
             if (data.Any(line => line.price.HasValue) && data.Any(pl => pl.currency_code != "RUB"))
             {
                 progress?.Report("Пересчет цен товаров в валюте");
@@ -67,7 +73,12 @@ namespace EtkBlazorApp.BL
         {
             var allManufacturers = await manufacturerStorage.GetManufacturers();
 
-            var affectedBrands = priceLines.Select(pl => pl.Manufacturer).Distinct().ToList();
+            var affectedBrands = priceLines
+                .Where(pl => pl.StockPartner == null)
+                .Select(pl => pl.Manufacturer)
+                .Distinct()
+                .ToList();
+
             if (affectedBrands.Contains("Bosch"))
             {
                 affectedBrands.Add("Dremel");

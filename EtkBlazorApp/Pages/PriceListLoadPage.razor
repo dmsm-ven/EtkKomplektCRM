@@ -11,24 +11,24 @@
 {
     if (isFileUploading)
     {
-        <h3>Загрузка файла на сервер</h3>
-        <BootstrapProgressBar CurrentProgress="uploadPercent"></BootstrapProgressBar>
+<h3>Загрузка файла на сервер</h3>
+<BootstrapProgressBar CurrentProgress="uploadPercent"></BootstrapProgressBar>
     }
     if (isIntermediateProgress)
     {
-        <h3>Обработка данных</h3>
-        <IntermediateProgressBar></IntermediateProgressBar>
+<h3>Обработка данных</h3>
+<IntermediateProgressBar></IntermediateProgressBar>
     }
 }
-
-<div class="form-group">
-    <button class="btn btn-success" @onclick="LoadRemoteUriTemplate" disabled="@(string.IsNullOrWhiteSpace(selectedTemplate?.RemoteUrl) || isBusy)">
-        Загрузить от поставщика
-    </button>
-    <InputFile OnChange="UploadSelectedPriceListTemplateFile" 
-               accept=".xlsx, .xls, .csv, .xml" disabled="@(selectedTemplate == null || isBusy)" ></InputFile>
+<div class="row my-2">
+    <div class="form-group">
+        <button class="btn btn-success" @onclick="LoadRemoteUriTemplate" disabled="@(string.IsNullOrWhiteSpace(selectedTemplate?.RemoteUrl) || isBusy)">
+            Загрузить от поставщика
+        </button>
+        <InputFile OnChange="UploadSelectedPriceListTemplateFile"
+                   accept=".xlsx, .xls, .csv, .xml" disabled="@(selectedTemplate == null || isBusy)"></InputFile>
+    </div>
 </div>
-
 
 <h2>Выберите шаблон загружаемого файла</h2>
 
@@ -43,7 +43,7 @@
                @bind="searchPhrase" class="form-control rounded mx-2" />
     </div>
     <div class="d-inline">
-        <button class="btn btn-outline-primary @(filterHasUri ? "active" : "")" 
+        <button class="btn btn-outline-primary @(filterHasUri ? "active" : "")"
                 @onclick="@(e => {filterHasUri = !filterHasUri; ApplyFilter(null); })">
             <span class="oi oi-link-intact"></span>
         </button>
@@ -53,9 +53,9 @@
 <div class="row my-2">
     @foreach (var template in filteredTemplates)
     {
-        <CascadingValue Value="selectedTemplate">
-            <PriceListTemplateItem Items="@template.Value" CheckedChanged="SelectedTemplateChanged" />
-        </CascadingValue>
+    <CascadingValue Value="selectedTemplate">
+        <PriceListTemplateItem Items="@template.Value" CheckedChanged="SelectedTemplateChanged" />
+    </CascadingValue>
     }
 </div>
 
@@ -63,39 +63,41 @@
 
 @if (selectedTemplate != null)
 {
-    <h4>Примечания к выбранному шаблону <storng>(@selectedTemplate.Title)</storng></h4>
-    <textarea readonly class="price-list-template-description">@selectedTemplate.Description</textarea>
-    @if (selectedTemplate.PriceListType == PriceListType.Price || selectedTemplate.PriceListType == PriceListType.Both)
-    {
-        @if (selectedTemplate.Nds)
+<div class="row my-2">
+    <div class="col-md-12">
+        <h4>@selectedTemplate.Title</h4>
+        @if ((selectedTemplate.PriceListType == PriceListType.Price || selectedTemplate.PriceListType == PriceListType.Both))
         {
-            <p>
-                <strong style="color: red;">прибавляется НДС</strong>
-            </p>
+        if (selectedTemplate.Nds)
+        {
+        <strong style="color: red; margin-right: 10px;">+ НДС | </strong>
         }
-        <p>
-            Наценка:
-            @if (editingTemplate == selectedTemplate)
-            {
-                <input type="number" style="display: inline; width: 80px;" class="form-control mx-2" @bind="editingTemplate.Discount" />
-                <button class="btn btn-outline-success" @onclick="SaveTemplateDiscount">
-                    <span class="oi oi-circle-check" style="font-size: 16px;"></span>
-                </button>
-            }
-            else
-            {
-                <strong style="color: red;">@(selectedTemplate.Discount.ToString("G29"))%</strong>
-                <button class="btn btn-sm btn-outline-success mx-2" @onclick="(e => editingTemplate = selectedTemplate)">
-                    <span class="oi oi-pencil"></span>
-                </button>
-            }
-        </p>
+        <strong>Наценка: </strong>
+        if (editingTemplate == selectedTemplate)
+        {
+        <input type="number" style="display: inline; width: 80px;" class="form-control mx-2" @bind="editingTemplate.Discount" />
+        <button class="btn btn-outline-success" @onclick="SaveTemplateDiscount">
+            <span class="oi oi-circle-check" style="font-size: 16px;"></span>
+        </button>
+        }
+        else
+        {
+        <strong style="color: red;">@(selectedTemplate.Discount.ToString("G29"))%</strong>
+        <button class="btn btn-sm btn-outline-success mx-2" @onclick="(e => editingTemplate = selectedTemplate)">
+            <span class="oi oi-pencil"></span>
+        </button>
+        }
+        }
+    </div>
+    @if(!string.IsNullOrWhiteSpace(selectedTemplate.Description))
+    {
+    <textarea readonly class="price-list-template-description">@selectedTemplate.Description</textarea>
     }
     @if (selectedTemplate.RemoteUrl != null)
     {
-        <p>Прямая ссылка на файл: <a href="@selectedTemplate.RemoteUrl" target="_blank">@selectedTemplate.RemoteUrl</a></p>
+    <p>Прямая ссылка на файл: <a href="@selectedTemplate.RemoteUrl" target="_blank">@selectedTemplate.RemoteUrl</a></p>
     }
-    <hr />
+</div>
 }
 
 @code
@@ -177,12 +179,27 @@
         StateHasChanged();
 
         IRemoteTemplateFileLoader loader = remoteTemplateFileLoaderFactory.GetMethod(selectedTemplate.RemoteUrl, selectedTemplate.RemoteUrlMethod, selectedTemplate.Guid);
-        var fileInfo = await loader.GetFile();
-
-        using (var ms = new MemoryStream(fileInfo.Bytes))
+        try
         {
-            await LoadTemplateFromStream(ms, fileInfo.FileName);
+            var fileInfo = await loader.GetFile();
+            using (var ms = new MemoryStream(fileInfo.Bytes))
+            {
+                await LoadTemplateFromStream(ms, fileInfo.FileName);
+            }
         }
+        catch(WebException webEx) when (webEx.Status == WebExceptionStatus.ProtocolError)
+        {
+            toast.ShowError("Файл недоступен", selectedTemplate.Title);
+        }
+        catch (Exception ex)
+        {
+            toast.ShowError("Не удалось загрузить файл: " + selectedTemplate.RemoteUrl + ". Ошибка: " + ex.Message, selectedTemplate.Title);
+        }
+        finally
+        {
+            isIntermediateProgress = false;
+        }
+
     }
 
     private async Task LoadTemplateFromStream(Stream stream, string fileName)

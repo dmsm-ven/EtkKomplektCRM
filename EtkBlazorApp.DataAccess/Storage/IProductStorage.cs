@@ -14,13 +14,15 @@ namespace EtkBlazorApp.DataAccess
         Task<ProductEntity> GetProductByKeyword(string keyword);
         Task<ProductEntity> GetProductByModel(string model);
         Task<ProductEntity> GetProductBySku(string sku);
-
-        Task UpdateProductsStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate);
+       
         Task UpdateProductsPrice(List<ProductUpdateData> data);
+        Task UpdateProductsStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate);
+        Task UpdateProductsStockPartner(List<ProductUpdateData> data);
+
         Task<List<ProductEntity>> ReadProducts(IEnumerable<int> allowedManufacturers = null);
         Task<List<ProductEntity>> ReadProducts(int manufacturer_id);
         Task UpdateDirectProduct(ProductEntity product);
-        Task<List<StockStatusEntity>> GetStockStatuses();
+        Task<List<StockStatusEntity>> GetStockStatuses();       
     }
 
     public class ProductStorage : IProductStorage
@@ -156,7 +158,7 @@ namespace EtkBlazorApp.DataAccess
             List<int> discountProductIds = await GetDiscountProductIds();
 
             List<ProductUpdateData> source = data
-                .Where(d => d.price.HasValue && !discountProductIds.Contains(d.product_id))
+                .Where(d => d.price.HasValue && !discountProductIds.Contains(d.product_id) && d.stock_partner == null)
                 .ToList();
 
             Dictionary<string, List<int>> idsGroupedByCurrency = source
@@ -208,7 +210,7 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task UpdateProductsStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate)
         {
-            List<ProductUpdateData> source = data.Where(d => d.quantity.HasValue).ToList();
+            List<ProductUpdateData> source = data.Where(d => d.quantity.HasValue && d.stock_partner == null).ToList();
 
             if (source.Count == 0) { return; }
 
@@ -243,11 +245,42 @@ namespace EtkBlazorApp.DataAccess
             await database.SaveData<dynamic>(sql, new { });
         }
 
+        public async Task UpdateProductsStockPartner(List<ProductUpdateData> data)
+        {
+            var source = data.Where(d => d.stock_partner != null).ToList();
+            if (source.Any())
+            {
+                var groupedByPartner = source.GroupBy(line => line.stock_partner.Value);
+                var partnerIdArray = string.Join(",", groupedByPartner.Select(g => g.Key).Distinct().ToList());
+
+                var sb = new StringBuilder()
+                    .AppendLine($"DELETE FROM oc_product_to_stock WHERE stock_partner_id IN ({partnerIdArray});")
+                    .AppendLine("INSERT INTO oc_product_to_stock (stock_partner_id, product_id, quantity) VALUES");
+
+                foreach (var group in groupedByPartner)
+                {
+                    foreach (var kvp in group)
+                    {
+                        sb.AppendLine($"({group.Key}, {kvp.product_id}, {kvp.quantity.Value}),");
+                    }
+                    if (group != groupedByPartner.Last())
+                    {
+                        sb.Append("\n");
+                    }
+                }
+
+                var sql = sb.ToString().Trim('\r', '\n', ',');
+
+                await database.SaveData<dynamic>(sql, new { });
+            }
+        }
+
         private async Task<List<int>> GetDiscountProductIds()
         {
             var sql = "SELECT DISTINCT product_id FROM oc_product_special WHERE NOW() BETWEEN date_start AND date_end";
             var list = (await database.LoadData<int, dynamic>(sql, new { })).ToList();
             return list;
         }
+
     }
 }

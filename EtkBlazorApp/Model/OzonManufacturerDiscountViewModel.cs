@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace EtkBlazorApp.ViewModel
+namespace EtkBlazorApp
 {
     public class OzonManufacturerDiscountViewModel
     {

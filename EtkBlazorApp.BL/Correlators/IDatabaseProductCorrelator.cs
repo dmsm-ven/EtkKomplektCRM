@@ -108,7 +108,8 @@ namespace EtkBlazorApp.BL
                             product_id = product.product_id,
                             price = findedLine.Price,
                             currency_code = findedLine.Currency.ToString(),
-                            quantity = findedLine.Quantity
+                            quantity = findedLine.Quantity,
+                            stock_partner = (int?)findedLine.StockPartner
                         };
                         list.Add(updateData);
                     }

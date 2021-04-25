@@ -62,7 +62,6 @@ namespace EtkBlazorApp
 
             //Сторонние
             services.AddBlazoredToast();
-
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
