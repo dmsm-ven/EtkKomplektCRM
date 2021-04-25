@@ -11,21 +11,19 @@ else
             @foreach (var product in products)
             {
             <div class="col-md-3 product-item">
-                @if (product.price != 0)
+                @if (product.Price != 0)
                 {
-                    <p class="product-price">@product.price.ToString("C0")</p>
+                    <p class="product-price">@product.Price.ToString("C0")</p>
                 }
-                <a href="https://etk-komplekt.ru/index.php?route=product/product&product_id=@product.product_id" target="_blank">
+                <a href="@product.ProductIdUri" target="_blank">
                     <div class="product-item-inner shadow">
                         <div class="product-item-manufacturer">
-                            <p>@product.manufacturer</p>
+                            <p>@product.Manufacturer</p>
                         </div>
-                        <img src="@("https://etk-komplekt.ru/image/" + product.image)"
-                             style="width: 250px; height: 250px;"
-                             class="figure-img img-fluid rounded" alt="@(product.name ?? "Товар без назания")">
+                        <img src="@product.FullSizeImage" class="product-item-image" alt="@product.Name">
 
                         <div class="product-item-info">
-                            <p class="product-name">@(product.name ?? "Товар без назания")</p>
+                            <p class="product-name">@product.Name</p>
                         </div>
                     </div>
                 </a>
@@ -40,7 +38,7 @@ else
     [Parameter]
     public int ProductsCount { get; set; } = 8;
 
-    List<ProductEntity> products = null;
+    List<ProductViewModel> products = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -49,6 +47,16 @@ else
             ProductsCount = 32;
         }
 
-        products = await database.GetLastAddedProducts(ProductsCount);
+        products = (await database.GetLastAddedProducts(ProductsCount))
+            .Select(entity => new ProductViewModel()
+            {
+                FullSizeImage = "https://etk-komplekt.ru/image/" + entity.image,
+                Name = entity.name ?? "Товар без назания",
+                Manufacturer = entity.manufacturer,
+                Price = entity.price,
+                Uri = $"{entity.product_id}",
+                Id = entity.product_id
+            })
+            .ToList();
     }
 }
