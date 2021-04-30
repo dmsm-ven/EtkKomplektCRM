@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -45,20 +46,18 @@ namespace EtkBlazorApp.BL
     [PriceListTemplateGuid("641779CC-C6F8-4CFB-9ABA-2C8136BF19FB")]
     public class ProxonDealerPriceListTemplate : ExcelPriceListTemplateBase
     {
-        readonly string SKU_PREFIX = "PX ";
-
         public ProxonDealerPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {
             var list = new List<PriceLine>();
 
-            for (int row = 6; row < tab.Dimension.Rows; row++)
+            for (int row = 7; row < tab.Dimension.Rows; row++)
             {
-                string sku = SKU_PREFIX + tab.GetValue<string>(row, 0);
-                string name = tab.GetValue<string>(row, 1);
-                string ean = tab.GetValue<string>(row, 2);
-                decimal price = tab.GetValue<decimal>(row, 8);
+                string sku = "PX " + tab.GetValue<string>(row, 2);
+                string name = tab.GetValue<string>(row, 3);
+                string ean = tab.GetValue<string>(row, 4);
+                decimal? price = ParsePrice(tab.GetValue<string>(row, 11), false, 4);
 
                 var priceLine = new PriceLine(this)
                 {
@@ -66,6 +65,7 @@ namespace EtkBlazorApp.BL
                     Manufacturer = "Proxxon",
                     Model = sku,
                     Sku = sku,
+                    Ean = ean,
                     Name = name,
                     Price = price
                 };

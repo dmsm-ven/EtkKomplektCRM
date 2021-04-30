@@ -9,6 +9,13 @@ namespace EtkBlazorApp.BL
         public SymmetronPriceListTemplate(string fileName) : base(fileName) 
         {
             ManufacturerNameMap["Pro'skit"] = "Pro'sKit";
+            ManufacturerNameMap["TIANMA Europe GmbH"] = "Tianma";
+            ManufacturerNameMap["BOE Technology Group Corp"] = "BOE";
+            ManufacturerNameMap["TechStar Electronics Corp"] = "TechStar";
+            ManufacturerNameMap["Sinotectronics Inc."] = "Sinotectronics";
+            ManufacturerNameMap["Disteck Display Inc."] = "Disteck";
+            ManufacturerNameMap["Apex Material Technology Corp."] = "AMT";
+            ManufacturerNameMap["Onetouch Technologies Co., Ltd"] = "Onetouch";
         }
 
         protected override List<PriceLine> ReadDataFromExcel()

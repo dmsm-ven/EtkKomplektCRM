@@ -29,7 +29,7 @@ namespace EtkBlazorApp.BL
             return manufacturerName;
         }
 
-        protected virtual decimal? ParsePrice(string str, bool canBeNull = false)
+        protected virtual decimal? ParsePrice(string str, bool canBeNull = false, int? roundDigits = null)
         {
             decimal? price = null;
             if (!string.IsNullOrWhiteSpace(str))
@@ -37,6 +37,10 @@ namespace EtkBlazorApp.BL
                 if (decimal.TryParse(str.Replace(",", ".").Replace(" ", string.Empty), System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var parsedPrice))
                 {
                     price = parsedPrice;
+                    if (roundDigits.HasValue)
+                    {
+                        price = Math.Round(price.Value, roundDigits.Value);
+                    }
                 }
             }
 

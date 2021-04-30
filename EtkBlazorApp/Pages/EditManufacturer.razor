@@ -33,7 +33,7 @@ else
 
                         @if (editManufacturer != item)
                         {
-                            <td>@item.shipment_period</td>
+                            <td>@item.ShipmentPeriodInDays</td>
                             <td>@item.NextShipmentDate.ToShortDateString()</td>
                             <td>
                                 <button class="btn-secondary btn-sm" @onclick="@(e => ChangeEditedManufacturer(item))">
@@ -43,7 +43,7 @@ else
                         }
                         else
                         {
-                            <td><input @bind="item.shipment_period" /></td>
+                            <td><input @bind="item.ShipmentPeriodInDays" /></td>
                             <td>@item.NextShipmentDate.ToShortDateString()</td>
                             <td>
                                 <button class="btn-info btn-sm" @onclick="@(e => ConfirmManufacturerChanges(item))">Подтвердить</button>
@@ -59,32 +59,37 @@ else
 
 @code {
 
-    List<ManufacturerViewModel> manufacturers = null;
-    ManufacturerViewModel editManufacturer = null;
+        List<ManufacturerViewModel> manufacturers = null;
+        ManufacturerViewModel editManufacturer = null;
 
-    private void ChangeEditedManufacturer(ManufacturerViewModel manufacturer)
-    {
-        editManufacturer = manufacturer;
-    }
+        private void ChangeEditedManufacturer(ManufacturerViewModel manufacturer)
+        {
+            editManufacturer = manufacturer;
+        }
 
-    private async Task ConfirmManufacturerChanges(ManufacturerViewModel manufacturer)
-    {
-        var data = new ManufacturerEntity() { manufacturer_id = manufacturer.manufacturer_id, shipment_period = manufacturer.shipment_period };
+        private async Task ConfirmManufacturerChanges(ManufacturerViewModel manufacturer)
+        {
+            var data = new ManufacturerEntity() {
+                manufacturer_id = manufacturer.Id,
+                shipment_period = manufacturer.ShipmentPeriodInDays
+            };
 
-        await _database.SaveManufacturer(data);
-        await logger.Write(LogEntryGroupName.ManufacturerUpdate, "Обновление", $"Срок поставки для производителя «{data.name}» измнен на {data.shipment_period} дн.");
-        editManufacturer = null;
-    }
+            if (manufacturer.OldShipmentPeriod != manufacturer.ShipmentPeriodInDays)
+            {
+                await _database.SaveManufacturer(data);
+                await logger.Write(LogEntryGroupName.ManufacturerUpdate, "Обновление", $"Срок поставки «{manufacturer.name}» измнен с {manufacturer.OldShipmentPeriod} на {manufacturer.ShipmentPeriodInDays} дн.");
+            }
+            editManufacturer = null;
+            manufacturer.OldShipmentPeriod = manufacturer.ShipmentPeriodInDays;
+        }
 
     protected override async Task OnInitializedAsync()
     {
         manufacturers = (await _database.GetManufacturers())
-            .Select(model => new ManufacturerViewModel()
+            .Select(model => new ManufacturerViewModel(model.manufacturer_id, model.shipment_period)
             {
                 name = model.name,
                 keyword = model.keyword,
-                manufacturer_id = model.manufacturer_id,
-                shipment_period = model.shipment_period,
                 productsCount = model.productsCount
             })
             .ToList();

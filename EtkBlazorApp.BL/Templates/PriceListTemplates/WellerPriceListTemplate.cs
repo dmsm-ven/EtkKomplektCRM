@@ -40,7 +40,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     };
 
                     list.Add(priceLine);
-                }            
+                }
             }
 
             return list;
@@ -55,13 +55,13 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         protected override List<PriceLine> ReadDataFromExcel()
         {
             var list = new List<PriceLine>();
-            var tab = Excel.Workbook.Worksheets[0];
 
-            for (int row = 9; row < tab.Dimension.Rows; row++)
+            for (int row = 12; row < tab.Dimension.Rows; row++)
             {
-                string skuNumber = tab.GetValue<string>(row, 1);
-                string name = tab.GetValue<string>(row, 2);
-                string quantityString = tab.GetValue<string>(row, 5);
+                string skuNumber = tab.GetValue<string>(row, 2);
+                string name = tab.GetValue<string>(row, 3);
+                string ean = tab.GetValue<string>(row, 4);
+                int? quantity = ParseQuantity(tab.GetValue<string>(row, 6));
 
                 if (string.IsNullOrWhiteSpace(skuNumber)) { continue; }
 
@@ -74,18 +74,16 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     skuNumber = skuNumber.Substring(3);
                 }
 
-                if (decimal.TryParse(quantityString, out var quantity))
+                var line = new PriceLine(this)
                 {
-                    var line = new PriceLine(this)
-                    {
-                        Name = name,
-                        Sku = skuNumber,
-                        Model = skuNumber,
-                        Quantity = (int)quantity,
-                        Manufacturer = "Weller"
-                    };
-                    list.Add(line);
-                }
+                    Name = name,
+                    Sku = skuNumber,
+                    Model = skuNumber,
+                    Quantity = quantity,
+                    Ean = ean,
+                    Manufacturer = "Weller"
+                };
+                list.Add(line);
             }
 
             return list;
