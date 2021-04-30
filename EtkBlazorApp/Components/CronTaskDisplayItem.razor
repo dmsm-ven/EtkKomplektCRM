@@ -1,4 +1,4 @@
-﻿@inject ISettingStorage settings
+﻿@inject ICronTaskStorage cronTaskStorage
 @inject NavigationManager navigation
 @implements IDisposable
 @using System.Timers
@@ -7,28 +7,26 @@
     <td>
         <div class="task-tool-items-box">
             <input type="checkbox" style="margin-right: 12px;" @onchange="EnableStatusChanged" checked="@Item.enabled" />
-            <a href="@("/cron-task/edit/" + @Item.details_page)"><span class="oi oi-cog cog-icon" style="font-size: 1.2em;" aria-hidden="true"></span></a>
+            <a href="@("/cron-task/edit/" + @Item.task_id)"><span class="oi oi-cog cog-icon" style="font-size: 1.2em;" aria-hidden="true"></span></a>
             <span>@Item.name</span>
         </div>
     </td>
     <td>
-        @(Item.enabled ? Item.exec_time.ToString(@"hh\:mm") : "-")
+        @(Item.enabled ? Item.exec_time.ToString(@"hh\:mm") : "")
     </td>
     <td>
         @if (Item.enabled)
         {
-        <span>@(string.Format("{0} ч. {1} мин.", nextExecution.ToString("hh"), nextExecution.ToString("mm")))</span>
-        <div class="progress">
-            <div class="progress-bar" role="progressbar" style="width: @(nextExecutionPercentLeft + "%")" aria-valuenow="@nextExecutionPercentLeft" aria-valuemin="0" aria-valuemax="100"></div>
-        </div>
-        }
-        else
-        {
-            <span>-</span>
+        <BootstrapProgressBar CurrentProgress="@nextExecutionPercentLeft">
+            <LabelText>@(string.Format("{0} ч. {1} мин.", nextExecution.ToString("hh"), nextExecution.ToString("mm")))</LabelText>
+        </BootstrapProgressBar>
         }
     </td>
     <td>
-        @(Item.last_exec_date_time != default ? Item.last_exec_date_time.ToString("dd.MM.yyyy HH:mm") : "-")
+        @(Item.last_exec_date_time != default ? Item.last_exec_date_time.ToString("dd.MM.yyyy HH:mm") : "")
+    </td>
+    <td>
+        @Item.description
     </td>
 </tr>
 
@@ -57,7 +55,7 @@
     {
         Item.enabled = (bool)e?.Value;
 
-        await settings.UpdateCronTask(Item);
+        await cronTaskStorage.UpdateCronTask(Item);
 
         timeLeftRefresh.Enabled = Item.enabled;
         StateHasChanged();

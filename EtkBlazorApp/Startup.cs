@@ -3,7 +3,6 @@ using EtkBlazorApp.BL;
 using EtkBlazorApp.BL.CronTask;
 using EtkBlazorApp.BL.Templates.PriceListTemplates;
 using EtkBlazorApp.DataAccess;
-using EtkBlazorApp.Integration.Ozon;
 using EtkBlazorApp.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -36,7 +35,8 @@ namespace EtkBlazorApp
             //Приложение              
             services.AddTransient<IDatabaseProductCorrelator, FullCompareProductCorrelator>();
             services.AddTransient<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
-            services.AddTransient<IOzonProductCorrelator, SimpleOzonProductCorrelator>();       
+            services.AddTransient<IOzonProductCorrelator, SimpleOzonProductCorrelator>();  
+            
             services.AddTransient<IDatabaseAccess, EtkDatabaseDapperAccess>();
             services.AddTransient<IProductStorage, ProductStorage>();
             services.AddTransient<ITemplateStorage, TemplateStorage>();
@@ -44,9 +44,9 @@ namespace EtkBlazorApp
             services.AddTransient<IManufacturerStorage, ManufacturerStorage>();
             services.AddTransient<ILogStorage, LogStorage>();
             services.AddTransient<ISettingStorage, SettingStorage>();
+            services.AddTransient<ICronTaskStorage, CronTaskStorage>();
             services.AddTransient<IAuthenticationDataStorage, AuthenticationDataStorage>();
             services.AddTransient<RemoteTemplateFileLoaderFactory>();
-            
 
             services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
             services.AddSingleton<SystemEventsLogger>();
@@ -55,7 +55,8 @@ namespace EtkBlazorApp
             services.AddSingleton<OzonSellerManager>();
             services.AddSingleton<PriceListManager>();
             services.AddSingleton<CronTaskService>();
-            
+          
+            services.AddScoped<CronTaskFactory>();
             services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();
             services.AddScoped<UserLogger>();
             services.AddScoped<ReportManager>();      

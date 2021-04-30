@@ -25,9 +25,18 @@
         <img class="brand-template-list-logo" src="@(data.TemplateDescription.image)" title="@data.TemplateDescription.title" />
     </div>
     <div style="width: auto; display: inline-block;">
-        <p><span class="oi oi-small oi-spreadsheet" @onclick="@(e => MoveToPriceList(data))" title="Показать что загружено"></span>Загруженные строки</p>
-        <p><span class="oi oi-small oi-file" title="Название файла при загрузке"></span>@data.FileName</p>
-        <p><span class="oi oi-small oi-calendar" title="Дата загрузки"></span>@data.DateAdded</p>
+        <p>
+            <span class="oi oi-small oi-spreadsheet" @onclick="@(e => MoveToPriceList(data))" title="Показать что загружено"></span>
+            Загруженные строки
+        </p>
+        <p>
+            <span class="oi oi-small oi-file" title="Название файла при загрузке"></span>
+            @data.FileName
+        </p>
+        <p>
+            <span class="oi oi-small oi-calendar" title="Дата загрузки"></span>
+            @data.DateAdded
+        </p>
     </div>
 </div>
         <hr />
@@ -86,9 +95,6 @@
 </style>
 
 @code {
-
-    List<string> manufacturers = null;
-
     protected override void OnInitialized()
     {
         priceListManager.OnPriceListLoaded += () => StateHasChanged();

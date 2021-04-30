@@ -1,8 +1,10 @@
-﻿@page "/cron-task/edit/{Prefix}"
+﻿@page "/cron-task/edit/{Id:int}"
 
-@inject ISettingStorage settings
+@inject ICronTaskStorage settings
 @inject IToastService toasts
 @inject CronTaskService taskManager
+@inject UserLogger userLogger
+@inject NavigationManager navigationManager
 @attribute [Authorize(Roles = "Administrator")]
 
 <h3>Настройки задачи</h3>
@@ -23,7 +25,8 @@
                 {
                     <button class="btn btn-outline-dark btn-lg" @onclick="@(e => confirmDialog.Show())">Выполнить сейчас</button>
                 }
-            <button style="width: auto;" class="btn btn-primary" @onclick="SaveSettings">Сохранить</button>
+                <button style="width: auto;" class="btn btn-danger" @onclick="@(e => deleteDialog.Show())">Удалить это задание</button>
+                <button style="width: auto;" class="btn btn-primary" @onclick="SaveSettings">Сохранить</button>
             </div>
         </div>
     </div>
@@ -37,14 +40,19 @@
 
 <ConfirmDialog @ref="confirmDialog"
                ConfirmationChanged="ExecuteImmediatelyDialogStatusChanged"
-               ConfirmationMessage="@(() => $"Выполнить задание {item.name} ?")"
+               ConfirmationMessage="@(() => $"Выполнить задание '{item.name}' ?")"
                ConfirmationTitle="Подтверждение" />
 
+<DeleteConfirmDialog @ref="deleteDialog"
+                     ConfirmationTitle="Подтверждение удаления"
+                     ConfirmationMessage="@(() => $"Удалить задание '{item.name}' ?")"
+                     ConfirmationChanged="TaskDeleteStatusChanged"/>
 @code {
     private DateTime executionDateTime = new DateTime();
     private DateTime ExecutionDateTime
     {
-        get => executionDateTime;
+        get =>
+executionDateTime;
         set
         {
             executionDateTime = value;
@@ -54,12 +62,13 @@
     private bool isProgressBarVisible;
     private CronTaskEntity item;
     private ConfirmDialogBase confirmDialog;
+    private DeleteConfirmDialog deleteDialog;
 
-    [Parameter] public string Prefix { get; set; }
+    [Parameter] public int Id { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        item = (await settings.GetCronTasks()).Single(t => t.details_page == Prefix);
+        item = (await settings.GetCronTasks()).Single(t => t.task_id == Id);
         executionDateTime = executionDateTime + item.exec_time;
     }
 
@@ -75,9 +84,25 @@
         }
     }
 
+    private async Task TaskDeleteStatusChanged(bool dialogResult)
+    {
+        if (dialogResult)
+        {
+            await settings.DeleteCronTask(item.task_id);
+
+            string msg = $"Задание {item.name} удалено";
+            toasts.ShowInfo(msg);
+            await userLogger.Write(LogEntryGroupName.CronTask, "Удаление задания", msg);
+            navigationManager.NavigateTo("/cron-task");
+        }
+    }
+
     private async Task SaveSettings()
     {
         await settings.UpdateCronTask(item);
-        toasts.ShowSuccess($"Настройки '{item.name}' сохранены");
+
+        string msg = $"Настройки задания '{item.name}' обновлены";
+        toasts.ShowSuccess(msg);
+        await userLogger.Write(LogEntryGroupName.CronTask, "Редактирование задания", msg);
     }
 }

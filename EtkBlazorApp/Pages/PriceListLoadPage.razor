@@ -7,20 +7,18 @@
 @inject IToastService toast
 @using System.Threading
 
-@if (isBusy)
-{
-    if (isFileUploading)
-    {
-<h3>Загрузка файла на сервер</h3>
-<BootstrapProgressBar CurrentProgress="uploadPercent"></BootstrapProgressBar>
-    }
-    if (isIntermediateProgress)
-    {
-<h3>Обработка данных</h3>
-<IntermediateProgressBar></IntermediateProgressBar>
-    }
-}
 <div class="row my-2">
+    @if (isFileUploading)
+    {
+    <h3>Загрузка файла на сервер</h3>
+    <BootstrapProgressBar CurrentProgress="@uploadPercent" IsAnimated="@true" IsStripped="@true"></BootstrapProgressBar>
+    }
+    @if (isIntermediateProgress)
+    {
+    <h3>Обработка данных</h3>
+    <IntermediateProgressBar></IntermediateProgressBar>
+    }
+    
     <div class="form-group">
         <button class="btn btn-success" @onclick="LoadRemoteUriTemplate" disabled="@(string.IsNullOrWhiteSpace(selectedTemplate?.RemoteUrl) || isBusy)">
             Загрузить от поставщика
@@ -103,7 +101,7 @@
 @code
 {
     const int MAX_UPLOAD_FILE_SIZE = 15_000_000; // 15 мб
-    const int UPLOAD_BUFFER_SIZE = 32_000; // 32 кб
+    const int UPLOAD_BUFFER_SIZE = 64_000; // 32 кб
 
     Dictionary<string, List<PriceListTemplateItemViewModel>> templates = null;
     Dictionary<string, List<PriceListTemplateItemViewModel>> filteredTemplates;
@@ -153,7 +151,6 @@
         using (var uploadStream = e.File.OpenReadStream(MAX_UPLOAD_FILE_SIZE))
         {
             int readed = 0;
-
             while ((readed += await uploadStream.ReadAsync(bytes, readed, Math.Min(UPLOAD_BUFFER_SIZE, bytes.Length - readed))) < bytes.Length)
             {
                 uploadPercent = (int)(((double)readed / bytes.Length) * 100);
@@ -223,7 +220,7 @@
         catch (Exception ex)
         {
             await logger.Write(LogEntryGroupName.PriceListTemplateLoad, "Ошибка загрузки", $"Ошибка загрузки файла с шаблоном {selectedTemplate.Title}. Ошибка: {ex.Message}");
-            toast.ShowError("Ошибка: " + ex.Message, selectedTemplate.Title);
+            toast.ShowError("Ошибка: " + ex.Message + " --- " + ex.StackTrace, selectedTemplate.Title);
         }
         finally
         {

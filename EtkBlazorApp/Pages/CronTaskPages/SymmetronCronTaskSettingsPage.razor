@@ -1,6 +1,7 @@
-﻿@page "/cron-task/edit/symmetron"
+﻿@page "/cron-task/edit/0"
 
 @inject ISettingStorage settings
+@inject ICronTaskStorage cronTaskStorage
 @inject IToastService toasts
 @inject CronTaskService taskManager
 @attribute [Authorize(Roles = "Administrator")]
@@ -66,7 +67,6 @@
     bool? checkConnectionState = null;
 
     DateTime executionDateTime;
-    DateTime lastExecutionDateTime;
     TimeSpan executionTime => executionDateTime.TimeOfDay;
 
     string imapServer, imapPort, password, email;
@@ -88,7 +88,7 @@
         email = await settings.GetValue("task_symmetron_login");
         password = await settings.GetValue("task_symmetron_password");
 
-        Item = (await settings.GetCronTasks()).Single(t => t.task_id == (int)CronTaskPrefix.Symmetron);
+        Item = (await cronTaskStorage.GetCronTasks()).Single(t => t.task_id == 0);
     }
 
     private async Task CheckConnection()
@@ -126,7 +126,7 @@
         await settings.SetValue("task_symmetron_login", email);
         await settings.SetValue("task_symmetron_password", password);
 
-        await settings.UpdateCronTask(Item);
+        await cronTaskStorage.UpdateCronTask(Item);
 
         checkConnectionState = null;
     }

@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL.CronTask
 {
-    public abstract class CronTaskByPriceListBase : CronTaskBase
+    public class CronTaskUsingRemotePriceList : CronTaskBase
     {
         private readonly Type templateType;
 
-        public CronTaskByPriceListBase(Type templateType, CronTaskService service, CronTaskPrefix prefix) : base(service, prefix)
+        public CronTaskUsingRemotePriceList(Type templateType, CronTaskService service, int taskId) : base(service, taskId)
         {
             this.templateType = templateType;
         }

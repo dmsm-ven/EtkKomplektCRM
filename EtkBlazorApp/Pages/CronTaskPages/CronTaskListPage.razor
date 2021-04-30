@@ -1,6 +1,8 @@
 ﻿@page "/cron-task"
-@inject ISettingStorage settings
+@inject ICronTaskStorage cronTaskStorage
+@inject ITemplateStorage templateStorage
 @inject CronTaskService taskManager
+@inject NavigationManager navigationManager
 @attribute [Authorize(Roles = "Administrator, Manager")]
 
 <h3>Переодические задачи</h3>
@@ -10,35 +12,115 @@
 }
 else
 {
-<div class="table-responsive cron-task-table">
-    <table class="table">
-        <thead class="thead-etk">
-            <tr>
-                <th>Задание</th>
-                <th>Запускается в</th>
-                <th>Следующий через</th>
-                <th>Последний запуск</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var task in cronTaskList)
-            {
-                <CronTaskDisplayItem Item="@task"></CronTaskDisplayItem>
-            }
-        </tbody>
-    </table>
-</div>
+    <div class="row py-2">
+        <div class="btn-group">
+            <button class="btn btn-info" @onclick="ShowAddNewTaskDialog">
+                <span class="oi oi-timer"></span>
+                Создать новое задание
+            </button>
+        </div>
+    </div>
+
+    <div class="row py-2">
+        <div class="table-responsive cron-task-table">
+            <table class="table">
+                <thead class="thead-etk">
+                    <tr>
+                        <th>Задание</th>
+                        <th>Запускается в</th>
+                        <th>Следующий через</th>
+                        <th>Последний запуск</th>
+                        <th>Примечание</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var task in cronTaskList)
+                    {
+                        <CronTaskDisplayItem Item="@task"></CronTaskDisplayItem>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 }
+
+<GenericModalDialog @ref="dialog" TItem="CronTaskEntity" Item="@newTask" Title="Добавление нового задания" ConfirmationChanged="NewTaskDialogStateChanged">
+    <form>
+        <div class="form-group">
+            <label for="task-name">Название</label>
+            <input type="text" id="task-name"  class="form-control" @bind="newTask.name" required/>
+        </div>
+        <div class="form-group">
+            <label for="task-description">Описание</label>
+            <input type="text" id="task-description" @bind="newTask.description" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label for="exec-time">Время запуска</label>
+            <input type="text" id="exec-time" @bind="newTask.exec_time" class="form-control"/>
+        </div>
+        <div class="form-group">
+            <label for="task-type mx-2">Тип задачи</label>
+            <select id="task-type" @bind="newTask.task_type_id" class="form-control">
+                @foreach (var taskType in cronTaskTypes)
+                {
+                    <option value="@taskType.type_id">@taskType.name</option>
+                }
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="price-list-template-guid mx-2">Закрепленный прайс-лист</label>
+            <select id="price-list-template-guid" @bind="newTask.linked_price_list_guid" class="form-control" >
+                @foreach (var plt in priceListTemplates)
+                {
+                    <option value="@plt.id">@plt.title</option>
+                }
+            </select>
+        </div>
+    </form>
+</GenericModalDialog>
 
 @code {
     List<CronTaskEntity> cronTaskList = null;
 
+    GenericModalDialog<CronTaskEntity> dialog;
+    CronTaskEntity newTask = null;
+    List<CronTaskTypeEntity> cronTaskTypes = null;
+    List<PriceListTemplateEntity> priceListTemplates = null;
+
     protected override async Task OnInitializedAsync()
     {
-        cronTaskList = (await settings.GetCronTasks())
-            .OrderBy(ct => ct.enabled ? 0 : 1)
-            .ThenBy(ct => ct.exec_time)
-            .ThenBy(ct => ct.name)
-            .ToList();
+        cronTaskTypes = await cronTaskStorage.GetCronTaskTypes();
+        priceListTemplates = await templateStorage.GetPriceListTemplates();
+
+        cronTaskList = (await cronTaskStorage.GetCronTasks())
+                .OrderBy(ct => ct.enabled ? 0 : 1)
+                .ThenBy(ct => ct.exec_time)
+                .ThenBy(ct => ct.name)
+                .ToList();
+    }
+
+    private void ShowAddNewTaskDialog()
+    {
+        dialog.Show();
+        newTask = new CronTaskEntity()
+        {
+            enabled = true,
+            name = "Заголовок",
+            description = "Описание",
+            exec_time = TimeSpan.FromHours(9),
+            last_exec_date_time = DateTime.MinValue,
+            linked_price_list_guid = null,
+            task_type_id = cronTaskTypes.First().type_id,
+            task_type_name = cronTaskTypes.First().name
+        };
+    }
+
+    private async Task NewTaskDialogStateChanged(CronTaskEntity item)
+    {
+        if(item != default)
+        {
+            await cronTaskStorage.CreateCronTask(item);
+            navigationManager.NavigateTo("/cron-task", true);
+        }
     }
 } 

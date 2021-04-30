@@ -17,7 +17,7 @@ namespace EtkBlazorApp.BL.CronTask
         public event Action<CronTaskBase> OnTaskComplete;
         public event Action<CronTaskBase> OnTaskExecutionError;
 
-        private readonly ISettingStorage settingStorage;
+        private readonly ICronTaskStorage cronTaskStorage;
         internal readonly ITemplateStorage templates;
         internal readonly SystemEventsLogger logger;
         internal readonly UpdateManager updateManager;
@@ -30,23 +30,22 @@ namespace EtkBlazorApp.BL.CronTask
         private readonly Dictionary<CronTaskBase, bool> isDoneToday;
 
         public CronTaskService(
-            ISettingStorage settingStorage,
+            ICronTaskStorage cronTaskStorage,
             ITemplateStorage templates,
             SystemEventsLogger logger,
             UpdateManager updateManager, 
             PriceListManager priceListManager,
             RemoteTemplateFileLoaderFactory remoteTemplateLoaderFactory)
         {
-            this.settingStorage = settingStorage;
+            this.cronTaskStorage = cronTaskStorage;
             this.templates = templates;
             this.logger = logger;
             this.updateManager = updateManager;
             this.priceListManager = priceListManager;
             this.remoteTemplateLoaderFactory = remoteTemplateLoaderFactory;
-            tasks = Assembly.GetAssembly(typeof(CronTaskBase)).GetTypes()
-                .Where(tt => tt.IsClass && !tt.IsAbstract && tt.IsSubclassOf(typeof(CronTaskBase)))
-                .Select(tt => (CronTaskBase)Activator.CreateInstance(tt, new object[] { this }))
-                .ToList();
+
+            tasks = new List<CronTaskBase>();
+
             isDoneToday = tasks.ToDictionary(t => t, state => false);
 
             checkTimer = new Timer(TimeSpan.FromSeconds(60).TotalMilliseconds);
@@ -56,7 +55,7 @@ namespace EtkBlazorApp.BL.CronTask
 
         public async Task ExecuteImmediately(int task_id)
         {
-            var task = tasks.FirstOrDefault(t => t.Prefix == (CronTaskPrefix)task_id);
+            var task = tasks.FirstOrDefault(t => t.TaskId == task_id);
             if(task != null)
             {
                 await ExecuteTask(task, DateTime.Now.TimeOfDay, forceRun: true);
@@ -79,7 +78,7 @@ namespace EtkBlazorApp.BL.CronTask
 
         private async Task ExecuteTask(CronTaskBase task, TimeSpan startTime, bool forceRun = false)
         {
-            var taskDatabaseEntity = await settingStorage.GetCronTaskById((int)task.Prefix);
+            var taskDatabaseEntity = await cronTaskStorage.GetCronTaskById(task.TaskId);
 
             if(taskDatabaseEntity == null || (!taskDatabaseEntity.enabled && !forceRun)) { return; }
 
@@ -96,16 +95,16 @@ namespace EtkBlazorApp.BL.CronTask
 
                     sw.Stop();
                     OnTaskComplete?.Invoke(task);
-                    await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {task.Prefix} выполнено. Длительность выполнения {(int)sw.Elapsed.TotalSeconds} сек.");
+                    await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {taskDatabaseEntity.name} выполнено. Длительность выполнения {(int)sw.Elapsed.TotalSeconds} сек.");
                     
                 }
                 catch (Exception ex)
                 {                    
                     OnTaskExecutionError?.Invoke(task);
-                    await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Ошибка", $"Ошибка выполнения задания '{task.Prefix}'. {ex.Message}");
+                    await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Ошибка", $"Ошибка выполнения задания '{taskDatabaseEntity.name}'. {ex.Message}");
                 }                 
 
-                await settingStorage.UpdateCronTask(taskDatabaseEntity);                                            
+                await cronTaskStorage.UpdateCronTask(taskDatabaseEntity);                                            
             }
         }
 

@@ -64,14 +64,11 @@ else
     List<OrderViewModel> orders = null;
     OrderViewModel newOrder = null;
 
-    List<string> cityList = null;
-    List<string> customerList = null;
-
     string numberFilter = null;
     string cityFilter = null;
     string cutomerFilter = null;
 
-    private async Task ShowNewOrder(OrderViewModel order)
+    private void ShowNewOrder(OrderViewModel order)
     {
         string toastTitle = $"Покупатель: {order.Customer} | Сумма заказа: {order.TotalPrice.ToString("F0")}";
         string toastBody = $"Получен новый заказ #{order.OrderId}";
