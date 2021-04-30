@@ -8,7 +8,7 @@ namespace EtkBlazorApp.BL.CronTask
     public abstract class CronTaskBase
     {
         public int TaskId { get; }
-        protected CronTaskService service { get; private set; }
+        protected CronTaskService service { get; }
 
         public CronTaskBase(CronTaskService service, int taskId)
         {

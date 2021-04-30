@@ -121,6 +121,7 @@ else
         {
             await cronTaskStorage.CreateCronTask(item);
             navigationManager.NavigateTo("/cron-task", true);
+            await taskManager.RefreshTaskList(force: true);
         }
     }
 } 

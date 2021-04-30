@@ -24,10 +24,9 @@ namespace EtkBlazorApp.BL.CronTask
         internal readonly PriceListManager priceListManager;
         internal readonly RemoteTemplateFileLoaderFactory remoteTemplateLoaderFactory;
 
-        private DateTime lastCheckDate;
         private readonly Timer checkTimer;
-        private readonly List<CronTaskBase> tasks;
-        private readonly Dictionary<CronTaskBase, bool> isDoneToday;
+        private readonly Dictionary<CronTaskBase, CronTaskEntity> tasks;
+        private readonly List<CronTaskBase> inProgress;
 
         public CronTaskService(
             ICronTaskStorage cronTaskStorage,
@@ -44,9 +43,8 @@ namespace EtkBlazorApp.BL.CronTask
             this.priceListManager = priceListManager;
             this.remoteTemplateLoaderFactory = remoteTemplateLoaderFactory;
 
-            tasks = new List<CronTaskBase>();
-
-            isDoneToday = tasks.ToDictionary(t => t, state => false);
+            tasks = new Dictionary<CronTaskBase, CronTaskEntity>();
+            inProgress = new List<CronTaskBase>();
 
             checkTimer = new Timer(TimeSpan.FromSeconds(60).TotalMilliseconds);
             checkTimer.Elapsed += CheckTimer_Elapsed;
@@ -55,69 +53,73 @@ namespace EtkBlazorApp.BL.CronTask
 
         public async Task ExecuteImmediately(int task_id)
         {
-            var task = tasks.FirstOrDefault(t => t.TaskId == task_id);
-            if(task != null)
+            var kvp = tasks.FirstOrDefault(t => t.Key.TaskId == task_id);
+            if(kvp.Equals(default(KeyValuePair<CronTaskBase, CronTaskEntity>))) { return; }
+
+            if (!inProgress.Contains(kvp.Key))
             {
-                await ExecuteTask(task, DateTime.Now.TimeOfDay, forceRun: true);
+                await ExecuteTask(kvp.Key, kvp.Value);
             }
         }
 
         private async void CheckTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            ResetIfNewDay();
+            await RefreshTaskList();
 
             TimeSpan currentTime = DateTime.Now.TimeOfDay;
 
-            foreach(var task in tasks)
+            foreach(var kvp in tasks)
             {
-                if (isDoneToday[task]) { continue; }
-
-                await ExecuteTask(task, currentTime);           
+                if(IsTimeToRun(kvp.Value, currentTime) && !inProgress.Contains(kvp.Key))
+                {
+                    await ExecuteTask(kvp.Key, kvp.Value);
+                }
             }
         }
 
-        private async Task ExecuteTask(CronTaskBase task, TimeSpan startTime, bool forceRun = false)
+        public async Task RefreshTaskList(bool force = false)
         {
-            var taskDatabaseEntity = await cronTaskStorage.GetCronTaskById(task.TaskId);
-
-            if(taskDatabaseEntity == null || (!taskDatabaseEntity.enabled && !forceRun)) { return; }
-
-            if (IsTimeToRun(taskDatabaseEntity, startTime) || forceRun)
+            if (force == true || tasks.Count == 0)
             {
-                var sw = Stopwatch.StartNew();
+                tasks.Clear();
+                inProgress.Clear();
 
-                try
+                var items = await cronTaskStorage.GetCronTasks();
+                foreach (var entity in items)
                 {
-                    taskDatabaseEntity.last_exec_date_time = DateTime.Now;
-                    isDoneToday[task] = true;
-
-                    await task.Run();
-
-                    sw.Stop();
-                    OnTaskComplete?.Invoke(task);
-                    await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {taskDatabaseEntity.name} выполнено. Длительность выполнения {(int)sw.Elapsed.TotalSeconds} сек.");
-                    
+                    var taskObject = CreateTask(entity.task_type_name, entity.linked_price_list_guid, entity.task_id);
+                    tasks.Add(taskObject, entity);
                 }
-                catch (Exception ex)
-                {                    
-                    OnTaskExecutionError?.Invoke(task);
-                    await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Ошибка", $"Ошибка выполнения задания '{taskDatabaseEntity.name}'. {ex.Message}");
-                }                 
-
-                await cronTaskStorage.UpdateCronTask(taskDatabaseEntity);                                            
             }
         }
 
-        private void ResetIfNewDay()
+        private async Task ExecuteTask(CronTaskBase task, CronTaskEntity taskInfo)
         {
-            if (lastCheckDate != DateTime.Now.Date)
+            inProgress.Add(task);
+
+            var sw = Stopwatch.StartNew();
+
+            try
             {
-                foreach(var task in tasks)
-                {
-                    isDoneToday[task] = false;
-                }
+                taskInfo.last_exec_date_time = DateTime.Now;
+                
+                await task.Run();
+
+                sw.Stop();
+                OnTaskComplete?.Invoke(task);
+                await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {taskInfo.name} выполнено. Длительность выполнения {(int)sw.Elapsed.TotalSeconds} сек.");
+
             }
-            lastCheckDate = DateTime.Now.Date;
+            catch (Exception ex)
+            {
+                OnTaskExecutionError?.Invoke(task);
+                await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Ошибка", $"Ошибка выполнения задания '{taskInfo.name}'. {ex.Message}");
+            }
+            finally
+            {
+                inProgress.Remove(task);
+                await cronTaskStorage.UpdateCronTask(taskInfo);
+            }         
         }
 
         private bool IsTimeToRun(CronTaskEntity task, TimeSpan now)
@@ -127,6 +129,19 @@ namespace EtkBlazorApp.BL.CronTask
                 return true;
             }
             return false;
+        }
+
+        private CronTaskBase CreateTask(string taskTypeName, string parameter, int taskId)
+        {
+            Type linkedPriceListType = PriceListManager.GetPriceListTypeByGuid(parameter);
+
+            switch (taskTypeName)
+            {
+                case "Одиночный прайс-лист":
+                    return new CronTaskUsingRemotePriceList(linkedPriceListType, this, taskId);
+            }
+
+            throw new ArgumentException(taskTypeName + " не реализован");
         }
     }
 }

@@ -89,6 +89,7 @@ executionDateTime;
         if (dialogResult)
         {
             await settings.DeleteCronTask(item.task_id);
+            await taskManager.RefreshTaskList(force: true);
 
             string msg = $"Задание {item.name} удалено";
             toasts.ShowInfo(msg);
@@ -100,6 +101,7 @@ executionDateTime;
     private async Task SaveSettings()
     {
         await settings.UpdateCronTask(item);
+        await taskManager.RefreshTaskList(force: true);
 
         string msg = $"Настройки задания '{item.name}' обновлены";
         toasts.ShowSuccess(msg);

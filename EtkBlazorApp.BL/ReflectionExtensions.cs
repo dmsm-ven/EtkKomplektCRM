@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
 {
-    public static class EnumExtensions
+    public static class ReflectionExtensions
     {
         public static string GetDescriptionAttribute(this Enum currentEnum)
         {

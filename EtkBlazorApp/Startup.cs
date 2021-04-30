@@ -56,7 +56,7 @@ namespace EtkBlazorApp
             services.AddSingleton<PriceListManager>();
             services.AddSingleton<CronTaskService>();
           
-            services.AddScoped<CronTaskFactory>();
+
             services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();
             services.AddScoped<UserLogger>();
             services.AddScoped<ReportManager>();      
