@@ -2,6 +2,7 @@
 @inject ICronTaskStorage cronTaskStorage
 @inject ITemplateStorage templateStorage
 @inject CronTaskService taskManager
+@inject UserLogger userLogger
 @inject NavigationManager navigationManager
 @attribute [Authorize(Roles = "Administrator, Manager")]
 
@@ -63,7 +64,7 @@ else
             <select id="task-type" @bind="newTask.task_type_id" class="form-control">
                 @foreach (var taskType in cronTaskTypes)
                 {
-                    <option value="@taskType.type_id">@taskType.name</option>
+                    <option value="@taskType.task_type_id">@taskType.name</option>
                 }
             </select>
         </div>
@@ -110,7 +111,7 @@ else
             exec_time = TimeSpan.FromHours(9),
             last_exec_date_time = DateTime.MinValue,
             linked_price_list_guid = null,
-            task_type_id = cronTaskTypes.First().type_id,
+            task_type_id = cronTaskTypes.First().task_type_id,
             task_type_name = cronTaskTypes.First().name
         };
     }
@@ -122,6 +123,8 @@ else
             await cronTaskStorage.CreateCronTask(item);
             navigationManager.NavigateTo("/cron-task", true);
             await taskManager.RefreshTaskList(force: true);
+            await userLogger.Write(LogEntryGroupName.CronTask, "Задание добавлено", $"Добавлено новое задание '{item.name}'");
+            newTask = null;
         }
     }
 } 

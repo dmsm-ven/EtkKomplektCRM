@@ -1,6 +1,9 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+.bg-etk {
+    background-color: #3f70a0 !important;
+}
 .brand-template-logo {
     width: 100%;
     height: auto;
@@ -221,7 +224,6 @@ input[type='radio'], input[type='checkbox'] {
     margin: auto;
     top: 0;
     bottom: 0;
-    left: 15%;
     z-index: -2;
 }
 

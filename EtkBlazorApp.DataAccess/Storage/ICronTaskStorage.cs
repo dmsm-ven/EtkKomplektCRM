@@ -28,7 +28,7 @@ namespace EtkBlazorApp.DataAccess
         {
             string sql = "SELECT ta.*, tp.name as task_type_name " +
                          "FROM etk_app_cron_task ta " +
-                         "LEFT JOIN etk_app_cron_task_type tp ON (ta.task_type_id = tp.type_id)";
+                         "LEFT JOIN etk_app_cron_task_type tp ON (ta.task_type_id = tp.task_type_id)";
 
             var data = await database.LoadData<CronTaskEntity, dynamic>(sql, new { });
 
@@ -39,7 +39,7 @@ namespace EtkBlazorApp.DataAccess
         {
             string sql = "SELECT ta.*, tp.name as task_type_name " +
                          "FROM etk_app_cron_task ta " +
-                         "LEFT JOIN etk_app_cron_task_type tp ON (ta.task_type_id = tp.type_id) " +
+                         "LEFT JOIN etk_app_cron_task_type tp ON (ta.task_type_id = tp.task_type_id) " +
                          "WHERE task_id = @id";
 
             var data = await database.LoadData<CronTaskEntity, dynamic>(sql, new { id });

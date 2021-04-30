@@ -15,30 +15,28 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         {
             var list = new List<PriceLine>();
 
-            for (int row = 2; row < tab.Dimension.Rows; row++)
+            for (int row = 4; row < tab.Dimension.Rows; row++)
             {
-                string skuNumber = tab.Cells[row, 1].ToString();
-                string quantityString = tab.Cells[row, 4].ToString();
-                string manufacturer = tab.Cells[row, 0].ToString();
+                string manufacturer = tab.GetValue<string>(row, 2);
+                string skuNumber = tab.GetValue<string>(row, 3);
+                string name = tab.GetValue<string>(row, 4);
+                int? quantity = ParseQuantity(tab.GetValue<string>(row, 6));
+                string ean = tab.GetValue<string>(row, 7);
+                decimal? price = ParsePrice(tab.GetValue<string>(row, 8));
 
-                int? parsedQuantity = null;
-                if (decimal.TryParse(quantityString, out var quantity))
+                var priceLine = new PriceLine(this)
                 {
-                    parsedQuantity = (int)quantity;
-                }
+                    Manufacturer = manufacturer,
+                    Price = price,
+                    Currency = CurrencyType.RUB,
+                    Sku = skuNumber,
+                    Model = skuNumber,
+                    Quantity = quantity,
+                    Ean = ean,          
+                    Name = name
+                };
 
-                if (parsedQuantity.HasValue)
-                {
-                    var priceLine = new PriceLine(this)
-                    {
-                        Manufacturer = manufacturer,
-                        Sku = skuNumber,
-                        Model = skuNumber,
-                        Quantity = parsedQuantity
-                    };
-
-                    list.Add(priceLine);
-                }
+                list.Add(priceLine);
             }
 
             return list;

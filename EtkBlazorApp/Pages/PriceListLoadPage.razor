@@ -7,18 +7,20 @@
 @inject IToastService toast
 @using System.Threading
 
-<div class="row my-2">
+<div class="my-2" style="margin-left: -15px; margin-right: -15px;">
     @if (isFileUploading)
     {
-    <h3>Загрузка файла на сервер</h3>
-    <BootstrapProgressBar CurrentProgress="@uploadPercent" IsAnimated="@true" IsStripped="@true"></BootstrapProgressBar>
+        <h3>Загрузка файла на сервер</h3>
+        <BootstrapProgressBar CurrentProgress="@uploadPercent" IsAnimated="@true" IsStripped="@true"></BootstrapProgressBar>
     }
     @if (isIntermediateProgress)
     {
-    <h3>Обработка данных</h3>
-    <IntermediateProgressBar></IntermediateProgressBar>
+        <h3>Обработка данных</h3>
+        <IntermediateProgressBar></IntermediateProgressBar>
     }
-    
+</div>
+
+<div class="row my-2">    
     <div class="form-group">
         <button class="btn btn-success" @onclick="LoadRemoteUriTemplate" disabled="@(string.IsNullOrWhiteSpace(selectedTemplate?.RemoteUrl) || isBusy)">
             Загрузить от поставщика
@@ -142,7 +144,7 @@
 
     private async Task UploadSelectedPriceListTemplateFile(InputFileChangeEventArgs e)
     {
-        if (!InvalidMaxFileSize(e.File.Size)) { return; }
+        if (!InvalidateFileSize(e.File.Size)) { return; }
 
         isFileUploading = true;
         uploadPercent = 0;
@@ -266,7 +268,7 @@
         }
     }
 
-    private bool InvalidMaxFileSize(long fileSize)
+    private bool InvalidateFileSize(long fileSize)
     {
         if (fileSize >= MAX_UPLOAD_FILE_SIZE)
         {

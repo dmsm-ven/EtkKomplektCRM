@@ -81,6 +81,9 @@ executionDateTime;
             await taskManager.ExecuteImmediately(item.task_id);
 
             isProgressBarVisible = false;
+
+            toasts.ShowSuccess("Задание выполнено", item.name);
+            await userLogger.Write(LogEntryGroupName.CronTask, "Задание выполнено (forced)", $"Задание '{item.name}' выполнено");
         }
     }
 

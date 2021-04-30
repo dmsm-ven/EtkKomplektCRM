@@ -8,7 +8,7 @@ namespace EtkBlazorApp.DataAccess.Entity
 {
     public class CronTaskTypeEntity
     {
-        public int type_id { get; set; }
+        public int task_type_id { get; set; }
         public string name { get; set; }
     }
 }
