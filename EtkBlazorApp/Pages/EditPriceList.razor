@@ -1,0 +1,264 @@
+﻿@page "/price-list/edit/{TemplateGuid}"
+@page "/price-list/new"
+@inject ITemplateStorage templateStorage
+@inject ISettingStorage settings
+@inject IToastService toasts
+@inject UserLogger logger
+@attribute [Authorize]
+
+@if (item == null)
+{
+    <LoadingSpinner />
+}
+else
+{
+    <div class="row my-2">
+        <div class="mx-auto d-block image-select-container" style="max-width: 400px; max-height: 200px; border: 2px dashed #c0c0c0;">
+            <img src="@item.Image" class="rounded image" @onclick="@(e => imageSelectDialog.Show())" style="width: 100%; height: 100%;"/>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-4 col-sm-12">
+            <form>
+                <div class="form-group">
+                    <label for="guid">GUID</label>
+                    <select class="form-control">
+                        <option value="">Выбрать</option>
+                        @foreach (var attributeGuid in guidList)
+                        {
+                            <option selected="@(attributeGuid == item.Guid)" value="@attributeGuid">@attributeGuid</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="title">Заголовок</label>
+                    <input type="text" @bind="@item.Title" id="title" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="group_name">Группа</label>
+                    <input type="text" list="group-name" class="form-control" @bind="item.GroupName" />
+                    <datalist id="group-name">
+                        @foreach (var groupName in groupNames)
+                        {
+                            <option selected="@(groupName == item.GroupName)" value="@groupName">@groupName</option>
+                        }
+                    </datalist>
+                </div>
+
+                <div class="form-group">
+                    <label for="content-type">Тип прайс-листа</label>
+                    <select class="form-control" @onchange="@(e => item.PriceListType = (PriceListType)(int)e.Value)" id="content-type">
+                        <option value="">Выбрать</option>
+                        @foreach (var ct in contentTypeNames)
+                        {
+                            <option selected="@(ct.id == (int)item.PriceListType)" value="@ct.id">@ct.name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Прямая ссылка на скачивание</label>
+                    <input type="url" @bind="@item.RemoteUrl" id="remote_url" class="form-control" />
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(item.RemoteUrl))
+                {
+                    <div class="form-group">
+                        <label for="remote-uri-method">Метод загрузки файла</label>
+                        <select class="form-control" @onchange="@(e => LoadMethodChanged(e?.Value.ToString()))" id="remote-uri-method">
+                            <option value="">Выбрать</option>
+                            @foreach (var method in remoteUriLoadMethods)
+                            {
+                                <option selected="@(method.id == item.RemoteUrlMethodId)" value="@method.id">@method.name</option>
+                            }
+                        </select>
+                    </div>
+
+                    @if (item.RemoteUrlMethodName == "HttpGetWithCredentials")
+                    {
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="remote-method-login">Логин</label>
+                                <input type="text" class="form-control" id="remote-method-login" @bind="remoteUriCredentialsLogin" />
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="remote-method-password">Пароль</label>
+                                <input type="password" class="form-control" id="remote-method-password" @bind="remoteUriCredentialsPassword" />
+                            </div>
+                        </div>
+                    }
+                }
+
+                <div class="form-group">
+                    <input type="checkbox" @bind="@item.Nds" id="nds" class="form-check-inline" />
+                    <label for="nds">Добавлять к цене НДС</label>
+                </div>
+
+                <div class="form-group">
+                    <label for="discount">Наценка, %</label>
+                    <input type="number" @bind="@item.Discount" id="discount" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Примечание</label>
+                    <textarea type="text" @bind="@item.Description" id="description" class="form-control" style="height: 60px;" />
+                </div>
+
+                <div class="form-group">
+                    <button class="btn btn-success" @onclick="SaveData">
+                        <span class="oi oi-check"></span>
+                        @buttonActionName
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <FtpFileSelectDialog @ref="imageSelectDialog"
+                         InitialFolder="/image/price-list-templates"
+                         OnChange="ImageFileChanged"
+                         Title="Выбор изображения" />
+}
+
+@code {
+    [Parameter] public string TemplateGuid { get; set; } = string.Empty;
+
+    FtpFileSelectDialog imageSelectDialog;
+
+    PriceListTemplateItemViewModel item;
+
+    List<PriceListTemplateRemoteUriMethodEntity> remoteUriLoadMethods;
+    List<PriceListTemplateContentTypeEntity> contentTypeNames;
+    List<string> groupNames;
+    List<string> guidList;
+
+    string remoteUriCredentialsLogin, remoteUriCredentialsPassword;
+    string buttonActionName => string.IsNullOrWhiteSpace(TemplateGuid) ? "Создать" : "Сохранить изменения";
+    bool createNew = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (TemplateGuid != null)
+        {
+            var entity = await templateStorage.GetPriceListTemplateById(TemplateGuid);
+            item = new PriceListTemplateItemViewModel(entity.id)
+            {
+                Title = entity.title,
+                Description = entity.description,
+                Discount = entity.discount,
+                GroupName = entity.group_name,
+                Image = entity.image,
+                Nds = entity.nds,
+                PriceListType = (PriceListType)entity.content_type_id,
+                RemoteUrl = entity.remote_uri,
+                RemoteUrlMethodId = entity.remote_uri_method_id,
+                RemoteUrlMethodName = entity.remote_uri_method_name
+            };
+
+            await LoadCredentialsFromSettings();
+        }
+        else
+        {
+            item = new PriceListTemplateItemViewModel(TemplateGuid);
+            createNew = true;
+        }
+
+        remoteUriLoadMethods = await templateStorage.GetPricelistTemplateRemoteLoadMethods();
+        contentTypeNames = await templateStorage.GetPriceListTemplateContentTypes();
+        groupNames = await templateStorage.GetPriceListTemplatGroupNames();
+
+        guidList = typeof(IPriceListTemplate).Assembly.GetTypes()
+            .Select(type => type.GetCustomAttributes(typeof(PriceListTemplateGuidAttribute), false)
+            .OfType<PriceListTemplateGuidAttribute>().FirstOrDefault())
+            .Where(a => a != null)
+            .Select(a => a.Guid)
+            .OrderBy(g => g)
+            .ToList();
+    }
+
+    private async Task LoadMethodChanged(string id)
+    {
+        var method = remoteUriLoadMethods.FirstOrDefault(m => m.id.ToString().Equals(id));
+        item.RemoteUrlMethodId = method?.id;
+        item.RemoteUrlMethodName = method?.name;
+
+        await LoadCredentialsFromSettings();
+    }
+
+    private async Task LoadCredentialsFromSettings()
+    {
+        if (Equals(item.RemoteUrlMethodName, "HttpGetWithCredentials"))
+        {
+            remoteUriCredentialsLogin = await settings.GetValue<string>($"price-list-template-credentials-{TemplateGuid}-login");
+            remoteUriCredentialsPassword = await settings.GetValue<string>($"price-list-template-credentials-{TemplateGuid}-password");
+        }
+    }
+
+    private async Task ImageFileChanged(string selectedFilePath)
+    {
+        if (selectedFilePath != null)
+        {
+            item.Image = selectedFilePath;
+            await Task.Delay(TimeSpan.FromSeconds(1));
+        }
+    }
+
+    private async Task SaveData()
+    {
+        var entity = new PriceListTemplateEntity()
+        {
+            id = item.Guid,
+            description = item.Description,
+            title = item.Title,
+            discount = item.Discount,
+            image = item.Image,
+            nds = item.Nds,
+            group_name = item.GroupName,
+            remote_uri = item.RemoteUrl,
+            remote_uri_method_id = item.RemoteUrlMethodId,
+            content_type_id = (int)item.PriceListType
+        };
+
+        if (createNew)
+        {
+            await SaveChanges(entity);
+        }
+        else
+        {
+            await CreateNewTemplate(entity);
+        }
+    }
+
+    private async Task SaveChanges(PriceListTemplateEntity entity)
+    {
+        try
+        {
+            await templateStorage.UpdatePriceList(entity);
+            toasts.ShowInfo("Шаблон обновлен", item.Title);
+            await logger.Write(LogEntryGroupName.TemplateUpdate, "Шаблон обновлен", $"Обновление шаблона '{item.Title}' ({item.Guid})");
+        }
+        catch (Exception ex)
+        {
+            toasts.ShowInfo("Ошибка обновления" + ex.Message, item.Title);
+            await logger.Write(LogEntryGroupName.TemplateUpdate, "Ошибка обновления", $"Ошибка обновления '{item.Title}' ({item.Guid}). {ex.Message}");
+        }
+    }
+
+    private async Task CreateNewTemplate(PriceListTemplateEntity entity)
+    {
+        try
+        {
+            await templateStorage.CreatePriceList(entity);
+            toasts.ShowInfo("Шаблон добавлен", item.Title);
+            await logger.Write(LogEntryGroupName.TemplateUpdate, "Шаблон создан", $"Добавление шаблона '{item.Title}' ({item.Guid})");
+        }
+        catch (Exception ex)
+        {
+            toasts.ShowInfo("Ошибка создания" + ex.Message, item.Title);
+            await logger.Write(LogEntryGroupName.TemplateUpdate, "Ошибка создания", $"Ошибка добавления шаблона '{item.Title}' ({item.Guid}). {ex.Message}");
+        }
+    }
+}

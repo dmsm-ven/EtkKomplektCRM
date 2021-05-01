@@ -11,9 +11,16 @@ namespace EtkBlazorApp.DataAccess
     {
         Task<List<PriceListTemplateEntity>> GetPriceListTemplates();
         Task<PriceListTemplateEntity> GetPriceListTemplateById(string guid);
+        Task<List<PriceListTemplateRemoteUriMethodEntity>> GetPricelistTemplateRemoteLoadMethods();
+        Task<List<PriceListTemplateContentTypeEntity>> GetPriceListTemplateContentTypes();
+        Task<List<string>> GetPriceListTemplatGroupNames();
+        Task UpdatePriceList(PriceListTemplateEntity data);
+        Task CreatePriceList(PriceListTemplateEntity data);
+        Task ChangePriceListTemplateDiscount(string id, decimal discount);
+
         Task<List<PrikatReportTemplateEntity>> GetPrikatTemplates();
         Task SavePrikatTemplate(PrikatReportTemplateEntity template);
-        Task ChangePriceListTemplateDiscount(string id, decimal discount);
+        
     }
 
     public class TemplateStorage : ITemplateStorage
@@ -27,14 +34,23 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task<List<PriceListTemplateEntity>> GetPriceListTemplates()
         {
-            string sql = "SELECT * FROM etk_app_price_list_template";
+            string sql = "SELECT t.*, ct.name as content_type_name, lm.name as remote_uri_method_name " +
+                        "FROM etk_app_price_list_template t " +
+                        "LEFT JOIN etk_app_price_list_template_content_type ct ON t.content_type_id = ct.id " +
+                        "LEFT JOIN etk_app_price_list_template_load_method lm ON t.remote_uri_method_id = lm.id";
+
             var templatesInfo = await database.LoadData<PriceListTemplateEntity, dynamic>(sql, new { });
             return templatesInfo;
         }
 
         public async Task<PriceListTemplateEntity> GetPriceListTemplateById(string guid)
         {
-            string sql = "SELECT * FROM etk_app_price_list_template WHERE id = @guid LIMIT 1";
+            string sql = "SELECT t.*, ct.name as content_type_name, lm.name as remote_uri_method_name " +
+                        "FROM etk_app_price_list_template t " +
+                        "LEFT JOIN etk_app_price_list_template_content_type ct ON t.content_type_id = ct.id " +
+                        "LEFT JOIN etk_app_price_list_template_load_method lm ON t.remote_uri_method_id = lm.id " + 
+                        "WHERE t.id = @guid LIMIT 1";
+
             var templateInfo = (await database.LoadData<PriceListTemplateEntity, dynamic>(sql, new { guid })).FirstOrDefault();
             return templateInfo;
         }
@@ -65,5 +81,55 @@ namespace EtkBlazorApp.DataAccess
             string sql = "UPDATE etk_app_price_list_template SET discount = @discount WHERE id = @id";
             await database.SaveData(sql, new { id, discount});
         }
+
+        public async Task<List<PriceListTemplateRemoteUriMethodEntity>> GetPricelistTemplateRemoteLoadMethods()
+        {
+            string sql = "SELECT * FROM etk_app_price_list_template_load_method";
+            var data = await database.LoadData<PriceListTemplateRemoteUriMethodEntity, dynamic>(sql, new { });
+            return data;
+        }
+
+        public async Task<List<PriceListTemplateContentTypeEntity>> GetPriceListTemplateContentTypes()
+        {
+            string sql = "SELECT * FROM etk_app_price_list_template_content_type";
+            var data = await database.LoadData<PriceListTemplateContentTypeEntity, dynamic>(sql, new { });
+            return data;
+        }
+
+        public async Task<List<string>> GetPriceListTemplatGroupNames()
+        {
+            string sql = "SELECT DISTINCT group_name FROM etk_app_price_list_template ORDER BY group_name";
+            var data = await database.LoadData<string, dynamic>(sql, new { });
+            return data;
+        }
+
+        public async Task UpdatePriceList(PriceListTemplateEntity data)
+        {
+            string sql = "UPDATE etk_app_price_list_template " +
+                $"SET {nameof(data.id)} = @{nameof(data.id)}, " +
+                $"{nameof(data.title)} = @{nameof(data.title)}, " +
+                $"{nameof(data.description)} = @{nameof(data.description)}, " +
+                $"{nameof(data.group_name)} = @{nameof(data.group_name)}, " +
+                $"{nameof(data.content_type_id)} = @{nameof(data.content_type_id)}, " +
+                $"{nameof(data.remote_uri_method_id)} = @{nameof(data.remote_uri_method_id)}, " +
+                $"{nameof(data.nds)} = @{nameof(data.nds)}, " +
+                $"{nameof(data.discount)} = @{nameof(data.discount)}, " +
+                $"{nameof(data.image)} = @{nameof(data.image)} " +
+                "WHERE id = @id";
+
+            await database.SaveData(sql, data);
+        }
+
+        public async Task CreatePriceList(PriceListTemplateEntity data)
+        {
+            string sql = $"INSERT INTO etk_app_price_list_template " +
+                $"({nameof(data.id)}, {nameof(data.title)}, {nameof(data.description)}, {nameof(data.group_name)}, {nameof(data.content_type_id)}, {nameof(data.remote_uri_method_id)}, {nameof(data.nds)}, {nameof(data.discount)}, {nameof(data.image)}) " +
+                "VALUES " +
+                $"(@{nameof(data.id)}, @{nameof(data.title)}, @{nameof(data.description)}, @{nameof(data.group_name)}, @{nameof(data.content_type_id)}, @{nameof(data.remote_uri_method_id)}, @{nameof(data.nds)}, @{nameof(data.discount)}, @{nameof(data.image)})";
+
+            await database.SaveData(sql, data);
+        }
+
+
     }
 }

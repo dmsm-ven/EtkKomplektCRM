@@ -10,16 +10,17 @@ namespace EtkBlazorApp.DataAccess.Entity
     {
         public string id { get; set; }
         public string title { get; set; }
-        public string manufacturer { get; set; }
-        public string description { get; set; }
-        public string image { get; set; }
-
-        public string remote_uri { get; set; }
-        public string remote_uri_method { get; set; }
         public string group_name { get; set; }
+        public string description { get; set; }
+        public string image { get; set; }     
         public decimal discount { get; set; }
         public bool nds { get; set; }
 
-        public int price_list_type { get; set; }
+        public string remote_uri { get; set; }
+        public int? remote_uri_method_id { get; set; }
+        public string remote_uri_method_name { get; set; }
+
+        public int content_type_id { get; set; }
+        public string content_type_name { get; set; }
     }
 }

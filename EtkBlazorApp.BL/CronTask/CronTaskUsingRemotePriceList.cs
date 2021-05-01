@@ -21,7 +21,7 @@ namespace EtkBlazorApp.BL.CronTask
             var templateGuid = PriceListManager.GetPriceListGuidByType(templateType);
             var templateInfo = await service.templates.GetPriceListTemplateById(templateGuid);
 
-            var loader = service.remoteTemplateLoaderFactory.GetMethod(templateInfo.remote_uri, templateInfo.remote_uri_method, templateGuid);
+            var loader = service.remoteTemplateLoaderFactory.GetMethod(templateInfo.remote_uri, templateInfo.remote_uri_method_name, templateGuid);
             var response = await loader.GetFile();
 
             using (var ms = new MemoryStream(response.Bytes))

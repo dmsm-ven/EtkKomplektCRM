@@ -1,6 +1,11 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+.image-select-container:hover {
+    border: 2px dashed blue !important;
+    transition: 100ms;
+}
+
 .cron-task-table td:not(:first-child), .cron-task-table th:not(:first-child) {
     text-align: center;
 }

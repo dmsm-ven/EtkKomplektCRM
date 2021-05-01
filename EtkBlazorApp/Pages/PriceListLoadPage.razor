@@ -14,7 +14,7 @@
         <BootstrapProgressBar CurrentProgress="@uploadPercent">
             <LabelText>
                 <span class="justify-content-center d-flex position-absolute w-100">
-                    @($"{uploadPercent}% ({ readedBytes / 1024 } кб из {currentFileTotalLength / 1024 } кб)")
+                    @($"{uploadPercent}% ({ readedBytes / 1000 } кб из {currentFileTotalLength / 1000 } кб)")
                 </span>
             </LabelText>
         </BootstrapProgressBar>
@@ -39,7 +39,12 @@
 <h2>Выберите шаблон загружаемого файла</h2>
 
 <div class="row my-2">
-    <div class="input-group" style="width: 425px;">
+    <div class="input-group px-2" style="width: 425px;">
+        <button class="btn btn-outline-primary @(filterHasUri ? "active" : "")"
+                @onclick="@(e => {filterHasUri = !filterHasUri; ApplyFilter(null); })">
+            <span class="oi oi-link-intact"></span>
+        </button>
+
         <button type="button" style="margin-left: 8px;" class="btn btn-outline-primary">
             <span class="oi oi-magnifying-glass"></span>
         </button>
@@ -48,12 +53,24 @@
                @oninput="@(e => { searchPhrase = (string)e.Value; ApplyFilter(null); })"
                @bind="searchPhrase" class="form-control rounded mx-2" />
     </div>
-    <div class="d-inline">
-        <button class="btn btn-outline-primary @(filterHasUri ? "active" : "")"
-                @onclick="@(e => {filterHasUri = !filterHasUri; ApplyFilter(null); })">
-            <span class="oi oi-link-intact"></span>
-        </button>
-    </div>
+
+    <AuthorizeView Roles="Administrator">
+        <div class="d-inline">
+            <a class="btn btn-outline-primary" href="/price-list/new">
+                <span class="oi oi-plus"></span>
+            </a>
+            @if (selectedTemplate != null)
+            { 
+                <a class="btn btn-outline-primary">
+                    <span class="oi oi-minus"></span>
+                </a>
+
+                <a class="btn btn-outline-primary" href="/price-list/edit/@(selectedTemplate?.Guid)">
+                    <span class="oi oi-pencil"></span>
+                </a>
+            }
+        </div>
+    </AuthorizeView>
 </div>
 
 <div class="row my-2">
@@ -135,10 +152,8 @@
                 Discount = t.discount,
                 GroupName = t.group_name,
                 Image = t.image,
-                Manufacturer = t.manufacturer,
-                PriceListType = (PriceListType)t.price_list_type,
+                PriceListType = (PriceListType)t.content_type_id,
                 RemoteUrl = t.remote_uri,
-                RemoteUrlMethod = t.remote_uri_method,
                 Title = t.title,
                 Nds = t.nds
             })
@@ -186,7 +201,7 @@
         isIntermediateProgress = true;
         StateHasChanged();
 
-        IRemoteTemplateFileLoader loader = remoteTemplateFileLoaderFactory.GetMethod(selectedTemplate.RemoteUrl, selectedTemplate.RemoteUrlMethod, selectedTemplate.Guid);
+        IRemoteTemplateFileLoader loader = remoteTemplateFileLoaderFactory.GetMethod(selectedTemplate.RemoteUrl, selectedTemplate.RemoteUrlMethodName, selectedTemplate.Guid);
         try
         {
             var fileInfo = await loader.GetFile();
