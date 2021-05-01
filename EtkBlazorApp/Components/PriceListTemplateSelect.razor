@@ -1,0 +1,36 @@
+﻿@inject ITemplateStorage templateStorage
+
+<select id="price-list-template-guid" @bind="Guid" class="form-control">
+    <option value="">Выбрать шаблон прайс-листа</option>
+    @foreach (var plt in priceListTemplates)
+    {
+        <option selected="@(Guid.Equals(plt.id))" value="@plt.id">
+            @plt.title
+        </option>
+    }
+</select>
+
+@code {
+    List<PriceListTemplateEntity> priceListTemplates = null;
+
+    [Parameter]
+    public string Guid
+    {
+        get => guid ?? string.Empty;
+        set
+        {
+            if (guid == value) return;
+            if(value == null) { value = string.Empty; }
+            guid = value;
+            GuidChanged.InvokeAsync(value);
+        }
+    }
+    string guid;
+
+    [Parameter] public EventCallback<string> GuidChanged { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        priceListTemplates = await templateStorage.GetPriceListTemplates();
+    }
+}

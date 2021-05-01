@@ -102,9 +102,7 @@ namespace EtkBlazorApp.BL.CronTask
 
             try
             {
-                
-                
-                await task.Run();
+                await Task.Run(async () => await task.Run());
                 
                 exec_result = true;
 

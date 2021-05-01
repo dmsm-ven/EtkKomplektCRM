@@ -13,20 +13,28 @@
     <div class="row">
         <div class="col-md-6 offset-3">
             <div class="form-group">
-                <input type="checkbox" class="form-check-input" checked="@item.enabled" @onchange="@(e => item.enabled = (bool)e.Value)" />
-                <span style="font-size: 16px; color: olive; margin-left: 25px; color: @(item.enabled ? "green" : "lightgray")">@(item.enabled ? "Включено" : "Выключено")</span>
+                <input type="checkbox" class="form-check-input" checked="@item.IsEnabled" @onchange="@(e => item.IsEnabled = (bool)e.Value)" />
+                <span style="font-size: 16px; color: olive; margin-left: 25px; color: @(item.IsEnabled ? "green" : "lightgray")">@(item.IsEnabled ? "Включено" : "Выключено")</span>
             </div>
             <div class="form-group">
                 <span>Выполнить в</span>
-                <input type="time" @bind="ExecutionDateTime" class="form-control" />
+                <input type="time" @bind="item.ExecutionDateTime" class="form-control" />
             </div>
-            <div class="btn-group" role="group" aria-label="Basic example" style="width: 100%">
+            <div class="form-group">
+                <label for="price-list-template-guid mx-2">Закрепленный прайс-лист</label>
+                <PriceListTemplateSelect @bind-Guid="@item.PriceListGuid" />
+            </div>
+            <div class="btn-group" role="group" style="width: 100%">
                 @if (!isProgressBarVisible)
                 {
                     <button class="btn btn-outline-dark btn-lg" @onclick="@(e => confirmDialog.Show())">Выполнить сейчас</button>
                 }
                 <button style="width: auto;" class="btn btn-danger" @onclick="@(e => deleteDialog.Show())">Удалить это задание</button>
                 <button style="width: auto;" class="btn btn-primary" @onclick="SaveSettings">Сохранить</button>
+            </div>
+            <div class="form-group my-4">
+                <label for="task-description">Примечание к заданию</label>
+                <textarea @bind="item.Description" class="form-control" style="height: 80px;"></textarea>
             </div>
         </div>
     </div>
@@ -40,27 +48,16 @@
 
 <ConfirmDialog @ref="confirmDialog"
                ConfirmationChanged="ExecuteImmediatelyDialogStatusChanged"
-               ConfirmationMessage="@(() => $"Выполнить задание '{item.name}' ?")"
+               ConfirmationMessage="@(() => $"Выполнить задание '{item.Title}' ?")"
                ConfirmationTitle="Подтверждение" />
 
 <DeleteConfirmDialog @ref="deleteDialog"
                      ConfirmationTitle="Подтверждение удаления"
-                     ConfirmationMessage="@(() => $"Удалить задание '{item.name}' ?")"
+                     ConfirmationMessage="@(() => $"Удалить задание '{item.Title}' ?")"
                      ConfirmationChanged="TaskDeleteStatusChanged"/>
 @code {
-    private DateTime executionDateTime = new DateTime();
-    private DateTime ExecutionDateTime
-    {
-        get =>
-executionDateTime;
-        set
-        {
-            executionDateTime = value;
-            item.exec_time = executionDateTime.TimeOfDay;
-        }
-    }
     private bool isProgressBarVisible;
-    private CronTaskEntity item;
+    private CronTaskViewModel item;
     private ConfirmDialogBase confirmDialog;
     private DeleteConfirmDialog deleteDialog;
 
@@ -68,8 +65,22 @@ executionDateTime;
 
     protected override async Task OnInitializedAsync()
     {
-        item = (await settings.GetCronTasks()).Single(t => t.task_id == Id);
-        executionDateTime = executionDateTime + item.exec_time;
+        var entity = (await settings.GetCronTasks()).Single(t => t.task_id == Id);
+        item = new CronTaskViewModel()
+        {
+            Id = entity.task_id,
+            PriceListGuid = entity.linked_price_list_guid,
+            TypeName = entity.task_type_name,
+            TypeId = entity.task_type_id,
+            Description = entity.description,
+            Title = entity.name,
+            IsEnabled = entity.enabled,
+            LastExec = entity.last_exec_date_time,
+            LastExecResult = entity.last_exec_result,
+            ExecTime = entity.exec_time
+        };
+
+        item.ExecutionDateTime += item.ExecTime;
     }
 
     private async Task ExecuteImmediatelyDialogStatusChanged(bool dialogResult)
@@ -78,12 +89,12 @@ executionDateTime;
         {
             isProgressBarVisible = true;
             StateHasChanged();
-            await taskManager.ExecuteImmediately(item.task_id);
+            await taskManager.ExecuteImmediately(item.Id);
 
             isProgressBarVisible = false;
 
-            toasts.ShowSuccess("Задание выполнено", item.name);
-            await userLogger.Write(LogEntryGroupName.CronTask, "Задание выполнено (forced)", $"Задание '{item.name}' выполнено");
+            toasts.ShowSuccess("Задание выполнено", item.Title);
+            await userLogger.Write(LogEntryGroupName.CronTask, "Задание выполнено (forced)", $"Задание '{item.Title}' выполнено");
         }
     }
 
@@ -91,10 +102,10 @@ executionDateTime;
     {
         if (dialogResult)
         {
-            await settings.DeleteCronTask(item.task_id);
+            await settings.DeleteCronTask(item.Id);
             await taskManager.RefreshTaskList(force: true);
 
-            string msg = $"Задание {item.name} удалено";
+            string msg = $"Задание {item.Title} удалено";
             toasts.ShowInfo(msg);
             await userLogger.Write(LogEntryGroupName.CronTask, "Удаление задания", msg);
             navigationManager.NavigateTo("/cron-task");
@@ -103,10 +114,19 @@ executionDateTime;
 
     private async Task SaveSettings()
     {
-        await settings.UpdateCronTask(item);
+        var entity = new CronTaskEntity()
+        {
+            task_id = item.Id,
+            description = item.Description,
+            enabled = item.IsEnabled,
+            exec_time = item.ExecutionDateTime.TimeOfDay,
+            linked_price_list_guid = item.PriceListGuid,
+        };
+
+        await settings.UpdateCronTask(entity);
         await taskManager.RefreshTaskList(force: true);
 
-        string msg = $"Настройки задания '{item.name}' обновлены";
+        string msg = $"Настройки задания '{item.Title}' обновлены";
         toasts.ShowSuccess(msg);
         await userLogger.Write(LogEntryGroupName.CronTask, "Редактирование задания", msg);
     }

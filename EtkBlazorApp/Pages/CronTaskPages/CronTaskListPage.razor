@@ -1,6 +1,5 @@
 ﻿@page "/cron-task"
 @inject ICronTaskStorage cronTaskStorage
-@inject ITemplateStorage templateStorage
 @inject CronTaskService taskManager
 @inject UserLogger userLogger
 @inject NavigationManager navigationManager
@@ -55,8 +54,8 @@ else
             <input type="text" id="task-name" class="form-control" @bind="newTask.Title" required />
         </div>
         <div class="form-group">
-            <label for="task-description">Описание</label>
-            <input type="text" id="task-description" @bind="newTask.Description" class="form-control" />
+            <label for="task-description">Примечание</label>
+            <textarea id="task-description" @bind="newTask.Description" class="form-control" style="height: 60px; resize: none;" />
         </div>
         <div class="form-group">
             <label for="exec-time">Время запуска</label>
@@ -73,14 +72,7 @@ else
         </div>
         <div class="form-group">
             <label for="price-list-template-guid mx-2">Закрепленный прайс-лист</label>
-            <select id="price-list-template-guid" @bind="newTask.PriceListGuid" class="form-control">
-                @foreach (var plt in priceListTemplates)
-                {
-                <option value="@plt.id">
-                    @plt.title
-                </option>
-                }
-            </select>
+            <PriceListTemplateSelect @bind-Guid="newTask.PriceListGuid"/>
         </div>
 </GenericModalDialog>
 
@@ -94,12 +86,10 @@ else
     GenericModalDialog<CronTaskViewModel> dialog;
     CronTaskViewModel newTask = null;
     List<CronTaskTypeEntity> cronTaskTypes = null;
-    List<PriceListTemplateEntity> priceListTemplates = null;
 
     protected override async Task OnInitializedAsync()
     {
         cronTaskTypes = await cronTaskStorage.GetCronTaskTypes();
-        priceListTemplates = await templateStorage.GetPriceListTemplates();
 
         cronTaskList = (await cronTaskStorage.GetCronTasks())
                     .Select(ct => new CronTaskViewModel()
@@ -144,7 +134,7 @@ else
 
     private async Task NewTaskDialogStateChanged(CronTaskViewModel item)
     {
-        if (item != default)
+        if (item != null)
         {
             var entity = new CronTaskEntity()
             {
@@ -159,8 +149,9 @@ else
             navigationManager.NavigateTo("/cron-task", true);
             await taskManager.RefreshTaskList(force: true);
             await userLogger.Write(LogEntryGroupName.CronTask, "Задание добавлено", $"Добавлено новое задание '{item.Title}'");
-            newTask = null;
+
         }
+        newTask = null;
     }
 
     public void Dispose()

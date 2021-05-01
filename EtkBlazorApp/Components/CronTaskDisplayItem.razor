@@ -1,7 +1,7 @@
 ﻿<tr>
     <td>
         <div class="task-tool-items-box">
-            <input type="checkbox" style="margin-right: 12px;" checked="@Item.IsEnabled" disabled />
+            <input type="checkbox" style="margin-right: 12px;" checked="@Item.IsEnabled" onclick="return false;" />
             <a href="@("/cron-task/edit/" + @Item.Id)"><span class="oi oi-cog cog-icon" style="font-size: 1.2em;" aria-hidden="true"></span></a>
             <span>@Item.Title</span>
         </div>
@@ -12,7 +12,7 @@
     <td>
         @if (Item.IsEnabled)
         {
-            <BootstrapProgressBar CurrentProgress="@nextExecutionPercentLeft" Stripped="false" Animated="false" HideProgressLabel="true" />
+            <BootstrapProgressBar CurrentProgress="@Item.NextExecutionPercentLeft" Stripped="false" Animated="false" HideProgressLabel="true" />
         }
     </td>
     <td>
@@ -27,12 +27,6 @@
     </td>
 </tr>
 @code {
-
-    TimeSpan nextExecution => Item.ExecTime < DateTime.Now.TimeOfDay ?
-                             (DateTime.Now.AddDays(1).Date.AddTicks(Item.ExecTime.Ticks) - DateTime.Now) :
-                             (Item.ExecTime - DateTime.Now.TimeOfDay);
-
-    int nextExecutionPercentLeft => (int)Math.Round(100 - (100d * (nextExecution.TotalSeconds / TimeSpan.FromHours(24).TotalSeconds)));
 
     MarkupString lastResultIconMarkup
     {
