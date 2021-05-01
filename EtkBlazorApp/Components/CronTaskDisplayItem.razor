@@ -1,73 +1,63 @@
-﻿@inject ICronTaskStorage cronTaskStorage
-@inject CronTaskService cronTaskManager
-@inject NavigationManager navigation
-@implements IDisposable
-@using System.Timers
-
-<tr>
+﻿<tr>
     <td>
         <div class="task-tool-items-box">
-            <input type="checkbox" style="margin-right: 12px;" @onchange="EnableStatusChanged" checked="@Item.enabled" />
-            <a href="@("/cron-task/edit/" + @Item.task_id)"><span class="oi oi-cog cog-icon" style="font-size: 1.2em;" aria-hidden="true"></span></a>
-            <span>@Item.name</span>
+            <input type="checkbox" style="margin-right: 12px;" checked="@Item.IsEnabled" disabled />
+            <a href="@("/cron-task/edit/" + @Item.Id)"><span class="oi oi-cog cog-icon" style="font-size: 1.2em;" aria-hidden="true"></span></a>
+            <span>@Item.Title</span>
         </div>
     </td>
     <td>
-        @(Item.enabled ? Item.exec_time.ToString(@"hh\:mm") : "")
+        @(Item.IsEnabled ? Item.ExecTime.ToString(@"hh\:mm") : "")
     </td>
     <td>
-        @if (Item.enabled)
+        @if (Item.IsEnabled)
         {
-        <BootstrapProgressBar CurrentProgress="@nextExecutionPercentLeft">
-            <LabelText>@(string.Format("{0} ч. {1} мин.", nextExecution.ToString("hh"), nextExecution.ToString("mm")))</LabelText>
-        </BootstrapProgressBar>
+            <BootstrapProgressBar CurrentProgress="@nextExecutionPercentLeft" Stripped="false" Animated="false" HideProgressLabel="true" />
         }
     </td>
     <td>
-        @(Item.last_exec_date_time != default ? Item.last_exec_date_time.ToString("dd.MM.yyyy HH:mm") : "")
+        @if (Item.LastExec.HasValue)
+        {
+            @lastResultIconMarkup
+            @Item.LastExec.Value.ToString("dd.MM.yyyy HH:mm")
+        }
     </td>
-    <td>
-        @Item.description
+    <td style="text-align: right;">
+        @Item.Description
     </td>
 </tr>
-
 @code {
-    Timer timeLeftRefresh;
-    TimeSpan nextExecution => Item.exec_time < DateTime.Now.TimeOfDay ?
-                             (DateTime.Now.AddDays(1).Date.AddTicks(Item.exec_time.Ticks) - DateTime.Now) :
-                             (Item.exec_time - DateTime.Now.TimeOfDay);
+
+    TimeSpan nextExecution => Item.ExecTime < DateTime.Now.TimeOfDay ?
+                             (DateTime.Now.AddDays(1).Date.AddTicks(Item.ExecTime.Ticks) - DateTime.Now) :
+                             (Item.ExecTime - DateTime.Now.TimeOfDay);
 
     int nextExecutionPercentLeft => (int)Math.Round(100 - (100d * (nextExecution.TotalSeconds / TimeSpan.FromHours(24).TotalSeconds)));
 
-    [Parameter] public CronTaskEntity Item { get; set; }
-
-    protected override void OnInitialized()
+    MarkupString lastResultIconMarkup
     {
-        timeLeftRefresh = new Timer();
-        timeLeftRefresh.Interval = TimeSpan.FromMinutes(1).TotalMilliseconds;
-        timeLeftRefresh.Elapsed += (o, e) =>
+        get
         {
-            InvokeAsync(() => StateHasChanged());
-        };
-        timeLeftRefresh.Start();
+            string color = "gray";
+            string iconClass = "oi-question-mark";
+
+            if(Item.LastExecResult == false)
+            {
+                color = "darkred";
+                iconClass = "oi-x";
+            }
+            else if(Item.LastExecResult == true)
+            {
+                color = "#50C878";
+                iconClass = "oi-check";
+            }
+
+            string result = $"<span class=\"oi {iconClass}\" style=\"color: {color}; font-size: 24px; padding-right: 8px; \" ></span>";
+            return (MarkupString)result;
+
+        }
     }
 
-    private async Task EnableStatusChanged(ChangeEventArgs e)
-    {
-        Item.enabled = (bool)e?.Value;
-
-        await cronTaskStorage.UpdateCronTask(Item);
-
-        timeLeftRefresh.Enabled = Item.enabled;
-        StateHasChanged();
-
-        await cronTaskManager.RefreshTaskList(force: true);
-    }
-
-    public void Dispose()
-    {
-        timeLeftRefresh?.Stop();
-        timeLeftRefresh?.Dispose();
-    }
+    [Parameter] public CronTaskViewModel Item { get; set; }
 
 }

@@ -16,6 +16,7 @@ namespace EtkBlazorApp.DataAccess.Entity
         public string description { get; set; }
         public bool enabled { get; set; }
         public TimeSpan exec_time { get; set; }
-        public DateTime last_exec_date_time { get; set; }
+        public DateTime? last_exec_date_time { get; set; }
+        public bool? last_exec_result { get; set; }
     }
 }

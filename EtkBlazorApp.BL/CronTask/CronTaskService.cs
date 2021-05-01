@@ -98,15 +98,18 @@ namespace EtkBlazorApp.BL.CronTask
             inProgress.Add(task);
 
             var sw = Stopwatch.StartNew();
+            bool exec_result = false;
 
             try
             {
-                taskInfo.last_exec_date_time = DateTime.Now;
+                
                 
                 await task.Run();
+                
+                exec_result = true;
 
                 sw.Stop();
-                OnTaskComplete?.Invoke(task);
+                OnTaskComplete?.Invoke(task);             
                 await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {taskInfo.name} выполнено. Длительность выполнения {(int)sw.Elapsed.TotalSeconds} сек.");
 
             }
@@ -118,6 +121,8 @@ namespace EtkBlazorApp.BL.CronTask
             finally
             {
                 inProgress.Remove(task);
+                taskInfo.last_exec_date_time = DateTime.Now;
+                taskInfo.last_exec_result = exec_result;
                 await cronTaskStorage.UpdateCronTask(taskInfo);
             }         
         }
@@ -135,6 +140,7 @@ namespace EtkBlazorApp.BL.CronTask
         {
             Type linkedPriceListType = PriceListManager.GetPriceListTypeByGuid(parameter);
 
+            //Таблица etk_app_cron_task_type
             switch (taskTypeName)
             {
                 case "Одиночный прайс-лист":

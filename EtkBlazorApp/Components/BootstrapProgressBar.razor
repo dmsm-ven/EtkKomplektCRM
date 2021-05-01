@@ -2,21 +2,22 @@
 
 <div class="progress">
     <div class="progress-bar bg-info @cssStyle" role="progressbar" style="width: @(CurrentProgress)%;" aria-valuenow="@CurrentProgress" aria-valuemin="0" aria-valuemax="100">
-        @if (LabelText == null)
-        {
-            @($"{CurrentProgress}%")
-        }
-        else
-        {
-            @LabelText
-        }
     </div>
+    @if (LabelText == null && HideProgressLabel == false)
+    {
+        @($"{CurrentProgress}%")
+    }
+    else if (LabelText != null)
+    {
+        @LabelText
+    }
 </div>
 
 @code {
+    [Parameter] public bool HideProgressLabel { get; set; } = false;
+    [Parameter] public bool Animated { get; set; } = true;
+    [Parameter] public bool Stripped { get; set; } = true;
     [Parameter] public int CurrentProgress { get; set; }
-    [Parameter] public bool IsAnimated { get; set; } = false;
-    [Parameter] public bool IsStripped { get; set; } = false;
     [Parameter] public RenderFragment LabelText { get; set; }
 
     string cssStyle
@@ -25,15 +26,14 @@
         {
             var sb = new StringBuilder();
 
-            if (IsAnimated)
+            if (Animated)
             {
                 sb.Append("progress-bar-animated ");
             }
-            if (IsStripped)
+            if (Stripped)
             {
                 sb.Append("progress-bar-striped ");
             }
-
 
             return sb.ToString().Trim();
         }

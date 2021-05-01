@@ -1,6 +1,10 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+.cron-task-table td:not(:first-child), .cron-task-table th:not(:first-child) {
+    text-align: center;
+}
+
 .bg-etk {
     background-color: #3f70a0 !important;
 }
