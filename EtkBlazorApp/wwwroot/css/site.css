@@ -35,6 +35,10 @@
     border: 1px dashed rgba(255,255,255,0.25);
 }
 
+tr.selected-user {
+    background: linen;
+}
+
 tr.disabled-user td:not(:last-child) {
     opacity: 0.4;
 }

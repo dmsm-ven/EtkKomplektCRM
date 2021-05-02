@@ -15,7 +15,7 @@ namespace EtkBlazorApp.DataAccess
         Task UpdateUser(AppUserEntity user);
         Task AddUser(AppUserEntity user);
         Task DeleteUser(int user_id);
-        Task<List<string>> GetUserGroups();
+        Task<List<AppUserGroupEntity>> GetUserGroups();
     }
 
     public class AuthenticationDataStorage : IAuthenticationDataStorage
@@ -49,7 +49,7 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task<List<AppUserEntity>> GetUsers()
         {
-            string sql = "SELECT u.*, g.name as group_name " +
+            string sql = "SELECT u.*,  g.name as group_name " +
                          "FROM etk_app_user u " +
                          "JOIN etk_app_user_group g ON u.user_group_id = g.user_group_id";
 
@@ -62,7 +62,7 @@ namespace EtkBlazorApp.DataAccess
         {
             var sb = new StringBuilder()
                 .AppendLine("UPDATE etk_app_user")
-                .AppendLine("SET user_group_id = (SELECT user_group_id FROM etk_app_user_group WHERE name = @group_name),")
+                .AppendLine("SET user_group_id = @user_group_id,")
                 .AppendLine("ip = @ip,")
                 .AppendLine("status = @status");
 
@@ -81,7 +81,7 @@ namespace EtkBlazorApp.DataAccess
         public async Task AddUser(AppUserEntity user)
         {
             string sql = "INSERT INTO etk_app_user (login, password, ip, user_group_id, status) VALUES " + 
-                         "(@login, MD5(@password), @ip, (SELECT user_group_id FROM etk_app_user_group WHERE name = @group_name), '1')";
+                         "(@login, MD5(@password), @ip, @group_id, '1')";
             await database.SaveData<dynamic>(sql, user);
 
         }
@@ -91,9 +91,9 @@ namespace EtkBlazorApp.DataAccess
             await database.SaveData<dynamic>("DELETE FROM etk_app_user WHERE user_id = @user_id", new { user_id });
         }
 
-        public async Task<List<string>> GetUserGroups()
+        public async Task<List<AppUserGroupEntity>> GetUserGroups()
         {
-            var groups = await database.LoadData<string, dynamic>("SELECT name FROM etk_app_user_group", new { });
+            var groups = await database.LoadData<AppUserGroupEntity, dynamic>("SELECT * FROM etk_app_user_group", new { });
             return groups;
         }
     }

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace EtkBlazorApp
 {
-    public class AppUser
+    public class AppUser 
     {
         public int Id { get; set; }
 
@@ -22,6 +22,9 @@ namespace EtkBlazorApp
         public string UserIP { get; set; }
 
         public string GroupName { get; set; }
+
+        [Required(ErrorMessage = "Необходимо выбрать группу пользователя")]
+        public int GroupId{ get; set; }
 
         public DateTime CreatingDate { get; set; }
 
