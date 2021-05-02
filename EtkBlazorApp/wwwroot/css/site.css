@@ -281,6 +281,14 @@ input[type='radio'], input[type='checkbox'] {
     color: red;
 }
 
+.product-item .discount-info {
+    font-size: 18px;
+    top: 20px;
+    font-weight: 900;
+    top: 25px;
+}
+
+
 .product-item-inner p .product-price {
     display: block;
     margin-left: 6px;

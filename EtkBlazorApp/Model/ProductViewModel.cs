@@ -12,14 +12,29 @@ namespace EtkBlazorApp
         public string Sku { get; set; }
         public string EAN { get; set; }
         public string Uri { get; set; }
-        public string FullSizeImage { get; set; }
+        public string Image { get; set; }
         public decimal Price { get; set; }
+        public decimal? DiscountedPrice { get; set; }
         public decimal BasePrice { get; set; }
         public string BasePriceCurrency { get; set; }
         public string StockStatus { get; set; }   
+        public int NumberOfViews { get; set; }
         public int Quantity { get; set; }
         public string DateModified { get; set; }
 
+
+        public string FullSizeImage => $"https://etk-komplekt.ru/image/{Image}";
+        public double? DiscountPercent
+        {
+            get
+            {
+                if(DiscountedPrice.HasValue && Price != decimal.Zero)
+                {
+                    return (double)Math.Round(DiscountedPrice.Value / Price * 100, 2);
+                }
+                return null;
+            }
+        }
         public string ProductIdUri => $"https://etk-komplekt.ru/index.php?route=product/product&product_id={Id}";
     }
 }

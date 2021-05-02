@@ -1,4 +1,66 @@
-﻿@page "/"
+﻿@inject IProductStorage productsStorage
+@page "/"
 
-<h3>Новые поступления</h3>
-<NewProductsDisplayer ProductsCount="16"></NewProductsDisplayer>
+<h2>Последние добавленные товары</h2>
+<ProductsGridDisplayer MaxDisplayCount="4" Products="@lastAddedProducts" />
+
+<h2>Товары с наибольшей скидкой</h2>
+<ProductsGridDisplayer MaxDisplayCount="4" Products="@productsWithMaxDiscount" ShowDiscountLabel="true" />
+
+<h2>Наиболее просматриваемые товары</h2>
+<ProductsGridDisplayer MaxDisplayCount="4" Products="@mostViewedProducts" />
+
+
+@code {
+
+    List<ProductViewModel> lastAddedProducts = null;
+    List<ProductViewModel> productsWithMaxDiscount = null;
+    List<ProductViewModel> mostViewedProducts = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        StateHasChanged();
+
+        lastAddedProducts = (await productsStorage.GetLastAddedProducts(4))
+       .Select(entity => new ProductViewModel()
+       {
+           Image = entity.image,
+           Name = HttpUtility.HtmlDecode(entity.name) ?? string.Empty,
+           Manufacturer = entity.manufacturer,
+           Price = entity.price,
+           Uri = $"{entity.product_id}",
+           Id = entity.product_id
+       }).ToList();
+
+
+        StateHasChanged();
+
+        productsWithMaxDiscount = (await productsStorage.GetProductsWithMaxDiscount(4))
+        .Select(entity => new ProductViewModel()
+        {
+            Image = entity.image,
+            Name = HttpUtility.HtmlDecode(entity.name) ?? string.Empty,
+            Manufacturer = entity.manufacturer,
+            Price = entity.price,
+            DiscountedPrice = entity.discount_price,
+            Uri = $"{entity.product_id}",
+            Id = entity.product_id
+        }).ToList();
+
+
+        StateHasChanged();
+
+        mostViewedProducts = (await productsStorage.GetMostViewedProducts(4))
+    .Select(entity => new ProductViewModel()
+    {
+        Image = entity.image,
+        Name = HttpUtility.HtmlDecode(entity.name) ?? string.Empty,
+        Manufacturer = entity.manufacturer,
+        Price = entity.price,
+        Uri = $"{entity.product_id}",
+        Id = entity.product_id,
+        NumberOfViews = entity.viewed
+    }).ToList();
+    }
+
+}

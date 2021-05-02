@@ -1,6 +1,6 @@
 ﻿@inject IProductStorage database
 
-@if(products == null)
+@if(Products == null)
 {
     <LoadingSpinner />
 }
@@ -8,12 +8,16 @@ else
 {
     <div class="container">
         <div class="row">
-            @foreach (var product in products)
+            @foreach (var product in Products.Take(MaxDisplayCount))
             {
             <div class="col-md-3 product-item">
-                @if (product.Price != 0)
+                @if (product.Price != decimal.Zero)
                 {
                     <p class="product-price">@product.Price.ToString("C0")</p>
+                }
+                @if (ShowDiscountLabel && product.DiscountPercent.HasValue)
+                {
+                    <p class="product-price discount-info">@product.DiscountedPrice.Value.ToString("P0")</p>
                 }
                 <a href="@product.ProductIdUri" target="_blank">
                     <div class="product-item-inner shadow">
@@ -35,28 +39,9 @@ else
 
 @code {
 
-    [Parameter]
-    public int ProductsCount { get; set; } = 8;
+    [Parameter] public int MaxDisplayCount { get; set; } = 1;
 
-    List<ProductViewModel> products = null;
+    [Parameter] public List<ProductViewModel> Products { get; set; }
 
-    protected override async Task OnInitializedAsync()
-    {
-        if(ProductsCount >= 32)
-        {
-            ProductsCount = 32;
-        }
-
-        products = (await database.GetLastAddedProducts(ProductsCount))
-            .Select(entity => new ProductViewModel()
-            {
-                FullSizeImage = "https://etk-komplekt.ru/image/" + entity.image,
-                Name = entity.name ?? "Товар без назания",
-                Manufacturer = entity.manufacturer,
-                Price = entity.price,
-                Uri = $"{entity.product_id}",
-                Id = entity.product_id
-            })
-            .ToList();
-    }
+    [Parameter] public bool ShowDiscountLabel { get; set; } = false;
 }
