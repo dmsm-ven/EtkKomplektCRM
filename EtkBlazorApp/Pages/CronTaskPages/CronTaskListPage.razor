@@ -10,13 +10,13 @@
 <h3>Переодические задачи</h3>
 @if (cronTaskList == null)
 {
-    <LoadingSpinner></LoadingSpinner>
+    <LoadingSpinner/>
 }
 else
 {
     <div class="row py-2">
         <div class="btn-group">
-            <button class="btn btn-info" @onclick="ShowAddNewTaskDialog">
+            <button class="btn btn-info" @onclick="@(e => addNewDialog.Show())">
                 <span class="oi oi-timer"></span>
                 Создать новое задание
             </button>
@@ -46,51 +46,15 @@ else
     </div>
 }
 
-
-<GenericModalDialog @ref="dialog" TItem="CronTaskViewModel" Item="@newTask" 
-                    Title="Добавление нового задания" ConfirmationChanged="NewTaskDialogStateChanged">
-        <div class="form-group">
-            <label for="task-name">Название</label>
-            <input type="text" id="task-name" class="form-control" @bind="newTask.Title" required />
-        </div>
-        <div class="form-group">
-            <label for="task-description">Примечание</label>
-            <textarea id="task-description" @bind="newTask.Description" class="form-control" style="height: 60px; resize: none;" />
-        </div>
-        <div class="form-group">
-            <label for="exec-time">Время запуска</label>
-            <input type="text" id="exec-time" @bind="newTask.ExecTime" class="form-control" />
-        </div>
-        <div class="form-group">
-            <label for="task-type mx-2">Тип задачи</label>
-            <select id="task-type" @bind="newTask.TypeId" class="form-control">
-                @foreach (var taskType in cronTaskTypes)
-                {
-                    <option value="@taskType.task_type_id">@taskType.name</option>
-                }
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="price-list-template-guid mx-2">Закрепленный прайс-лист</label>
-            <PriceListTemplateSelect @bind-Guid="newTask.PriceListGuid"/>
-        </div>
-</GenericModalDialog>
-
-<style>
-
-</style>
+<AddNewCronTaskDialog @ref="addNewDialog" ConfirmationChanged="NewTaskDialogStateChanged"/>
 
 @code {
     Timer timeLeftRefresh;
     List<CronTaskViewModel> cronTaskList = null;
-    GenericModalDialog<CronTaskViewModel> dialog;
-    CronTaskViewModel newTask = null;
-    List<CronTaskTypeEntity> cronTaskTypes = null;
+    AddNewCronTaskDialog addNewDialog;
 
     protected override async Task OnInitializedAsync()
     {
-        cronTaskTypes = await cronTaskStorage.GetCronTaskTypes();
-
         cronTaskList = (await cronTaskStorage.GetCronTasks())
                     .Select(ct => new CronTaskViewModel()
                     {
@@ -119,19 +83,6 @@ else
         timeLeftRefresh.Start();
     }
 
-    private void ShowAddNewTaskDialog()
-    {
-        dialog.Show();
-        newTask = new CronTaskViewModel()
-        {
-            Title = "Заголовок",
-            ExecTime = TimeSpan.FromHours(9),
-            IsEnabled = true,
-            TypeId = cronTaskTypes.First().task_type_id,
-            TypeName = cronTaskTypes.First().name
-        };
-    }
-
     private async Task NewTaskDialogStateChanged(CronTaskViewModel item)
     {
         if (item != null)
@@ -149,9 +100,7 @@ else
             navigationManager.NavigateTo("/cron-task", true);
             await taskManager.RefreshTaskList(force: true);
             await userLogger.Write(LogEntryGroupName.CronTask, "Задание добавлено", $"Добавлено новое задание '{item.Title}'");
-
         }
-        newTask = null;
     }
 
     public void Dispose()

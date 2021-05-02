@@ -9,14 +9,17 @@ namespace EtkBlazorApp.DataAccess
 {
     public interface ITemplateStorage
     {
+
+        Task CreatePriceList(PriceListTemplateEntity data);
+        Task UpdatePriceList(PriceListTemplateEntity data);
         Task<List<PriceListTemplateEntity>> GetPriceListTemplates();
         Task<PriceListTemplateEntity> GetPriceListTemplateById(string guid);
+        Task DeletePriceList(string guid);
+        Task ChangePriceListTemplateDiscount(string guid, decimal discount);
+
         Task<List<PriceListTemplateRemoteUriMethodEntity>> GetPricelistTemplateRemoteLoadMethods();
         Task<List<PriceListTemplateContentTypeEntity>> GetPriceListTemplateContentTypes();
         Task<List<string>> GetPriceListTemplatGroupNames();
-        Task UpdatePriceList(PriceListTemplateEntity data);
-        Task CreatePriceList(PriceListTemplateEntity data);
-        Task ChangePriceListTemplateDiscount(string id, decimal discount);
 
         Task<List<PrikatReportTemplateEntity>> GetPrikatTemplates();
         Task SavePrikatTemplate(PrikatReportTemplateEntity template);
@@ -111,6 +114,7 @@ namespace EtkBlazorApp.DataAccess
                 $"{nameof(data.description)} = @{nameof(data.description)}, " +
                 $"{nameof(data.group_name)} = @{nameof(data.group_name)}, " +
                 $"{nameof(data.content_type_id)} = @{nameof(data.content_type_id)}, " +
+                $"{nameof(data.remote_uri)} = @{nameof(data.remote_uri)}, " +
                 $"{nameof(data.remote_uri_method_id)} = @{nameof(data.remote_uri_method_id)}, " +
                 $"{nameof(data.nds)} = @{nameof(data.nds)}, " +
                 $"{nameof(data.discount)} = @{nameof(data.discount)}, " +
@@ -122,14 +126,17 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task CreatePriceList(PriceListTemplateEntity data)
         {
+            
             string sql = $"INSERT INTO etk_app_price_list_template " +
-                $"({nameof(data.id)}, {nameof(data.title)}, {nameof(data.description)}, {nameof(data.group_name)}, {nameof(data.content_type_id)}, {nameof(data.remote_uri_method_id)}, {nameof(data.nds)}, {nameof(data.discount)}, {nameof(data.image)}) " +
-                "VALUES " +
-                $"(@{nameof(data.id)}, @{nameof(data.title)}, @{nameof(data.description)}, @{nameof(data.group_name)}, @{nameof(data.content_type_id)}, @{nameof(data.remote_uri_method_id)}, @{nameof(data.nds)}, @{nameof(data.discount)}, @{nameof(data.image)})";
+                $"(id, title, description, group_name, content_type_id, remote_uri, remote_uri_method_id, nds, discount, image) VALUES" +
+                $"(@id, @title, @description, @group_name, @content_type_id, @remote_uri, @remote_uri_method_id, @nds, @discount, @image)";
 
             await database.SaveData(sql, data);
         }
 
-
+        public async Task DeletePriceList(string guid)
+        {
+            await database.SaveData("DELETE FROM etk_app_price_list_template WHERE id = @guid", new { guid });
+        }
     }
 }

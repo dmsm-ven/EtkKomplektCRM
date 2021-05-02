@@ -1,6 +1,21 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+#guid-select option {
+    color: blue;
+}
+
+    #guid-select option:disabled {
+        color: gray;
+    }
+
+.image-select-container {
+    min-width: 400px;
+    max-width: 400px;
+    min-height: 200px;
+    max-height: 200px;
+    border: 2px dashed #c0c0c0;
+}
 .image-select-container:hover {
     border: 2px dashed blue !important;
     transition: 100ms;

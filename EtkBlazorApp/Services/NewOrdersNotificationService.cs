@@ -64,7 +64,6 @@ namespace EtkBlazorApp.Services
                     OrderStatus = _lastOrder.order_status
                 };
 
-
                 OnNewOrderFound?.Invoke(orderVM);
             }
 

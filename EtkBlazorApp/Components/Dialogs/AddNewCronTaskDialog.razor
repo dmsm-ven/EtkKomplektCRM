@@ -1,0 +1,93 @@
+﻿@inject ICronTaskStorage cronTaskStorage
+
+@if (isVisible)
+{
+    <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog" style="background: rgba(0,0,0, 0.5)">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <EditForm Model="@newTask" OnValidSubmit="@(e => OnConfirmationChange(newTask))">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modal-title">Добавление нового задания</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+                                @onclick="@(e => OnConfirmationChange(null))">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="task-name">Название</label>
+                            <input type="text" id="task-name" class="form-control" @bind="newTask.Title" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="task-description">Примечание</label>
+                            <textarea id="task-description" @bind="newTask.Description" class="form-control" style="height: 60px; resize: none;" />
+                        </div>
+                        <div class="form-group">
+                            <label for="exec-time">Время запуска</label>
+                            <input type="time" id="exec-time" @bind="newTask.ExecutionDateTime" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label for="task-type mx-2">Тип задачи</label>
+                            <select id="task-type" @bind="newTask.TypeId" class="form-control">
+                                @foreach (var taskType in cronTaskTypes)
+                                {
+                                    <option value="@taskType.task_type_id">@taskType.name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="price-list-template-guid mx-2">Закрепленный прайс-лист</label>
+                            <PriceListTemplateSelect @bind-Guid="newTask.PriceListGuid" />
+                        </div>
+                    </div>
+                    
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                                @onclick="@(e => OnConfirmationChange(null))">
+                            Отмена
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            Создать
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+@code {
+    [Parameter] public EventCallback<CronTaskViewModel> ConfirmationChanged { get; set; }
+
+    List<CronTaskTypeEntity> cronTaskTypes = null;
+    CronTaskViewModel newTask = null;
+    bool isVisible = false;
+
+    public void Show()
+    {
+        isVisible = true;
+
+        newTask = new CronTaskViewModel()
+        {
+            Title = "Заголовок",
+            ExecTime = TimeSpan.FromHours(9),
+            IsEnabled = true,
+            TypeId = cronTaskTypes.First().task_type_id,
+            TypeName = cronTaskTypes.First().name
+        };
+
+        StateHasChanged();
+    }
+
+    private async Task OnConfirmationChange(CronTaskViewModel item)
+    {
+        isVisible = false;
+        await ConfirmationChanged.InvokeAsync(item);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        cronTaskTypes = await cronTaskStorage.GetCronTaskTypes();
+    }
+} 

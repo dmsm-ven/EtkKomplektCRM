@@ -32,12 +32,12 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-md-@(updateProgressSteps.Any() ? "8" : "12")">
+    <div class="col-md-@(updateProgressSteps.Any() ? "6" : "12")">
         <LoadedPriceListDisplayer></LoadedPriceListDisplayer>
     </div>
     @if (updateProgressSteps.Any())
     {
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div id="update-status">
                 @foreach (var step in updateProgressSteps)
                 {
@@ -76,9 +76,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        websiteManufacturers = (await manufacturers.GetManufacturers())
-            .Select(m => m.name)
-            .ToList();
+        websiteManufacturers = (await manufacturers.GetManufacturers()).Select(m => m.name).ToList();
 
         priceListManager.OnPriceListLoaded += () => StateHasChanged();
     }
@@ -89,7 +87,10 @@
         {
             updateProgressSteps.Clear();
             inProgress = true;
+
             StateHasChanged();
+
+            await Task.Delay(TimeSpan.FromSeconds(1));
 
             var progress = new Progress<string>((msg) =>
             {

@@ -4,6 +4,7 @@
 @inject ISettingStorage settings
 @inject IToastService toasts
 @inject UserLogger logger
+@inject NavigationManager navManager
 @attribute [Authorize]
 
 @if (item == null)
@@ -12,34 +13,42 @@
 }
 else
 {
-    <div class="row my-2">
-        <div class="mx-auto d-block image-select-container" style="max-width: 400px; max-height: 200px; border: 2px dashed #c0c0c0;">
-            <img src="@item.Image" class="rounded image" @onclick="@(e => imageSelectDialog.Show())" style="width: 100%; height: 100%;"/>
-        </div>
-    </div>
-
     <div class="row justify-content-center">
         <div class="col-md-4 col-sm-12">
-            <form>
-                <div class="form-group">
-                    <label for="guid">GUID</label>
-                    <select class="form-control">
-                        <option value="">Выбрать</option>
-                        @foreach (var attributeGuid in guidList)
-                        {
-                            <option selected="@(attributeGuid == item.Guid)" value="@attributeGuid">@attributeGuid</option>
-                        }
-                    </select>
+            <EditForm OnValidSubmit="ValidSubmit" Model="item">
+                <DataAnnotationsValidator />
+                <div class="row my-2">   
+                    <ValidationMessage For="() => item.Image" />
+                    <div class="mx-auto d-block image-select-container m-1 p-1">                    
+                        <img src="@item.Image" class="rounded image"
+                             @onclick="@(e => imageSelectDialog.Show())"
+                             style="width: 100%; height: 100%;" />
+                    </div>
+                </div>
+
+                <div class=" form-group">
+                            <label for="guid-select">GUID</label>
+                            <select class="form-control" @bind="item.Guid" required id="guid-select">
+                                <option value="">Выбрать</option>
+                                @foreach (var attributeGuid in guidList)
+                                                        {
+                                <option selected="@(attributeGuid == item.Guid)"
+                                        disabled="@(alreadyUsedGuids.Contains(attributeGuid) && attributeGuid != item.Guid)"
+                                        value="@attributeGuid">
+                                    @(((alreadyUsedGuids.Contains(attributeGuid) && attributeGuid != item.Guid) ? "занят " : "") +  @attributeGuid)
+                                </option>
+                                                        }
+                            </select>
                 </div>
 
                 <div class="form-group">
                     <label for="title">Заголовок</label>
-                    <input type="text" @bind="@item.Title" id="title" class="form-control" />
+                    <input type="text" @bind="@item.Title" id="title" class="form-control" required />
                 </div>
 
                 <div class="form-group">
                     <label for="group_name">Группа</label>
-                    <input type="text" list="group-name" class="form-control" @bind="item.GroupName" />
+                    <input type="text" list="group-name" class="form-control" @bind="item.GroupName" required />
                     <datalist id="group-name">
                         @foreach (var groupName in groupNames)
                         {
@@ -50,11 +59,10 @@ else
 
                 <div class="form-group">
                     <label for="content-type">Тип прайс-листа</label>
-                    <select class="form-control" @onchange="@(e => item.PriceListType = (PriceListType)(int)e.Value)" id="content-type">
-                        <option value="">Выбрать</option>
+                    <select class="form-control" @bind="item.PriceListTypeId" id="content-type" required>
                         @foreach (var ct in contentTypeNames)
                         {
-                            <option selected="@(ct.id == (int)item.PriceListType)" value="@ct.id">@ct.name</option>
+                            <option selected="@(ct.id == item.PriceListTypeId)" value="@ct.id">@ct.name</option>
                         }
                     </select>
                 </div>
@@ -107,26 +115,47 @@ else
                     <textarea type="text" @bind="@item.Description" id="description" class="form-control" style="height: 60px;" />
                 </div>
 
-                <div class="form-group">
-                    <button class="btn btn-success" @onclick="SaveData">
-                        <span class="oi oi-check"></span>
-                        @buttonActionName
-                    </button>
+                <div class="form-row my-4">
+                    @if (createNew == false)
+                    {
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-danger mx-2" @onclick="@(e => deleteDialog.Show())">
+                            <span class="oi oi-x"></span>
+                            Удалить данный шаблон
+                        </button>
+                    </div>
+                    }
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-success mx-2">
+                            <span class="oi oi-check"></span>
+                            @buttonActionName
+                        </button>
+                    </div>
+
+
                 </div>
-            </form>
+            </EditForm>
         </div>
     </div>
 
     <FtpFileSelectDialog @ref="imageSelectDialog"
                          InitialFolder="/image/price-list-templates"
+                         InitialFileName="@item.Image"
                          OnChange="ImageFileChanged"
                          Title="Выбор изображения" />
+
+    <DeleteConfirmDialog ConfirmationChanged="DeleteConfirmChanged" 
+                         @ref="deleteDialog" 
+                         ConfirmationMessage="@(() => "Удалить данный шаблон описания для прайс-листа ?")"
+                         ConfirmationTitle="Подтвердите удаление"/>
 }
+
 
 @code {
     [Parameter] public string TemplateGuid { get; set; } = string.Empty;
 
     FtpFileSelectDialog imageSelectDialog;
+    DeleteConfirmDialog deleteDialog;
 
     PriceListTemplateItemViewModel item;
 
@@ -134,6 +163,7 @@ else
     List<PriceListTemplateContentTypeEntity> contentTypeNames;
     List<string> groupNames;
     List<string> guidList;
+    List<string> alreadyUsedGuids;
 
     string remoteUriCredentialsLogin, remoteUriCredentialsPassword;
     string buttonActionName => string.IsNullOrWhiteSpace(TemplateGuid) ? "Создать" : "Сохранить изменения";
@@ -152,7 +182,7 @@ else
                 GroupName = entity.group_name,
                 Image = entity.image,
                 Nds = entity.nds,
-                PriceListType = (PriceListType)entity.content_type_id,
+                PriceListTypeId = entity.content_type_id,
                 RemoteUrl = entity.remote_uri,
                 RemoteUrlMethodId = entity.remote_uri_method_id,
                 RemoteUrlMethodName = entity.remote_uri_method_name
@@ -162,6 +192,7 @@ else
         }
         else
         {
+            TemplateGuid = string.Empty;
             item = new PriceListTemplateItemViewModel(TemplateGuid);
             createNew = true;
         }
@@ -169,14 +200,19 @@ else
         remoteUriLoadMethods = await templateStorage.GetPricelistTemplateRemoteLoadMethods();
         contentTypeNames = await templateStorage.GetPriceListTemplateContentTypes();
         groupNames = await templateStorage.GetPriceListTemplatGroupNames();
+        alreadyUsedGuids = (await templateStorage.GetPriceListTemplates()).Select(t => t.id).ToList();
 
         guidList = typeof(IPriceListTemplate).Assembly.GetTypes()
             .Select(type => type.GetCustomAttributes(typeof(PriceListTemplateGuidAttribute), false)
             .OfType<PriceListTemplateGuidAttribute>().FirstOrDefault())
             .Where(a => a != null)
             .Select(a => a.Guid)
-            .OrderBy(g => g)
+            .OrderBy(g => g == item.Guid ? 0 : 1)
+            .ThenBy(g => alreadyUsedGuids.Contains(g) ? 1 : 0)
+            .ThenBy(g => g)
             .ToList();
+
+
     }
 
     private async Task LoadMethodChanged(string id)
@@ -197,6 +233,15 @@ else
         }
     }
 
+    private async Task SaveCredentialsToSettingsIfNeed()
+    {
+        if (Equals(item.RemoteUrlMethodName, "HttpGetWithCredentials"))
+        {
+            await settings.SetValue<string>($"price-list-template-credentials-{TemplateGuid}-login", remoteUriCredentialsLogin);
+            await settings.SetValue<string>($"price-list-template-credentials-{TemplateGuid}-password", remoteUriCredentialsPassword);
+        }
+    }
+
     private async Task ImageFileChanged(string selectedFilePath)
     {
         if (selectedFilePath != null)
@@ -206,7 +251,7 @@ else
         }
     }
 
-    private async Task SaveData()
+    private async Task ValidSubmit()
     {
         var entity = new PriceListTemplateEntity()
         {
@@ -218,18 +263,20 @@ else
             nds = item.Nds,
             group_name = item.GroupName,
             remote_uri = item.RemoteUrl,
-            remote_uri_method_id = item.RemoteUrlMethodId,
-            content_type_id = (int)item.PriceListType
+            remote_uri_method_id = !string.IsNullOrWhiteSpace(item.RemoteUrl) ? item.RemoteUrlMethodId : null,
+            content_type_id = item.PriceListTypeId
         };
 
         if (createNew)
         {
-            await SaveChanges(entity);
+            await CreateNewTemplate(entity);
         }
         else
         {
-            await CreateNewTemplate(entity);
+            await SaveChanges(entity);
         }
+
+        await SaveCredentialsToSettingsIfNeed();
     }
 
     private async Task SaveChanges(PriceListTemplateEntity entity)
@@ -254,11 +301,24 @@ else
             await templateStorage.CreatePriceList(entity);
             toasts.ShowInfo("Шаблон добавлен", item.Title);
             await logger.Write(LogEntryGroupName.TemplateUpdate, "Шаблон создан", $"Добавление шаблона '{item.Title}' ({item.Guid})");
+            navManager.NavigateTo("/load-price-list");
         }
         catch (Exception ex)
         {
             toasts.ShowInfo("Ошибка создания" + ex.Message, item.Title);
             await logger.Write(LogEntryGroupName.TemplateUpdate, "Ошибка создания", $"Ошибка добавления шаблона '{item.Title}' ({item.Guid}). {ex.Message}");
+        }
+    }
+
+    private async Task DeleteConfirmChanged(bool dialogResult)
+    {
+        if(dialogResult == true)
+        {
+            await templateStorage.DeletePriceList(item.Guid);
+
+            await logger.Write(LogEntryGroupName.TemplateUpdate, "Удаление шаблон", $"Шаблон '{item.Title}' ({item.Guid}) удален");
+            toasts.ShowInfo(item.Title, "Шаблон удален");
+            navManager.NavigateTo("/load-price-list");
         }
     }
 }

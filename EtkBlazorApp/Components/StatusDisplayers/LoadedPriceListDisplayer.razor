@@ -8,8 +8,8 @@
     @if (priceListManager.LoadedFiles.Count > 1)
     {
     <div>
-        <i class="fas fa-trash remove-loaded-price-list" title="Удалить все загруженные прайс-листы"
-           @onclick="RemoveAll"></i>
+        <span class="oi oi-trash" title="Удалить все загруженные прайс-листы" @onclick="RemoveAll"></span>
+        Удалить все загруженные прайс-листы
     </div>
         <hr />
     }
@@ -18,8 +18,9 @@
     {
 <div class="display-item">
     <div style="width: auto; display: inline-block;">
-            <i class="fas fa-trash remove-loaded-price-list" title="Удалить загруженный прайс-лист"
-               @onclick="@(e => priceListManager.RemovePriceList(data))"></i>
+        <span class="oi oi-trash" 
+              @onclick="@(e => priceListManager.RemovePriceList(data))" 
+              title="Удалить прайс-лист из загруженных"></span>
     </div>
     <div style="width: auto; display: inline-block;">
         <img class="brand-template-list-logo" src="@(data.TemplateDescription.image)" title="@data.TemplateDescription.title" />
@@ -66,8 +67,7 @@
         height: auto;
         margin: auto 4px;
         padding: 2px;
-        border: 2px solid #a8c2c3;
-        border-radius: 4px;
+        border: 1px solid #e0c7d6;
         vertical-align: bottom;
     }
 

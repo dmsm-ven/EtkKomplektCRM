@@ -2,10 +2,10 @@
 @attribute [Authorize(Roles = "Administrator, Manager")]
 @inject PriceListManager priceListManager
 @inject UserLogger logger
+@inject NavigationManager navManager
 @inject RemoteTemplateFileLoaderFactory remoteTemplateFileLoaderFactory
 @inject ITemplateStorage templateStorage
 @inject IToastService toast
-@using System.Threading
 
 <div class="my-2" style="margin-left: -15px; margin-right: -15px;">
     @if (isFileUploading)
@@ -55,20 +55,17 @@
     </div>
 
     <AuthorizeView Roles="Administrator">
-        <div class="d-inline">
-            <a class="btn btn-outline-primary" href="/price-list/new">
+        <div class="d-inline px-2">
+            <button class="btn btn-outline-primary mx-1" 
+                    @onclick="@(e => navManager.NavigateTo($"/price-list/new"))">
                 <span class="oi oi-plus"></span>
-            </a>
-            @if (selectedTemplate != null)
-            { 
-                <a class="btn btn-outline-primary">
-                    <span class="oi oi-minus"></span>
-                </a>
+            </button>
 
-                <a class="btn btn-outline-primary" href="/price-list/edit/@(selectedTemplate?.Guid)">
-                    <span class="oi oi-pencil"></span>
-                </a>
-            }
+            <button class="btn btn-outline-primary mx-1" 
+                    disabled="@(selectedTemplate == null)"
+                    @onclick="@(e => navManager.NavigateTo($"/price-list/edit/{selectedTemplate?.Guid}"))">
+                <span class="oi oi-pencil"></span>
+            </button>
         </div>
     </AuthorizeView>
 </div>
@@ -89,27 +86,24 @@
 <div class="row my-2">
     <div class="col-md-12">
         <h4>@selectedTemplate.Title</h4>
-        @if ((selectedTemplate.PriceListType == PriceListType.Price || selectedTemplate.PriceListType == PriceListType.Both))
-        {
-        if (selectedTemplate.Nds)
+        @if (selectedTemplate.Nds)
         {
         <strong style="color: red; margin-right: 10px;">+ НДС | </strong>
         }
         <strong>Наценка: </strong>
-        if (editingTemplate == selectedTemplate)
+        @if (editingTemplate == selectedTemplate)
         {
-        <input type="number" style="display: inline; width: 80px;" class="form-control mx-2" @bind="editingTemplate.Discount" />
-        <button class="btn btn-outline-success" @onclick="SaveTemplateDiscount">
-            <span class="oi oi-circle-check" style="font-size: 16px;"></span>
-        </button>
+            <input type="number" style="display: inline; width: 80px;" class="form-control mx-2" @bind="editingTemplate.Discount" />
+            <button class="btn btn-outline-success" @onclick="SaveTemplateDiscount">
+                <span class="oi oi-circle-check" style="font-size: 16px;"></span>
+            </button>
         }
         else
         {
-        <strong style="color: red;">@(selectedTemplate.Discount.ToString("G29"))%</strong>
-        <button class="btn btn-sm btn-outline-success mx-2" @onclick="(e => editingTemplate = selectedTemplate)">
-            <span class="oi oi-pencil"></span>
-        </button>
-        }
+            <strong style="color: red;">@(selectedTemplate.Discount.ToString("G29"))%</strong>
+            <button class="btn btn-sm btn-outline-success mx-2" @onclick="(e => editingTemplate = selectedTemplate)">
+                <span class="oi oi-pencil"></span>
+            </button>
         }
     </div>
     @if(!string.IsNullOrWhiteSpace(selectedTemplate.Description))
@@ -126,7 +120,7 @@
 @code
 {
     const int MAX_UPLOAD_FILE_SIZE = 15_000_000; // 15 мб
-    const int UPLOAD_BUFFER_SIZE = 64_000; // 32 кб
+    const int UPLOAD_BUFFER_SIZE = 64_000; // 64 кб
 
     Dictionary<string, List<PriceListTemplateItemViewModel>> templates = null;
     Dictionary<string, List<PriceListTemplateItemViewModel>> filteredTemplates;
@@ -152,8 +146,8 @@
                 Discount = t.discount,
                 GroupName = t.group_name,
                 Image = t.image,
-                PriceListType = (PriceListType)t.content_type_id,
                 RemoteUrl = t.remote_uri,
+                RemoteUrlMethodName = t.remote_uri_method_name,
                 Title = t.title,
                 Nds = t.nds
             })

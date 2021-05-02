@@ -101,9 +101,9 @@ else
 </div>
 
 @code {
-
     [Parameter] public string TemplateGuid { get; set; }
 
+    PriceLine selectedPriceLine = null;
     List<PriceLine> source = new List<PriceLine>();
     List<PriceLine> priceLines = new List<PriceLine>();
 
@@ -153,7 +153,7 @@ else
                 .ToDictionary(i => i.Key, j => j.Count());
         }
     }
-    
+
     private async Task SearchSkuOnWebsite(string tag, string searchString)
     {
         if (string.IsNullOrWhiteSpace(searchString)) { return; }
@@ -169,6 +169,13 @@ else
         }
 
         await js.InvokeVoidAsync("open", searchUri, "_blank");
+    }
+
+    private void RemoveSelectedPriceLine()
+    {
+        source.Remove(selectedPriceLine);
+        priceLines.Remove(selectedPriceLine);
+        manager.PriceLines.Remove(selectedPriceLine);
     }
 
     private void ApplyManufacturerFilter(string manufacturer)
