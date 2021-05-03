@@ -29,9 +29,10 @@ namespace EtkBlazorApp.BL
             this.priceListManager = priceListManager;
         }
 
-        public async Task<string> Create(bool inStock, bool hasEan)
+        public async Task<string> Create(IEnumerable<int> selectedTemplateIds, bool inStock, bool hasEan)
         {
-            var templateSource = (await templateStorage.GetPrikatTemplates()).Where(t => t.enabled);
+            var templateSource = (await templateStorage.GetPrikatTemplates())
+                .Where(t => selectedTemplateIds.Contains(t.manufacturer_id));
 
             string fileName = Path.GetTempPath() + $"prikat_{DateTime.Now.ToShortDateString().Replace(".", "_")}.csv";
             await Task.Run(async () =>

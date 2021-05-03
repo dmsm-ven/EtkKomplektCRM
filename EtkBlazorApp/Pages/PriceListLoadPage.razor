@@ -11,10 +11,10 @@
     @if (isFileUploading)
     {
         <h3>Загрузка файла на сервер</h3>
-        <BootstrapProgressBar CurrentProgress="@uploadPercent">
+        <BootstrapProgressBar CurrentProgress="@uploadProgress.Value.Percent">
             <LabelText>
                 <span class="justify-content-center d-flex position-absolute w-100">
-                    @($"{uploadPercent}% ({ readedBytes / 1000 } кб из {currentFileTotalLength / 1000 } кб)")
+                    @($"{uploadProgress.Value.Percent}% ({ uploadProgress.Value.ReadedKb } кб из {uploadProgress.Value.TotalKb } кб)")
                 </span>
             </LabelText>
         </BootstrapProgressBar>
@@ -130,9 +130,7 @@
     bool isIntermediateProgress = false;
     bool isFileUploading = false;
     bool isBusy => isIntermediateProgress || isFileUploading;
-    int uploadPercent = 0;
-    int readedBytes = 0;
-    int currentFileTotalLength;
+    FileLoadProgress? uploadProgress;
 
     string searchPhrase;
     bool filterHasUri;
@@ -164,30 +162,19 @@
         if (!InvalidateFileSize(e.File.Size)) { return; }
 
         isFileUploading = true;
-        uploadPercent = 0;
-        readedBytes = 0;
-        currentFileTotalLength = (int)e.File.Size;
 
-        var bytes = new byte[currentFileTotalLength];
-        using (var uploadStream = e.File.OpenReadStream(MAX_UPLOAD_FILE_SIZE))
+        var indicator = new Progress<FileLoadProgress>(v => { uploadProgress = v; StateHasChanged(); });
+        uploadProgress = FileLoadProgress.Started;
+
+        using (var ms = await e.File.OpenReadStream(MAX_UPLOAD_FILE_SIZE).ToMemoryStreamWithProgress(UPLOAD_BUFFER_SIZE, (int)e.File.Size, indicator))
         {
-            while ((readedBytes += await uploadStream.ReadAsync(bytes, readedBytes, Math.Min(UPLOAD_BUFFER_SIZE, currentFileTotalLength - readedBytes))) < currentFileTotalLength)
-            {
-                uploadPercent = (int)(((double)readedBytes / bytes.Length) * 100);
-                StateHasChanged();
-            }
-        }
+            isFileUploading = false;
+            StateHasChanged();
 
-        isFileUploading = false;
-        StateHasChanged();
-
-        using (var ms = new MemoryStream(bytes))
-        {
             await LoadTemplateFromStream(ms, e.File.Name);
         }
 
-        bytes = null;
-        e = null;
+        uploadProgress = null;
     }
 
     private async Task LoadRemoteUriTemplate()

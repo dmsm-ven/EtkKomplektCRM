@@ -31,9 +31,15 @@ else
             }
         </td>
         <td>@User.CreatingDate</td>
-        <td>@User.LastLoginDateTime</td>
+        <td>@(User.LastLoginDateTime.HasValue ? User.LastLoginDateTime.ToString() : "")</td>
         <td>
-            @if (changePasswordActive && GlobalSelectedUser == User)
+            @if (hasChanges)
+            {
+                <button class="btn btn-success btn-sm" @onclick="SaveChanges">
+                    <span class="oi oi-check"></span>
+                </button>
+            }
+            else if (changePasswordActive && GlobalSelectedUser == User)
             {
                 <input type="password" class="form-control" @bind="User.Password" />
             }
@@ -41,14 +47,6 @@ else
             {
                 <button class="btn btn-secondary btn-sm" @onclick="@(e => changePasswordActive = true)">
                     <span class="oi oi-pencil"></span>
-                </button>
-            }
-        </td>
-        <td>
-            @if (hasChanges)
-            {
-                <button class="btn btn-success btn-sm" @onclick="SaveChanges">
-                    <span class="oi oi-check"></span>
                 </button>
             }
         </td>

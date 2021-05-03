@@ -1,6 +1,50 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+.prikat-table .manufacturer-name {
+    font-size: 15px;
+    font-weight: bold;
+    font-family: monospace;
+    margin: auto;
+}
+
+.prikat-table .prikat-price-example-row {
+    border-bottom: 2px solid black;
+}
+.prikat-table .disabled-row{
+    opacity: 0.6;
+}
+
+.prikat-table select {
+    display: inline-block;
+    border: none;
+    padding-right: 8px;
+    width: auto;
+}
+
+.prikat-table td {
+    vertical-align: middle;
+}
+.prikat-table td:nth-child(n+2), .prikat-table th:nth-child(n+2) {
+    padding: 3px 10px;
+    width: 20%;
+}
+
+    .prikat-table td:nth-child(n+3), .prikat-table th:nth-child(n+3) {
+        text-align: right;
+    }
+
+.prikat-table input {
+    border: none;
+    padding-right: 8px;
+    text-align: right;
+}
+
+.prikat-table .form-control:hover {
+    border: 1px solid gray;
+    transition: 100ms;
+}
+
 #guid-select option {
     color: blue;
 }
@@ -279,6 +323,13 @@ input[type='radio'], input[type='checkbox'] {
     right: 20px;
     top: 10px;
     color: red;
+}
+
+.product-item .view-counter oi {
+    color: royalblue;
+    font-size: 24px;
+    top: 20px;
+    padding-right: 4px;
 }
 
 .product-item .discount-info {

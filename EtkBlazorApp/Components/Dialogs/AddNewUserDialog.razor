@@ -26,7 +26,7 @@
                         <div class="form-group">
                             <label for="group">Группа</label>
                             <select class="form-control" @bind="newUser.GroupId" id="group">
-                                <option value="">Выберите группу</option>
+                                <option value="0">Выберите группу</option>
                                 @foreach (var g in groups)
                                 {
                                     <option value="@g.user_group_id">@g.name</option>
@@ -62,7 +62,7 @@
     {
         isVisible = true;
 
-        newUser = new AppUser();
+        newUser = new AppUser() { CreatingDate = DateTime.Now , IsEnabled = true};
 
         StateHasChanged();
     }

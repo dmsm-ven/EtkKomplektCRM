@@ -10,7 +10,7 @@ namespace EtkBlazorApp.DataAccess.Entity
         public string login { get; set; }
         public string password { get; set; }
         public DateTime creation_date { get; set; }
-        public DateTime last_login_date { get; set; }
+        public DateTime? last_login_date { get; set; }
         
         public bool status { get; set; }
         public string ip { get; set; }

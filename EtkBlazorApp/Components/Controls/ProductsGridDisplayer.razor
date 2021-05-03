@@ -11,13 +11,22 @@ else
             @foreach (var product in Products.Take(MaxDisplayCount))
             {
             <div class="col-md-3 product-item">
-                @if (product.Price != decimal.Zero)
+                @if (ShowPrice && product.Price != decimal.Zero)
                 {
                     <p class="product-price">@product.Price.ToString("C0")</p>
                 }
                 @if (ShowDiscountLabel && product.DiscountPercent.HasValue)
                 {
-                    <p class="product-price discount-info">@product.DiscountedPrice.Value.ToString("P0")</p>
+                    <p class="product-price discount-info">-@product.DiscountPercent.Value.ToString("P0")</p>
+                }
+                @if (ShowViewCounter)
+                {
+                <p class="product-price view-counter">
+
+                    <span class="oi oi-eye"></span>
+                    @product.NumberOfViews
+                </p>
+                    
                 }
                 <a href="@product.ProductIdUri" target="_blank">
                     <div class="product-item-inner shadow">
@@ -39,9 +48,10 @@ else
 
 @code {
 
-    [Parameter] public int MaxDisplayCount { get; set; } = 1;
-
     [Parameter] public List<ProductViewModel> Products { get; set; }
 
+    [Parameter] public int MaxDisplayCount { get; set; } = 4;
+    [Parameter] public bool ShowPrice { get; set; } = true;
     [Parameter] public bool ShowDiscountLabel { get; set; } = false;
+    [Parameter] public bool ShowViewCounter { get; set; } = false;
 }

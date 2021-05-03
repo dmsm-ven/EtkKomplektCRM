@@ -30,7 +30,7 @@ namespace EtkBlazorApp
             {
                 if(DiscountedPrice.HasValue && Price != decimal.Zero)
                 {
-                    return (double)Math.Round(DiscountedPrice.Value / Price * 100, 2);
+                    return (1d - (double)Math.Round(DiscountedPrice.Value / Price, 2));
                 }
                 return null;
             }

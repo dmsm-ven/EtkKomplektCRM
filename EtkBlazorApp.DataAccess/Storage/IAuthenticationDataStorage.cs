@@ -80,8 +80,8 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task AddUser(AppUserEntity user)
         {
-            string sql = "INSERT INTO etk_app_user (login, password, ip, user_group_id, status) VALUES " + 
-                         "(@login, MD5(@password), @ip, @group_id, '1')";
+            string sql = "INSERT INTO etk_app_user (login, password, ip, user_group_id, status) VALUES " +
+                         "(@login, MD5(@password), @ip, @user_group_id, '1')";
             await database.SaveData<dynamic>(sql, user);
 
         }

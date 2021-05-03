@@ -74,11 +74,11 @@ namespace EtkBlazorApp.DataAccess
             var sb = new StringBuilder()
                 .AppendLine("SELECT p.*, d.name as name, m.name as manufacturer, sp.price as discount_price")
                 .AppendLine("FROM oc_product p")
+                .AppendLine("JOIN oc_product_special sp ON p.product_id = sp.product_id")
                 .AppendLine("JOIN oc_product_description d ON p.product_id = d.product_id")
                 .AppendLine("JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id")
-                .AppendLine("JOIN oc_product_special sp ON p.product_id = sp.product_id")
-                .AppendLine("WHERE p.status = 1")
-                .AppendLine("ORDER BY Round(sp.price / p.price, 4) DESC")
+                .AppendLine("WHERE p.status = 1 AND (NOW() BETWEEN sp.date_start AND sp.date_end)")
+                .AppendLine("ORDER BY Round(sp.price / p.price, 4)")
                 .AppendLine("LIMIT @Limit");
 
             string sql = sb.ToString();

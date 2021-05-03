@@ -23,30 +23,34 @@ else
         }
         else
         {
-            <div class="row" style="margin-bottom: 20px;">
-                <div class="col-md-4">
-                    <button class="btn btn-info" 
-                            style="width: 100%;" @onclick="(() => hideSettingsBox = !hideSettingsBox)">Настройки выгрузки</button>
+            <div class="row my-3">
+                <div class="col-md-3">
+                    <button class="btn btn-info w-100" @onclick="(() => showSettingsBox = !showSettingsBox)">
+                        <span class="oi oi-cog px-1"></span>
+                        @(!showSettingsBox ? "Показать меню настроек" : "Скрыть меню настроек")
+                    </button>
                 </div>
-                <div class="col-md-8">
-                    <button type="button" class="btn btn-primary" 
-                            style="width: 100%;" @onclick="GetReport" disabled="@reportButtonDisabled">Скачать выгрузку</button>
+                <div class="col-md-3">
+                    <button class="btn btn-info w-100 mx-2" @onclick="@(e => ShowPriceExample = !ShowPriceExample)">
+                        <span class="oi oi-info px-1"></span>
+                        @(!ShowPriceExample ? "Показать тестовые цены" : "Скрыть тестовые цены")
+                    </button>
+                    @if (ShowPriceExample)
+                    {
+                        <input type="number" class="form-control mx-2 my-1 justify-content-center" name="example-price" @bind-value="ExamplePrice" />
+                    }
+                </div>
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-primary w-100" @onclick="GetReport" disabled="@reportButtonDisabled">
+                        <span class="oi oi-spreadsheet px-1"></span>
+                        Скачать выгрузку
+                    </button>
                 </div>
             </div>
 
-            <div class="form-inline">
-                <input class="form-check-input" style="margin-left: 2px;"
-                       type="checkbox" @onchange="@((e) => ShowPriceExample = (bool)e.Value)">
-                <label class="mx-2">Показать пример цен</label>
-                @if (ShowPriceExample)
-                {
-                    <label class="mx-2" style="margin-left: auto!important;">Тестовая цена</label>
-                    <input type="number" 
-                           style="display: inline; margin: 2px; max-width: 100px; margin-left: 2px;" 
-                           class="form-control" name="example-price" @bind-value="ExamplePrice" />
-                }
-            </div>
-            <ul class="list-group" hidden="@hideSettingsBox">
+
+
+            <ul class="list-group" hidden="@(!showSettingsBox)">
                 <li class="list-group-item">
                     <input class="form-check-input" type="checkbox"
                            checked="@reportSettingsHasStock"
@@ -63,10 +67,15 @@ else
         }
 
         <div class="table-responsive">
-            <table class="table">
+            <table class="table prikat-table">
                 <thead class="thead-etk">
                     <tr>
-                        <th></th>
+                        <th width="5%">
+                            <input type="checkbox"
+                                   style="display: inline-block;  margin: 2px 6px; vertical-align: middle;"
+                                   checked="@uncheckAllState"
+                                   @onchange="HeaderCheckAll" />
+                        </th>
                         <th>Производитель</th>
                         <th>Закупочная цена<br /><small>(наценка к цене от сайта)</small></th>
                         <th>Рекомендуемая цена<br /><small>(наценка к закупочной цене)</small></th>
@@ -92,12 +101,15 @@ else
     List<PrikatManufacturerDiscountViewModel> itemsSource;
     List<PrikatManufacturerDiscountViewModel> orderedSource => itemsSource.OrderByDescending(t => t.IsChecked).ToList();
 
-    public bool ShowPriceExample { get; set; }
+    public bool ShowPriceExample { get; set; } = false;
     public decimal ExamplePrice { get; set; } = 1000;
+
+    bool uncheckAllState = false;
     bool reportSettingsHasStock = false;
     bool reportSettingsHasEan = false;
-    bool hideSettingsBox = true;
+    bool showSettingsBox = false;
     bool inProgress = false;
+
     bool reportButtonDisabled => itemsSource == null || itemsSource.All(m => m.IsChecked == false);
 
     protected override async Task OnInitializedAsync()
@@ -126,7 +138,8 @@ else
 
         try
         {
-            filePath = await ReportManager.Prikat.Create(reportSettingsHasStock, reportSettingsHasEan);
+            var selectedIds = itemsSource.Where(item => item.IsChecked).Select(item => item.Manufacturer_id);
+            filePath = await ReportManager.Prikat.Create(selectedIds, reportSettingsHasStock, reportSettingsHasEan);
             await js.InvokeAsync<object>("saveAsFile", Path.GetFileName(filePath), Convert.ToBase64String(File.ReadAllBytes(filePath)));
             await logger.Write(LogEntryGroupName.Prikat, "Создан", "Выгрузка для ВсеИнструменты создана");
         }
@@ -151,6 +164,18 @@ else
     {
         reportSettingsHasEan = (bool)e.Value;
         await settingStorage.SetValue<bool>("prikat-export-has-ean", reportSettingsHasEan);
+    }
+
+    private void HeaderCheckAll(ChangeEventArgs e)
+    {
+        uncheckAllState = !uncheckAllState;
+
+        foreach (var item in itemsSource)
+        {
+            item.IsChecked = uncheckAllState && new[] { item.Discount1, item.Discount2 }.Any(d => d != decimal.Zero);
+        }
+
+        StateHasChanged();
     }
 
     private async Task DiscountChanged(PrikatManufacturerDiscountViewModel vmItem)

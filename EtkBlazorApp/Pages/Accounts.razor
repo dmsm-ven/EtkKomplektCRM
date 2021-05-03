@@ -7,9 +7,9 @@
 
 <h3>Учетные записи</h3>
 
-<div class="row p-1 m-2">
+<div class="row p-1">
     <div class="btn-group">
-        <button class="btn btn-info mx-2" @onclick="@(e => addNewDialog.Show())">
+        <button class="btn btn-info" @onclick="@(e => addNewDialog.Show())">
             <span class="oi oi-person"></span>
             Добавить
         </button>
@@ -17,7 +17,7 @@
         @if (selectedUser != null)
         {
         <button class="btn btn-danger mx-2"
-                disabled="@(selectedUser == null)"
+                disabled="@(selectedUser == null || selectedUser == loginedUser)"
                 @onclick="@(e => deleteDialog.Show())">
             <span class="oi oi-trash"></span>
             Удалить
@@ -26,7 +26,7 @@
     </div>
 </div>
 
-<div class="row p-1 m-2">
+<div class="row p-1">
     <div class="table-responsive">
         <table class="table users-table table-hover table-borderless">
             <thead class="thead-etk">
@@ -53,7 +53,8 @@
                         <AppUserDisplayItem User="@item" 
                                      Groups="@groups" 
                                      OnItemSelect="@(e => selectedUser = item)"
-                                     OnSaveChanges="@(e => UpdateUser(item))" />
+                                     OnSaveChanges="@(e => UpdateUser(item))">
+                        </AppUserDisplayItem>
                     </CascadingValue>
                     }
                 }
@@ -73,6 +74,8 @@
     AddNewUserDialog addNewDialog;
 
     List<AppUserGroupEntity> groups;
+
+    AppUser loginedUser = null;
     List<AppUser> users = null;
     public AppUser selectedUser { get; set; }
 
@@ -90,6 +93,10 @@
             AllowedIp = u.ip
         }).ToList();
         groups = await userStorage.GetUserGroups();
+
+        string loginedUserName = (await stateProvider.GetAuthenticationStateAsync()).User.Identity.Name;
+        loginedUser = users.Single(u => u.Login == loginedUserName);
+
     }
 
     private async Task UpdateUser(AppUser user)
@@ -132,7 +139,7 @@
         {
             login = newUser.Login,
             password = newUser.Password,
-            group_name = newUser.GroupName,
+            user_group_id = newUser.GroupId,
             ip = newUser.AllowedIp
         };
 
