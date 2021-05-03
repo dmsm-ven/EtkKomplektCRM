@@ -39,6 +39,7 @@ namespace EtkBlazorApp
             
             services.AddTransient<IDatabaseAccess, EtkDatabaseDapperAccess>();
             services.AddTransient<IProductStorage, ProductStorage>();
+            services.AddTransient<IProductUpdateService, ProductUpdateService>();
             services.AddTransient<ITemplateStorage, TemplateStorage>();
             services.AddTransient<IOrderStorage, OrderStorage>();
             services.AddTransient<IManufacturerStorage, ManufacturerStorage>();

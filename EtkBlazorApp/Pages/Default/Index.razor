@@ -4,44 +4,47 @@
 <h2>Последние добавленные товары</h2>
 <ProductsGridDisplayer Products="@lastAddedProducts" />
 
-<h2>Товары с наибольшей скидкой</h2>
-<ProductsGridDisplayer Products="@productsWithMaxDiscount" ShowDiscountLabel="true" />
+<h2>Наиболее продаваемые товары за месяц по сумме</h2>
+<ProductsGridDisplayer Products="@bestsellersBySum"  />
 
-<h2>Наиболее просматриваемые товары</h2>
-<ProductsGridDisplayer Products="@mostViewedProducts" ShowViewCounter="true" ShowPrice="false" />
+<h2>Наиболее продаваемые товары за месяц по количеству</h2>
+<ProductsGridDisplayer Products="@bestsellersByQuantity"  />
 
 
 @code {
 
     List<ProductViewModel> lastAddedProducts = null;
-    List<ProductViewModel> productsWithMaxDiscount = null;
-    List<ProductViewModel> mostViewedProducts = null;
+    List<ProductViewModel> bestsellersBySum = null;
+    List<ProductViewModel> bestsellersByQuantity = null;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        StateHasChanged();
-        lastAddedProducts = ConvertToViewModels(await productsStorage.GetLastAddedProducts(4));
+        if (firstRender)
+        {
+            lastAddedProducts = ConvertToViewModels(await productsStorage.GetLastAddedProducts(4));
+            StateHasChanged();
 
-        StateHasChanged();
-        productsWithMaxDiscount = ConvertToViewModels(await productsStorage.GetProductsWithMaxDiscount(4));
+            bestsellersBySum = ConvertToViewModels(await productsStorage.GetBestsellersBySum(4, 30));
+            StateHasChanged();
 
-        StateHasChanged();
-        mostViewedProducts = ConvertToViewModels(await productsStorage.GetMostViewedProducts(4));
+            bestsellersByQuantity = ConvertToViewModels(await productsStorage.GetBestsellersByQuantity(4, 30));
+            StateHasChanged();
+        }
     }
 
     private List<ProductViewModel> ConvertToViewModels(IEnumerable<ProductEntity> dbEntities)
     {
-            var viewItems = dbEntities
-            .Select(entity => new ProductViewModel()
-             {
-                 Image = entity.image,
-                 Name = HttpUtility.HtmlDecode(entity.name) ?? string.Empty,
-                 Manufacturer = entity.manufacturer,
-                 Price = entity.price,
-                 Id = entity.product_id,
-                 NumberOfViews = entity.viewed,
-                 DiscountedPrice = entity.discount_price
-             }).ToList();
+        var viewItems = dbEntities
+        .Select(entity => new ProductViewModel()
+        {
+            Image = entity.image,
+            Name = HttpUtility.HtmlDecode(entity.name) ?? string.Empty,
+            Manufacturer = entity.manufacturer,
+            Price = entity.price,
+            Id = entity.product_id,
+            NumberOfViews = entity.viewed,
+            DiscountedPrice = entity.discount_price
+        }).ToList();
 
         return viewItems;
     }

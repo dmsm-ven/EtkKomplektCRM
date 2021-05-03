@@ -13,16 +13,19 @@ namespace EtkBlazorApp.BL
         readonly string CurrencyPlusUri = "https://etk-komplekt.ru/cron/currency_plus.php";
 
         private readonly IProductStorage productsStorage;
+        private readonly IProductUpdateService productUpdateService;
         private readonly ISettingStorage settingStorage;
         private readonly IManufacturerStorage manufacturerStorage;
         private readonly IDatabaseProductCorrelator correlator;
 
-        public UpdateManager(IProductStorage productsStorage, 
+        public UpdateManager(IProductStorage productsStorage,
+            IProductUpdateService productUpdateService,
             ISettingStorage settingStorage,
             IManufacturerStorage manufacturerStorage, 
             IDatabaseProductCorrelator correlator)
         {
             this.productsStorage = productsStorage;
+            this.productUpdateService = productUpdateService;
             this.settingStorage = settingStorage;
             this.manufacturerStorage = manufacturerStorage;
             this.correlator = correlator;
@@ -47,15 +50,15 @@ namespace EtkBlazorApp.BL
             var data = await correlator.GetCorrelationData(products, priceLines);
 
             progress?.Report("Обновление цен etk-komplekt.ru");
-            await productsStorage.UpdateProductsPrice(data);
+            await productUpdateService.UpdateProductsPrice(data);
 
             progress?.Report("Обновление остатков etk-komplekt.ru");
-            await productsStorage.UpdateProductsStock(data, clearStockBeforeUpdate);
+            await productUpdateService.UpdateProductsStock(data, clearStockBeforeUpdate);
 
             if (data.Any(data => data.stock_partner != null))
             {
                 progress?.Report("Обновление дополнительных складов etk-komplekt.ru");
-                await productsStorage.UpdateProductsStockPartner(data);
+                await productUpdateService.UpdateProductsStockPartner(data);
             }
 
             if (data.Any(line => line.price.HasValue) && data.Any(pl => pl.currency_code != "RUB"))

@@ -2,6 +2,7 @@
 @page "/edit-product/keyword/{Keyword}";
 
 @inject IProductStorage productStorage
+@inject IProductUpdateService productUpdateService
 @inject ISettingStorage settingStorage
 @inject ICurrencyChecker currencyChecker
 @inject IToastService toasts
@@ -176,7 +177,7 @@
             stock_status = editedProduct.StockStatus
         };
 
-        await productStorage.UpdateDirectProduct(entity);
+        await productUpdateService.UpdateDirectProduct(entity);
 
         string pUri = "https://etk-komplekt.ru/index.php?route=product/product&product_id=" + editedProduct.Id;
         await log.Write(LogEntryGroupName.ProductUpdate, "Товар обновлен", $"{HttpUtility.HtmlDecode(editedProduct.Name)} ({pUri})");
