@@ -12,5 +12,6 @@ namespace EtkBlazorApp
         public bool IsChecked { get; set; }
         public string Manufacturer { get; set; }
         public string CurrencyCode { get; set; }
+
     }
 }

@@ -29,6 +29,13 @@ namespace EtkBlazorApp.BL
             this.priceListManager = priceListManager;
         }
 
+        /// <summary>
+        /// Создает отчет для ВсеИнструменты для выбранных брендов
+        /// </summary>
+        /// <param name="selectedTemplateIds"></param>
+        /// <param name="inStock"></param>
+        /// <param name="hasEan"></param>
+        /// <returns>Ссылку на созданный файле на сервере</returns>
         public async Task<string> Create(IEnumerable<int> selectedTemplateIds, bool inStock, bool hasEan)
         {
             var templateSource = (await templateStorage.GetPrikatTemplates())

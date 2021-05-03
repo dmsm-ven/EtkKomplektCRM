@@ -53,17 +53,10 @@
 
 @code {
 
-    [Parameter]
-    public PrikatManufacturerDiscountViewModel Item { get; set; }
-
-    [Parameter]
-    public EventCallback ItemChanged { get; set; }
-
-    [CascadingParameter]
-    public bool ShowPriceExample { get; set; }
-
-    [CascadingParameter]
-    public decimal ExamplePrice { get; set; }
+    [Parameter] public PrikatManufacturerDiscountViewModel Item { get; set; }
+    [Parameter] public EventCallback ItemChanged { get; set; }
+    [CascadingParameter] public bool ShowPriceExample { get; set; }
+    [CascadingParameter] public decimal ExamplePrice { get; set; }
 
     List<string> currencyCodeList = new List<string>(Enum.GetNames(typeof(CurrencyType)));
 
@@ -77,6 +70,12 @@
 
         string part1 = $"{ExamplePrice.ToString("G29")} {sign1} {Math.Abs(Item.Discount1).ToString("G29")}% = <strong>{priceExample1.ToString("G29")}<strong>";
         string part2 = $"{priceExample1.ToString("G29")} {sign2} {Math.Abs(Item.Discount2).ToString("G29")}% = <strong>{priceExample2.ToString("G29")}</strong>";
+
+        if(priceExample2 < priceExample1)
+        {
+            part2 = part2.Replace("<strong>", "<strong style=\"color: red;\">");
+        }
+
         if(index == 1) { return (MarkupString)part1; }
         if(index == 2) { return (MarkupString)part2; }
 

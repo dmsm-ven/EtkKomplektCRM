@@ -9,21 +9,18 @@ namespace EtkBlazorApp.DataAccess
 {
     public interface ITemplateStorage
     {
-
         Task CreatePriceList(PriceListTemplateEntity data);
         Task UpdatePriceList(PriceListTemplateEntity data);
         Task<List<PriceListTemplateEntity>> GetPriceListTemplates();
         Task<PriceListTemplateEntity> GetPriceListTemplateById(string guid);
         Task DeletePriceList(string guid);
         Task ChangePriceListTemplateDiscount(string guid, decimal discount);
-
         Task<List<PriceListTemplateRemoteUriMethodEntity>> GetPricelistTemplateRemoteLoadMethods();
         Task<List<PriceListTemplateContentTypeEntity>> GetPriceListTemplateContentTypes();
         Task<List<string>> GetPriceListTemplatGroupNames();
 
         Task<List<PrikatReportTemplateEntity>> GetPrikatTemplates();
-        Task SavePrikatTemplate(PrikatReportTemplateEntity template);
-        
+        Task SavePrikatTemplate(PrikatReportTemplateEntity template);       
     }
 
     public class TemplateStorage : ITemplateStorage
@@ -60,8 +57,9 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task<List<PrikatReportTemplateEntity>> GetPrikatTemplates()
         {
-            string sql = "SELECT t.*, m.name as manufacturer_name FROM etk_app_prikat_template t " +
-                         "LEFT JOIN oc_manufacturer m ON t.manufacturer_id = m.manufacturer_id";
+            string sql = "SELECT t.*, m.manufacturer_id as manufacturer_id,  m.name as manufacturer_name " +
+                         "FROM etk_app_prikat_template t " +
+                         "RIGHT JOIN oc_manufacturer m ON t.manufacturer_id = m.manufacturer_id";
 
             var templatesInfo = await database.LoadData<PrikatReportTemplateEntity, dynamic>(sql, new { });
             return templatesInfo;
@@ -69,12 +67,20 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task SavePrikatTemplate(PrikatReportTemplateEntity template)
         {
-            string sql = "UPDATE etk_app_prikat_template " +
-                         "SET discount1 = @discount1, " +
-                             "discount2 = @discount2, " +
-                             "enabled = @enabled, " +
-                             "currency_code = @currency_code " +
-                         "WHERE manufacturer_id = @manufacturer_id";
+            var sb = new StringBuilder();
+
+            sb
+                .AppendLine("INSERT INTO etk_app_prikat_template")
+                .AppendLine("(manufacturer_id, enabled, discount1, discount2, currency_code)")
+                .AppendLine("VALUES")
+                .AppendLine("(@manufacturer_id, @enabled, @discount1, @discount2, @currency_code)")
+                .AppendLine("ON DUPLICATE KEY UPDATE")
+                .AppendLine("enabled = @enabled,")
+                .AppendLine("discount1 = @discount1,")
+                .AppendLine("discount2 = @discount2,")
+                .AppendLine("currency_code = @currency_code");
+
+            string sql = sb.ToString();
 
             await database.SaveData(sql, template);
         }

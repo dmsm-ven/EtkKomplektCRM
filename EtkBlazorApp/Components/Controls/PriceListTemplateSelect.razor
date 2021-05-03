@@ -4,17 +4,16 @@
     <option value="">Выбрать шаблон прайс-листа</option>
     @foreach (var plt in priceListTemplates)
     {
-        <option selected="@(Guid.Equals(plt.id))"
-                class="@(!string.IsNullOrWhiteSpace(plt.remote_uri) ? "bg-has-file" : "")"
-                value="&starf; @plt.id">
-            @plt.title
-        </option>
+<option selected="@(Guid.Equals(plt.id))"
+        value="@plt.id">
+        @((MarkupString)(string.IsNullOrWhiteSpace(plt.remote_uri) ? "&star;" : "&starf;")) &nbsp; @plt.title
+</option>
     }
 </select>
 
 @code {
         List<PriceListTemplateEntity> priceListTemplates = null;
-
+        
         [Parameter]
         public string Guid
     {
