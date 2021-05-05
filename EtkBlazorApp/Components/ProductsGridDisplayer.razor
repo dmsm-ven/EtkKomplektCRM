@@ -6,7 +6,11 @@
 }
 else
 {
-    <div class="container">
+    @if (!string.IsNullOrWhiteSpace(Title) && Products.Take(MaxDisplayCount).Any())
+    {
+        <h1>@Title</h1>
+    }
+    <div class="container product-grid">
         <div class="row">
             @foreach (var product in Products.Take(MaxDisplayCount))
             {
@@ -49,8 +53,10 @@ else
 @code {
 
     [Parameter] public List<ProductViewModel> Products { get; set; }
-
     [Parameter] public int MaxDisplayCount { get; set; } = 4;
+    [Parameter] public string Title { get; set; } = string.Empty;
+
+
     [Parameter] public bool ShowPrice { get; set; } = true;
     [Parameter] public bool ShowDiscountLabel { get; set; } = false;
     [Parameter] public bool ShowViewCounter { get; set; } = false;

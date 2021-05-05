@@ -77,7 +77,7 @@ namespace EtkBlazorApp.DataAccess
 
             var sql = sb.ToString();
 
-            await database.SaveData<dynamic>(sql, new { });
+            await database.ExecuteQuery<dynamic>(sql, new { });
         }
 
         public async Task UpdateProductsStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate)
@@ -114,7 +114,7 @@ namespace EtkBlazorApp.DataAccess
 
             string sql = sb.ToString();
 
-            await database.SaveData<dynamic>(sql, new { });
+            await database.ExecuteQuery<dynamic>(sql, new { });
         }
 
         public async Task UpdateProductsStockPartner(List<ProductUpdateData> data)
@@ -143,31 +143,29 @@ namespace EtkBlazorApp.DataAccess
 
                 var sql = sb.ToString().Trim('\r', '\n', ',');
 
-                await database.SaveData<dynamic>(sql, new { });
+                await database.ExecuteQuery<dynamic>(sql, new { });
             }
         }
 
         public async Task UpdateDirectProduct(ProductEntity product)
         {
-            var sb = new StringBuilder()
-                .AppendLine("UPDATE oc_product")
-                .AppendLine("SET price = @price,")
-                .AppendLine("base_price = @base_price,")
-                .AppendLine("base_currency_code = @base_currency_code,")
-                .AppendLine("quantity = @quantity,")
-                .AppendLine("stock_status_id = (SELECT stock_status_id FROM oc_stock_status WHERE name = @stock_status),")
-                .AppendLine("date_modified = NOW()")
-                .AppendLine("WHERE product_id = @product_id");
+            var sql = @"UPDATE oc_product
+                        SET price = @price,
+                            base_price = @base_price,
+                            base_currency_code = @base_currency_code,
+                            quantity = @quantity,
+                            stock_status_id = (SELECT stock_status_id FROM oc_stock_status WHERE name = @stock_status),
+                            date_modified = NOW()
+                            WHERE product_id = @product_id";
 
-            string sql = sb.ToString();
-            await database.SaveData(sql, product);
+            await database.ExecuteQuery(sql, product);
         }
 
         private async Task<List<int>> GetDiscountProductIds()
         {
             var sql = "SELECT DISTINCT product_id FROM oc_product_special WHERE NOW() BETWEEN date_start AND date_end";
-            var list = (await database.LoadData<int, dynamic>(sql, new { })).ToList();
-            return list;
+            var ids = await database.GetList<int>(sql);
+            return ids;
         }
     }
 }

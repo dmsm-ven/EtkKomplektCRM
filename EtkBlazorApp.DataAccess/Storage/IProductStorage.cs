@@ -35,53 +35,33 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task<List<ProductEntity>> GetLastAddedProducts(int count)
         {
-            int MAX_LIMIT_PER_REQUEST = 100;
+                var sql = @"SELECT p.*, d.name as name, m.name as manufacturer
+                            FROM oc_product p
+                            JOIN oc_product_description d ON p.product_id = d.product_id
+                            JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id
+                            WHERE p.status = 1
+                            ORDER BY p.product_id DESC
+                            LIMIT @Limit";
 
-            if (count > MAX_LIMIT_PER_REQUEST)
-            {
-                throw new ArgumentOutOfRangeException($"Превышено максимальное количество запрашиваемых товаров ({MAX_LIMIT_PER_REQUEST})");
-            }
+            var products = await database.GetList<ProductEntity, dynamic>(sql, new { Limit = count });
 
-            var sb = new StringBuilder()
-                .AppendLine("SELECT p.*, d.name as name, m.name as manufacturer")
-                .AppendLine("FROM oc_product p")
-                .AppendLine("JOIN oc_product_description d ON p.product_id = d.product_id")
-                .AppendLine("JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id")
-                .AppendLine("WHERE p.status = 1")
-                .AppendLine("ORDER BY p.product_id DESC")
-                .AppendLine("LIMIT @Limit");
-
-            string sql = sb.ToString();
-
-            var products = await database.LoadData<ProductEntity, dynamic>(sql, new { Limit = count });
-
-            return products.ToList();
+            return products;
         }
 
         public async Task<List<ProductEntity>> GetProductsWithMaxDiscount(int count)
-        {
-            int MAX_LIMIT_PER_REQUEST = 100;
+        {          
+            var sql = @"SELECT p.*, d.name as name, m.name as manufacturer, sp.price as discount_price
+                        FROM oc_product p
+                        JOIN oc_product_special sp ON p.product_id = sp.product_id
+                        JOIN oc_product_description d ON p.product_id = d.product_id
+                        JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id
+                        WHERE p.status = 1 AND (NOW() BETWEEN sp.date_start AND sp.date_end)
+                        ORDER BY Round(sp.price / p.price, 4)
+                        LIMIT @Limit";
 
-            if (count > MAX_LIMIT_PER_REQUEST)
-            {
-                throw new ArgumentOutOfRangeException($"Превышено максимальное количество запрашиваемых товаров ({MAX_LIMIT_PER_REQUEST})");
-            }
+            var products = await database.GetList<ProductEntity, dynamic>(sql, new { Limit = count });
 
-            var sb = new StringBuilder()
-                .AppendLine("SELECT p.*, d.name as name, m.name as manufacturer, sp.price as discount_price")
-                .AppendLine("FROM oc_product p")
-                .AppendLine("JOIN oc_product_special sp ON p.product_id = sp.product_id")
-                .AppendLine("JOIN oc_product_description d ON p.product_id = d.product_id")
-                .AppendLine("JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id")
-                .AppendLine("WHERE p.status = 1 AND (NOW() BETWEEN sp.date_start AND sp.date_end)")
-                .AppendLine("ORDER BY Round(sp.price / p.price, 4)")
-                .AppendLine("LIMIT @Limit");
-
-            string sql = sb.ToString();
-
-            var products = await database.LoadData<ProductEntity, dynamic>(sql, new { Limit = count });
-
-            return products.ToList();
+            return products;
         }
 
         public Task<List<ProductEntity>> GetBestsellersBySum(int count, int maxOrderOldInDays)
@@ -94,27 +74,34 @@ namespace EtkBlazorApp.DataAccess
             return GetBestsellersByField(count, maxOrderOldInDays, nameof(OrderDetailsEntity.quantity));
         }
 
-        public Task<ProductEntity> GetProductByModel(string model) => GetSingleProductOrNullByField(nameof(model), model);
+        public Task<ProductEntity> GetProductByModel(string model)
+        {
+            return GetSingleProductOrNullByField(nameof(model), model);
+        }
 
-        public Task<ProductEntity> GetProductBySku(string sku) => GetSingleProductOrNullByField(nameof(sku), sku);
+        public Task<ProductEntity> GetProductBySku(string sku)
+        {
+            return GetSingleProductOrNullByField(nameof(sku), sku);
+        }
 
         public async Task<ProductEntity> GetProductByKeyword(string keyword)
         {
-            string sql = "SELECT p.product_id, d.name, p.sku, p.model, p.quantity, p.price, p.base_price, p.base_currency_code, p.date_modified, s.name as stock_status, url.keyword as keyword " +
-                         "\nFROM oc_product p " +
-                         "\nJOIN oc_url_alias url ON url.query = CONCAT('product_id=', p.product_id) " +
-                         "\nLEFT JOIN oc_product_description d ON p.product_id = d.product_id " +
-                         "\nLEFT JOIN oc_stock_status s ON s.stock_status_id = p.stock_status_id " +
-                         "\nWHERE url.keyword = @keyword " +
-                         "\nLIMIT 1";
+            string sql = @"SELECT p.*, d.name as name, s.name as stock_status, url.keyword as keyword
+                           FROM oc_product p
+                           JOIN oc_url_alias url ON url.query = CONCAT('product_id=', p.product_id)
+                           JOIN oc_product_description d ON p.product_id = d.product_id
+                           JOIN oc_stock_status s ON s.stock_status_id = p.stock_status_id
+                           WHERE url.keyword = @keyword
+                           LIMIT 1";
 
-            var product = (await database.LoadData<ProductEntity, dynamic>(sql, new { keyword })).FirstOrDefault();
+            var product = await database.GetFirstOrDefault<ProductEntity, dynamic>(sql, new { keyword });
+
             return product;
         }
       
         public async Task<List<StockStatusEntity>> GetStockStatuses()
         {
-            var data = await database.LoadData<StockStatusEntity, dynamic>("SELECT * FROM oc_stock_status", new { });
+            var data = await database.GetList<StockStatusEntity>("SELECT * FROM oc_stock_status");
             return data;
         }
 
@@ -143,7 +130,7 @@ namespace EtkBlazorApp.DataAccess
 
             string sql = sb.ToString().Trim();
 
-            var products = await database.LoadData<ProductEntity, dynamic>(sql, new { });
+            var products = await database.GetList<ProductEntity>(sql);
 
             return products;
 
@@ -156,43 +143,36 @@ namespace EtkBlazorApp.DataAccess
 
         private async Task<List<ProductEntity>> GetBestsellersByField(int count, int maxOrderOldInDays, string columnOrder)
         {
-            int MAX_LIMIT_PER_REQUEST = 100;
-
-            if (count > MAX_LIMIT_PER_REQUEST)
-            {
-                throw new ArgumentOutOfRangeException($"Превышено максимальное количество запрашиваемых товаров ({MAX_LIMIT_PER_REQUEST})");
-            }
-
             var sb = new StringBuilder()
-            .AppendLine("SELECT p.*, d.name as name, m.name as manufacturer")
-            .AppendLine("FROM oc_product p")
-            .AppendLine("LEFT JOIN oc_order_product op ON op.product_id = p.product_id")
-            .AppendLine("LEFT JOIN oc_order o ON o.order_id = op.order_id")
-            .AppendLine("JOIN oc_product_description d ON p.product_id = d.product_id")
-            .AppendLine("JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id")
-            .AppendLine("WHERE DATE(o.date_added) > DATE_ADD(NOW(), INTERVAL @maxOrderOldInDays DAY)")
-            .AppendLine("GROUP BY op.product_id")
-            .AppendLine($"ORDER BY SUM(op.{columnOrder}) DESC")
-            .AppendLine("LIMIT @Limit");
+                .AppendLine("SELECT p.*, d.name as name, m.name as manufacturer")
+                .AppendLine("FROM oc_product p")
+                .AppendLine("LEFT JOIN oc_order_product op ON op.product_id = p.product_id")
+                .AppendLine("LEFT JOIN oc_order o ON o.order_id = op.order_id")
+                .AppendLine("JOIN oc_product_description d ON p.product_id = d.product_id")
+                .AppendLine("JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id")
+                .AppendLine("WHERE DATE(o.date_added) > DATE_ADD(NOW(), INTERVAL @maxOrderOldInDays DAY)")
+                .AppendLine("GROUP BY op.product_id")
+                .AppendLine($"ORDER BY SUM(op.{columnOrder}) DESC")
+                .AppendLine("LIMIT @Limit");
 
             string sql = sb.ToString();
 
-            var products = await database.LoadData<ProductEntity, dynamic>(sql, new { Limit = count, maxOrderOldInDays = -maxOrderOldInDays });
+            var products = await database.GetList<ProductEntity, dynamic>(sql, new { Limit = count, maxOrderOldInDays = -maxOrderOldInDays });
 
-            return products.ToList();
+            return products;
         }
 
         private async Task<ProductEntity> GetSingleProductOrNullByField(string fieldName, string fieldValue)
         {
-            string sql = "SELECT p.*, url.keyword as keyword " +
-                         "FROM oc_product p " +
-                         "JOIN oc_url_alias url ON url.query = CONCAT('product_id=', p.product_id) " +
-                         $"WHERE p.{fieldName} = @fieldValue ";
+            string sql = @$"SELECT p.*, url.keyword as keyword
+                         FROM oc_product p
+                         JOIN oc_url_alias url ON url.query = CONCAT('product_id=', p.product_id)
+                         WHERE p.{fieldName} = @fieldValue";
 
             try
             {
-                var product = (await database.LoadData<ProductEntity, dynamic>(sql, new { fieldValue })).SingleOrDefault();
-                return product;
+                var products = await database.GetList<ProductEntity, dynamic>(sql, new { fieldValue });
+                return products.SingleOrDefault();
             }
             catch (InvalidOperationException)
             {

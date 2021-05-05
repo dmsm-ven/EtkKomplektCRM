@@ -9,6 +9,7 @@ namespace EtkBlazorApp.DataAccess
     public interface IOrderStorage
     {
         Task<List<OrderEntity>> GetLastOrders(int limit, string number = null, string city = null, string client = null);
+        Task<OrderEntity> GetLastOrder();
         Task<List<OrderDetailsEntity>> GetOrderDetails(int orderId);
         Task<OrderEntity> GetOrderById(int orderId);
         Task<List<OrderEntity>> GetLinkedOrders(OrderEntity order);
@@ -54,25 +55,25 @@ namespace EtkBlazorApp.DataAccess
             }
             
             sb
-                .AppendLine("ORDER BY o.date_added DESC")
+                .AppendLine("ORDER BY o.order_id DESC")
                 .AppendLine("LIMIT @takeCount");
 
             string sql = sb.ToString().Trim();
 
             dynamic parameter = new { takeCount, order_id = $"%{order_id}%", payment_city = $"%{payment_city}%", shipping_firstname = $"%{shipping_firstname}%" };
-            var orders = await database.LoadData<OrderEntity, dynamic>(sql, parameter);
+            var orders = await database.GetList<OrderEntity, dynamic>(sql, parameter);
 
             return orders;
         }
 
         public async Task<List<OrderDetailsEntity>> GetOrderDetails(int orderId)
         {
-            string sql = "SELECT op.*, p.sku as sku, m.name as manufacturer FROM oc_order_product op " +
-                "LEFT JOIN oc_product p ON op.product_id = p.product_id " +
-                "LEFT JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id " +
-                "WHERE order_id = @Id";
+            string sql = @"SELECT op.*, p.sku as sku, m.name as manufacturer FROM oc_order_product op
+                           LEFT JOIN oc_product p ON op.product_id = p.product_id
+                           LEFT JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id
+                           WHERE order_id = @Id";
 
-            var details = await database.LoadData<OrderDetailsEntity, dynamic>(sql, new { Id = orderId });
+            var details = await database.GetList<OrderDetailsEntity, dynamic>(sql, new { Id = orderId });
 
             return details.ToList();
         }
@@ -81,20 +82,27 @@ namespace EtkBlazorApp.DataAccess
         {
             var sql = "SELECT * FROM oc_order WHERE order_id = @orderId";
 
-            var order = (await database.LoadData<OrderEntity, dynamic>(sql, new { orderId })).FirstOrDefault();
+            var order = (await database.GetList<OrderEntity, dynamic>(sql, new { orderId })).FirstOrDefault();
 
             return order;
         }
 
         public async Task<List<OrderEntity>> GetLinkedOrders(OrderEntity order)
         {
-            var sql = "SELECT * FROM oc_order " +
-                      "WHERE (email = @email OR telephone = @telephone OR ip = @ip) " +
-                      "ORDER BY date_added DESC";
+            var sql = @"SELECT * FROM oc_order
+                      WHERE (email = @email OR telephone = @telephone OR ip = @ip)
+                      ORDER BY date_added DESC";
 
-            var linkedOrders = await database.LoadData<OrderEntity, OrderEntity>(sql, order);
+            var linkedOrders = await database.GetList<OrderEntity, OrderEntity>(sql, order);
 
             return linkedOrders;
+        }
+
+        public async Task<OrderEntity> GetLastOrder()
+        {
+            var sql = "SELECT * FROM oc_order ORDER BY order_id DESC LIMIT 1";
+            var order = await database.GetFirstOrDefault<OrderEntity>(sql);
+            return order;
         }
     }
 }

@@ -1,14 +1,11 @@
 ﻿@inject IProductStorage productsStorage
 @page "/"
 
-<h2>Последние добавленные товары</h2>
-<ProductsGridDisplayer Products="@lastAddedProducts" />
+<ProductsGridDisplayer Products="@lastAddedProducts" Title ="Последние добавленные товары"/>
 
-<h2>Наиболее продаваемые товары за месяц по сумме</h2>
-<ProductsGridDisplayer Products="@bestsellersBySum"  />
+<ProductsGridDisplayer Products="@bestsellersBySum" Title="Наиболее продаваемые (Сумма)" />
 
-<h2>Наиболее продаваемые товары за месяц по количеству</h2>
-<ProductsGridDisplayer Products="@bestsellersByQuantity"  />
+<ProductsGridDisplayer Products="@bestsellersByQuantity" Title="Наиболее продаваемые (Количество)" />
 
 
 @code {

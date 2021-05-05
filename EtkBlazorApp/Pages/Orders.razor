@@ -1,9 +1,6 @@
 ﻿@page "/orders"
 @attribute [Authorize(Roles = "Administrator, Manager")]
-@using EtkBlazorApp.DataAccess
-@using System.Web
 @inject IOrderStorage _database
-@inject IToastService toastService
 
 <h3>Заказы</h3>
 
@@ -23,12 +20,7 @@
     <button class="btn btn-primary py-2 px-2 mx-2 my-2" @onclick="@(() => LoadOrders())">Найти</button>
 </div>
 
-@if (orders == null)
-{
-    <LoadingSpinner />
-}
-else
-{
+
     <div class="row">
         <table class="table table-hover orders-table" style="width: 100%">
             <thead class="thead-etk">
@@ -42,23 +34,29 @@ else
                 </tr>
             </thead>
             <tbody>
-                @foreach (var order in orders)
+                @if (orders == null)
                 {
-                    <tr class="@(order == newOrder ? "new-order-row" : string.Empty)">
-                        <td>@order.OrderId</td>
-                        <td>@order.DateTime.ToString("dd.MM.yyyy | HH:mm")</td>
-                        <td>@order.Customer</td>
-                        <td>@order.City</td>
-                        <td>@order.TotalPrice.ToString("C0")</td>
-                        <td><a href="/order/@order.OrderId" target="_blank" class="btn btn-info btn-sm"><i class="oi oi-eye"></i></a></td>
-                    </tr>
+                    <tr colspan="6"><LoadingSpinner /></tr>
+                }
+                else
+                {
+                    @foreach (var order in orders)
+                    {
+                        <tr class="@(order == newOrder ? "new-order-row" : string.Empty)">
+                            <td>@order.OrderId</td>
+                            <td>@order.DateTime.ToString("dd.MM.yyyy | HH:mm")</td>
+                            <td>@order.Customer</td>
+                            <td>@order.City</td>
+                            <td>@order.TotalPrice.ToString("C0")</td>
+                            <td><a href="/order/@order.OrderId" target="_blank" class="btn btn-info btn-sm"><i class="oi oi-eye"></i></a></td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
     </div>
-}
 
-<EtkBlazorApp.Components.NewOrdersNotificator NewOrderPushed="@ShowNewOrder" RefreshInterval="@TimeSpan.FromSeconds(15)" />
+<EtkBlazorApp.Components.NewOrdersNotificator NewOrderPushed="@ShowNewOrder" />
 
 @code {
     List<OrderViewModel> orders = null;
@@ -70,20 +68,17 @@ else
 
     private void ShowNewOrder(OrderViewModel order)
     {
-        string toastTitle = $"Покупатель: {order.Customer} | Сумма заказа: {order.TotalPrice.ToString("F0")}";
-        string toastBody = $"Получен новый заказ #{order.OrderId}";
-
-        toastService.ShowSuccess(toastTitle, toastBody);
-
         orders.Insert(0, order);
         newOrder = order;
         StateHasChanged();
-        order = null;
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await LoadOrders();
+        if (firstRender)
+        {
+            await LoadOrders();
+        }
     }
 
     private async Task LoadOrders()

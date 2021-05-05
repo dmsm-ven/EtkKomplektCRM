@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System;
 using System.Globalization;
 
 namespace EtkBlazorApp
@@ -55,8 +56,7 @@ namespace EtkBlazorApp
             services.AddSingleton<UpdateManager>();
             services.AddSingleton<OzonSellerManager>();
             services.AddSingleton<PriceListManager>();
-            services.AddSingleton<CronTaskService>();
-          
+            services.AddSingleton<CronTaskService>();          
 
             services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();
             services.AddScoped<UserLogger>();
@@ -93,6 +93,7 @@ namespace EtkBlazorApp
             });
 
             app.ApplicationServices.GetService<CronTaskService>();
+            app.ApplicationServices.GetService<NewOrdersNotificationService>().RefreshInterval = TimeSpan.FromSeconds(5);
 
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("ru-RU");
         }

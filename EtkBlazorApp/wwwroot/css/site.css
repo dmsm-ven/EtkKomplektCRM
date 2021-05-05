@@ -359,18 +359,19 @@ input[type='radio'], input[type='checkbox'] {
 
 
 .new-order-row {
-    animation: highlight-new-order-row-animation 5s;
-    background: green;
-    transition: 2000ms;
+    animation: highlight-new-order-row-animation 60s;
+    animation-timing-function: ease-in;
 }
 
 @keyframes highlight-new-order-row-animation {
     /* You could think of as "step 1" */
     0% {
-        background: orange;
+        color: blue;
+        background: yellow;
     }
     /* You could think of as "step 2" */
     100% {
+        color: inherit;
         background: inherit;
     }
 }

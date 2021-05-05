@@ -65,12 +65,12 @@ namespace EtkBlazorApp.DataAccess
             if (recordExists)
             {
                 string updateQuery = $"UPDATE etk_app_setting SET value = @value WHERE name = @name";
-                await database.SaveData<dynamic>(updateQuery, new { name, value });
+                await database.ExecuteQuery<dynamic>(updateQuery, new { name, value });
             }
             else
             {
                 var insertQuery = $"INSERT INTO etk_app_setting (name, value) VALUES (@name, @value)";
-                await database.SaveData<dynamic>(insertQuery, new { name, value });
+                await database.ExecuteQuery<dynamic>(insertQuery, new { name, value });
             }         
         }
 
@@ -83,26 +83,26 @@ namespace EtkBlazorApp.DataAccess
             if (recordExists)
             {
                 string updateQuery = $"UPDATE etk_app_setting SET value = NOW() WHERE name = @name";
-                await database.SaveData<dynamic>(updateQuery, new { name });
+                await database.ExecuteQuery<dynamic>(updateQuery, new { name });
             }
             else
             {
                 var insertQuery = $"INSERT INTO etk_app_setting (name, value) VALUES (@name, NOW())";
-                await database.SaveData<dynamic>(insertQuery, new { name });
+                await database.ExecuteQuery<dynamic>(insertQuery, new { name });
             }
         }
 
         public async Task SetValue<T>(string name, T value)
-        {
-            var converter = TypeDescriptor.GetConverter(typeof(T));
+        {          
             try
             {
+                var converter = TypeDescriptor.GetConverter(typeof(T));
                 var typeConvertedStringValue = converter.ConvertToInvariantString(value);
                 await SetValue(name, typeConvertedStringValue);
             }
-            catch(Exception ex)
+            catch
             {
-
+                throw;
             }
         }    
     

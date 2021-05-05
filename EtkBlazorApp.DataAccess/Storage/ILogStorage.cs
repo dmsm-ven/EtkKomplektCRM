@@ -23,15 +23,15 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task Write(LogEntryEntity entry)
         {
-            string sql = $"INSERT INTO etk_app_log (user, group_name, date_time, title, message) VALUES " +
-                $"(@{nameof(entry.user)}, @{nameof(entry.group_name)}, @{nameof(entry.date_time)}, @{nameof(entry.title)}, @{nameof(entry.message)})";
+            string sql = @"INSERT INTO etk_app_log (user, group_name, date_time, title, message) VALUES
+                          (@user, @group_name, @date_time, @title, @message)";
 
-            await database.SaveData(sql, entry);
+            await database.ExecuteQuery(sql, entry);
         }
 
         public async Task<List<LogEntryEntity>> GetLogItems(int count, int maxDaysOld)
         {
-            string sql = $"SELECT * FROM etk_app_log ORDER BY date_time DESC LIMIT @limit";
+            string sql = "SELECT * FROM etk_app_log ORDER BY date_time DESC LIMIT @limit";
 
             if (maxDaysOld > 0)
             {
@@ -42,7 +42,7 @@ namespace EtkBlazorApp.DataAccess
             {
                 sql = sql.Insert(sql.IndexOf("ORDER BY"), "WHERE DATE(date_time) = DATE(ADDDATE(NOW(), INTERVAL @maxDaysOld DAY)) ");
             }
-            var data = await database.LoadData<LogEntryEntity, dynamic>(sql, new { limit = count, maxDaysOld });
+            var data = await database.GetList<LogEntryEntity, dynamic>(sql, new { limit = count, maxDaysOld });
             return data.ToList();
         }
     }
