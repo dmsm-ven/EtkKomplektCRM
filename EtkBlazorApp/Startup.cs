@@ -34,21 +34,9 @@ namespace EtkBlazorApp
             services.AddHttpContextAccessor();
 
             //Приложение                        
-            services.AddTransient<IDatabaseProductCorrelator, FullCompareProductCorrelator>();
-            services.AddTransient<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
-            services.AddTransient<IOzonProductCorrelator, SimpleOzonProductCorrelator>();  
-            services.AddTransient<ICompressedFileExtractor, SharpCompressFileExtractor>();            
-            services.AddTransient<IDatabaseAccess, EtkDatabaseDapperAccess>();
-            services.AddTransient<IProductStorage, ProductStorage>();
-            services.AddTransient<IProductUpdateService, ProductUpdateService>();
-            services.AddTransient<IPriceListTemplateStorage, PriceListTemplateStorage>();
-            services.AddTransient<IPrikatTemplateStorage, PrikatTemplateStorage>();
-            services.AddTransient<IOrderStorage, OrderStorage>();
-            services.AddTransient<IManufacturerStorage, ManufacturerStorage>();
-            services.AddTransient<ILogStorage, LogStorage>();
-            services.AddTransient<ISettingStorage, SettingStorage>();
-            services.AddTransient<ICronTaskStorage, CronTaskStorage>();
-            services.AddTransient<IAuthenticationDataStorage, AuthenticationDataStorage>();
+            services.AddTransient<ICompressedFileExtractor, SharpCompressFileExtractor>();
+            ConfigureCorrelators(services);
+            ConfigureDatabase(services);
 
             services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
             services.AddSingleton<RemoteTemplateFileLoaderFactory>();        
@@ -65,6 +53,28 @@ namespace EtkBlazorApp
 
             //Сторонние
             services.AddBlazoredToast();
+        }
+
+        private void ConfigureDatabase(IServiceCollection services)
+        {
+            services.AddTransient<IDatabaseAccess, EtkDatabaseDapperAccess>();
+            services.AddTransient<IProductStorage, ProductStorage>();
+            services.AddTransient<IProductUpdateService, ProductUpdateService>();
+            services.AddTransient<IPriceListTemplateStorage, PriceListTemplateStorage>();
+            services.AddTransient<IPrikatTemplateStorage, PrikatTemplateStorage>();
+            services.AddTransient<IOrderStorage, OrderStorage>();
+            services.AddTransient<IManufacturerStorage, ManufacturerStorage>();
+            services.AddTransient<ILogStorage, LogStorage>();
+            services.AddTransient<ISettingStorage, SettingStorage>();
+            services.AddTransient<ICronTaskStorage, CronTaskStorage>();
+            services.AddTransient<IAuthenticationDataStorage, AuthenticationDataStorage>();
+        }
+
+        private void ConfigureCorrelators(IServiceCollection services)
+        {
+            services.AddTransient<IDatabaseProductCorrelator, FullCompareProductCorrelator>();
+            services.AddTransient<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
+            services.AddTransient<IOzonProductCorrelator, SimpleOzonProductCorrelator>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

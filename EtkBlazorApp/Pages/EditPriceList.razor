@@ -58,23 +58,8 @@ else
             </div>
 
             <div class="form-group">
-                <label for="content-type">Тип прайс-листа</label>
-                <select class="form-control" @bind="item.PriceListTypeId" id="content-type" required>
-                    @foreach (var ct in contentTypeNames)
-                    {
-                        <option selected="@(ct.id == item.PriceListTypeId)" value="@ct.id">@ct.name</option>
-                    }
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="description">Прямая ссылка на скачивание</label>
-                <input type="url" @bind="@item.RemoteUrl" id="remote_url" class="form-control" />
-            </div>
-
-            <div class="form-group">
                 <label for="remote-uri-method">Метод загрузки файла</label>
-                <select class="form-control" @onchange="@(e => LoadMethodChanged(e?.Value.ToString()))" id="remote-uri-method">
+                <select class="form-control" @onchange="LoadMethodChanged" id="remote-uri-method">
                     <option value="">Выбрать</option>
                     @foreach (var method in remoteUriLoadMethods)
                     {
@@ -82,20 +67,6 @@ else
                     }
                 </select>
             </div>
-
-            @if (@showCredentialsBox)
-            {
-                <div class="form-row">
-                    <div class="form-group col-md-6">
-                        <label for="remote-method-login">Логин</label>
-                        <input type="text" class="form-control" id="remote-method-login" @bind="item.Cridentials_Login" />
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label for="remote-method-password">Пароль</label>
-                        <input type="password" class="form-control" id="remote-method-password" @bind="item.Cridentials_Password" />
-                    </div>
-                </div>
-            }
 
             @if (showEmailPatternBox)
             {
@@ -120,16 +91,50 @@ else
                     </div>
                 </div>
             }
+            else if (showCredentialsBox)
+            {
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="remote-method-login">Логин</label>
+                        <input type="text" class="form-control" id="remote-method-login" @bind="item.Cridentials_Login" />
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="remote-method-password">Пароль</label>
+                        <input type="password" class="form-control" id="remote-method-password" @bind="item.Cridentials_Password" />
+                    </div>
+                </div>
+            }
 
-            <div class="form-group">
-                <input type="checkbox" @bind="@item.Nds" id="nds" class="form-check-inline" />
-                <label for="nds">Добавлять к цене НДС</label>
-            </div>
+            @if (item.RemoteUrlMethodId != null && showEmailPatternBox == false)
+            {
+                <div class="form-group">
+                    <label for="description">Прямая ссылка на скачивание</label>
+                    <input type="url" @bind="@item.RemoteUrl" id="remote_url" class="form-control" />
+                </div>
+            }
 
-            <div class="form-group">
-                <label for="discount">Наценка, %</label>
-                <input type="number" @bind="@item.Discount" id="discount" class="form-control" />
-            </div>
+                <div class="form-group">
+                    <label for="content-type">Тип прайс-листа</label>
+                    <select class="form-control" @onchange="ContentTypeChangedChanged" id="content-type" required>
+                        @foreach (var ct in contentTypeNames)
+                        {
+                            <option selected="@(ct.id == item.PriceListTypeId)" value="@ct.id">@ct.name</option>
+                        }
+                    </select>
+                </div>
+            @if (item.PriceListTypeName != "Остатки")
+            {
+
+                <div class="form-group">
+                    <input type="checkbox" @bind="@item.Nds" id="nds" class="form-check-inline" />
+                    <label for="nds">Добавлять к цене НДС</label>
+                </div>
+
+                <div class="form-group">
+                    <label for="discount">Наценка, %</label>
+                    <input type="number" @bind="@item.Discount" id="discount" class="form-control" />
+                </div>
+            }
 
             <div class="form-group">
                 <label for="description">Примечание</label>
@@ -202,6 +207,7 @@ else
                 Image = entity.image,
                 Nds = entity.nds,
                 PriceListTypeId = entity.content_type_id,
+                PriceListTypeName = entity.content_type_name,
                 RemoteUrl = entity.remote_uri,
                 RemoteUrlMethodId = entity.remote_uri_method_id,
                 RemoteUrlMethodName = entity.remote_uri_method_name,
@@ -240,12 +246,23 @@ else
     bool showCredentialsBox => item.RemoteUrlMethodName == "HttpGetWithCredentials";
     bool showEmailPatternBox => item.RemoteUrlMethodName == "EmailAttachment";
 
-    private void LoadMethodChanged(string id)
+    private void LoadMethodChanged(ChangeEventArgs e)
     {
+        string id = e?.Value?.ToString();
         var method = remoteUriLoadMethods.FirstOrDefault(m => m.id.ToString().Equals(id));
         item.RemoteUrlMethodId = method?.id;
         item.RemoteUrlMethodName = method?.name;
     }
+
+    private void ContentTypeChangedChanged(ChangeEventArgs e)
+    {
+        string id = e?.Value?.ToString();
+        var contentType = contentTypeNames.FirstOrDefault(m => m.id.ToString().Equals(id));
+        item.PriceListTypeId = contentType?.id ?? 0;
+        item.PriceListTypeName = contentType?.name;
+    }
+
+
 
     private async Task ImageFileChanged(string selectedFilePath)
     {

@@ -1,5 +1,6 @@
 ﻿using SharpCompress.Archives;
 using SharpCompress.Common;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -19,29 +20,50 @@ namespace EtkBlazorApp.BL
 
 	public class SharpCompressFileExtractor : ICompressedFileExtractor
 	{
-		public async Task<List<string>> UnzipAll(string achiveFile, bool deleteArchive)
+		public async Task<List<string>> UnzipAll(string compressedFile, bool deleteArchive)
 		{
-			if (!File.Exists(achiveFile)) { return new List<string>(); }
+			if (!File.Exists(compressedFile)) { return new List<string>(); }
 
-			string downloadFolder = Path.GetDirectoryName(achiveFile);
-			var archive = SharpCompress.Archives.Rar.RarArchive.Open(achiveFile);
+			List<string> outputFiles = new List<string>();
+			string downloadFolder = Path.GetDirectoryName(compressedFile);
 
-			await Task.Run(() =>
+			using (IArchive archive = CreateProcessor(compressedFile))
 			{
-				foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+				await Task.Run(() =>
 				{
-					entry.WriteToDirectory(downloadFolder, new ExtractionOptions());
-				}
-			});
-			archive.Dispose();
+					foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+					{
+						entry.WriteToDirectory(downloadFolder, new ExtractionOptions() { Overwrite = true, ExtractFullPath = false });
+						outputFiles.Add(Path.Combine(downloadFolder, Path.GetFileName(entry.Key)));
+					}
+				});
 
+			}
+			
 			if (deleteArchive)
 			{
-				File.Delete(achiveFile);
+				
+				File.Delete(compressedFile);
 			}
 
-			var entries = archive.Entries.Select(e => Path.Combine(downloadFolder, e.Key)).ToList();
-			return entries;
+			
+			return outputFiles;
+		}
+
+		private IArchive CreateProcessor(string compressedFile)
+        {
+			if (compressedFile.EndsWith(".zip"))
+			{
+				return SharpCompress.Archives.Zip.ZipArchive.Open(compressedFile);
+			}
+			if (compressedFile.EndsWith(".rar"))
+			{
+				return SharpCompress.Archives.Rar.RarArchive.Open(compressedFile);
+			}
+
+			throw new NotSupportedException("Данный вид архивов не поддерживается");
 		}
 	}
+
+
 }

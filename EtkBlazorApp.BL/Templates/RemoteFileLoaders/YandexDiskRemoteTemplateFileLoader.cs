@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Web;
@@ -10,10 +11,12 @@ namespace EtkBlazorApp.BL
     public class YandexDiskRemoteTemplateFileLoader : IRemoteTemplateFileLoader
     {
         private readonly string remoteUri;
+        private readonly ICompressedFileExtractor zipExtractor;
 
-        internal YandexDiskRemoteTemplateFileLoader(string remoteUri)
+        internal YandexDiskRemoteTemplateFileLoader(string remoteUri, ICompressedFileExtractor zipExtractor)
         {
             this.remoteUri = remoteUri;
+            this.zipExtractor = zipExtractor;
         }
 
         public async Task<RemoteTemplateFileResponse> GetFile()
@@ -32,7 +35,18 @@ namespace EtkBlazorApp.BL
                     var uriQuery = new Uri(HttpUtility.UrlDecode(jsonObject.href)).Query;
                     var fileName = HttpUtility.ParseQueryString(uriQuery)["filename"];
 
-                    return new RemoteTemplateFileResponse(bytes, fileName);
+                    if(fileName.EndsWith(".zip") || fileName.EndsWith(".rar"))
+                    {
+                        var tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + Path.GetExtension(fileName));
+                        File.WriteAllBytes(tempFile, bytes);
+
+                        var extractedFiles = await zipExtractor.UnzipAll(tempFile, deleteArchive: true);
+                        
+                        fileName = extractedFiles.FirstOrDefault();
+                        bytes = File.ReadAllBytes(fileName);
+                    }
+
+                    return new RemoteTemplateFileResponse(bytes, Path.GetFileName(fileName));
                 }
             }
             throw new WebException("Не удалось скачать файл по ссылке: " + remoteUri);

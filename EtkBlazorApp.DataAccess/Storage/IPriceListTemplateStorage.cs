@@ -31,10 +31,11 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task<List<PriceListTemplateEntity>> GetPriceListTemplates()
         {
-            string sql = @"SELECT t.*, ct.name as content_type_name, lm.name as remote_uri_method_name
+            string sql = @"SELECT t.*, ct.name as content_type_name, lm.name as remote_uri_method_name, esc.sender as email_criteria_sender
                           FROM etk_app_price_list_template t
-                          LEFT JOIN etk_app_price_list_template_content_type ct ON t.content_type_id = ct.id
-                          LEFT JOIN etk_app_price_list_template_load_method lm ON t.remote_uri_method_id = lm.id";
+                          JOIN etk_app_price_list_template_content_type ct ON t.content_type_id = ct.id
+                          LEFT JOIN etk_app_price_list_template_load_method lm ON t.remote_uri_method_id = lm.id
+                          LEFT JOIN etk_app_price_list_template_email_search_criteria esc ON t.id = esc.template_guid";
 
             var templatesInfo = await database.GetList<PriceListTemplateEntity, dynamic>(sql, new { });
             return templatesInfo;
@@ -51,7 +52,7 @@ namespace EtkBlazorApp.DataAccess
                                     esc.file_name_pattern as email_criteria_file_name_pattern,
                                     esc.max_age_in_days as email_criteria_max_age_in_days
                           FROM etk_app_price_list_template t
-                          LEFT JOIN etk_app_price_list_template_content_type ct ON t.content_type_id = ct.id
+                          JOIN etk_app_price_list_template_content_type ct ON t.content_type_id = ct.id
                           LEFT JOIN etk_app_price_list_template_load_method lm ON t.remote_uri_method_id = lm.id 
                           LEFT JOIN etk_app_price_list_template_email_search_criteria esc ON t.id = esc.template_guid 
                           LEFT JOIN etk_app_price_list_template_credentials cred ON t.id = cred.template_guid 

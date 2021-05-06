@@ -31,7 +31,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 case "HttpGetWithCredentials":
                     return new HttpGetWithCredentialsRemoteTemplateFileLoader(templateStorage, guid);
                 case "YandexDisk":
-                    return new YandexDiskRemoteTemplateFileLoader(remoteUri);
+                    return new YandexDiskRemoteTemplateFileLoader(remoteUri, zipExtractor);
                 case "EmailAttachment":
                     return new EmailAttachmentRemoteTemplateFileLoader(settings, zipExtractor, templateStorage, guid);
             }
