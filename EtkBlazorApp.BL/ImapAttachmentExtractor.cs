@@ -1,8 +1,7 @@
 ﻿using MailKit;
+using MailKit.Net.Imap;
 using MailKit.Search;
 using MimeKit;
-using SharpCompress.Archives;
-using SharpCompress.Common;
 using System;
 using System.IO;
 using System.Linq;
@@ -12,108 +11,93 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
 {
-    public class ImapAttachmentExtractor
+    public class EmailAttachmentExtractor
     {
-        private readonly string host;
-        private readonly string port;
-        private readonly string login;
-        private readonly string password;
+        private readonly ICompressedFileExtractor extractor;
+        private readonly ImapConnectionData connectionData;
 
-        public ImapAttachmentExtractor(string host, string port, string login, string password)
+        public EmailAttachmentExtractor(ImapConnectionData connectionData, ICompressedFileExtractor extractor)
         {
-            this.host = host;
-            this.port = port;
-            this.login = login;
-            this.password = password;
+            this.connectionData = connectionData;
+            this.extractor = extractor;
         }
 
 		public async Task<bool> CheckConnection()
 		{
-			using (var client = new MailKit.Net.Imap.ImapClient())
+			using (var connection = new MailKit.Net.Imap.ImapClient())
 			{
-				await client.ConnectAsync(host, int.Parse(port), useSsl: true);
-				await client.AuthenticateAsync(new NetworkCredential(login, password));
-				bool isConnected = client.IsAuthenticated;
+				string userName = connectionData.Email.Split('@')[0];
 
-				client.Disconnect(true);
+				await connection.ConnectAsync(connectionData.Host, int.Parse(connectionData.Port), useSsl: true);
+				await connection.AuthenticateAsync(new NetworkCredential(connectionData.Email, connectionData.Password));
 
-				return isConnected;
+				return connection.IsConnected;
 			}
 		}
 
-		/// <summary>
-		/// После работы с файлом его необходимо удалить
-		/// </summary>
-		/// <param name="host"></param>
-		/// <param name="port"></param>
-		/// <param name="login"></param>
-		/// <param name="password"></param>
-		/// <returns>Возращает путь до временного файла или в случае неудачи null</returns>
-		public async Task<string> DownloadLastSymmetronPriceListFromMail(uint maxEmailAgeInDays = 5)
+		public async Task<string> GetLastAttachment(ImapEmailSearchCriteria searchCriteria)
         {
-			string userName = login.Split('@')[0];
+			using (var connection = new MailKit.Net.Imap.ImapClient())
+            {
+				await connection.ConnectAsync(connectionData.Host, int.Parse(connectionData.Port), useSsl: true);
+				await connection.AuthenticateAsync(new NetworkCredential(connectionData.Email, connectionData.Password));
+				await connection.Inbox.OpenAsync(FolderAccess.ReadOnly);
 
-			using (var client = new MailKit.Net.Imap.ImapClient())
-			{
-				await client.ConnectAsync(host, int.Parse(port), useSsl: true);
-				await client.AuthenticateAsync(new NetworkCredential(login, password));
-				await client.Inbox.OpenAsync(FolderAccess.ReadOnly);
-
-				var searchQuery = SearchQuery.SubjectContains("Price Symmetron")
-					.And(SearchQuery.FromContains("price@symmetron.ru"))
-					.And(SearchQuery.DeliveredAfter(DateTime.Now.AddDays(-maxEmailAgeInDays)));
-
-				var searchResult = await client.Inbox.SearchAsync(searchQuery);
-
-				if (searchResult.Any()) 
+				var searchQuery = SearchQuery
+					.FromContains(searchCriteria.Sender)
+					.And(SearchQuery.DeliveredAfter(DateTime.Now.AddDays(-searchCriteria.MaxOldInDays)));
+				if (!string.IsNullOrWhiteSpace(searchCriteria.Subject))
 				{
-					var id = searchResult
-						.Where(item => Regex.IsMatch(client.Inbox.GetMessage(item).Attachments.First().ContentDisposition?.FileName, @"\d+\.rar"))
-						.OrderByDescending(item => item.Id)
-						.FirstOrDefault();
-
-					if (id != default)
-					{
-						var email = await client.Inbox.GetMessageAsync(id);
-						var attachment = email.Attachments.First();
-						var fileName = await SaveAttachmentFile(attachment);
-
-						return fileName;
-					}
+					searchQuery = searchQuery.And(SearchQuery.SubjectContains(searchCriteria.Subject));
 				}
 
-				client.Disconnect(true);
+				var fileName = await DownloadAttachmentFileWithCriteria(searchQuery, searchCriteria.FileNamePattern, connection);
+
+				connection.Disconnect(true);
+
+				return fileName;
+			}
+
+			throw new NotSupportedException();
+        }
+		
+		private async Task<string> DownloadAttachmentFileWithCriteria(BinarySearchQuery searchQuery, string fileNamePattern, ImapClient connection)
+        {
+			var searchResult = await connection.Inbox.SearchAsync(searchQuery);
+
+			if (searchResult.Count == 0)
+			{
+				throw new Exception("Письмо по заданным характеристикам не найдено");
+			}
+
+			var id = searchResult
+				.Where(item => Regex.IsMatch(connection.Inbox.GetMessage(item).Attachments.First().ContentDisposition?.FileName, fileNamePattern))
+				.OrderByDescending(item => item.Id)
+				.FirstOrDefault();
+
+			if (id != default)
+			{
+				var email = await connection.Inbox.GetMessageAsync(id);
+				var attachment = (MimePart)email.Attachments.First();
+
+				var tempPath = Path.Combine(Path.GetTempPath() + attachment.FileName);
+				using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write))
+				{
+					await attachment.Content.DecodeToAsync(fs);
+				}
+
+				if (tempPath.EndsWith(".rar") || tempPath.EndsWith(".zip"))
+				{
+					var files = await extractor.UnzipAll(tempPath, deleteArchive: true);
+					return files.FirstOrDefault();
+				}
+				else
+				{
+					return tempPath;
+				}
 			}
 
 			return null;
 		}
-
-		private async Task<string> SaveAttachmentFile(MimeEntity attachment)
-		{
-			var tempPath = Path.GetTempFileName();
-			var downloadFolder = Path.GetDirectoryName(tempPath);
-
-			using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write))
-			{
-				await ((MimePart)attachment).Content.DecodeToAsync(fs);
-			}
-
-			if (File.Exists(tempPath))
-			{
-				var archive = SharpCompress.Archives.Rar.RarArchive.Open(tempPath);
-				foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-				{
-					entry.WriteToDirectory(downloadFolder, new ExtractionOptions());
-				}
-				archive.Dispose();
-
-				File.Delete(tempPath);
-
-				string filePath = Path.Combine(downloadFolder, archive.Entries.First().Key);
-				return filePath;
-			}
-
-			return null;
-		}				
     }
 }

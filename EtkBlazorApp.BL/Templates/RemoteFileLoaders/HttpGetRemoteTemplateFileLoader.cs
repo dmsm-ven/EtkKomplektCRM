@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
 {
-    public class DefaultRemoteTemplateFileLoader : IRemoteTemplateFileLoader
+    public class HttpGetRemoteTemplateFileLoader : IRemoteTemplateFileLoader
     {
         private readonly string remoteUri;
 
-        internal DefaultRemoteTemplateFileLoader(string remoteUri)
+        internal HttpGetRemoteTemplateFileLoader(string remoteUri)
         {
             this.remoteUri = remoteUri;
         }

@@ -33,24 +33,25 @@ namespace EtkBlazorApp
             //Blazor дополнительные
             services.AddHttpContextAccessor();
 
-            //Приложение              
+            //Приложение                        
             services.AddTransient<IDatabaseProductCorrelator, FullCompareProductCorrelator>();
             services.AddTransient<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
             services.AddTransient<IOzonProductCorrelator, SimpleOzonProductCorrelator>();  
-            
+            services.AddTransient<ICompressedFileExtractor, SharpCompressFileExtractor>();            
             services.AddTransient<IDatabaseAccess, EtkDatabaseDapperAccess>();
             services.AddTransient<IProductStorage, ProductStorage>();
             services.AddTransient<IProductUpdateService, ProductUpdateService>();
-            services.AddTransient<ITemplateStorage, TemplateStorage>();
+            services.AddTransient<IPriceListTemplateStorage, PriceListTemplateStorage>();
+            services.AddTransient<IPrikatTemplateStorage, PrikatTemplateStorage>();
             services.AddTransient<IOrderStorage, OrderStorage>();
             services.AddTransient<IManufacturerStorage, ManufacturerStorage>();
             services.AddTransient<ILogStorage, LogStorage>();
             services.AddTransient<ISettingStorage, SettingStorage>();
             services.AddTransient<ICronTaskStorage, CronTaskStorage>();
             services.AddTransient<IAuthenticationDataStorage, AuthenticationDataStorage>();
-            services.AddTransient<RemoteTemplateFileLoaderFactory>();
 
             services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
+            services.AddSingleton<RemoteTemplateFileLoaderFactory>();        
             services.AddSingleton<SystemEventsLogger>();
             services.AddSingleton<NewOrdersNotificationService>();
             services.AddSingleton<UpdateManager>();

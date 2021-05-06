@@ -7,7 +7,7 @@ namespace EtkBlazorApp.BL
         public PrikatReportGenerator Prikat { get; } 
 
         public ReportManager(ICurrencyChecker currencyCheker, 
-            ITemplateStorage templateStorage,
+            IPrikatTemplateStorage templateStorage,
             IProductStorage productStorage, 
             PriceListManager priceListManager)
         {

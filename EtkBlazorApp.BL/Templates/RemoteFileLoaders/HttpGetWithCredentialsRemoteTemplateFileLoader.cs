@@ -8,24 +8,24 @@ namespace EtkBlazorApp.BL
 {
     public class HttpGetWithCredentialsRemoteTemplateFileLoader : IRemoteTemplateFileLoader
     {
-        private readonly string remoteUri;
+        private readonly IPriceListTemplateStorage templateStorage;
         private readonly string guid;
-        private readonly ISettingStorage settingStorage;
 
-        internal HttpGetWithCredentialsRemoteTemplateFileLoader(string remoteUri, string guid, ISettingStorage settingStorage)
+        internal HttpGetWithCredentialsRemoteTemplateFileLoader(IPriceListTemplateStorage templateStorage, string guid)
         {
-            this.remoteUri = remoteUri;
+            this.templateStorage = templateStorage;
             this.guid = guid;
-            this.settingStorage = settingStorage;
         }
 
         public async Task<RemoteTemplateFileResponse> GetFile()
         {
+            var templateInfo = await templateStorage.GetPriceListTemplateById(guid);
+            string login = templateInfo.credentials_login;
+            string password = templateInfo.credentials_password;
+            string remoteUri = templateInfo.remote_uri;
+
             using (var wc = new WebClient())
             {
-                string login = await settingStorage.GetValue($"price-list-template-credentials-{guid}-login");
-                string password = await settingStorage.GetValue($"price-list-template-credentials-{guid}-password");
-
                 wc.Credentials = new NetworkCredential(login, password);
 
                 var bytes = await Task.Run(() => wc.DownloadData(new Uri(remoteUri)));
@@ -35,8 +35,4 @@ namespace EtkBlazorApp.BL
             }
         }
     }
-
-    
-
-
 }

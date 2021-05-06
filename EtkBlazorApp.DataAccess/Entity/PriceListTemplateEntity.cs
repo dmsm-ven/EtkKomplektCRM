@@ -22,5 +22,13 @@ namespace EtkBlazorApp.DataAccess.Entity
 
         public int content_type_id { get; set; }
         public string content_type_name { get; set; }
+
+        public string email_criteria_subject { get; set; }
+        public string email_criteria_sender { get; set; }
+        public string email_criteria_file_name_pattern { get; set; }
+        public int email_criteria_max_age_in_days { get; set; }
+
+        public string credentials_login { get; set; }
+        public string credentials_password { get; set; }
     }
 }

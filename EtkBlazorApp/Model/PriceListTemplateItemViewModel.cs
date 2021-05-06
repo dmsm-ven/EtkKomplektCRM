@@ -32,8 +32,17 @@ namespace EtkBlazorApp
         public int? RemoteUrlMethodId { get; set; }
         public string RemoteUrlMethodName { get; set; }
 
+        
         public Type Type { get; private set; }
 
+        public string EmailSearchCriteria_Subject { get; set; }
+        public string EmailSearchCriteria_Sender { get; set; }
+        public string EmailSearchCriteria_FileNamePattern { get; set; }
+        public int EmailSearchCriteria_MaxAgeInDays { get; set; }
+
+        public string Cridentials_Login { get; set; }
+        public string Cridentials_Password { get; set; }
+        
         public PriceListTemplateItemViewModel(string guid)
         {
             Guid = guid;

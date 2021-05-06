@@ -14,12 +14,12 @@ namespace EtkBlazorApp.BL
     public class PrikatReportGenerator
     {
         private readonly ICurrencyChecker currencyChecker;
-        private readonly ITemplateStorage templateStorage;
+        private readonly IPrikatTemplateStorage templateStorage;
         private readonly IProductStorage productStorage;
         private readonly PriceListManager priceListManager;
 
-        public PrikatReportGenerator(ICurrencyChecker currencyChecker, 
-            ITemplateStorage templateStorage, 
+        public PrikatReportGenerator(ICurrencyChecker currencyChecker,
+            IPrikatTemplateStorage templateStorage, 
             IProductStorage productStorage, 
             PriceListManager priceListManager)
         {

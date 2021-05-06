@@ -4,7 +4,7 @@
 @inject UserLogger logger
 @inject NavigationManager navManager
 @inject RemoteTemplateFileLoaderFactory remoteTemplateFileLoaderFactory
-@inject ITemplateStorage templateStorage
+@inject IPriceListTemplateStorage templateStorage
 @inject IToastService toast
 
 <div class="my-2" style="margin-left: -15px; margin-right: -15px;">
@@ -28,7 +28,14 @@
 
 <div class="row my-2">    
     <div class="form-group">
-        <button class="btn btn-success" @onclick="LoadRemoteUriTemplate" disabled="@(string.IsNullOrWhiteSpace(selectedTemplate?.RemoteUrl) || isBusy)">
+        <button class="btn btn-success" @onclick="LoadRemoteUriTemplate"
+                disabled="@(!selectedTemplateHasEmailSource || isBusy)">
+            <span class="oi oi-envelope-open"></span>
+            Загрузить из почты
+        </button>
+        <button class="btn btn-success" @onclick="LoadRemoteUriTemplate"
+                disabled="@(string.IsNullOrWhiteSpace(selectedTemplate?.RemoteUrl) || isBusy)">
+            <span class="oi oi-cloud-download"></span>
             Загрузить от поставщика
         </button>
         <InputFile OnChange="UploadSelectedPriceListTemplateFile"
@@ -110,7 +117,7 @@
     {
     <textarea readonly class="price-list-template-description">@selectedTemplate.Description</textarea>
     }
-    @if (selectedTemplate.RemoteUrl != null)
+    @if (!string.IsNullOrWhiteSpace(selectedTemplate.RemoteUrl) && !selectedTemplateHasEmailSource)
     {
     <p>Прямая ссылка на файл: <a href="@selectedTemplate.RemoteUrl" target="_blank">@selectedTemplate.RemoteUrl</a></p>
     }
@@ -130,10 +137,12 @@
     bool isIntermediateProgress = false;
     bool isFileUploading = false;
     bool isBusy => isIntermediateProgress || isFileUploading;
+    bool selectedTemplateHasEmailSource => selectedTemplate?.RemoteUrlMethodName == "EmailAttachment";
     FileLoadProgress? uploadProgress;
 
     string searchPhrase;
     bool filterHasUri;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -182,7 +191,11 @@
         isIntermediateProgress = true;
         StateHasChanged();
 
-        IRemoteTemplateFileLoader loader = remoteTemplateFileLoaderFactory.GetMethod(selectedTemplate.RemoteUrl, selectedTemplate.RemoteUrlMethodName, selectedTemplate.Guid);
+        IRemoteTemplateFileLoader loader = remoteTemplateFileLoaderFactory.GetMethod(
+            selectedTemplate.RemoteUrl,
+            selectedTemplate.RemoteUrlMethodName,
+            selectedTemplate.Guid);
+
         try
         {
             var fileInfo = await loader.GetFile();
@@ -191,7 +204,7 @@
                 await LoadTemplateFromStream(ms, fileInfo.FileName);
             }
         }
-        catch(WebException webEx) when (webEx.Status == WebExceptionStatus.ProtocolError)
+        catch (WebException webEx) when (webEx.Status == WebExceptionStatus.ProtocolError)
         {
             toast.ShowError("Файл недоступен", selectedTemplate.Title);
         }
@@ -227,7 +240,7 @@
         catch (Exception ex)
         {
             await logger.Write(LogEntryGroupName.PriceListTemplateLoad, "Ошибка загрузки", $"Ошибка загрузки файла с шаблоном {selectedTemplate.Title}. Ошибка: {ex.Message}");
-            toast.ShowError("Ошибка: " + ex.Message + " --- " + ex.StackTrace, selectedTemplate.Title);
+            toast.ShowError(ex.Message, selectedTemplate.Title);
         }
         finally
         {

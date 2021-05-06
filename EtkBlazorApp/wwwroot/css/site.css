@@ -1,6 +1,10 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+label {
+    font-weight: bolder;
+}
+
 .prikat-table .manufacturer-name {
     font-size: 15px;
     font-weight: bold;

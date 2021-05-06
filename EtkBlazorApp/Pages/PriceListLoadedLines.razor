@@ -1,7 +1,7 @@
 ﻿@page "/loaded-price-list-details/{TemplateGuid}"
 @inject PriceListManager manager
 @inject IManufacturerStorage manufacturerStorage
-@inject ITemplateStorage templateStorage
+@inject IPriceListTemplateStorage templateStorage
 @inject IProductStorage productStorage
 @inject IJSRuntime js
 
@@ -142,7 +142,7 @@ else
 
         if (!hasManufacturerColumn)
         {
-            singleManufacturer = groupByBrand.SingleOrDefault().Key;
+            singleManufacturer = groupByBrand.FirstOrDefault()?.Key ?? string.Empty;
         }
         else
         {

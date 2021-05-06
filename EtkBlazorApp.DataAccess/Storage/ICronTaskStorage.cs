@@ -12,6 +12,7 @@ namespace EtkBlazorApp.DataAccess
         public Task<CronTaskEntity> GetCronTaskById(int id);
         public Task DeleteCronTask(int id);
         public Task UpdateCronTask(CronTaskEntity task);
+        public Task SaveCronTaskExecResult(CronTaskEntity task);
         public Task<List<CronTaskTypeEntity>> GetCronTaskTypes();
     }
 
@@ -52,12 +53,25 @@ namespace EtkBlazorApp.DataAccess
             string sql = @"UPDATE etk_app_cron_task 
                            SET enabled = @enabled,
                                exec_time = @exec_time,
-                               linked_price_list_guid = @linked_price_list_guid,
-                               last_exec_date_time = @last_exec_date_time,
-                               last_exec_result = @last_exec_result
-                               WHERE task_id = @task_id";
+                               linked_price_list_guid = @linked_price_list_guid
+                           WHERE task_id = @task_id";
 
             await database.ExecuteQuery(sql, task);
+        }
+
+        public async Task SaveCronTaskExecResult(CronTaskEntity task)
+        {
+            string mainTableSql = @"UPDATE etk_app_cron_task
+                           SET last_exec_date_time = @last_exec_date_time,
+                               last_exec_result = @last_exec_result
+                           WHERE task_id = @task_id";
+
+            await database.ExecuteQuery(mainTableSql, task);
+
+            string historyTableSql = @"INSERT INTO etk_app_cron_task_history (task_id, date_time, exec_result) 
+                                                                     VALUES (@task_id, @last_exec_date_time, @last_exec_result)";
+
+            await database.ExecuteQuery(historyTableSql, task);
         }
 
         public async Task CreateCronTask(CronTaskEntity task)

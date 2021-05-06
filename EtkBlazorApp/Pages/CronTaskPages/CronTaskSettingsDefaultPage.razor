@@ -25,24 +25,35 @@
                 <PriceListTemplateSelect @bind-Guid="@item.PriceListGuid" />
             </div>
             <div class="btn-group" role="group" style="width: 100%">
-                @if (!isProgressBarVisible)
-                {
-                    <button class="btn btn-outline-dark btn-lg" @onclick="@(e => confirmDialog.Show())">Выполнить сейчас</button>
-                }
-                <button style="width: auto;" class="btn btn-danger" @onclick="@(e => deleteDialog.Show())">Удалить это задание</button>
-                <button style="width: auto;" class="btn btn-primary" @onclick="SaveSettings">Сохранить</button>
+
+                <button class="btn btn-outline-dark btn-lg"
+                        disabled="@isProgressBarVisible"
+                        @onclick="@(e => confirmDialog.Show())">
+                    Выполнить сейчас
+                </button>
+                <button style="width: auto;" class="btn btn-danger"
+                        disabled="@isProgressBarVisible"
+                        @onclick="@(e => deleteDialog.Show())">
+                    Удалить это задание
+                </button>
+                <button style="width: auto;" class="btn btn-primary"
+                        disabled="@isProgressBarVisible"
+                        @onclick="SaveSettings">
+                    Сохранить
+                </button>
             </div>
             <div class="form-group my-4">
                 <label for="task-description">Примечание к заданию</label>
                 <textarea @bind="item.Description" class="form-control" style="height: 80px;"></textarea>
             </div>
+
+            <div class="w-100">
+                @if (isProgressBarVisible)
+                {
+                    <IntermediateProgressBar></IntermediateProgressBar>
+                }
+            </div>
         </div>
-    </div>
-    <div class="row">
-        @if (isProgressBarVisible)
-        {
-            <IntermediateProgressBar></IntermediateProgressBar>
-        }
     </div>
 </div>
 
@@ -89,6 +100,9 @@
         {
             isProgressBarVisible = true;
             StateHasChanged();
+
+            await Task.Delay(TimeSpan.FromSeconds(1));
+
             await taskManager.ExecuteImmediately(item.Id);
 
             isProgressBarVisible = false;

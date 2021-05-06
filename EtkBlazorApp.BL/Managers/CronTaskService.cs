@@ -18,7 +18,7 @@ namespace EtkBlazorApp.BL.CronTask
         public event Action<CronTaskBase> OnTaskExecutionError;
 
         private readonly ICronTaskStorage cronTaskStorage;
-        internal readonly ITemplateStorage templates;
+        internal readonly IPriceListTemplateStorage templates;
         internal readonly SystemEventsLogger logger;
         internal readonly UpdateManager updateManager;
         internal readonly PriceListManager priceListManager;
@@ -30,7 +30,7 @@ namespace EtkBlazorApp.BL.CronTask
 
         public CronTaskService(
             ICronTaskStorage cronTaskStorage,
-            ITemplateStorage templates,
+            IPriceListTemplateStorage templates,
             SystemEventsLogger logger,
             UpdateManager updateManager, 
             PriceListManager priceListManager,
@@ -52,9 +52,10 @@ namespace EtkBlazorApp.BL.CronTask
         }
 
         public async Task ExecuteImmediately(int task_id)
-        {
+        {            
+            await RefreshTaskList(force: true);
             var kvp = tasks.FirstOrDefault(t => t.Key.TaskId == task_id);
-            if(kvp.Equals(default(KeyValuePair<CronTaskBase, CronTaskEntity>))) { return; }
+            if (kvp.Equals(default(KeyValuePair<CronTaskBase, CronTaskEntity>))) { return; }
 
             if (!inProgress.Contains(kvp.Key))
             {
@@ -121,7 +122,7 @@ namespace EtkBlazorApp.BL.CronTask
                 inProgress.Remove(task);
                 taskInfo.last_exec_date_time = DateTime.Now;
                 taskInfo.last_exec_result = exec_result;
-                await cronTaskStorage.UpdateCronTask(taskInfo);
+                await cronTaskStorage.SaveCronTaskExecResult(taskInfo);
             }         
         }
 

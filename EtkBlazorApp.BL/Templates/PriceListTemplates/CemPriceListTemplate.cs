@@ -16,9 +16,10 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             var tab = Excel.Workbook.Worksheets[0];
 
-            for (int row = 19; row < tab.Dimension.Rows; row++)
+            for (int row = 21; row < tab.Dimension.Rows; row++)
             {
-                string name = tab.GetValue<string>(row, 1);
+                string name = tab.GetValue<string>(row, 2);
+                string ean = tab.GetValue<string>(row, 3);
                 string sku = SKU_PREFIX + tab.GetValue<string>(row, 4);
                 decimal priceInRUR = tab.GetValue<decimal>(row, 10);
                 int quantity = tab.GetValue<int>(row, 11);
@@ -29,6 +30,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Currency = CurrencyType.RUB,
                     Manufacturer = "CEM",
                     Model = sku,
+                    Ean = ean,
                     Sku = sku,
                     Price = priceInRUR,
                     Quantity = quantity

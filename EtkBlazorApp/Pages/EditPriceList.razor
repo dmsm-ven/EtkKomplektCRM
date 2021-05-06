@@ -1,11 +1,11 @@
 ﻿@page "/price-list/edit/{TemplateGuid}"
 @page "/price-list/new"
-@inject ITemplateStorage templateStorage
+@inject IPriceListTemplateStorage templateStorage
 @inject ISettingStorage settings
 @inject IToastService toasts
 @inject UserLogger logger
 @inject NavigationManager navManager
-@attribute [Authorize]
+@attribute [Authorize(Roles = "Administrator")]
 
 @if (item == null)
 {
@@ -13,128 +13,147 @@
 }
 else
 {
-    <div class="row justify-content-center">
-        <div class="col-md-4 col-sm-12">
-            <EditForm OnValidSubmit="ValidSubmit" Model="item">
-                <DataAnnotationsValidator />
-                <div class="row my-2">   
-                    <ValidationMessage For="() => item.Image" />
-                    <div class="mx-auto d-block image-select-container m-1 p-1">                    
-                        <img src="@item.Image" class="rounded image"
-                             @onclick="@(e => imageSelectDialog.Show())"
-                             style="width: 100%; height: 100%;" />
-                    </div>
+<div class="row justify-content-center">
+    <div class="col-md-6 col-sm-12">
+        <EditForm OnValidSubmit="ValidSubmit" Model="item">
+            <DataAnnotationsValidator />
+            <div class="row my-2">
+                <ValidationMessage For="() => item.Image" />
+                <div class="mx-auto d-block image-select-container m-1 p-1">
+                    <img src="@item.Image" class="rounded image"
+                         @onclick="@(e => imageSelectDialog.Show())"
+                         style="width: 100%; height: 100%;" />
                 </div>
+            </div>
 
-                <div class=" form-group">
-                            <label for="guid-select">GUID</label>
-                            <select class="form-control" @bind="item.Guid" required id="guid-select">
-                                <option value="">Выбрать</option>
-                                @foreach (var attributeGuid in guidList)
-                                                        {
-                                <option selected="@(attributeGuid == item.Guid)"
-                                        disabled="@(alreadyUsedGuids.Contains(attributeGuid) && attributeGuid != item.Guid)"
-                                        value="@attributeGuid">
-                                    @(((alreadyUsedGuids.Contains(attributeGuid) && attributeGuid != item.Guid) ? "занят " : "") +  @attributeGuid)
-                                </option>
-                                                        }
-                            </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="title">Заголовок</label>
-                    <input type="text" @bind="@item.Title" id="title" class="form-control" required />
-                </div>
-
-                <div class="form-group">
-                    <label for="group_name">Группа</label>
-                    <input type="text" list="group-name" class="form-control" @bind="item.GroupName" required />
-                    <datalist id="group-name">
-                        @foreach (var groupName in groupNames)
-                        {
-                            <option selected="@(groupName == item.GroupName)" value="@groupName">@groupName</option>
-                        }
-                    </datalist>
-                </div>
-
-                <div class="form-group">
-                    <label for="content-type">Тип прайс-листа</label>
-                    <select class="form-control" @bind="item.PriceListTypeId" id="content-type" required>
-                        @foreach (var ct in contentTypeNames)
-                        {
-                            <option selected="@(ct.id == item.PriceListTypeId)" value="@ct.id">@ct.name</option>
-                        }
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="description">Прямая ссылка на скачивание</label>
-                    <input type="url" @bind="@item.RemoteUrl" id="remote_url" class="form-control" />
-                </div>
-
-                @if (!string.IsNullOrWhiteSpace(item.RemoteUrl))
-                {
-                    <div class="form-group">
-                        <label for="remote-uri-method">Метод загрузки файла</label>
-                        <select class="form-control" @onchange="@(e => LoadMethodChanged(e?.Value.ToString()))" id="remote-uri-method">
-                            <option value="">Выбрать</option>
-                            @foreach (var method in remoteUriLoadMethods)
-                            {
-                                <option selected="@(method.id == item.RemoteUrlMethodId)" value="@method.id">@method.name</option>
-                            }
-                        </select>
-                    </div>
-
-                    @if (item.RemoteUrlMethodName == "HttpGetWithCredentials")
+            <div class=" form-group">
+                <label for="guid-select">GUID</label>
+                <select class="form-control" @bind="item.Guid" required id="guid-select">
+                    <option value="">Выбрать</option>
+                    @foreach (var attributeGuid in guidList)
                     {
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="remote-method-login">Логин</label>
-                                <input type="text" class="form-control" id="remote-method-login" @bind="remoteUriCredentialsLogin" />
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label for="remote-method-password">Пароль</label>
-                                <input type="password" class="form-control" id="remote-method-password" @bind="remoteUriCredentialsPassword" />
-                            </div>
-                        </div>
+                        <option selected="@(attributeGuid == item.Guid)"
+                                disabled="@(alreadyUsedGuids.Contains(attributeGuid) && attributeGuid != item.Guid)"
+                                value="@attributeGuid">
+                            @(((alreadyUsedGuids.Contains(attributeGuid) && attributeGuid != item.Guid) ? "занят " : "") +  @attributeGuid)
+                        </option>
                     }
-                }
+                </select>
+            </div>
 
-                <div class="form-group">
-                    <input type="checkbox" @bind="@item.Nds" id="nds" class="form-check-inline" />
-                    <label for="nds">Добавлять к цене НДС</label>
-                </div>
+            <div class="form-group">
+                <label for="title">Заголовок</label>
+                <input type="text" @bind="@item.Title" id="title" class="form-control" required />
+            </div>
 
-                <div class="form-group">
-                    <label for="discount">Наценка, %</label>
-                    <input type="number" @bind="@item.Discount" id="discount" class="form-control" />
-                </div>
-
-                <div class="form-group">
-                    <label for="description">Примечание</label>
-                    <textarea type="text" @bind="@item.Description" id="description" class="form-control" style="height: 60px;" />
-                </div>
-
-                <div class="form-row my-4">
-                    @if (createNew == false)
+            <div class="form-group">
+                <label for="group_name">Группа</label>
+                <input type="text" list="group-name" class="form-control" @bind="item.GroupName" required />
+                <datalist id="group-name">
+                    @foreach (var groupName in groupNames)
                     {
+                        <option selected="@(groupName == item.GroupName)" value="@groupName">@groupName</option>
+                    }
+                </datalist>
+            </div>
+
+            <div class="form-group">
+                <label for="content-type">Тип прайс-листа</label>
+                <select class="form-control" @bind="item.PriceListTypeId" id="content-type" required>
+                    @foreach (var ct in contentTypeNames)
+                    {
+                        <option selected="@(ct.id == item.PriceListTypeId)" value="@ct.id">@ct.name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Прямая ссылка на скачивание</label>
+                <input type="url" @bind="@item.RemoteUrl" id="remote_url" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label for="remote-uri-method">Метод загрузки файла</label>
+                <select class="form-control" @onchange="@(e => LoadMethodChanged(e?.Value.ToString()))" id="remote-uri-method">
+                    <option value="">Выбрать</option>
+                    @foreach (var method in remoteUriLoadMethods)
+                    {
+                        <option selected="@(method.id == item.RemoteUrlMethodId)" value="@method.id">@method.name</option>
+                    }
+                </select>
+            </div>
+
+            @if (@showCredentialsBox)
+            {
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="remote-method-login">Логин</label>
+                        <input type="text" class="form-control" id="remote-method-login" @bind="item.Cridentials_Login" />
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="remote-method-password">Пароль</label>
+                        <input type="password" class="form-control" id="remote-method-password" @bind="item.Cridentials_Password" />
+                    </div>
+                </div>
+            }
+
+            @if (showEmailPatternBox)
+            {
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="criteria-subject">Тема письма</label>
+                        <input type="text" class="form-control" id="criteria-subject" @bind="item.EmailSearchCriteria_Subject" />
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="criteria-sender">Отправитель</label>
+                        <input type="text" class="form-control" id="criteria-sender" @bind="item.EmailSearchCriteria_Sender" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="criteria-filename">Паттерн имени файла</label>
+                        <input type="text" class="form-control" id="criteria-filename" @bind="item.EmailSearchCriteria_FileNamePattern" />
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="criteria-max-old">Не старее чем (дней)</label>
+                        <input type="number" min="0" max="14" class="form-control" id="criteria-max-old" @bind="item.EmailSearchCriteria_MaxAgeInDays" />
+                    </div>
+                </div>
+            }
+
+            <div class="form-group">
+                <input type="checkbox" @bind="@item.Nds" id="nds" class="form-check-inline" />
+                <label for="nds">Добавлять к цене НДС</label>
+            </div>
+
+            <div class="form-group">
+                <label for="discount">Наценка, %</label>
+                <input type="number" @bind="@item.Discount" id="discount" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label for="description">Примечание</label>
+                <textarea type="text" @bind="@item.Description" id="description" class="form-control" style="height: 60px;" />
+            </div>
+
+            <div class="form-row my-4">
+                @if (createNew == false)
+                {
                     <div class="col-md-6">
                         <button type="button" class="btn btn-danger mx-2" @onclick="@(e => deleteDialog.Show())">
                             <span class="oi oi-x"></span>
                             Удалить данный шаблон
                         </button>
                     </div>
-                    }
-                    <div class="col-md-6">
-                        <button type="submit" class="btn btn-success mx-2">
-                            <span class="oi oi-check"></span>
-                            @buttonActionName
-                        </button>
-                    </div>
-
-
+                }
+                <div class="col-md-6">
+                    <button type="submit" class="btn btn-success mx-2">
+                        <span class="oi oi-check"></span>
+                        @buttonActionName
+                    </button>
                 </div>
-            </EditForm>
+            </div>
+        </EditForm>
         </div>
     </div>
 
@@ -144,10 +163,10 @@ else
                          OnChange="ImageFileChanged"
                          Title="Выбор изображения" />
 
-    <DeleteConfirmDialog ConfirmationChanged="DeleteConfirmChanged" 
-                         @ref="deleteDialog" 
+    <DeleteConfirmDialog ConfirmationChanged="DeleteConfirmChanged"
+                         @ref="deleteDialog"
                          ConfirmationMessage="@(() => "Удалить данный шаблон описания для прайс-листа ?")"
-                         ConfirmationTitle="Подтвердите удаление"/>
+                         ConfirmationTitle="Подтвердите удаление" />
 }
 
 
@@ -166,7 +185,6 @@ else
     List<string> alreadyUsedGuids;
 
     string remoteUriCredentialsLogin, remoteUriCredentialsPassword;
-    string buttonActionName => string.IsNullOrWhiteSpace(TemplateGuid) ? "Создать" : "Сохранить изменения";
     bool createNew = false;
 
     protected override async Task OnInitializedAsync()
@@ -174,6 +192,7 @@ else
         if (TemplateGuid != null)
         {
             var entity = await templateStorage.GetPriceListTemplateById(TemplateGuid);
+
             item = new PriceListTemplateItemViewModel(entity.id)
             {
                 Title = entity.title,
@@ -185,10 +204,14 @@ else
                 PriceListTypeId = entity.content_type_id,
                 RemoteUrl = entity.remote_uri,
                 RemoteUrlMethodId = entity.remote_uri_method_id,
-                RemoteUrlMethodName = entity.remote_uri_method_name
+                RemoteUrlMethodName = entity.remote_uri_method_name,
+                EmailSearchCriteria_FileNamePattern = entity.email_criteria_file_name_pattern,
+                EmailSearchCriteria_Sender = entity.email_criteria_sender,
+                EmailSearchCriteria_MaxAgeInDays = entity.email_criteria_max_age_in_days,
+                EmailSearchCriteria_Subject = entity.email_criteria_subject,
+                Cridentials_Login = entity.credentials_login,
+                Cridentials_Password = entity.credentials_password
             };
-
-            await LoadCredentialsFromSettings();
         }
         else
         {
@@ -211,35 +234,17 @@ else
             .ThenBy(g => alreadyUsedGuids.Contains(g) ? 1 : 0)
             .ThenBy(g => g)
             .ToList();
-
-
     }
 
-    private async Task LoadMethodChanged(string id)
+    string buttonActionName => string.IsNullOrWhiteSpace(TemplateGuid) ? "Создать" : "Сохранить изменения";
+    bool showCredentialsBox => item.RemoteUrlMethodName == "HttpGetWithCredentials";
+    bool showEmailPatternBox => item.RemoteUrlMethodName == "EmailAttachment";
+
+    private void LoadMethodChanged(string id)
     {
         var method = remoteUriLoadMethods.FirstOrDefault(m => m.id.ToString().Equals(id));
         item.RemoteUrlMethodId = method?.id;
         item.RemoteUrlMethodName = method?.name;
-
-        await LoadCredentialsFromSettings();
-    }
-
-    private async Task LoadCredentialsFromSettings()
-    {
-        if (Equals(item.RemoteUrlMethodName, "HttpGetWithCredentials"))
-        {
-            remoteUriCredentialsLogin = await settings.GetValue<string>($"price-list-template-credentials-{TemplateGuid}-login");
-            remoteUriCredentialsPassword = await settings.GetValue<string>($"price-list-template-credentials-{TemplateGuid}-password");
-        }
-    }
-
-    private async Task SaveCredentialsToSettingsIfNeed()
-    {
-        if (Equals(item.RemoteUrlMethodName, "HttpGetWithCredentials"))
-        {
-            await settings.SetValue<string>($"price-list-template-credentials-{TemplateGuid}-login", remoteUriCredentialsLogin);
-            await settings.SetValue<string>($"price-list-template-credentials-{TemplateGuid}-password", remoteUriCredentialsPassword);
-        }
     }
 
     private async Task ImageFileChanged(string selectedFilePath)
@@ -263,8 +268,14 @@ else
             nds = item.Nds,
             group_name = item.GroupName,
             remote_uri = item.RemoteUrl,
-            remote_uri_method_id = !string.IsNullOrWhiteSpace(item.RemoteUrl) ? item.RemoteUrlMethodId : null,
-            content_type_id = item.PriceListTypeId
+            remote_uri_method_id = item.RemoteUrlMethodId,
+            content_type_id = item.PriceListTypeId,
+            credentials_login = item.Cridentials_Login,
+            credentials_password = item.Cridentials_Password,
+            email_criteria_sender = item.EmailSearchCriteria_Sender,
+            email_criteria_subject = item.EmailSearchCriteria_Subject,
+            email_criteria_file_name_pattern = item.EmailSearchCriteria_FileNamePattern,
+            email_criteria_max_age_in_days = item.EmailSearchCriteria_MaxAgeInDays
         };
 
         if (createNew)
@@ -275,8 +286,6 @@ else
         {
             await SaveChanges(entity);
         }
-
-        await SaveCredentialsToSettingsIfNeed();
     }
 
     private async Task SaveChanges(PriceListTemplateEntity entity)
@@ -312,7 +321,7 @@ else
 
     private async Task DeleteConfirmChanged(bool dialogResult)
     {
-        if(dialogResult == true)
+        if (dialogResult == true)
         {
             await templateStorage.DeletePriceList(item.Guid);
 

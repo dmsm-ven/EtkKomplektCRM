@@ -74,22 +74,12 @@
     string checkConnectionCss => checkConnectionState.HasValue ? (checkConnectionState.Value ? "btn-success" : "btn-danger") : string.Empty;
 
     ConfirmDialogBase confirmDialog;
-    ImapAttachmentExtractor imapExtractor;
 
     private CronTaskEntity Item { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        imapServer = await settings.GetValue("task_symmetron_imap_server");
-        imapPort = await settings.GetValue("task_symmetron_imap_port");
-        if (string.IsNullOrWhiteSpace(imapPort))
-        {
-            imapPort = "143";
-        }
-        email = await settings.GetValue("task_symmetron_login");
-        password = await settings.GetValue("task_symmetron_password");
-
-        Item = (await cronTaskStorage.GetCronTasks()).Single(t => t.name == "Symmetron");
+        throw new NotImplementedException();
     }
 
     private async Task CheckConnection()
@@ -98,7 +88,7 @@
 
         try
         {
-            checkConnectionState = await imapExtractor.CheckConnection();
+            //checkConnectionState = await imapExtractor.CheckConnection();
         }
         catch(Exception ex)
         {

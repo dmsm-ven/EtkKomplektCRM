@@ -8,6 +8,8 @@ namespace EtkBlazorApp.BL
     {
         public SymmetronPriceListTemplate(string fileName) : base(fileName) 
         {
+            SkipManufacturerNames.Add("Mean Well");
+
             ManufacturerNameMap["Pro'skit"] = "Pro'sKit";
             ManufacturerNameMap["TIANMA Europe GmbH"] = "Tianma";
             ManufacturerNameMap["BOE Technology Group Corp"] = "BOE";
@@ -37,6 +39,8 @@ namespace EtkBlazorApp.BL
                 {
                     priceCurreny = parsedCurrency;
                 }
+
+                if (SkipManufacturerNames.Contains(manufacturer)) { continue; }
                           
                 var priceLine = new PriceLine(this)
                 {

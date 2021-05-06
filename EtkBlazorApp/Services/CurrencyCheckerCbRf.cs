@@ -7,8 +7,6 @@ using System.Xml;
 
 namespace EtkBlazorApp.Services
 {
-
-
     public class CurrencyCheckerCbRf : ICurrencyChecker
     {
         Dictionary<CurrencyType, decimal> rates;

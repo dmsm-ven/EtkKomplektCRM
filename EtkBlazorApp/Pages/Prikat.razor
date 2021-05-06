@@ -1,6 +1,6 @@
 ﻿@page "/prikat"
 @attribute [Authorize(Roles = "Administrator, Manager")]
-@inject ITemplateStorage templateStorage
+@inject IPrikatTemplateStorage templateStorage
 @inject ISettingStorage settingStorage
 @inject IManufacturerStorage manufacturerStorage
 @inject IJSRuntime js

@@ -47,13 +47,10 @@
     private AppUser user = new AppUser();
     bool isInvalidData = false;
 
-    protected override void OnInitialized()
-    {
-        user.UserIP = httpContext.HttpContext.Connection.RemoteIpAddress.ToString();
-    }
-
     private async Task Enter()
     {
+        user.UserIP = httpContext.HttpContext.Connection?.RemoteIpAddress.ToString();
+
         isInvalidData = false;
 
         await ((MyCustomAuthProvider)authenticationStateProvider).AuthenticateUser(user);
