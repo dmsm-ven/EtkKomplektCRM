@@ -12,9 +12,22 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
 {
-    public static class EmailImapClient
+    public class ImapAttachmentExtractor
     {
-		public static async Task<bool> CheckConnection(string host, string port, string login, string password)
+        private readonly string host;
+        private readonly string port;
+        private readonly string login;
+        private readonly string password;
+
+        public ImapAttachmentExtractor(string host, string port, string login, string password)
+        {
+            this.host = host;
+            this.port = port;
+            this.login = login;
+            this.password = password;
+        }
+
+		public async Task<bool> CheckConnection()
 		{
 			using (var client = new MailKit.Net.Imap.ImapClient())
 			{
@@ -36,7 +49,7 @@ namespace EtkBlazorApp.BL
 		/// <param name="login"></param>
 		/// <param name="password"></param>
 		/// <returns>Возращает путь до временного файла или в случае неудачи null</returns>
-		public static async Task<string> DownloadLastSymmetronPriceListFromMail(string host, string port, string login, string password, uint maxEmailAgeInDays = 5)
+		public async Task<string> DownloadLastSymmetronPriceListFromMail(uint maxEmailAgeInDays = 5)
         {
 			string userName = login.Split('@')[0];
 
@@ -75,11 +88,10 @@ namespace EtkBlazorApp.BL
 			return null;
 		}
 
-		private static async Task<string> SaveAttachmentFile(MimeEntity attachment)
+		private async Task<string> SaveAttachmentFile(MimeEntity attachment)
 		{
 			var tempPath = Path.GetTempFileName();
-			var downloadFolder = Path.GetDirectoryName(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
-			downloadFolder = Path.Combine(downloadFolder, "Downloads");
+			var downloadFolder = Path.GetDirectoryName(tempPath);
 
 			using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write))
 			{

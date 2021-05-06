@@ -2,7 +2,14 @@
     <td>
         <div class="task-tool-items-box">
             <input type="checkbox" style="margin-right: 12px;" checked="@Item.IsEnabled" onclick="return false;" />
-            <a href="@("/cron-task/edit/" + @Item.Id)"><span class="oi oi-cog cog-icon" style="font-size: 1.2em;" aria-hidden="true"></span></a>
+            <AuthorizeView Roles="Administrator">
+                <Authorized>
+                    <a href="@("/cron-task/edit/" + @Item.Id)">
+                        <span class="oi oi-cog cog-icon" style="font-size: 1.2em;" aria-hidden="true"></span>
+                    </a>
+                </Authorized>
+            </AuthorizeView>
+
             <span>@Item.Title</span>
         </div>
     </td>

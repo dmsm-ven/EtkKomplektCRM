@@ -111,7 +111,7 @@ namespace EtkBlazorApp.DataAccess
         public async Task UpdatePriceList(PriceListTemplateEntity data)
         {
             string sql = @"UPDATE etk_app_price_list_template
-                            SET id = @id,
+                           SET id = @id,
                                 title = @title,
                                 description = @description,
                                 group_name = @group_name,
@@ -121,7 +121,7 @@ namespace EtkBlazorApp.DataAccess
                                 nds = @nds,
                                 discount = @discount,
                                 image = @image
-                            WHERE id = @id";
+                           WHERE id = @id";
 
             await database.ExecuteQuery(sql, data);
         }

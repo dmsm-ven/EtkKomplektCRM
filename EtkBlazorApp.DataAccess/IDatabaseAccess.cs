@@ -66,29 +66,21 @@ namespace EtkBlazorApp.DataAccess
             }
         }
 
-        public async Task<T> GetScalar<T, U>(string sql, U parameters)
+        public async Task<T> GetFirstOrDefault<T>(string sql)
         {
             using (IDbConnection connection = new MySqlConnection(ConnectionString))
             {
-                T value = await connection.ExecuteScalarAsync<T>(sql, parameters);
+                T value = await connection.QueryFirstOrDefaultAsync<T>(sql);
 
                 return value;
             }
         }
 
-        public async Task ExecuteQuery<T>(string sql, T parameters)
+        public async Task<T> GetScalar<T, U>(string sql, U parameters)
         {
             using (IDbConnection connection = new MySqlConnection(ConnectionString))
             {
-                 await connection.ExecuteAsync(sql, parameters);
-            }
-        }
-
-        public async Task<T> GetFirstOrDefault<T>(string sql)
-        {
-            using (IDbConnection connection = new MySqlConnection(ConnectionString))
-            {
-                T value = await connection.ExecuteScalarAsync<T>(sql);
+                T value = await connection.ExecuteScalarAsync<T>(sql, parameters);
 
                 return value;
             }
@@ -101,6 +93,14 @@ namespace EtkBlazorApp.DataAccess
                 T value = await connection.ExecuteScalarAsync<T>(sql);
 
                 return value;
+            }
+        }
+
+        public async Task ExecuteQuery<T>(string sql, T parameters)
+        {
+            using (IDbConnection connection = new MySqlConnection(ConnectionString))
+            {
+                 await connection.ExecuteAsync(sql, parameters);
             }
         }
 

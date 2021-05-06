@@ -15,9 +15,7 @@
             </div>
 
             <div class="col-md-8 col-sm-12">
-                <EditForm Model="@user" OnValidSubmit="@ValidateUser">
-                    <DataAnnotationsValidator />
-                    <ValidationSummary />
+                <form>
                     <div>
                         <h3 style="color: white;">Авторизация</h3>
                     </div>
@@ -28,9 +26,17 @@
                         <input type="password" class="form-control col-12" @bind="user.Password" placeholder="Пароль" />
                     </div>
                     <div class="col-md-12" style="margin: 10px 20px">
-                        <input type="submit" class="form-control col-12 btn btn-success" value="Войти" />
+                        <button type="button" @onclick="Enter" class="form-control col-12 btn btn-success" value="Войти">
+                            Войти
+                        </button>
+                        @if (isInvalidData)
+                        {
+                        <p style="margin-top: 4px; background: rgba(0,0,0,0.25);">
+                            <strong style="color: red; font-size: 14px;">Неверный логин или пароль!</strong>
+                        </p>
+                        }
                     </div>
-                </EditForm>
+                </form>
             </div>
         </div>
     </div>
@@ -39,14 +45,17 @@
 @code {
 
     private AppUser user = new AppUser();
+    bool isInvalidData = false;
 
     protected override void OnInitialized()
     {
         user.UserIP = httpContext.HttpContext.Connection.RemoteIpAddress.ToString();
     }
 
-    private async Task<bool> ValidateUser()
+    private async Task Enter()
     {
+        isInvalidData = false;
+
         await ((MyCustomAuthProvider)authenticationStateProvider).AuthenticateUser(user);
 
         navigation.NavigateTo("/");
@@ -68,9 +77,8 @@
                 user = "Не авторизован",
                 date_time = DateTime.Now
             });
+            isInvalidData = true;
         }
-
-        return await Task.FromResult(true);
     }
 
 }

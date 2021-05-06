@@ -12,35 +12,30 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         {
             var list = new List<PriceLine>();
 
-            for (int i = 15; i < tab.Dimension.Rows; i++)
+            for (int i = 18; i < tab.Dimension.Rows; i++)
             {
-                string skuNumber = tab.GetValue<string>(i, 0);
+                string skuNumber = tab.GetValue<string>(i, 1);
                 if (Regex.IsMatch(skuNumber, @"^(\d){6,}N$"))
                 {
                     skuNumber = skuNumber.TrimEnd('N');
                 }
 
-                string partNumber = tab.GetValue<string>(i, 1);
-                if (Regex.IsMatch(partNumber, @"^T00(\d+)$"))
+                string partNumber = tab.GetValue<string>(i, 2);
+
+                string name = tab.GetValue<string>(i, 4);
+                decimal? priceInEuro = ParsePrice(tab.GetValue<string>(i, 7));
+
+                var priceLine = new PriceLine(this)
                 {
-                    partNumber = partNumber.Substring(3);
-                }
+                    Sku = skuNumber,
+                    Name = name,
+                    Model = partNumber,
+                    Price = priceInEuro,
+                    Currency = CurrencyType.EUR,
+                    Manufacturer = "Weller"
+                };
 
-                string priceString = tab.GetValue<string>(i, 6);
-
-                if (decimal.TryParse(priceString, out var priceInEuro))
-                {
-                    var priceLine = new PriceLine(this)
-                    {
-                        Sku = skuNumber,
-                        Model = partNumber,
-                        Price = priceInEuro,
-                        Currency = CurrencyType.EUR,
-                        Manufacturer = "Weller"
-                    };
-
-                    list.Add(priceLine);
-                }
+                list.Add(priceLine);
             }
 
             return list;
