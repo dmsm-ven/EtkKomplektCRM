@@ -34,7 +34,8 @@ namespace EtkBlazorApp.BL
             decimal? price = null;
             if (!string.IsNullOrWhiteSpace(str))
             {
-                if (decimal.TryParse(str.Replace(",", ".").Replace(" ", string.Empty), System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var parsedPrice))
+                string strValue = str.Replace(",", ".").Replace(" ", string.Empty);
+                if (decimal.TryParse(strValue, System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var parsedPrice))
                 {
                     price = Math.Max(parsedPrice, 0);
                     if (roundDigits.HasValue)

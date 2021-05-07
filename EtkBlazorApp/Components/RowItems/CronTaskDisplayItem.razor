@@ -35,6 +35,7 @@
 </tr>
 @code {
 
+    [Parameter] public CronTaskViewModel Item { get; set; }
     MarkupString lastResultIconMarkup
     {
         get
@@ -42,12 +43,12 @@
             string color = "gray";
             string iconClass = "oi-question-mark";
 
-            if(Item.LastExecResult == false)
+            if (Item.LastExecResult == false)
             {
                 color = "darkred";
                 iconClass = "oi-x";
             }
-            else if(Item.LastExecResult == true)
+            else if (Item.LastExecResult == true)
             {
                 color = "#50C878";
                 iconClass = "oi-check";
@@ -58,7 +59,4 @@
 
         }
     }
-
-    [Parameter] public CronTaskViewModel Item { get; set; }
-
 }

@@ -20,6 +20,10 @@ else
                 <span class="oi oi-timer"></span>
                 Создать новое задание
             </button>
+            <a class="btn btn-info mx-2" href="/cron-task-history">
+                <span class="oi oi-book"></span>
+                Журнал выполнения
+            </a>
         </div>
     </div>
 
@@ -47,6 +51,7 @@ else
 }
 
 <AddNewCronTaskDialog @ref="addNewDialog" ConfirmationChanged="NewTaskDialogStateChanged"/>
+
 
 @code {
     Timer timeLeftRefresh = new Timer(TimeSpan.FromMinutes(1).TotalMilliseconds);

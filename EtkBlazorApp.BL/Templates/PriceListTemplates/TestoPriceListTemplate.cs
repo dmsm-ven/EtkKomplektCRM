@@ -15,7 +15,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
-                string model = tab.GetValue<string>(row, 1).Replace(" ", string.Empty);
+                string sku = tab.GetValue<string>(row, 1);
                 string name = tab.GetValue<string>(row, 2);
                 int? quantity = ParseQuantity(tab.GetValue<string>(row, 4));
 
@@ -23,8 +23,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 {
                     Manufacturer = "Testo",
                     Name = name,
-                    Model = model,
-                    Sku = model,
+                    Model = sku,
+                    Sku = sku,
                     Quantity = quantity
                 };
 
@@ -52,11 +52,11 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 for (int row = 2; row < tab.Dimension.Rows; row++)
                 {
-                    string model = tab.GetValue<string>(row, 0).Replace(" ", "").Trim();
+                    string model = tab.GetValue<string>(row, 1).Trim();
 
                     if (!IsValidModel(model)) { continue; }
 
-                    string priceString = tab.GetValue<string>(row, 2);
+                    string priceString = tab.GetValue<string>(row, 3);
                     if ((string.IsNullOrWhiteSpace(priceString) || priceString == "По запросу"))
                     {
                         priceString = "0";

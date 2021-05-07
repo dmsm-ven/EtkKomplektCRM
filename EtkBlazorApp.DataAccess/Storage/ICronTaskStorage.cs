@@ -14,6 +14,7 @@ namespace EtkBlazorApp.DataAccess
         public Task UpdateCronTask(CronTaskEntity task);
         public Task SaveCronTaskExecResult(CronTaskEntity task);
         public Task<List<CronTaskTypeEntity>> GetCronTaskTypes();
+        public Task<List<CronTaskHistoryEntity>> GetHistoryDataForMonth();
     }
 
     public class CronTaskStorage : ICronTaskStorage
@@ -86,13 +87,24 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task<List<CronTaskTypeEntity>> GetCronTaskTypes()
         {
-            var data = await database.GetList<CronTaskTypeEntity, dynamic>("SELECT * FROM etk_app_cron_task_type", new { });
+            var data = await database.GetList<CronTaskTypeEntity>("SELECT * FROM etk_app_cron_task_type");
             return data;
         }
 
         public async Task DeleteCronTask(int task_id)
         {
             await database.ExecuteQuery<dynamic>("DELETE FROM etk_app_cron_task WHERE task_id = @task_id", new { task_id });
+        }
+
+        public async Task<List<CronTaskHistoryEntity>> GetHistoryDataForMonth()
+        {
+            string sql = @"SELECT h.*, t.name as name
+                           FROM etk_app_cron_task_history h
+                           LEFT JOIN etk_app_cron_task t ON h.task_id = t.task_id
+                           WHERE MONTH(h.date_time) = MONTH(NOW())";
+
+            var data = await database.GetList<CronTaskHistoryEntity>(sql);
+            return data;
         }
     }
 }

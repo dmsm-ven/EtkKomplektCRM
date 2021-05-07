@@ -1,6 +1,11 @@
-﻿using System;
+﻿using HtmlAgilityPack;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
@@ -21,7 +26,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string skuNumber = tab.GetValue<string>(row, 1).Trim('.', ' ');
                 string name = tab.GetValue<string>(row, 4);
                 int quantity = tab.GetValue<int>(row, 11);
-                
+
                 if (string.IsNullOrWhiteSpace(skuNumber)) { continue; }
 
                 var priceLine = new PriceLine(this)
@@ -40,6 +45,51 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             list.Where(row => row.Name.Contains("testo")).ToList().ForEach(p => p.Model = p.Model.Replace(" ", string.Empty));
 
             return list;
+        }
+    }
+
+    [PriceListTemplateGuid("B048D3E6-D8D1-4867-944B-6D5D3A6D4396")]
+    public class _1CHtmlPriceListTemplate : PriceListTemplateReaderBase, IPriceListTemplate
+    {
+        public string FileName { get; }
+
+        public _1CHtmlPriceListTemplate(string fileName)
+        {
+            FileName = fileName;
+        }
+
+        public Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)
+        {
+            var list = new List<PriceLine>();
+
+            var doc = new HtmlDocument();
+            doc.LoadHtml(File.ReadAllText(FileName));
+
+            var table = doc.DocumentNode.SelectNodes(".//table").LastOrDefault();
+
+            if(table != null)
+            {
+                var data = table
+                    .SelectNodes(".//tr")
+                    .Skip(4)
+                    .Select(tr => tr.SelectNodes("./td").Select(td => HttpUtility.HtmlDecode(td.InnerText.Trim())).ToArray())
+                    .Select(cells => new PriceLine(this)
+                    {
+                        Sku = cells[0],
+                        Name = cells[1],
+                        Price = ParsePrice(cells[2].Replace(" ", string.Empty), false, 0),
+                        Quantity = ParseQuantity(cells[3].Replace(",000", string.Empty)),
+                        Manufacturer = "<Не указано>", //ParseQuantity(cells[4]),
+                        Currency = CurrencyType.RUB
+                    })
+                    .Where(pl => !string.IsNullOrWhiteSpace(pl.Sku))
+                    .ToList();
+
+                list.AddRange(data);
+            }
+
+
+            return Task.FromResult(list);
         }
     }
 }

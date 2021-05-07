@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "wlK7+XQFV61d+A8YbtCn28NbqS39lJQ8UO69dQs7R+b+bJCBds9iUyBCSgXh5BYppSstVxJR0aDJFumuxzTVvg==",
+  "dgSpecHash": "7VjvmUspD8bd/DL7/dFc0AsXtG5PWbBcf45d1rEu7QdNR5NfHmvK6VCFtU2tQlMXz1zTmGrevhKHDxr+JStVOQ==",
   "success": true,
   "projectFilePath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.BL\\EtkBlazorApp.BL.csproj",
   "expectedPackageFiles": [
@@ -9,6 +9,7 @@
     "C:\\Users\\user\\.nuget\\packages\\dapper\\2.0.78\\dapper.2.0.78.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\epplus\\5.6.3\\epplus.5.6.3.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\google.protobuf\\3.11.4\\google.protobuf.3.11.4.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\htmlagilitypack\\1.11.33\\htmlagilitypack.1.11.33.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\k4os.compression.lz4\\1.1.11\\k4os.compression.lz4.1.1.11.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\k4os.compression.lz4.streams\\1.1.11\\k4os.compression.lz4.streams.1.1.11.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\k4os.hash.xxhash\\1.0.6\\k4os.hash.xxhash.1.0.6.nupkg.sha512",

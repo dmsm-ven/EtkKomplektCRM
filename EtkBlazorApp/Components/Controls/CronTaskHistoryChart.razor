@@ -1,0 +1,100 @@
+﻿@inject ICronTaskStorage storage
+@page "/cron-task-history" 
+@if (historyItems == null)
+{
+    <LoadingSpinner/>
+}
+else
+{
+    <table id="cron-task-history-table" class="table-bordered">
+        <tbody>
+            @foreach (var kvp in historyItems)
+            {
+                <tr>
+                    <td>
+                        @historyItems[kvp.Key].FirstOrDefault()?.name
+                    </td>
+                    @for (int day = 1; day < daysInMoth; day++)
+                    {
+                        <td style="background: @GetLabelForTaskInDay(kvp.Key, day)"></td>
+                    }
+                </tr>
+            }
+            <tr class="footer">
+                <td>
+                </td>
+                @for (int day = 1; day < daysInMoth; day++)
+                {
+                    <td>@day</td>
+                }
+            </tr>
+        </tbody>
+    </table>
+}
+
+<style>
+    #cron-task-history-table td:first-child {
+        font-size: 16px;
+        font-weight: bold;
+        text-align: right;
+        width: auto;
+        white-space: pre;
+        margin: 4px 10px 4px 2px;
+        padding: 6px 12px;
+    }
+
+    #cron-task-history-table td:not(:first-child) {
+        min-width: 42px;
+        min-height: 42px;
+        max-width: 42px;
+        max-height: 42px;
+        text-align: center;
+        vertical-align: middle;
+    }
+</style>
+
+@code {
+        Dictionary<int, List<CronTaskHistoryEntity>> historyItems;
+
+        int currentDay;
+        int currentMonth;
+        int currentYear;
+        int daysInMoth;
+
+    protected override void OnInitialized()
+    {
+        currentDay = DateTime.Now.Day;
+        currentMonth = DateTime.Now.Month;
+        currentYear = DateTime.Now.Year;
+        daysInMoth = DateTime.DaysInMonth(currentYear, currentMonth);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            historyItems = (await storage.GetHistoryDataForMonth())
+            .GroupBy(h => h.task_id)
+            .ToDictionary(t => t.Key, t => t.ToList());
+            StateHasChanged();
+        }
+    }
+
+    private string GetLabelForTaskInDay(int id, int day)
+    {
+        var findedItem = historyItems[id].FirstOrDefault(t => t.date_time.Date == new DateTime(currentYear, currentMonth, day));
+
+        if (findedItem != null)
+        {
+            return findedItem.exec_result ? "#50C878" : "darkred";
+        }
+
+        if (day > currentDay)
+        {
+            return "#ececec";
+        }
+
+        return "transparent";
+    }
+
+}
