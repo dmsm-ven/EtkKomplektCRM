@@ -56,10 +56,12 @@
 <div class="row my-2">
     <div class="input-group px-2" style="width: 425px;">
         <button class="btn btn-outline-primary @(filterHasUri ? "active" : "")"
+                title="Фильтр - показать только шаблоны с возможность загрузки по ссылке"
                 @onclick="@(e => { filterHasUri = !filterHasUri; ApplyFilter(null); } )">
             <span class="oi oi-cloud-download"></span>
         </button>
         <button class="mx-1 btn btn-outline-primary @(filterFromEmail ? "active" : "")"
+                title="Фильтр - показать только шаблоны с возможность загрузки из почты"
                 @onclick="@(e => { filterFromEmail = !filterFromEmail; ApplyFilter(null); } )">
             <span class="oi oi-envelope-open"></span>
         </button>
@@ -73,11 +75,13 @@
     <AuthorizeView Roles="Administrator">
         <div class="d-inline px-2">
             <button class="btn btn-outline-primary mx-1"
+                    title="Добавить новое описание для существующего шаблона прайс-листа"
                     @onclick="@(e => navManager.NavigateTo($"/price-list/new"))">
                 <span class="oi oi-plus"></span>
             </button>
 
             <button class="btn btn-outline-primary mx-1"
+                    title="Редактированть описание выбранного шаблона прайс-листа"
                     disabled="@(selectedTemplate == null)"
                     @onclick="@(e => navManager.NavigateTo($"/price-list/edit/{selectedTemplate?.Guid}"))">
                 <span class="oi oi-pencil"></span>

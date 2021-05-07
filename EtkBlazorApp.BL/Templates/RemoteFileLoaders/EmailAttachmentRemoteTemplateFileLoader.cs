@@ -74,7 +74,7 @@ namespace EtkBlazorApp.BL
                 imapPort = "143";
             }
             var email = await settingStorage.GetValue("general_email_login");
-            var password = EncryptHelper.Decrypt(await settingStorage.GetValue("general_email_password"), "email_extractor");
+            var password = EncryptHelper.Decrypt(await settingStorage.GetValue("general_email_password"));
 
             ImapConnectionData connectionData = new ImapConnectionData(email, password, imapServer, imapPort);
 

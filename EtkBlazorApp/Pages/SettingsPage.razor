@@ -1,0 +1,49 @@
+﻿@page "/settings"
+@inject IToastService toasts
+@attribute [Authorize(Roles = "Administrator")]
+
+
+<div class="btn-group">
+    @foreach(var tab in new[] { generalTab, emailTab, ozonSellerTab })
+    {
+        <button class="btn btn-outline-success @(selectedTab == tab ? "active" : "")"
+                @onclick="@(e => selectedTab = tab)">
+            @tab.Icon &nbsp; @tab.Title
+        </button>
+    }
+</div>
+
+
+<button class="btn btn-outline-primary float-right"
+        @onclick="SaveCurrentTabSettings">
+    <span class="oi oi-check"></span>
+    Сохранить настройки
+</button>
+
+<div class="settings-tab-content container">
+    <h2>@selectedTab.Title</h2>
+    <CascadingValue Value="selectedTab">
+        <EmailSettingsTab tabData="@emailTab" />
+        <MainSettingsControlTab tabData="@generalTab" />
+        <OzonSellerSettingsTab tabData="@ozonSellerTab" />
+    </CascadingValue>
+</div>
+
+@code {
+    public SettingsTabData selectedTab { get; set; }
+    SettingsTabData generalTab, emailTab, ozonSellerTab;
+
+    protected override void OnInitialized()
+    {
+        generalTab = new SettingsTabData() { Title = "Основные настройки"  };
+        emailTab = new SettingsTabData() { Title = "Настройки почты", Icon = new MarkupString("&#9993;")  };
+        ozonSellerTab = new SettingsTabData() { Title = "Настройки OzonSeller" };
+
+        selectedTab = generalTab;
+    }
+    private void SaveCurrentTabSettings()
+    {
+        selectedTab.SaveButtonClicked.Invoke();
+        toasts.ShowInfo("Настройки сохранены", selectedTab.Title);
+    }
+}

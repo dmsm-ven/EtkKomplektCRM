@@ -1,6 +1,10 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+.settings-tab-content {
+    padding: 30px 5px;
+}
+
 .file-input-zone {
     position: relative;
     width: 225px;

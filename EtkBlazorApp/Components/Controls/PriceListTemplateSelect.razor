@@ -4,34 +4,50 @@
     <option value="">Выбрать шаблон прайс-листа</option>
     @foreach (var plt in priceListTemplates)
     {
-<option selected="@(Guid.Equals(plt.id))"
-        value="@plt.id">
-        @((MarkupString)(string.IsNullOrWhiteSpace(plt.remote_uri) ? "&star;" : "&starf;")) &nbsp; @plt.title
-</option>
+        <option selected="@(Guid.Equals(plt.id))"
+                value="@plt.id">
+           @GetIconMarkup(plt) &nbsp; @plt.title
+        </option>
     }
 </select>
 
 @code {
-        List<PriceListTemplateEntity> priceListTemplates = null;
-        
-        [Parameter]
-        public string Guid
-    {
-            get => guid ?? string.Empty;
-            set
-        {
-                if (guid == value) return;
-                if(value == null) { value = string.Empty; }
-                guid = value;
-                GuidChanged.InvokeAsync(value);
-            }
-        }
-        string guid;
+    List<PriceListTemplateEntity> priceListTemplates = null;
 
-        [Parameter] public EventCallback<string> GuidChanged { get; set; }
+    [Parameter]
+    public string Guid
+    {
+        get => guid ?? string.Empty;
+        set
+        {
+            if (guid == value) return;
+            if (value == null) { value = string.Empty; }
+            guid = value;
+            GuidChanged.InvokeAsync(value);
+        }
+    }
+    string guid;
+
+    [Parameter] public EventCallback<string> GuidChanged { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         priceListTemplates = await templateStorage.GetPriceListTemplates();
+    }
+
+    private MarkupString GetIconMarkup(PriceListTemplateEntity plt)
+    {
+        if (!string.IsNullOrEmpty(plt.remote_uri))
+        {
+            return (MarkupString)"&#9729;";
+        }
+
+        if (!string.IsNullOrWhiteSpace(plt.email_criteria_sender))
+        {
+            return (MarkupString)"&#9993;";
+        }
+
+
+        return (MarkupString)"&star;";
     }
 }

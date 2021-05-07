@@ -1,0 +1,29 @@
+﻿@inject ISettingStorage settings
+
+@if (selectedTab == tabData)
+{
+<div id="main_tab">
+    <div class="form-group">
+        <label for="monobrand_key">Ключ обновления монобренд сайтов</label>
+        <input type="text" class="form-control" id="monobrand_key" @bind="monobrandKey">
+    </div>
+</div>
+}
+
+@code {
+
+    [Parameter] public SettingsTabData tabData { get; set; }
+    [CascadingParameter] public SettingsTabData selectedTab { get; set; }
+
+    string monobrandKey;
+
+    protected override async Task OnInitializedAsync()
+    {
+        monobrandKey = await settings.GetValue("monobrand_updater_key");
+
+        tabData.SaveButtonClicked = new Action(async() =>
+        {
+            await settings.SetValue("monobrand_updater_key", monobrandKey);
+        });
+    }
+}

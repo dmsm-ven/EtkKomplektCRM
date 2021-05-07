@@ -1,0 +1,56 @@
+﻿@inject ISettingStorage settings
+
+@if (selectedTab == tabData)
+{
+    <div id="email_tab">
+        <form>
+            <div class="form-group">
+                <label for="imap_server">Сервер</label>
+                <input type="text" class="form-control" id="imap_server" placeholder="IMAP сервер" @bind="imapServer">
+            </div>
+            <div class="form-group">
+                <label for="imap_port">Порт</label>
+                <select class="form-control" id="imap_port" value="@imapPort">
+                    <option value="143">143</option>
+                    <option value="993">993</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="Почтовый ящик" @bind="email">
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <input type="password" class="form-control" id="password" placeholder="Пароль от почтового ящика" @bind="password">
+            </div>
+        </form>
+    </div>
+}
+
+@code {
+
+    [Parameter] public SettingsTabData tabData { get; set; }
+    [CascadingParameter] public SettingsTabData selectedTab { get; set; }
+
+    string imapServer, imapPort, password, email;
+
+    protected override async Task OnInitializedAsync()
+    {
+        imapServer = await settings.GetValue("general_email_imap_server");
+        imapPort = await settings.GetValue("general_email_imap_port");
+        if (string.IsNullOrWhiteSpace(imapPort))
+        {
+            imapPort = "143";
+        }
+        email = await settings.GetValue("general_email_login");
+        password = EncryptHelper.Decrypt(await settings.GetValue("general_email_password"));
+
+        tabData.SaveButtonClicked = new Action(async() =>
+        {
+            await settings.SetValue("general_email_imap_server", imapServer);
+            await settings.SetValue("general_email_imap_port", imapPort);
+            await settings.SetValue("general_email_login", email);
+            await settings.SetValue("general_email_password", EncryptHelper.Encrypt(password));
+        });
+    }
+}
