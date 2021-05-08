@@ -16,16 +16,17 @@ else
                     </td>
                     @for (int day = 1; day < daysInMoth; day++)
                     {
-                        <td style="background: @GetLabelForTaskInDay(kvp.Key, day)"></td>
+                        <td class="@(day == currentDay ? "today" : "")" style="background: @GetLabelForTaskInDay(kvp.Key, day)"></td>
                     }
                 </tr>
             }
             <tr class="footer">
                 <td>
+                    @DateTime.Now.ToString("MMMM")
                 </td>
                 @for (int day = 1; day < daysInMoth; day++)
                 {
-                    <td>@day</td>
+                    <td class="@(day == currentDay ? "today" : "")">@day</td>
                 }
             </tr>
         </tbody>
@@ -50,6 +51,11 @@ else
         max-height: 42px;
         text-align: center;
         vertical-align: middle;
+    }
+
+    #cron-task-history-table .today {
+        border-left: 2px solid red;
+        border-right: 2px solid red;
     }
 </style>
 

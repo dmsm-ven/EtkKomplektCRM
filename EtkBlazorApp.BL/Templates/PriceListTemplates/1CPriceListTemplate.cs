@@ -76,11 +76,10 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     .Select(cells => new PriceLine(this)
                     {
                         Sku = cells[0],
-                        Name = cells[1],
-                        Price = ParsePrice(cells[2].Replace(" ", string.Empty), false, 0),
-                        Quantity = ParseQuantity(cells[3].Replace(",000", string.Empty)),
-                        Manufacturer = "<Не указано>", //ParseQuantity(cells[4]),
-                        Currency = CurrencyType.RUB
+                        Manufacturer = cells[1],
+                        Name = cells[2],
+                        Quantity = ParseQuantity(cells[4].Replace(",000", string.Empty)),
+                        StockPartner = StockPartner._1C
                     })
                     .Where(pl => !string.IsNullOrWhiteSpace(pl.Sku))
                     .ToList();

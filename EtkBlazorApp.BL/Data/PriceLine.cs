@@ -24,5 +24,6 @@
     public enum StockPartner
     {        
         MarsComponent = 1,
+        _1C = 2,
     }
 }

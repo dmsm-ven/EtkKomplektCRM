@@ -79,13 +79,15 @@ namespace EtkBlazorApp.Pages
             isIntermediateProgress = true;
             StateHasChanged();
 
-            IRemoteTemplateFileLoader loader = remoteTemplateFileLoaderFactory.GetMethod(
-                selectedTemplate.RemoteUrl,
-                selectedTemplate.RemoteUrlMethodName,
-                selectedTemplate.Guid);
+
 
             try
             {
+                IRemoteTemplateFileLoader loader = remoteTemplateFileLoaderFactory.GetMethod(
+                    selectedTemplate.RemoteUrl,
+                    selectedTemplate.RemoteUrlMethodName,
+                    selectedTemplate.Guid);
+
                 var fileInfo = await loader.GetFile();
                 using (var ms = new MemoryStream(fileInfo.Bytes))
                 {

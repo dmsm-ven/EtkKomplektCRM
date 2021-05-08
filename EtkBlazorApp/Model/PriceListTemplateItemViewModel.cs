@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.BL;
+using EtkBlazorApp.Infrastructure;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -24,14 +25,12 @@ namespace EtkBlazorApp
         public decimal Discount { get; set; }       
         public bool Nds { get; set; }
 
-        [Required]
         public int PriceListTypeId { get; set; }
         public string PriceListTypeName { get; set; }
 
         public string RemoteUrl { get; set; }
         public int? RemoteUrlMethodId { get; set; }
         public string RemoteUrlMethodName { get; set; }
-
         
         public Type Type { get; private set; }
 
