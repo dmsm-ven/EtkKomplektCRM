@@ -56,6 +56,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         public _1CHtmlPriceListTemplate(string fileName)
         {
             FileName = fileName;
+            ManufacturerNameMap["Proskit"] = "Pro'sKit";
+            ManufacturerNameMap["АКТАКОМ"] = "Aktakom";
         }
 
         public Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)
@@ -76,7 +78,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     .Select(cells => new PriceLine(this)
                     {
                         Sku = cells[0],
-                        Manufacturer = cells[1],
+                        Manufacturer = MapManufacturerName(cells[1]),
                         Name = cells[2],
                         Quantity = ParseQuantity(cells[4].Replace(",000", string.Empty)),
                         StockPartner = StockPartner._1C

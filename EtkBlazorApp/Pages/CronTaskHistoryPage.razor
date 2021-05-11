@@ -16,7 +16,7 @@ else
                     </td>
                     @for (int day = 1; day < daysInMoth; day++)
                     {
-                        <td class="@(day == currentDay ? "today" : "")" style="background: @GetLabelForTaskInDay(kvp.Key, day)"></td>
+                        <td style="background: @GetLabelForTaskInDay(kvp.Key, day)"></td>
                     }
                 </tr>
             }
@@ -32,32 +32,6 @@ else
         </tbody>
     </table>
 }
-
-<style>
-    #cron-task-history-table td:first-child {
-        font-size: 16px;
-        font-weight: bold;
-        text-align: right;
-        width: auto;
-        white-space: pre;
-        margin: 4px 10px 4px 2px;
-        padding: 6px 12px;
-    }
-
-    #cron-task-history-table td:not(:first-child) {
-        min-width: 42px;
-        min-height: 42px;
-        max-width: 42px;
-        max-height: 42px;
-        text-align: center;
-        vertical-align: middle;
-    }
-
-    #cron-task-history-table .today {
-        border-left: 2px solid red;
-        border-right: 2px solid red;
-    }
-</style>
 
 @code {
         Dictionary<int, List<CronTaskHistoryEntity>> historyItems;

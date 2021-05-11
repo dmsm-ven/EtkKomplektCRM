@@ -3,6 +3,7 @@
 @inject IToastService toastService
 @inject ISettingStorage setting
 @inject IManufacturerStorage manufacturers
+@inject CronTaskService cronTaskService
 @inject PriceListManager priceListManager
 @inject UpdateManager databaseManager
 @inject UserLogger logger
@@ -12,8 +13,12 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12 my-1">
-            @if (inProgress)
+            @if (inProgress || activeTask != null)
             {
+                if (activeTask != null)
+                {
+                <h3>В данный момент выполняется задание @($"'{activeTask.name}'")</h3>
+                }
                 <IntermediateProgressBar></IntermediateProgressBar>
             }
             else
@@ -53,6 +58,9 @@
 @code {
     bool clearStockBeforeUpdate = false;
     bool inProgress = false;
+
+    CronTaskEntity activeTask;
+
     List<string> websiteManufacturers;
     List<string> updateProgressSteps = new List<string>();
 
@@ -76,6 +84,10 @@
 
     protected override async Task OnInitializedAsync()
     {
+        activeTask = cronTaskService.TaskInProgress;
+        cronTaskService.OnTaskExecutionStart += (t) => { activeTask = t; StateHasChanged(); };
+        cronTaskService.OnTaskExecutionEnd += (t) => { activeTask = null; StateHasChanged(); };
+
         websiteManufacturers = (await manufacturers.GetManufacturers()).Select(m => m.name).ToList();
 
         priceListManager.OnPriceListLoaded += () => StateHasChanged();
@@ -94,8 +106,8 @@
 
             var progress = new Progress<string>((msg) =>
             {
-                updateProgressSteps.Add($"[{DateTime.Now.ToString()}] " + msg);                            
-                StateHasChanged();            
+                updateProgressSteps.Add($"[{DateTime.Now.ToString()}] " + msg);
+                StateHasChanged();
             });
 
             await databaseManager.UpdatePriceAndStock(priceListManager.PriceLines, clearStockBeforeUpdate, progress);
@@ -113,4 +125,4 @@
             inProgress = false;
         }
     }
-}
+    }

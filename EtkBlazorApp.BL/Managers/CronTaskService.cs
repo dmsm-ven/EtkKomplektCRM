@@ -1,4 +1,4 @@
-﻿using EtkBlazorApp.BL;
+﻿using EtkBlazorApp.BL.CronTask;
 using EtkBlazorApp.BL.Templates.PriceListTemplates;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
@@ -6,16 +6,18 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.Timers;
 
-namespace EtkBlazorApp.BL.CronTask
+namespace EtkBlazorApp.BL
 {
     public class CronTaskService
     {
-        public event Action<CronTaskBase> OnTaskComplete;
-        public event Action<CronTaskBase> OnTaskExecutionError;
+        public event Action<CronTaskEntity> OnTaskExecutionStart;
+        public event Action<CronTaskEntity> OnTaskExecutionEnd;
+        public event Action<CronTaskEntity> OnTaskExecutionSuccess;
+        public event Action<CronTaskEntity> OnTaskExecutionError;
+        public CronTaskEntity TaskInProgress { get; private set; }
 
         private readonly ICronTaskStorage cronTaskStorage;
         internal readonly IPriceListTemplateStorage templates;
@@ -97,6 +99,8 @@ namespace EtkBlazorApp.BL.CronTask
         private async Task ExecuteTask(CronTaskBase task, CronTaskEntity taskInfo)
         {
             inProgress.Add(task);
+            OnTaskExecutionStart?.Invoke(taskInfo);
+            TaskInProgress = taskInfo;
 
             var sw = Stopwatch.StartNew();
             bool exec_result = false;
@@ -108,21 +112,31 @@ namespace EtkBlazorApp.BL.CronTask
                 exec_result = true;
 
                 sw.Stop();
-                OnTaskComplete?.Invoke(task);             
+                      
                 await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {taskInfo.name} выполнено. Длительность выполнения {(int)sw.Elapsed.TotalSeconds} сек.");
-
             }
             catch (Exception ex)
-            {
-                OnTaskExecutionError?.Invoke(task);
+            {               
                 await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Ошибка", $"Ошибка выполнения задания '{taskInfo.name}'. {ex.Message}");
+                //...exec_result = false 
             }
             finally
             {
                 inProgress.Remove(task);
                 taskInfo.last_exec_date_time = DateTime.Now;
                 taskInfo.last_exec_result = exec_result;
-                await cronTaskStorage.SaveCronTaskExecResult(taskInfo);
+                await cronTaskStorage.SaveCronTaskExecResult(taskInfo);               
+                TaskInProgress = null;
+
+                OnTaskExecutionEnd?.Invoke(taskInfo);
+                if (exec_result)
+                {
+                    OnTaskExecutionSuccess?.Invoke(taskInfo);
+                }
+                else
+                {
+                    OnTaskExecutionError?.Invoke(taskInfo);
+                }
             }         
         }
 
@@ -143,7 +157,7 @@ namespace EtkBlazorApp.BL.CronTask
             switch (taskTypeName)
             {
                 case "Одиночный прайс-лист":
-                    return new CronTaskUsingRemotePriceList(linkedPriceListType, this, taskId);
+                    return new BL.CronTask.CronTaskUsingRemotePriceList(linkedPriceListType, this, taskId);
             }
 
             throw new ArgumentException(taskTypeName + " не реализован");

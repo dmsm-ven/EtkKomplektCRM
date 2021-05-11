@@ -107,7 +107,6 @@
 
             isProgressBarVisible = false;
 
-            toasts.ShowSuccess("Задание выполнено", item.Title);
             await userLogger.Write(LogEntryGroupName.CronTask, "Задание выполнено (forced)", $"Задание '{item.Title}' выполнено");
         }
     }

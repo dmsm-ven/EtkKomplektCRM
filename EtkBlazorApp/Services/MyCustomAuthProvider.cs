@@ -38,7 +38,7 @@ namespace EtkBlazorApp.Services
                 { 
                     Login = login.Value, 
                     Password = password.Value,
-                    UserIP = contextAccessor.HttpContext.Connection?.RemoteIpAddress.ToString()
+                    UserIP = contextAccessor.HttpContext.Connection?.LocalIpAddress.ToString()
                 });
 
                 return state;           

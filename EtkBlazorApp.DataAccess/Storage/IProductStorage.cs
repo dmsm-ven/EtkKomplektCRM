@@ -18,9 +18,11 @@ namespace EtkBlazorApp.DataAccess
         Task<ProductEntity> GetProductByKeyword(string keyword);
         Task<ProductEntity> GetProductByModel(string model);
         Task<ProductEntity> GetProductBySku(string sku);
+        Task<ProductEntity> GetProductById(int id);
 
         Task<List<ProductEntity>> ReadProducts(IEnumerable<int> allowedManufacturers = null);
         Task<List<ProductEntity>> ReadProducts(int manufacturer_id);      
+        Task<List<ProductEntity>> SearchProductsByName(string searchText);      
         Task<List<StockStatusEntity>> GetStockStatuses();
     }
 
@@ -84,11 +86,18 @@ namespace EtkBlazorApp.DataAccess
             return GetSingleProductOrNullByField(nameof(sku), sku);
         }
 
+        public Task<ProductEntity> GetProductById(int product_id)
+        {
+            return GetSingleProductOrNullByField(nameof(product_id), product_id.ToString());
+        }
+
         public async Task<ProductEntity> GetProductByKeyword(string keyword)
         {
-            string sql = @"SELECT p.*, d.name as name, s.name as stock_status, url.keyword as keyword
+            string sql = @"SELECT p.*, d.name as name, s.name as stock_status, url.keyword as keyword, pr.replacement_id, m.name as manufacturer
                            FROM oc_product p
                            JOIN oc_url_alias url ON url.query = CONCAT('product_id=', p.product_id)
+                           LEFT JOIN oc_product_replacement pr ON p.product_id = pr.product_id
+                           JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id
                            JOIN oc_product_description d ON p.product_id = d.product_id
                            JOIN oc_stock_status s ON s.stock_status_id = p.stock_status_id
                            WHERE url.keyword = @keyword
@@ -164,9 +173,11 @@ namespace EtkBlazorApp.DataAccess
 
         private async Task<ProductEntity> GetSingleProductOrNullByField(string fieldName, string fieldValue)
         {
-            string sql = @$"SELECT p.*, url.keyword as keyword
+            string sql = @$"SELECT p.*, url.keyword as keyword, m.name as manufacturer, d.name as name
                          FROM oc_product p
-                         JOIN oc_url_alias url ON url.query = CONCAT('product_id=', p.product_id)
+                         JOIN oc_product_description d ON p.product_id = d.product_id
+                         LEFT JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id
+                         LEFT JOIN oc_url_alias url ON url.query = CONCAT('product_id=', p.product_id)
                          WHERE p.{fieldName} = @fieldValue";
 
             try
@@ -178,6 +189,21 @@ namespace EtkBlazorApp.DataAccess
             {
                 return null;
             }
+        }
+
+        public async Task<List<ProductEntity>> SearchProductsByName(string searchText)
+        {
+            var sql = @"SELECT p.*, d.name as name, m.name as manufacturer
+                        FROM oc_product p
+                        JOIN oc_product_description d ON p.product_id = d.product_id
+                        JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id
+                        WHERE p.status = 1 AND d.name LIKE @pattern
+                        ORDER BY d.name
+                        LIMIT 10";
+
+            var findedProducts = await database.GetList<ProductEntity, dynamic>(sql, new { pattern = $"%{searchText}%" });
+
+            return findedProducts;
         }
     }
 }

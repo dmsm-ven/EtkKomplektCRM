@@ -22,6 +22,7 @@ namespace EtkBlazorApp.DataAccess.Entity
         public string stock_status { get; set; }
         public int quantity { get; set; }
         public int viewed { get; set; }
+        public int? replacement_id { get; set; }
 
         public decimal length { get; set; }
         public decimal width { get; set; }

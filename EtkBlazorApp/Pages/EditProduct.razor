@@ -29,17 +29,21 @@
                 </div>
             </div>
 
-            @if (editedProduct != null)
+            @if(editedProduct == null)
             {
-        <div class="form-group">
-            <div class="float-left">
-                <label for="product-name">Наименование</label>
-            </div>
-            <div class="float-right">
-                <small style="color: lightgray">Последнее обновление: <span style="color: #7b7ba5;">@editedProduct.DateModified</span></small>
-            </div>
-            <input type="text" class="form-control" id="product-name" value="@(HttpUtility.HtmlDecode(editedProduct.Name))" readonly>
-        </div>
+                <LoadingSpinner/>
+            }
+            else
+            {
+                <div class="form-group">
+                    <div class="float-left">
+                        <label for="product-name">Наименование</label>
+                    </div>
+                    <div class="float-right">
+                        <small style="color: lightgray">Последнее обновление: <span style="color: #7b7ba5;">@editedProduct.DateModified</span></small>
+                    </div>
+                    <input type="text" class="form-control" id="product-name" value="@(HttpUtility.HtmlDecode(editedProduct.Name))" readonly>
+                </div>
                 <div class="form-row">
                     <div class="form-group col-md-4">
                         <label for="product-model">Модель</label>
@@ -84,7 +88,32 @@
                         </select>
                     </div>
                 </div>
-                @if (hasChanges)
+                @if (editedProduct.StockStatus == "Снято с производства")
+                {
+                    <div class="form-group">
+                        <label for="replacement_product">Замена</label>
+                        <input type="text" class="form-control" 
+                               list="replacement_list" 
+                               placeholder="Поиск по имени"
+                               autoComplete="on"
+                               style="width: 100%;"
+                               value="@replacementSearchText"
+                               @onkeypress="UpdateReplacementSource"
+                               @oninput="SelectedReplacementChanged"
+                               id="replacement_product" />
+                        <datalist id="replacement_list">
+                            @foreach(var replacement in replacementSource)
+                            {
+                                <option value="@replacement.name" 
+                                        selected="@(editedProduct.ReplacementProductId.HasValue && replacement.product_id == editedProduct.ReplacementProductId.Value)">
+                                    @replacement.manufacturer
+                                </option>
+                            }
+                        </datalist>
+                    </div>
+                }
+
+                if (hasChanges)
                 {
                     <button class="btn btn-success" style="width: 100%;" @onclick="SaveChanges">Сохранить</button>
                 }
@@ -95,92 +124,115 @@
 
 
 @code {
-    ProductViewModel editedProduct = null;
+        ProductViewModel editedProduct = null;
 
-    string[] basePriceCurrencyNames = Enum.GetNames(typeof(CurrencyType));
-    string[] stockStatusNames = null;
-    string enteredUri = null;
+        List<ProductEntity> replacementSource = null;
+        ProductEntity selectedReplacement = null;
 
-    [Parameter] public string Keyword { get; set; }
+        string[] basePriceCurrencyNames = Enum.GetNames(typeof(CurrencyType));
+        string[] stockStatusNames = null;
+        string enteredUri = null;
+        string replacementSearchText = null;
 
-    int currentStateCode = 0;
-    bool hasChanges => currentStateCode != 0 && currentStateCode != GetCurrentStateCode();
+        [Parameter] public string Keyword { get; set; }
 
-    protected override async Task OnInitializedAsync()
-    {
-        if (!string.IsNullOrWhiteSpace(Keyword))
+        int currentStateCode = 0;
+        bool hasChanges => currentStateCode != 0 && currentStateCode != GetCurrentStateCode();
+
+        protected override async Task OnInitializedAsync()
         {
-            enteredUri = $"https://etk-komplekt.ru/{Keyword}";
-        }
-        else
-        {
-            enteredUri = await settingStorage.GetValue("edit-product-page-last-uri");
-        }
-        stockStatusNames = (await productStorage.GetStockStatuses()).Select(e => e.name).ToArray();
-        if (!string.IsNullOrWhiteSpace(enteredUri))
-        {
-            await LoadProduct();
-        }
-    }
+            replacementSource = new List<ProductEntity>();
 
-    private async Task LoadProduct()
-    {
-        if (string.IsNullOrWhiteSpace(enteredUri)) { return; }
-
-        string keyword = new Uri(enteredUri).AbsolutePath.Trim('/', '?', '&');
-        var entity = await productStorage.GetProductByKeyword(keyword);
-        if (entity == null) { editedProduct = null; return; }
-
-        editedProduct = new ProductViewModel()
-        {
-            Id = entity.product_id,
-            Uri = $"https://etk-komplekt.ru/{entity.keyword}",
-            Name = entity.name,
-            Model = entity.model,
-            Sku = entity.sku,
-            EAN = entity.ean,
-            Quantity = entity.quantity,
-            BasePrice = entity.base_currency_code == CurrencyType.RUB.ToString() ? entity.price : entity.base_price,
-            BasePriceCurrency = entity.base_currency_code,
-            StockStatus = entity.stock_status,
-            DateModified = entity.date_modified.HasValue ? entity.date_modified.ToString() : string.Empty
-        };
-
-        if (entity != null)
-        {
-            await settingStorage.SetValue("edit-product-page-last-uri", editedProduct.Uri);
+            if (!string.IsNullOrWhiteSpace(Keyword))
+            {
+                enteredUri = $"https://etk-komplekt.ru/{Keyword}";
+            }
+            else
+            {
+                enteredUri = await settingStorage.GetValue("edit-product-page-last-uri");
+            }
         }
 
-        currentStateCode = GetCurrentStateCode();
-    }
-
-    private async Task SaveChanges()
-    {
-        if (editedProduct.BasePriceCurrency != CurrencyType.RUB.ToString())
+        protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            decimal ratio = await currencyChecker.GetCurrencyRate(Enum.Parse<CurrencyType>(editedProduct.BasePriceCurrency));
-            editedProduct.Price = Math.Round(ratio * editedProduct.BasePrice);
-        }
-        else
-        {
-            editedProduct.BasePriceCurrency = CurrencyType.RUB.ToString();
-            editedProduct.Price = editedProduct.BasePrice;
+            if (firstRender)
+            {
+                stockStatusNames = (await productStorage.GetStockStatuses()).Select(e => e.name).ToArray();
+                if (!string.IsNullOrWhiteSpace(enteredUri))
+                {
+                    await LoadProduct();
+                }
+            }
         }
 
-        var entity = new ProductEntity()
+        private async Task LoadProduct()
         {
-            product_id = editedProduct.Id,
-            price = editedProduct.Price,
-            base_price = editedProduct.BasePriceCurrency == CurrencyType.RUB.ToString() ? 0 : editedProduct.BasePrice,
-            base_currency_code = editedProduct.BasePriceCurrency,
-            quantity = editedProduct.Quantity,
-            stock_status = editedProduct.StockStatus
+            if (string.IsNullOrWhiteSpace(enteredUri)) { return; }
+
+            string keyword = new Uri(enteredUri).AbsolutePath.Trim('/', '?', '&');
+            var entity = await productStorage.GetProductByKeyword(keyword);
+            if (entity == null) { editedProduct = null; return; }
+
+            editedProduct = new ProductViewModel()
+            {
+                Id = entity.product_id,
+                Uri = $"https://etk-komplekt.ru/{entity.keyword}",
+                Name = entity.name,
+                Model = entity.model,
+                Manufacturer = entity.manufacturer,
+                Sku = entity.sku,
+                EAN = entity.ean,
+                Quantity = entity.quantity,
+                BasePrice = entity.base_currency_code == CurrencyType.RUB.ToString() ? entity.price : entity.base_price,
+                BasePriceCurrency = entity.base_currency_code,
+                StockStatus = entity.stock_status,
+                DateModified = entity.date_modified.HasValue ? entity.date_modified.ToString() : string.Empty,
+                ReplacementProductId = entity.replacement_id,
+            };
+
+            if (editedProduct.ReplacementProductId.HasValue)
+            {
+                selectedReplacement = await productStorage.GetProductById(editedProduct.ReplacementProductId.Value);
+                replacementSource.Add(selectedReplacement);
+                replacementSearchText = selectedReplacement?.name;
+            }
+
+            if (entity != null)
+            {
+                await settingStorage.SetValue("edit-product-page-last-uri", editedProduct.Uri);
+            }
+
+            currentStateCode = GetCurrentStateCode();
+            StateHasChanged();
+        }
+
+        private async Task SaveChanges()
+        {
+            if (editedProduct.BasePriceCurrency != CurrencyType.RUB.ToString())
+            {
+                decimal ratio = await currencyChecker.GetCurrencyRate(Enum.Parse<CurrencyType>(editedProduct.BasePriceCurrency));
+                editedProduct.Price = Math.Round(ratio * editedProduct.BasePrice);
+            }
+            else
+            {
+                editedProduct.BasePriceCurrency = CurrencyType.RUB.ToString();
+                editedProduct.Price = editedProduct.BasePrice;
+            }
+
+            var entity = new ProductEntity()
+            {
+                product_id = editedProduct.Id,
+                price = editedProduct.Price,
+                base_price = editedProduct.BasePriceCurrency == CurrencyType.RUB.ToString() ? 0 : editedProduct.BasePrice,
+                base_currency_code = editedProduct.BasePriceCurrency,
+                quantity = editedProduct.Quantity,
+                stock_status = editedProduct.StockStatus,
+                replacement_id = (editedProduct.StockStatus == "Снято с производства" ? selectedReplacement?.product_id : (int?)null)
         };
 
         await productUpdateService.UpdateDirectProduct(entity);
 
-        string pUri = "https://etk-komplekt.ru/index.php?route=product/product&product_id=" + editedProduct.Id;
-        await log.Write(LogEntryGroupName.ProductUpdate, "Товар обновлен", $"{HttpUtility.HtmlDecode(editedProduct.Name)} ({pUri})");
+        await log.Write(LogEntryGroupName.ProductUpdate, "Товар обновлен", $"{HttpUtility.HtmlDecode(editedProduct.Name)} ({editedProduct.ProductIdUri})");
 
         currentStateCode = GetCurrentStateCode();
     }
@@ -196,7 +248,24 @@
             code += editedProduct.Quantity.GetHashCode();
             code += (editedProduct?.StockStatus ?? string.Empty).GetHashCode();
             code += (editedProduct?.BasePriceCurrency ?? string.Empty).GetHashCode();
+            code += (selectedReplacement?.name?.GetHashCode() ?? 9);
         }
         return code;
+    }
+
+    private async Task UpdateReplacementSource(KeyboardEventArgs e)
+    {
+        if(e.Key != "Enter" || replacementSearchText.Length < 3) { return; }
+
+        replacementSource.Clear();
+
+        var data = await productStorage.SearchProductsByName(replacementSearchText);
+        replacementSource.AddRange(data.OrderBy(p => p.name));
+    }
+
+    private void SelectedReplacementChanged(ChangeEventArgs e)
+    {
+        replacementSearchText = e.Value?.ToString() ?? string.Empty;
+        selectedReplacement = replacementSource.FirstOrDefault(p => p.name.Equals(replacementSearchText));
     }
 }

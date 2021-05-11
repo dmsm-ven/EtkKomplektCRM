@@ -1,7 +1,7 @@
 ﻿@page "/login"
 @using Microsoft.AspNetCore.Http
 @inject ILogStorage log
-@inject IHttpContextAccessor httpContext
+@inject IHttpContextAccessor httpAccessor
 @inject AuthenticationStateProvider authenticationStateProvider
 @inject NavigationManager navigation
 @inject ProtectedLocalStorage localStorage
@@ -49,7 +49,8 @@
 
     private async Task Enter()
     {
-        user.UserIP = httpContext.HttpContext.Connection?.RemoteIpAddress.ToString();
+        var request = httpAccessor.HttpContext;
+        user.UserIP = request.Connection.RemoteIpAddress.ToString();
 
         isInvalidData = false;
 

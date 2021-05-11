@@ -149,7 +149,7 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task UpdateDirectProduct(ProductEntity product)
         {
-            var sql = @"UPDATE oc_product
+            string sql = @"UPDATE oc_product
                         SET price = @price,
                             base_price = @base_price,
                             base_currency_code = @base_currency_code,
@@ -159,6 +159,20 @@ namespace EtkBlazorApp.DataAccess
                             WHERE product_id = @product_id";
 
             await database.ExecuteQuery(sql, product);
+
+            if (product.replacement_id.HasValue)
+            {
+                string addReplacementSql = @"INSERT INTO oc_product_replacement (product_id, replacement_id)
+                                             VALUES (@product_id, @replacement_id)
+                                             ON DUPLICATE KEY
+                                             UPDATE replacement_id = @replacement_id";
+
+                await database.ExecuteQuery(addReplacementSql, product);
+            }
+            else
+            {
+                await database.ExecuteQuery("DELETE FROM oc_product_replacement WHERE product_id = @product_id", product);
+            }
         }
 
         private async Task<List<int>> GetDiscountProductIds()

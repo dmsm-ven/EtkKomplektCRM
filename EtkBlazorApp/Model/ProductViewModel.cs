@@ -6,6 +6,7 @@ namespace EtkBlazorApp
     public class ProductViewModel
     {
         public int Id { get; set; }
+
         public string Name { get; set; }
         public string Model { get; set; }
         public string Manufacturer { get; set; }
@@ -22,6 +23,8 @@ namespace EtkBlazorApp
         public int Quantity { get; set; }
         public string DateModified { get; set; }
 
+        public int? ReplacementProductId { get; set; }
+        public string ReplacementProductName { get; set; }
 
         public string FullSizeImage => $"https://etk-komplekt.ru/image/{Image}";
         public double? DiscountPercent

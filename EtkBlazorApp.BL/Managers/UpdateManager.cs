@@ -77,7 +77,6 @@ namespace EtkBlazorApp.BL
             var allManufacturers = await manufacturerStorage.GetManufacturers();
 
             var affectedBrands = priceLines
-                .Where(pl => pl.StockPartner == null)
                 .Select(pl => pl.Manufacturer)
                 .Distinct()
                 .ToList();
