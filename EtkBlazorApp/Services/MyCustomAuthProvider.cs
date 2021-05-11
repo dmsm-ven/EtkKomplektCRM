@@ -1,11 +1,11 @@
-using EtkBlazorApp.BL;
 using EtkBlazorApp.DataAccess;
-using EtkBlazorApp.DataAccess.Entity;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.AspNetCore.Http;
-using System;
+using Microsoft.JSInterop;
+using Newtonsoft.Json;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -13,18 +13,18 @@ namespace EtkBlazorApp.Services
 {
     public class MyCustomAuthProvider : AuthenticationStateProvider
     {
-        private readonly IHttpContextAccessor contextAccessor;
         private readonly IAuthenticationDataStorage auth;
+        private readonly IUserInfoChecker userInfoChecker;
         private readonly ProtectedLocalStorage storage;
 
         public MyCustomAuthProvider(
-            IAuthenticationDataStorage auth, 
-            IHttpContextAccessor contextAccessor, 
+            IAuthenticationDataStorage auth,
+            IUserInfoChecker userInfoChecker,
             ProtectedLocalStorage storage)
         {
             this.storage = storage;
-            this.contextAccessor = contextAccessor;
             this.auth = auth;
+            this.userInfoChecker = userInfoChecker;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -34,11 +34,10 @@ namespace EtkBlazorApp.Services
             
             if (login.Success && password.Success)
             {
-                var state = await AuthenticateUser(new AppUser() 
-                { 
-                    Login = login.Value, 
-                    Password = password.Value,
-                    UserIP = contextAccessor.HttpContext.Connection?.LocalIpAddress.ToString()
+                var state = await AuthenticateUser(new AppUser()
+                {
+                    Login = login.Value,
+                    Password = password.Value
                 });
 
                 return state;           
@@ -48,7 +47,9 @@ namespace EtkBlazorApp.Services
         }
 
         public async Task<AuthenticationState> AuthenticateUser(AppUser userData)
-        {           
+        {
+            await userInfoChecker.FillUserInfo(userData);
+
             string permission = await auth.GetUserPermission(userData.Login, userData.Password);
 
             if (string.IsNullOrWhiteSpace(permission))
@@ -57,6 +58,7 @@ namespace EtkBlazorApp.Services
             }
 
             var userInfo = (await auth.GetUsers()).Single(u => u.login == userData.Login);
+       
 
             if (!string.IsNullOrWhiteSpace(userInfo.ip) && userInfo.ip != userData.UserIP)
             {

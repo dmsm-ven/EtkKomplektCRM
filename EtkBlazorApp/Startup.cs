@@ -7,6 +7,7 @@ using EtkBlazorApp.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -28,12 +29,11 @@ namespace EtkBlazorApp
         {
             //Blazor стандартные
             services.AddRazorPages();
-            services.AddServerSideBlazor().AddCircuitOptions(options => { options.DetailedErrors = true; });
-
-            //Blazor дополнительные
+            services.AddServerSideBlazor().AddCircuitOptions(options => { options.DetailedErrors = true; });           
             services.AddHttpContextAccessor();
 
-            //Приложение                        
+            //Приложение       
+            services.AddTransient<IUserInfoChecker, UserInfoChecker>();
             services.AddTransient<ICompressedFileExtractor, SharpCompressFileExtractor>();
             ConfigureCorrelators(services);
             ConfigureDatabase(services);
@@ -49,7 +49,8 @@ namespace EtkBlazorApp
 
             services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();
             services.AddScoped<UserLogger>();
-            services.AddScoped<ReportManager>();      
+            services.AddScoped<ReportManager>();
+            
 
             //Сторонние
             services.AddBlazoredToast();

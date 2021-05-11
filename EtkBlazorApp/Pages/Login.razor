@@ -1,7 +1,5 @@
 ﻿@page "/login"
-@using Microsoft.AspNetCore.Http
 @inject ILogStorage log
-@inject IHttpContextAccessor httpAccessor
 @inject AuthenticationStateProvider authenticationStateProvider
 @inject NavigationManager navigation
 @inject ProtectedLocalStorage localStorage
@@ -49,9 +47,6 @@
 
     private async Task Enter()
     {
-        var request = httpAccessor.HttpContext;
-        user.UserIP = request.Connection.RemoteIpAddress.ToString();
-
         isInvalidData = false;
 
         await ((MyCustomAuthProvider)authenticationStateProvider).AuthenticateUser(user);
@@ -71,7 +66,7 @@
             {
                 group_name = LogEntryGroupName.Auth.GetDescriptionAttribute(),
                 title = "Ошибка входа",
-                message = $"Вход не выполнен. Логин ({user.Login}) Пароль ({user.Password}) IP ({user.UserIP})",
+                message = $"Логин ({user.Login}) Пароль ({user.Password}) IP ({user.UserIP}) город ({user.UserCity})",
                 user = "Не авторизован",
                 date_time = DateTime.Now
             });

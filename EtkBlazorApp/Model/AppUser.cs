@@ -21,6 +21,7 @@ namespace EtkBlazorApp
         public string Password { get; set; }
 
         public string UserIP { get; set; }
+        public string UserCity { get; set; }
 
         public string GroupName { get; set; }
 

@@ -10,3 +10,7 @@
         return (img.width === 400 && img.height === 200);
     }
 }
+
+function getUserInfo() {
+    return $.getJSON('https://api.db-ip.com/v2/free/self');
+}
