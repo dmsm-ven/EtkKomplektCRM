@@ -103,7 +103,7 @@
 
             await Task.Delay(TimeSpan.FromSeconds(1));
 
-            await taskManager.ExecuteImmediately(item.Id);
+            await InvokeAsync(() => taskManager.ExecuteImmediately(item.Id));
 
             isProgressBarVisible = false;
 

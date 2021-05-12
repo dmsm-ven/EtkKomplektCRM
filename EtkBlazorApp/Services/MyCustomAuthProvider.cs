@@ -1,11 +1,7 @@
 using EtkBlazorApp.DataAccess;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
-using Microsoft.AspNetCore.Http;
-using Microsoft.JSInterop;
-using Newtonsoft.Json;
 using System.Linq;
-using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 

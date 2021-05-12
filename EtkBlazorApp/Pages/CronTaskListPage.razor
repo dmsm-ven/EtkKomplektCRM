@@ -25,6 +25,9 @@ else
                 Журнал выполнения
             </a>
         </div>
+        <div class="float-right" style="margin-left: auto;">
+            <p>Время на сервере: <span style="color: Highlight">@DateTime.Now.ToShortTimeString()</span></p>
+        </div>
     </div>
 
     <div class="row py-2">
@@ -54,7 +57,7 @@ else
 
 
 @code {
-    Timer timeLeftRefresh = new Timer(TimeSpan.FromMinutes(1).TotalMilliseconds);
+    Timer timeLeftRefresh = new Timer(TimeSpan.FromSeconds(15).TotalMilliseconds);
     List<CronTaskViewModel> cronTaskList = null;
     AddNewCronTaskDialog addNewDialog;
 
