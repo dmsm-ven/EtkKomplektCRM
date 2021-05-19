@@ -4,7 +4,7 @@
 
 
 <div class="btn-group">
-    @foreach(var tab in new[] { generalTab, emailTab, ozonSellerTab })
+    @foreach(var tab in tabData)
     {
         <button class="btn btn-outline-primary @(selectedTab == tab ? "active" : "")"
                 @onclick="@(e => selectedTab = tab)">
@@ -26,18 +26,23 @@
         <EmailSettingsTab tabData="@emailTab" />
         <MainSettingsControlTab tabData="@generalTab" />
         <OzonSellerSettingsTab tabData="@ozonSellerTab" />
+        <VISettingsTab tabData="@viTab" />
     </CascadingValue>
 </div>
 
 @code {
     public SettingsTabData selectedTab { get; set; }
-    SettingsTabData generalTab, emailTab, ozonSellerTab;
+    List<SettingsTabData> tabData;
+    SettingsTabData generalTab, emailTab, ozonSellerTab, viTab;
 
     protected override void OnInitialized()
     {
         generalTab = new SettingsTabData() { Title = "Основные настройки"  };
-        emailTab = new SettingsTabData() { Title = "Настройки почты", Icon = new MarkupString("&#9993;")  };
-        ozonSellerTab = new SettingsTabData() { Title = "Настройки OzonSeller" };
+        emailTab = new SettingsTabData() { Title = "Почтовые ящики", Icon = new MarkupString("&#9993;")  };
+        ozonSellerTab = new SettingsTabData() { Title = "Озон" };
+        viTab = new SettingsTabData() { Title = "ВсеИнструменты" };
+
+        tabData = new List<SettingsTabData>(new[] { generalTab, emailTab, ozonSellerTab, viTab });
 
         selectedTab = generalTab;
     }

@@ -14,16 +14,17 @@ namespace EtkBlazorApp.DataAccess
         Task<List<ProductEntity>> GetProductsWithMaxDiscount(int count);
         Task<List<ProductEntity>> GetBestsellersByQuantity(int count, int maxOrderOldInDays);
         Task<List<ProductEntity>> GetBestsellersBySum(int count, int maxOrderOldInDays);
+        Task<List<ProductEntity>> GetProductQuantityInAdditionalStock(int stockId);
+        Task<List<ProductEntity>> ReadProducts(IEnumerable<int> allowedManufacturers = null);
+        Task<List<ProductEntity>> ReadProducts(int manufacturer_id);
+        Task<List<ProductEntity>> SearchProductsByName(string searchText);
 
         Task<ProductEntity> GetProductByKeyword(string keyword);
         Task<ProductEntity> GetProductByModel(string model);
         Task<ProductEntity> GetProductBySku(string sku);
         Task<ProductEntity> GetProductById(int id);
 
-        Task<List<ProductEntity>> ReadProducts(IEnumerable<int> allowedManufacturers = null);
-        Task<List<ProductEntity>> ReadProducts(int manufacturer_id);      
-        Task<List<ProductEntity>> SearchProductsByName(string searchText);      
-        Task<List<StockStatusEntity>> GetStockStatuses();
+        Task<List<StockStatusEntity>> GetStockStatuses();        
     }
 
     public class ProductStorage : IProductStorage
@@ -204,6 +205,15 @@ namespace EtkBlazorApp.DataAccess
             var findedProducts = await database.GetList<ProductEntity, dynamic>(sql, new { pattern = $"%{searchText}%" });
 
             return findedProducts;
+        }
+
+        public async Task<List<ProductEntity>> GetProductQuantityInAdditionalStock(int stockParnerId)
+        {
+            string sql = "SELECT * FROM oc_product_to_stock WHERE stock_partner_id = @stockParnerId";
+
+            var data = await database.GetList<ProductEntity, dynamic>(sql, new { stockParnerId });
+
+            return data;
         }
     }
 }

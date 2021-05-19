@@ -7,6 +7,10 @@
         <label for="monobrand_key">Ключ обновления монобренд сайтов</label>
         <input type="text" class="form-control" id="monobrand_key" @bind="monobrandKey">
     </div>
+    <div class="form-group">
+        <label for="nds">НДС, %</label>
+        <input type="number" min="0" max="100" class="form-control" id="nds" @bind="nds">
+    </div>
 </div>
 }
 
@@ -16,14 +20,17 @@
     [CascadingParameter] public SettingsTabData selectedTab { get; set; }
 
     string monobrandKey;
+    int nds;
 
     protected override async Task OnInitializedAsync()
     {
         monobrandKey = await settings.GetValue("monobrand_updater_key");
+        nds = await settings.GetValue<int>("nds");
 
         tabData.SaveButtonClicked = new Action(async() =>
         {
             await settings.SetValue("monobrand_updater_key", monobrandKey);
+            await settings.SetValue<int>("nds", nds);
         });
     }
 }

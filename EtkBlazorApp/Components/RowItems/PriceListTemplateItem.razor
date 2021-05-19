@@ -28,6 +28,7 @@
     string outerDivCss => Items.Contains(GlobalSelectedTemplate) ? "active" : string.Empty;
     string innerDivCss => Items.All(item => IsTemplateAlreadyLoaded(item)) ? "already-loaded" : string.Empty;
 
+    DateTime lastChangeDateTime;
 
     private string GroupImage
     {
@@ -44,6 +45,8 @@
 
     private async Task BoxClicked()
     {
+        if (IsAlreadyChanged()) { return; }
+
         int currentTemplateIndex = Items.IndexOf(SelectedTemplate);
         if (currentTemplateIndex == -1 || currentTemplateIndex == Items.Count - 1)
         {
@@ -64,6 +67,7 @@
         {
             GlobalSelectedTemplate = SelectedTemplate;
             await CheckedChanged.InvokeAsync(SelectedTemplate);
+            lastChangeDateTime = DateTime.Now;
         }
     }
 
@@ -72,6 +76,12 @@
         SelectedTemplate = item;
         GlobalSelectedTemplate = SelectedTemplate;
         await CheckedChanged.InvokeAsync(item);
+        lastChangeDateTime = DateTime.Now;
+    }
+
+    private bool IsAlreadyChanged()
+    {
+        return Math.Abs((DateTime.Now - lastChangeDateTime).TotalMilliseconds) <= 400;
     }
 
 }

@@ -32,6 +32,9 @@ namespace EtkBlazorApp.BL
         Prikat,
 
         [Description("Загрузка шаблона")]
-        PriceListTemplateLoad
+        PriceListTemplateLoad,
+
+        [Description("Озон")]
+        Ozon,
     }
 }

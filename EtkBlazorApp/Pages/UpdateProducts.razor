@@ -1,4 +1,5 @@
 ﻿@page "/update-products"
+@implements IDisposable
 @attribute [Authorize(Roles = "Administrator, Manager")]
 @inject IToastService toastService
 @inject ISettingStorage setting
@@ -56,41 +57,63 @@
 </div>
 
 @code {
-    bool clearStockBeforeUpdate = false;
-    bool inProgress = false;
+        bool clearStockBeforeUpdate = false;
+        bool inProgress = false;
 
-    CronTaskEntity activeTask;
+        CronTaskEntity activeTask;
 
-    List<string> websiteManufacturers;
-    List<string> updateProgressSteps = new List<string>();
+        List<string> websiteManufacturers;
+        List<string> updateProgressSteps = new List<string>();
 
-    string clearStockBrandsArrayString
+        string clearStockBrandsArrayString
     {
-        get
+            get
         {
-            var priceLinesBrands = priceListManager.PriceLines
-                .Where(line => line.StockPartner == null && line.Quantity != null)
-                .GroupBy(p => p.Manufacturer)
-                .Select(g => g.Key)
-                .OrderBy(m => m)
-                .ToList();
+                var priceLinesBrands = priceListManager.PriceLines
+                    .Where(line => line.StockPartner == null && line.Quantity != null)
+                    .GroupBy(p => p.Manufacturer)
+                    .Select(g => g.Key)
+                    .OrderBy(m => m)
+                    .ToList();
 
-            var affectedBrands = priceLinesBrands
-                .Intersect(websiteManufacturers, StringComparer.OrdinalIgnoreCase);
+                var affectedBrands = priceLinesBrands
+                    .Intersect(websiteManufacturers, StringComparer.OrdinalIgnoreCase);
 
-            return string.Join(", ", affectedBrands);
+                return string.Join(", ", affectedBrands);
+            }
         }
-    }
 
     protected override async Task OnInitializedAsync()
     {
         activeTask = cronTaskService.TaskInProgress;
-        cronTaskService.OnTaskExecutionStart += (t) => { activeTask = t; StateHasChanged(); };
-        cronTaskService.OnTaskExecutionEnd += (t) => { activeTask = null; StateHasChanged(); };
+        cronTaskService.OnTaskExecutionStart += OnTaskManagerStart;
+        cronTaskService.OnTaskExecutionEnd += OnTaskManagerFinish;
+        priceListManager.OnPriceListLoaded += OnPriceListLoad;
+    }
 
-        websiteManufacturers = (await manufacturers.GetManufacturers()).Select(m => m.name).ToList();
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            websiteManufacturers = (await manufacturers.GetManufacturers()).Select(m => m.name).ToList();
+        }
+    }
 
-        priceListManager.OnPriceListLoaded += () => StateHasChanged();
+    private async void OnTaskManagerStart(CronTaskEntity t)
+    {
+        activeTask = t;
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    private async void OnTaskManagerFinish(CronTaskEntity t)
+    {
+        activeTask = null;
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    private async void OnPriceListLoad()
+    {
+        await InvokeAsync(() => StateHasChanged());
     }
 
     private async Task UpdateProductsPriceAndStock()
@@ -125,4 +148,11 @@
             inProgress = false;
         }
     }
+
+    public void Dispose()
+    {
+        cronTaskService.OnTaskExecutionStart -= OnTaskManagerStart;
+        cronTaskService.OnTaskExecutionEnd -= OnTaskManagerFinish;
+        priceListManager.OnPriceListLoaded -= OnPriceListLoad;
     }
+}

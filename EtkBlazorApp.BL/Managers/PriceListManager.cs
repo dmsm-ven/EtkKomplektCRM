@@ -17,17 +17,19 @@ namespace EtkBlazorApp.BL
 
         public List<PriceLine> PriceLines { get; }
         public List<LoadedPriceListTemplateData> LoadedFiles { get; }
-        public decimal NDS { get; } = 1.2m;
 
+        public decimal NDS { get; private set; }
         private readonly IPriceLineLoadCorrelator correlator;
         private readonly IPriceListTemplateStorage templateStorage;
+        private readonly ISettingStorage settings;
 
-        public PriceListManager(IPriceLineLoadCorrelator correlator, IPriceListTemplateStorage templateStorage)
+        public PriceListManager(IPriceLineLoadCorrelator correlator, IPriceListTemplateStorage templateStorage, ISettingStorage settings)
         {
             PriceLines = new List<PriceLine>();
             LoadedFiles = new List<LoadedPriceListTemplateData>();
             this.correlator = correlator;
             this.templateStorage = templateStorage;
+            this.settings = settings;
         }
 
         public static string GetPriceListGuidByType(Type priceListTemplateType)
@@ -86,7 +88,7 @@ namespace EtkBlazorApp.BL
                 var templateInfo = await GetTemplateDescription(templateType);
 
                 var list = await templateInstance.ReadPriceLines(null);
-                ApplyDiscounts(list, templateInfo.discount, templateInfo.nds);
+                await ApplyDiscounts(list, templateInfo.discount, templateInfo.nds);
 
                 if (addFileData)
                 {
@@ -112,12 +114,14 @@ namespace EtkBlazorApp.BL
         /// <param name="list"></param>
         /// <param name="discount"></param>
         /// <param name="addNds"></param>
-        private void ApplyDiscounts(List<PriceLine> list, decimal discount, bool addNds)
+        private async Task ApplyDiscounts(List<PriceLine> list, decimal discount, bool addNds)
         {
             var source = list.Where(line => line.Price.HasValue);
             bool emptyDiscount = (discount == decimal.Zero && addNds == false);
 
             if (emptyDiscount || source.Count() == 0) { return; }
+
+            NDS = (100m + (await settings.GetValue<int>("nds"))) / 100;
 
             foreach (var line in source)
             {
@@ -141,6 +145,7 @@ namespace EtkBlazorApp.BL
         /// <returns></returns>
         private decimal AddNds(decimal price, CurrencyType currencyType)
         {
+            
             if (currencyType == CurrencyType.RUB)
             {
                 return Math.Floor(price * NDS);

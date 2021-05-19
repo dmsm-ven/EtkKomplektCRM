@@ -4,56 +4,83 @@
 @inject IManufacturerStorage manufacturerStorage
 @inject ISettingStorage settings
 @inject OzonSellerManager ozonManager
+@inject UserLogger logger
 
-@if (orderedDiscountInfoSource == null)
-{
-    <LoadingSpinner />
-}
-else
-{
-    <h3>Ozon Seller</h3>
-    <div class="row">
-        <div class="col-lg-6 col-md-8 col-sm-12">
-            <div class="row">
-                <div class="col-md-6 col-sm-6">
-                    @if (isUpdateInProgress)
-                    {
-                        <IntermediateProgressBar></IntermediateProgressBar>
-                    }
-                    else
-                    {
-                        <button type="button" class="btn btn-outline-primary btn-lg"
-                                @onclick="UpdateOzonButtonClick"
-                                disabled="@updateButtonDisabled">
-                            Обновить цены и остатки
-                        </button>
-                    }
-                    <p>Последнее обновление: <storng>@lastUpdateDateTime</storng></p>
-                </div>
-            </div>
-            <div class="row">
-                <div class="ozon-manufacturer-discount-list col-sm-12">
-                    <div class="row">
-                        <div class="col-md-9">Производитель</div>
-                        <div class="col-md-3">Наценка от сайта</div>
-                    </div>
-                    @foreach (var item in orderedDiscountInfoSource)
-                    {
-                        <OzonManufacturerDiscountItem Item="item" ItemChanged="ItemStateChanged" />
-                    }
-                </div>
-            </div>
+<img style="height: 100px; margin: 0px auto 40px auto; display: block;"
+     src="image/logotips/ozon-seller-logo-big.png"
+     class="img-fluid" />
+
+<div class="container">
+
+    @if (isUpdateInProgress)
+    {
+        <h3>Данные обновляются</h3>
+        <IntermediateProgressBar></IntermediateProgressBar>
+    }
+
+    <div class="row my-3">
+        <div class="col-md-4">
+            <button class="btn btn-info w-100" 
+                    disabled="@updateButtonDisabled"
+                    @onclick="(() => showSettingsBox = !showSettingsBox)">
+                <span class="oi oi-cog px-1"></span>
+                @(!showSettingsBox ? "Показать меню настроек" : "Скрыть меню настроек")
+            </button>
+        </div>
+
+        <div class="col-md-4 offset-4">
+            <button type="button" class="btn btn-primary w-100"
+                    @onclick="UpdateOzonButtonClick"
+                    disabled="@updateButtonDisabled">
+                <span class="oi oi-arrow-circle-top px-1"></span>
+                Обновить цены и остатки
+            </button>
+            <p>Последнее обновление: <storng>@lastUpdateDateTime</storng></p>
         </div>
     </div>
-}
 
-<ConfirmDialog @ref="confirmDialog" 
+    <ul class="list-group" hidden="@(!showSettingsBox)">
+        <li class=" list-group-item">
+            <input class="form-check-input" type="checkbox"
+                   checked="@reportOptionsOnly1CQuantity"
+                   @onchange="@(async e => { reportOptionsOnly1CQuantity = (bool)e.Value; await OptionsChanged(); })" />
+            Только остатки из 1С (если нет то 0)
+        </li>
+    </ul>
+
+
+
+    @if (orderedDiscountInfoSource == null)
+    {
+        <LoadingSpinner />
+    }
+    else
+    {
+        <div class="row">
+            <div class="ozon-manufacturer-discount-list col-sm-12">
+                <div class="row">
+                    <div class="col-md-9">Производитель</div>
+                    <div class="col-md-3">Наценка от сайта</div>
+                </div>
+                @foreach (var item in orderedDiscountInfoSource)
+                {
+                    <OzonManufacturerDiscountItem Item="item" ItemChanged="ItemStateChanged" />
+                }
+            </div>
+        </div>
+    }
+
+</div>
+
+<ConfirmDialog @ref="confirmDialog"
                ConfirmationChanged="ConfirmStateChanged"
                ConfirmationMessage="@(() => "Сегодня обновление уже выполнялось. Выполнить еще раз ?")"></ConfirmDialog>
 
 @code {
     bool isUpdateInProgress = false;
-    bool updateButtonDisabled => discountsInfoSource.All(m => m.IsChecked == false);
+    bool showSettingsBox = false;
+    bool reportOptionsOnly1CQuantity = false;
+    bool updateButtonDisabled => isUpdateInProgress || (discountsInfoSource?.All(m => m.IsChecked == false) ?? true);
     DateTime lastUpdateDateTime;
 
     ConfirmDialog confirmDialog;
@@ -86,27 +113,36 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var manufacturers = await manufacturerStorage.GetManufacturers();
-        string rawArray = await settings.GetValue("ozon_seller_manufacturer_discounts");
-        var mDiscount = string.IsNullOrWhiteSpace(rawArray) ?
-            new Dictionary<string, decimal>() :
-            rawArray.Split(";").Select(chunk => chunk.Split("=")).ToDictionary(x => x[0], x => decimal.Parse(x[1]));
-
-        discountsInfoSource = manufacturers
-            .Select(manufacturer => new OzonManufacturerDiscountViewModel(manufacturer.name)
-            {
-                Id = manufacturer.manufacturer_id,
-                Discount = mDiscount.ContainsKey(manufacturer.name) ? mDiscount[manufacturer.name] : 0,
-                IsChecked = mDiscount.ContainsKey(manufacturer.name)
-            })
-            .ToList();
-
         await RefreshLastUpdateLabel();
+        reportOptionsOnly1CQuantity = await settings.GetValue<bool>("ozon_seller_update_options_1c_stock");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var manufacturers = await manufacturerStorage.GetManufacturers();
+            string rawArray = await settings.GetValue("ozon_seller_manufacturer_discounts");
+            var mDiscount = string.IsNullOrWhiteSpace(rawArray) ?
+                new Dictionary<string, decimal>() :
+                rawArray.Split(";").Select(chunk => chunk.Split("=")).ToDictionary(x => x[0], x => decimal.Parse(x[1]));
+
+            discountsInfoSource = manufacturers
+                .Select(manufacturer => new OzonManufacturerDiscountViewModel(manufacturer.name)
+                {
+                    Id = manufacturer.manufacturer_id,
+                    Discount = mDiscount.ContainsKey(manufacturer.name) ? mDiscount[manufacturer.name] : 0,
+                    IsChecked = mDiscount.ContainsKey(manufacturer.name)
+                })
+                .ToList();
+
+            StateHasChanged();
+        }
     }
 
     private async Task UpdateOzonButtonClick()
     {
-        if(lastUpdateDateTime.Date == DateTime.Now.Date)
+        if (lastUpdateDateTime.Date == DateTime.Now.Date)
         {
             confirmDialog.Show();
         }
@@ -121,6 +157,19 @@ else
         lastUpdateDateTime = await settings.GetValue<DateTime>("ozon_seller_last_update");
     }
 
+    private async Task OptionsChanged()
+    {
+        await settings.SetValue("ozon_seller_update_options_1c_stock", reportOptionsOnly1CQuantity);
+    }
+
+    private OzonSellerUpdateOptions GetOptions()
+    {
+        return new OzonSellerUpdateOptions()
+        {
+            Only1CQuantity = reportOptionsOnly1CQuantity
+        };
+    }
+
     private async Task ConfirmStateChanged(bool status)
     {
         if (status)
@@ -129,19 +178,22 @@ else
             {
                 isUpdateInProgress = true;
                 StateHasChanged();
-                await ozonManager.Update();
+
+                await ozonManager.Update(GetOptions());
+
+                await RefreshLastUpdateLabel();
+                await logger.Write(LogEntryGroupName.Ozon, "Обновление выполнено", "Обновление цен и остатков на ozon seller выполнено");
                 toasts.ShowSuccess("Обновление выполнено");
             }
             catch (Exception ex)
             {
                 toasts.ShowError(ex.Message);
+                await logger.Write(LogEntryGroupName.Ozon, "Ошибка обновления", "Обновление не выполнено: " + ex.Message + ex.StackTrace);
             }
             finally
             {
                 isUpdateInProgress = false;
             }
-
-            await RefreshLastUpdateLabel();
         }
     }
 }

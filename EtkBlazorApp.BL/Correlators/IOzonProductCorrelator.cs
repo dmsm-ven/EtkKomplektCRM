@@ -13,7 +13,7 @@ namespace EtkBlazorApp.BL
 
     public class SimpleOzonProductCorrelator : IOzonProductCorrelator
     {
-        public Dictionary<OzonProductModel, ProductEntity> GetCorrelationData(IEnumerable<OzonProductModel> offers, 
+        public Dictionary<OzonProductModel, ProductEntity> GetCorrelationData(IEnumerable<OzonProductModel> offers,
             IEnumerable<ProductEntity> products)
         {
             var dic = offers.Select(offer => new

@@ -37,7 +37,7 @@ namespace EtkBlazorApp.BL
             this.settings = settings;
         }
 
-        public async Task Update()
+        public async Task Update(OzonSellerUpdateOptions options)
         {
             offers = null;
             manufacturerDiscounts = null;
@@ -46,8 +46,8 @@ namespace EtkBlazorApp.BL
             try
             {
                 await InitializeData();
-                //await UpdateStock();
-                //await UpdatePrice();
+                await UpdateStock(options);
+                await UpdatePrice();
             }
             catch
             {
@@ -58,11 +58,24 @@ namespace EtkBlazorApp.BL
             OnUpdate?.Invoke();
         }
 
-        private async Task UpdateStock()
+        private async Task UpdateStock(OzonSellerUpdateOptions options)
         {            
             try
             {
-                Dictionary<OzonProductModel, int> offerToQuantity = correlationData.ToDictionary(cd => cd.Key, cd => cd.Value.quantity);
+                var offerToQuantity = correlationData
+                    .Where(kvp => kvp.Value != null)
+                    .ToDictionary(cd => cd.Key, cd => cd.Value.quantity);
+
+                if (options.Only1CQuantity)
+                {
+                    var stockInfo = (await productsStorage.GetProductQuantityInAdditionalStock((int)StockPartner._1C))
+                        .ToDictionary(i => i.product_id, i => i.quantity);
+
+                    offerToQuantity = correlationData
+                        .Where(kvp => kvp.Value != null)
+                        .ToDictionary(cd => cd.Key, cd => stockInfo.ContainsKey(cd.Value.product_id) ? stockInfo[cd.Value.product_id] : 0);
+                }
+
                 await api.UpdateQuantity(offerToQuantity);
             }
             catch
@@ -76,7 +89,9 @@ namespace EtkBlazorApp.BL
             try
             {
                 var offerToPrice = new Dictionary<OzonProductModel, decimal>();
-                foreach (var g in correlationData.GroupBy(p => p.Value.manufacturer))
+
+                var source = correlationData.Where(kvp => kvp.Value != null).GroupBy(p => p.Value.manufacturer);
+                foreach (var g in source)
                 {
                     var manufacturerDiscount = manufacturerDiscounts[g.Key];
                     foreach (var item in g)

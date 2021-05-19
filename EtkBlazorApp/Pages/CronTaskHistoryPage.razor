@@ -16,7 +16,7 @@ else
                     </td>
                     @for (int day = 1; day < daysInMoth; day++)
                     {
-                        <td style="background: @GetLabelForTaskInDay(kvp.Key, day)"></td>
+                        <td class="@GetCellClassForTaskInDay(kvp.Key, day)"></td>
                     }
                 </tr>
             }
@@ -32,14 +32,54 @@ else
         </tbody>
     </table>
 }
+<style>
+    #cron-task-history-table td.success {
+        background: #50C878;
+    }
+    #cron-task-history-table td.failed {
+        background: #8b0000;
+    }
+    #cron-task-history-table td.many-results {
+        background: linear-gradient( 45deg, #50C878 50%, 0%, #8b0000 50%);
+    }
+    #cron-task-history-table td.in-future {
+        background: #ececec;
+    }
+    #cron-task-history-table td.empty {
+        background: #fff;
+    }
+
+    #cron-task-history-table td:first-child {
+        font-size: 16px;
+        font-weight: bold;
+        text-align: right;
+        width: auto;
+        white-space: pre;
+        margin: 4px 10px 4px 2px;
+        padding: 6px 12px;
+    }
+
+    #cron-task-history-table td:not(:first-child) {
+        width: 43px;
+        height: 44px;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    #cron-task-history-table .today {
+        background: blue;
+        color: white;
+        font-weight: bold;
+    }
+</style>
 
 @code {
-        Dictionary<int, List<CronTaskHistoryEntity>> historyItems;
+    Dictionary<int, List<CronTaskHistoryEntity>> historyItems;
 
-        int currentDay;
-        int currentMonth;
-        int currentYear;
-        int daysInMoth;
+    int currentDay;
+    int currentMonth;
+    int currentYear;
+    int daysInMoth;
 
     protected override void OnInitialized()
     {
@@ -60,21 +100,36 @@ else
         }
     }
 
-    private string GetLabelForTaskInDay(int id, int day)
+    private string GetCellClassForTaskInDay(int id, int day)
     {
-        var findedItem = historyItems[id].FirstOrDefault(t => t.date_time.Date == new DateTime(currentYear, currentMonth, day));
-
-        if (findedItem != null)
-        {
-            return findedItem.exec_result ? "#50C878" : "darkred";
-        }
-
         if (day > currentDay)
         {
-            return "#ececec";
+            return "in-future";
         }
 
-        return "transparent";
+        var items = historyItems[id].Where(t => t.date_time.Date == new DateTime(currentYear, currentMonth, day));
+
+        if (items.Any())
+        {
+            bool allSuccess = items.All(item => item.exec_result == true);
+            bool allFailed = items.All(item => item.exec_result == false);
+            bool bothResulsts = allSuccess == false && allFailed == false;
+
+            if (allSuccess)
+            {
+                return "success";
+            }
+            if (allFailed)
+            {
+                return "failed";
+            }
+            if (bothResulsts)
+            {
+                return "many-results";
+            }
+        }
+
+        return "empty";
     }
 
 }

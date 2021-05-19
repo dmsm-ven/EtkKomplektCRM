@@ -11,14 +11,14 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
 {
-    public class PrikatReportGenerator
+    public class VseInstrumentiReportGenerator
     {
         private readonly ICurrencyChecker currencyChecker;
         private readonly IPrikatTemplateStorage templateStorage;
         private readonly IProductStorage productStorage;
         private readonly PriceListManager priceListManager;
 
-        public PrikatReportGenerator(ICurrencyChecker currencyChecker,
+        public VseInstrumentiReportGenerator(ICurrencyChecker currencyChecker,
             IPrikatTemplateStorage templateStorage, 
             IProductStorage productStorage, 
             PriceListManager priceListManager)
@@ -36,7 +36,7 @@ namespace EtkBlazorApp.BL
         /// <param name="inStock"></param>
         /// <param name="hasEan"></param>
         /// <returns>Ссылку на созданный файле на сервере</returns>
-        public async Task<string> Create(IEnumerable<int> selectedTemplateIds, bool inStock, bool hasEan)
+        public async Task<string> Create(IEnumerable<int> selectedTemplateIds, VseInstrumentiReportOptions options)
         {
             var templateSource = (await templateStorage.GetPrikatTemplates())
                 .Where(t => selectedTemplateIds.Contains(t.manufacturer_id));
@@ -49,7 +49,7 @@ namespace EtkBlazorApp.BL
                 {
                     foreach (var data in templateSource)
                     {
-                        await InsertTemplateInfo(inStock, hasEan, sw, data);
+                        await InsertTemplateInfo(sw, data, options);
                     }
                 }
             });
@@ -57,7 +57,7 @@ namespace EtkBlazorApp.BL
             return fileName;
         }
 
-        private async Task InsertTemplateInfo(bool inStock, bool hasEan, StreamWriter sw, PrikatReportTemplateEntity data)
+        private async Task InsertTemplateInfo(StreamWriter sw, PrikatReportTemplateEntity data, VseInstrumentiReportOptions options)
         {
             var currency = Enum.Parse<CurrencyType>(data.currency_code);
             decimal currentCurrencyRate = await currencyChecker.GetCurrencyRate(currency);
@@ -67,17 +67,39 @@ namespace EtkBlazorApp.BL
                 Discount1 = data.discount1,
                 Discount2 = data.discount2,
                 CurrencyRatio = currentCurrencyRate,
-                IsProductHasEan = hasEan,
-                IsProductInStock = inStock
+                GLN = options.GLN
             };
-            var products = await productStorage.ReadProducts(data.manufacturer_id);
+
+            List<ProductEntity> products = await PrepareProducts(options, data.manufacturer_id);
 
             var priceLines = priceListManager.PriceLines
-                .Where(line => line.Manufacturer.Equals(data.manufacturer_name, StringComparison.OrdinalIgnoreCase) ||
-                               line.Manufacturer.Equals(PrikatReportTemplateBase.PRIKAT_ONLY_PREFIX + data.manufacturer_name, StringComparison.OrdinalIgnoreCase))
+                .Where(line => line.Manufacturer.Equals(data.manufacturer_name, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
             template.AppendLines(products, priceLines, sw);
+        }
+
+        private async Task<List<ProductEntity>> PrepareProducts(VseInstrumentiReportOptions options, int manufacturer_id)
+        {
+            var products = await productStorage.ReadProducts(manufacturer_id);
+
+            if (options.Adding1CStockQuantity)
+            {
+                var additionalStock = await productStorage.GetProductQuantityInAdditionalStock((int)StockPartner._1C);
+                products.ForEach(product => product.quantity += additionalStock.FirstOrDefault(p => p.product_id == product.product_id)?.quantity ?? 0);
+            }
+
+            if (options.StockGreaterThanZero) 
+            {
+                products.RemoveAll(p => p.quantity <= 0);
+            }
+
+            if (options.HasEan)
+            {
+                products.RemoveAll(product => string.IsNullOrWhiteSpace(product.ean));
+            }
+
+            return products;
         }
     }
 }

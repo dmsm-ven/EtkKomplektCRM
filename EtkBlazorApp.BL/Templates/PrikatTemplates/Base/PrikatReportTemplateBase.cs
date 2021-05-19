@@ -9,15 +9,11 @@ namespace EtkBlazorApp.BL.Templates
 {
     public abstract class PrikatReportTemplateBase
     {
-        public static string PRIKAT_ONLY_PREFIX  => "PRIKAT_ONLY-";
-
-        public bool IsProductInStock { get; set; }
-        public bool IsProductHasEan { get; set; }
         public decimal CurrencyRatio { get; set; }
         public decimal Discount1 { get; set; }
         public decimal Discount2 { get; set; }
+        public string GLN { get; set; }
 
-        protected virtual string GLN { get; } = "4607804947010";
         protected virtual decimal[] DEFAULT_DIMENSIONS { get; } = new decimal[] { 150, 100, 100, 0.4m }; 
         protected virtual string LENGTH_UNIT { get; } = "миллиметр";
         protected virtual string WEIGHT_UNIT { get; } = "килограмм";
@@ -35,22 +31,15 @@ namespace EtkBlazorApp.BL.Templates
 
         public void AppendLines(List<ProductEntity> products, List<PriceLine> priceLines, StreamWriter writer)
         {
-            foreach (var product in products)
+            if (priceLines.Count == 0)
             {
-                if (IsProductInStock && product.quantity <= 0)
+                products.Where(p => !string.IsNullOrWhiteSpace(p.sku)).ToList().ForEach(p => AppendLine(p, writer));
+            }
+            else
+            {
+                foreach (var product in products)
                 {
-                    continue;
-                }
-
-                if(IsProductHasEan && string.IsNullOrWhiteSpace(product.ean))
-                {
-                    continue;
-                }
-
-                if (priceLines.Any())
-                {
-                    var linkedPriceLine = priceLines?
-                        .FirstOrDefault(line => line.Sku.Equals(product.sku, StringComparison.OrdinalIgnoreCase) || (!string.IsNullOrEmpty(line.Model) && (line.Model.Equals(product.model, StringComparison.OrdinalIgnoreCase))) );
+                    var linkedPriceLine = priceLines.FirstOrDefault(line => line.Sku.Equals(product.sku, StringComparison.OrdinalIgnoreCase) || (!string.IsNullOrEmpty(line.Model) && (line.Model.Equals(product.model, StringComparison.OrdinalIgnoreCase))));
 
                     if (linkedPriceLine != null)
                     {
@@ -64,11 +53,11 @@ namespace EtkBlazorApp.BL.Templates
                     {
                         product.sku = null;
                     }
-                }
 
-                if (!string.IsNullOrWhiteSpace(product.sku))
-                {
-                    AppendLine(product, writer);
+                    if (!string.IsNullOrWhiteSpace(product.sku))
+                    {
+                        AppendLine(product, writer);
+                    }
                 }
             }
         }

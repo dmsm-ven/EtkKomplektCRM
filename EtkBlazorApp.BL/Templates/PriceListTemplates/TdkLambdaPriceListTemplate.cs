@@ -26,7 +26,7 @@ namespace EtkBlazorApp.BL
                 var priceLine = new PriceLine(this)
                 {
                     Currency = CurrencyType.USD,
-                    Manufacturer = PrikatReportTemplateBase.PRIKAT_ONLY_PREFIX + "TDK-Lambda",
+                    Manufacturer = "TDK-Lambda",
                     Model = skuNumber,
                     Sku = skuNumber,
                     Price = price
