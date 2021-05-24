@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL.CronTask
 {
-    public class CronTaskUsingRemotePriceList : CronTaskBase
+    public class LoadRemotePriceListCronTask : CronTaskBase
     {
         private readonly Type templateType;
 
-        public CronTaskUsingRemotePriceList(Type templateType, CronTaskService service, int taskId) : base(service, taskId)
+        public LoadRemotePriceListCronTask(Type templateType, CronTaskService service, int taskId) : base(service, taskId)
         {
             this.templateType = templateType;
         }
@@ -27,6 +27,8 @@ namespace EtkBlazorApp.BL.CronTask
             using (var ms = new MemoryStream(response.Bytes))
             {
                 var lines = await service.priceListManager.ReadTemplateLines(templateType, ms, response.FileName);
+                
+                //TODO: тут напрямую указываем что остатки товаров перед обновлением очищаются, в будущем нужно будет вынести в опция для задачи
                 await service.updateManager.UpdatePriceAndStock(lines, clearStockBeforeUpdate: true);
             }
         }

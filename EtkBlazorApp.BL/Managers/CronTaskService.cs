@@ -25,7 +25,7 @@ namespace EtkBlazorApp.BL
         internal readonly UpdateManager updateManager;
         internal readonly PriceListManager priceListManager;
         internal readonly RemoteTemplateFileLoaderFactory remoteTemplateLoaderFactory;
-
+        private readonly OzonSellerManager ozonSellerManager;
         private readonly Timer checkTimer;
         private readonly Dictionary<CronTaskBase, CronTaskEntity> tasks;
         private readonly List<CronTaskBase> inProgress;
@@ -36,7 +36,8 @@ namespace EtkBlazorApp.BL
             SystemEventsLogger logger,
             UpdateManager updateManager, 
             PriceListManager priceListManager,
-            RemoteTemplateFileLoaderFactory remoteTemplateLoaderFactory)
+            RemoteTemplateFileLoaderFactory remoteTemplateLoaderFactory,
+            OzonSellerManager ozonSellerManager)
         {
             this.cronTaskStorage = cronTaskStorage;
             this.templates = templates;
@@ -44,7 +45,7 @@ namespace EtkBlazorApp.BL
             this.updateManager = updateManager;
             this.priceListManager = priceListManager;
             this.remoteTemplateLoaderFactory = remoteTemplateLoaderFactory;
-
+            this.ozonSellerManager = ozonSellerManager;
             tasks = new Dictionary<CronTaskBase, CronTaskEntity>();
             inProgress = new List<CronTaskBase>();
 
@@ -90,7 +91,7 @@ namespace EtkBlazorApp.BL
                 var items = await cronTaskStorage.GetCronTasks();
                 foreach (var entity in items)
                 {
-                    var taskObject = CreateTask(entity.task_type_name, entity.linked_price_list_guid, entity.task_id);
+                    var taskObject = CreateTask((CronTaskType)entity.task_type_id, entity.linked_price_list_guid, entity.task_id);
                     tasks.Add(taskObject, entity);
                 }
             }
@@ -149,18 +150,20 @@ namespace EtkBlazorApp.BL
             return false;
         }
 
-        private CronTaskBase CreateTask(string taskTypeName, string parameter, int taskId)
+        private CronTaskBase CreateTask(CronTaskType taskType, string parameter, int taskId)
         {
-            Type linkedPriceListType = PriceListManager.GetPriceListTypeByGuid(parameter);
+            Type linkedPriceListType = parameter != null ? PriceListManager.GetPriceListTypeByGuid(parameter) : null;
 
             //Таблица etk_app_cron_task_type
-            switch (taskTypeName)
+            switch (taskType)
             {
-                case "Одиночный прайс-лист":
-                    return new BL.CronTask.CronTaskUsingRemotePriceList(linkedPriceListType, this, taskId);
+                case CronTaskType.RemotePriceList:
+                    return new BL.CronTask.LoadRemotePriceListCronTask(linkedPriceListType, this, taskId);
+                case CronTaskType.OzonSellerUpdate:
+                    return new BL.CronTask.OzonSellerUpdateProductsCronTask(this, taskId, ozonSellerManager);
             }
 
-            throw new ArgumentException(taskTypeName + " не реализован");
+            throw new ArgumentException(taskType + " не реализован");
         }
     }
 }

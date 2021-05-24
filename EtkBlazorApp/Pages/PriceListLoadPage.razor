@@ -103,36 +103,33 @@
 
 @if (selectedTemplate != null)
 {
-    <div class="row my-2">
-        <div class="col-md-12">
-            <h4>@selectedTemplate.Title</h4>
-            @if (selectedTemplate.Nds)
-            {
-                <strong style="color: red; margin-right: 10px;">+ НДС | </strong>
-            }
-            <strong>Наценка: </strong>
-            @if (editingTemplate == selectedTemplate)
-            {
-                <input type="number" style="display: inline; width: 80px;" class="form-control mx-2" @bind="editingTemplate.Discount" />
-                <button class="btn btn-outline-success" @onclick="SaveTemplateDiscount">
-                    <span class="oi oi-circle-check" style="font-size: 16px;"></span>
-                </button>
-            }
-            else
-            {
-                <strong style="color: red;">@(selectedTemplate.Discount.ToString("G29"))%</strong>
-                <button class="btn btn-sm btn-outline-success mx-2" @onclick="(e => editingTemplate = selectedTemplate)">
-                    <span class="oi oi-pencil"></span>
-                </button>
-            }
-        </div>
-        @if (!string.IsNullOrWhiteSpace(selectedTemplate.Description))
+<div class="row my-2">
+    <div class="col-md-12">
+        <h4>@selectedTemplate.Title</h4>
+        @if (selectedTemplate.Nds)
         {
-            <textarea readonly class="price-list-template-description">@selectedTemplate.Description</textarea>
+            <strong style="color: red; margin-right: 10px;">+ НДС | </strong>
         }
-        @if (!string.IsNullOrWhiteSpace(selectedTemplate.RemoteUrl) && !selectedTemplateHasEmailSource)
+        <strong>Наценка: </strong>
+        @if (editingTemplate == selectedTemplate)
         {
-            <p>Прямая ссылка на файл: <a href="@selectedTemplate.RemoteUrl" target="_blank">@selectedTemplate.RemoteUrl</a></p>
+            <input type="number" style="display: inline; width: 80px;" class="form-control mx-2" @bind="editingTemplate.Discount" />
+            <button class="btn btn-outline-success" @onclick="SaveTemplateDiscount">
+                <span class="oi oi-circle-check" style="font-size: 16px;"></span>
+            </button>
+        }
+        else
+        {
+            <strong style="color: red;">@(selectedTemplate.Discount.ToString("G29"))%</strong>
+            <button class="btn btn-sm btn-outline-success mx-2" @onclick="(e => editingTemplate = selectedTemplate)">
+                <span class="oi oi-pencil"></span>
+            </button>
         }
     </div>
+    <textarea readonly class="price-list-template-description">@selectedTemplate.Description</textarea>
+
+    <p style="opacity: @(!string.IsNullOrWhiteSpace(selectedTemplate.RemoteUrl) ? "1.0" : "0.0")">
+        Прямая ссылка на файл: <a href="@selectedTemplate.RemoteUrl" target="_blank">@selectedTemplate.RemoteUrl</a>
+    </p>
+</div>
 }

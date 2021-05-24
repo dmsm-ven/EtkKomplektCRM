@@ -20,10 +20,13 @@
                 <span>Выполнить в</span>
                 <input type="time" @bind="item.ExecutionDateTime" class="form-control" />
             </div>
+            @if (item.TypeId == CronTaskType.RemotePriceList)  
+            {
             <div class="form-group">
                 <label for="price-list-template-guid mx-2">Закрепленный прайс-лист</label>
                 <PriceListTemplateSelect @bind-Guid="@item.PriceListGuid" />
             </div>
+            }
             <div class="btn-group" role="group" style="width: 100%">
 
                 <button class="btn btn-outline-dark btn-lg"
@@ -82,7 +85,7 @@
             Id = entity.task_id,
             PriceListGuid = entity.linked_price_list_guid,
             TypeName = entity.task_type_name,
-            TypeId = entity.task_type_id,
+            TypeId = (CronTaskType)entity.task_type_id,
             Description = entity.description,
             Title = entity.name,
             IsEnabled = entity.enabled,

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtkBlazorApp.BL;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace EtkBlazorApp
@@ -12,14 +13,14 @@ namespace EtkBlazorApp
         [Required]
         public string Title { get; set; }
      
-        [Required(ErrorMessage = "Необходимо выбрать прикрепленный шаблон")]
         public string PriceListGuid { get; set; }
 
         [Range(typeof(TimeSpan), "00:00:00", "23:59:59", ErrorMessage = "Время должно быть в диапазоне 00:00:00 - 23:59:59")]
         public TimeSpan ExecTime { get; set; }
 
         public int Id { get; set; }
-        public int TypeId { get; set; }
+
+        public CronTaskType TypeId { get; set; }
         public bool IsEnabled { get; set; }
         public string Description { get; set; }
         public DateTime? LastExec { get; set; }

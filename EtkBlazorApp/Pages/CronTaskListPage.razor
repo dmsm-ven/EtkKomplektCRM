@@ -74,7 +74,7 @@ else
                         LastExecResult = ct.last_exec_result,
                         PriceListGuid = ct.linked_price_list_guid,
                         Title = ct.name,
-                        TypeId = ct.task_type_id,
+                        TypeId = (CronTaskType)ct.task_type_id,
                         TypeName = ct.task_type_name
                     })
                     .OrderBy(ct => ct.IsEnabled ? 0 : 1)
@@ -99,7 +99,7 @@ else
                 description = item.Description,
                 exec_time = item.ExecTime,
                 linked_price_list_guid = item.PriceListGuid,
-                task_type_id = item.TypeId
+                task_type_id = (int)item.TypeId
             };
 
             await cronTaskStorage.CreateCronTask(entity);

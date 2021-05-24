@@ -68,8 +68,8 @@ namespace EtkBlazorApp.BL.Templates
             decimal price1 = Math.Round(priceInCurrency * ((100m + Discount1) / 100m), Precission);
             decimal price2 = Math.Round((price1 * (100m + Discount2)) / 100m, Precission);
             
-            string recommendedPrice = price1.ToString($"F{Precission}", new CultureInfo("en-EN"));
-            string prikatPrice = price2.ToString($"F{Precission}", new CultureInfo("en-EN"));
+            string vi_price = price1.ToString($"F{Precission}", new CultureInfo("en-EN"));
+            string vi_price_rrc = price2.ToString($"F{Precission}", new CultureInfo("en-EN"));
 
             string length = (product.length != decimal.Zero ? product.length : DEFAULT_DIMENSIONS[0]).ToString("F2", new CultureInfo("en-EN"));
             string width = (product.width != decimal.Zero ? product.width : DEFAULT_DIMENSIONS[1]).ToString("F2", new CultureInfo("en-EN"));
@@ -101,8 +101,8 @@ namespace EtkBlazorApp.BL.Templates
             WriteCell(sw, WEIGHT_UNIT); //Единицы измерения
             WriteCell(sw); //Страна производитель
             WriteCell(sw); //Годен до
-            WriteCell(sw, recommendedPrice); //Рекомендованная цена
-            WriteCell(sw, prikatPrice); //Закупочная цена
+            WriteCell(sw, vi_price_rrc); //Рекомендованная цена
+            WriteCell(sw, vi_price); //Закупочная цена
             WriteCell(sw, product.quantity.ToString()); //Количество остатков на скаладе
             WriteCell(sw, Currency.ToString().ToLower()); //Рекомендованная валюта
             WriteCell(sw, Currency.ToString().ToLower()); //Закупчная валюта

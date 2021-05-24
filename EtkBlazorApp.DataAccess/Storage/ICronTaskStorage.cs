@@ -87,7 +87,7 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task<List<CronTaskTypeEntity>> GetCronTaskTypes()
         {
-            var data = await database.GetList<CronTaskTypeEntity>("SELECT * FROM etk_app_cron_task_type");
+            var data = await database.GetList<CronTaskTypeEntity>("SELECT * FROM etk_app_cron_task_type ORDER BY task_type_id");
             return data;
         }
 

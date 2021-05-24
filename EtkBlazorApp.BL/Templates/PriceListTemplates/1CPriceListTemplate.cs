@@ -77,9 +77,9 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     .Select(tr => tr.SelectNodes("./td").Select(td => HttpUtility.HtmlDecode(td.InnerText.Trim())).ToArray())
                     .Select(cells => new PriceLine(this)
                     {
-                        Sku = cells[0],
-                        Manufacturer = MapManufacturerName(cells[1]),
-                        Name = cells[2],
+                        Sku = cells[0],                       
+                        Name = cells[1],
+                        Manufacturer = MapManufacturerName(cells[2]),
                         Quantity = ParseQuantity(cells[4].Replace(",000", string.Empty)),
                         StockPartner = StockPartner._1C
                     })

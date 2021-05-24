@@ -68,8 +68,8 @@
         string sign1 = Math.Sign(Item.Discount1) < 0 ? "-" : "+";
         string sign2 = Math.Sign(Item.Discount2) < 0 ? "-" : "+";
 
-        string part1 = $"{ExamplePrice.ToString("G29")} {sign1} {Math.Abs(Item.Discount1).ToString("G29")}% = <strong>{priceExample1.ToString("G29")}<strong>";
-        string part2 = $"{priceExample1.ToString("G29")} {sign2} {Math.Abs(Item.Discount2).ToString("G29")}% = <strong>{priceExample2.ToString("G29")}</strong>";
+        string part1 = $"{ExamplePrice.ToString("0.##")} {sign1} {Math.Abs(Item.Discount1).ToString("0.##")}% = <strong>{priceExample1.ToString("0.##")}<strong>";
+        string part2 = $"{priceExample1.ToString("0.##")} {sign2} {Math.Abs(Item.Discount2).ToString("0.##")}% = <strong>{priceExample2.ToString("0.##")}</strong>";
 
         if(priceExample2 < priceExample1)
         {
