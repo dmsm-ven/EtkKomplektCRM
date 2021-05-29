@@ -1,0 +1,147 @@
+﻿@inject IJSRuntime js
+@inject IOrderStorage ordersStorage
+
+@if (inProgress)
+{
+    <LoadingSpinner />
+}
+
+<div style="width: 100%; height: 600px;">
+    <canvas id="myChart" />
+</div>
+
+
+@code {
+    [Parameter] public ChartDateRange? Range { get; set; }
+    [Parameter] public ChartKind? Kind { get; set; }
+    [Parameter] public int MaxItems { get; set; } = 10;
+
+    int uniqueOrdersInChart = 0;
+    bool inProgress = false;
+    bool isRendered = false;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            isRendered = true;
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (isRendered && Range.HasValue && Kind.HasValue)
+        {
+            StateHasChanged();
+            await GenerateChart();
+        }
+    }
+
+    private async Task GenerateChart()
+    {
+        inProgress = true;
+        StateHasChanged();
+
+        var data = await GetDataSource();
+
+        string chartTitle = $"Статистика ({uniqueOrdersInChart}) заказов {Kind.GetDescriptionAttribute().ToLower()} {Range.GetDescriptionAttribute().ToLower()}";
+        string[] labels = data.Select(c => c.Key).ToArray();
+        decimal[] points = data.Select(c => c.Value).ToArray();
+
+        await js.InvokeVoidAsync("GenerateChart", chartTitle, labels, points);
+        inProgress = false;
+    }
+
+    private async Task<Dictionary<string, decimal>> GetDataSource()
+    {
+        DateTime startDate = GetStartDate();
+
+        Dictionary<string, decimal> data = null;
+
+        if (Kind.Value == ChartKind.ByCustomer)
+        {
+            var orders = await ordersStorage.GetOrdersFromDate(startDate);
+            uniqueOrdersInChart = orders.Select(o => o.order_id).Distinct().Count();
+
+            data = orders
+            .GroupBy(order => order.firstname)
+            .Select(g => new
+            {
+                Customer = HttpUtility.HtmlDecode(g.Key),
+                TotalSum = g.Sum(o => o.total)
+            })
+            .Where(g => g.Customer != null)
+            .OrderByDescending(i => i.TotalSum)
+            .Take(MaxItems)
+            .ToDictionary(i => i.Customer, j => j.TotalSum);
+        }
+        if (Kind.Value == ChartKind.ByCity)
+        {
+            var orders = await ordersStorage.GetOrdersFromDate(startDate);
+            uniqueOrdersInChart = orders.Select(o => o.order_id).Distinct().Count();
+
+            data = orders
+                .GroupBy(order => order.payment_city, StringComparer.OrdinalIgnoreCase)
+                .Select(g => new
+                {
+                    City = HttpUtility.HtmlDecode(g.Key),
+                    TotalSum = g.Sum(o => o.total)
+                })
+                .Where(g => g.City != null)
+                .OrderByDescending(i => i.TotalSum)
+                .Take(MaxItems)
+                .ToDictionary(i => i.City, j => j.TotalSum);
+        }
+        if (Kind.Value == ChartKind.ByManufacturer)
+        {
+            var orders = await ordersStorage.GetOrderDetailsFromDate(startDate);
+            uniqueOrdersInChart = orders.Select(od => od.order_id).Distinct().Count();
+
+            data = orders
+            .GroupBy(od => od.manufacturer, StringComparer.OrdinalIgnoreCase)
+            .Select(g => new
+            {
+                Manufacturer = HttpUtility.HtmlDecode(g.Key),
+                TotalSum = g.Sum(o => o.total)
+            })
+            .Where(g => g.Manufacturer != null)
+            .OrderByDescending(i => i.TotalSum)
+            .Take(MaxItems)
+            .ToDictionary(i => i.Manufacturer, j => j.TotalSum);
+        }
+        if (Kind.Value == ChartKind.ByProduct)
+        {
+            var orders = await ordersStorage.GetOrderDetailsFromDate(startDate);
+            uniqueOrdersInChart = orders.Select(od => od.order_id).Distinct().Count();
+
+            data = orders
+                .GroupBy(od => od.name, StringComparer.OrdinalIgnoreCase)
+                .Select(g => new
+                {
+                    ProductName = HttpUtility.HtmlDecode(g.Key),
+                    TotalSum = g.Sum(o => o.total)
+                })
+                .Where(g => g.ProductName != null)
+                .OrderByDescending(i => i.TotalSum)
+                .Take(MaxItems)
+                .ToDictionary(i => i.ProductName, j => j.TotalSum);
+        }
+
+        return data;
+    }
+
+    private DateTime GetStartDate()
+    {
+        int maxAge = 0;
+        switch (Range)
+        {
+            case ChartDateRange.Week: maxAge = 7; break;
+            case ChartDateRange.Month: maxAge = 31; break;
+            case ChartDateRange.Year: maxAge = 365; break;
+            default: maxAge = 0; break;
+        }
+
+        return DateTime.Now.AddDays(-maxAge);
+
+    }
+}

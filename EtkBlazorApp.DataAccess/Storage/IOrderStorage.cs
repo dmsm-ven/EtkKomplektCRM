@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.DataAccess.Entity;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,8 @@ namespace EtkBlazorApp.DataAccess
     public interface IOrderStorage
     {
         Task<List<OrderEntity>> GetLastOrders(int limit, string number = null, string city = null, string client = null);
+        Task<List<OrderEntity>> GetOrdersFromDate(DateTime startDate);
+        Task<List<OrderDetailsEntity>> GetOrderDetailsFromDate(DateTime startDate);
         Task<OrderEntity> GetLastOrder();
         Task<List<OrderDetailsEntity>> GetOrderDetails(int orderId);
         Task<OrderEntity> GetOrderById(int orderId);
@@ -66,16 +69,41 @@ namespace EtkBlazorApp.DataAccess
             return orders;
         }
 
+        public async Task<List<OrderEntity>> GetOrdersFromDate(DateTime startDate)
+        {
+            string sql = @"SELECT o.*, s.name as order_status
+                           FROM oc_order o
+                           LEFT JOIN oc_order_status s ON o.order_status_id = s.order_status_id
+                           WHERE date_added >= @startDate";
+            var orders = await database.GetList<OrderEntity, dynamic>(sql, new { startDate });
+            return orders;
+        }
+
+        public async Task<List<OrderDetailsEntity>> GetOrderDetailsFromDate(DateTime startDate)
+        {
+            string sql = @"SELECT op.*, p.sku as sku, m.name as manufacturer 
+                          FROM oc_order o
+                          LEFT JOIN oc_order_product op ON o.order_id = op.order_id 
+                          LEFT JOIN oc_product p ON op.product_id = p.product_id
+                          LEFT JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id
+                          WHERE o.date_added >= @startDate";
+
+            var details = await database.GetList<OrderDetailsEntity, dynamic>(sql, new { startDate });
+
+            return details;
+        }
+
         public async Task<List<OrderDetailsEntity>> GetOrderDetails(int orderId)
         {
-            string sql = @"SELECT op.*, p.sku as sku, m.name as manufacturer FROM oc_order_product op
+            string sql = @"SELECT op.*, p.sku as sku, m.name as manufacturer 
+                           FROM oc_order_product op
                            LEFT JOIN oc_product p ON op.product_id = p.product_id
                            LEFT JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id
-                           WHERE order_id = @Id";
+                           WHERE order_id = @orderId";
 
-            var details = await database.GetList<OrderDetailsEntity, dynamic>(sql, new { Id = orderId });
+            var details = await database.GetList<OrderDetailsEntity, dynamic>(sql, new { orderId });
 
-            return details.ToList();
+            return details;
         }
 
         public async Task<OrderEntity> GetOrderById(int orderId)
@@ -104,5 +132,6 @@ namespace EtkBlazorApp.DataAccess
             var order = await database.GetFirstOrDefault<OrderEntity>(sql);
             return order;
         }
+
     }
 }

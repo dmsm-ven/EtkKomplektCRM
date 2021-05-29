@@ -3,6 +3,15 @@
 @inject IOrderStorage _database
 
 <h3>Заказы</h3>
+<AuthorizeView Roles="Administrator">
+    <div class="row">
+        <div class="btn-group">
+            <a class="btn btn-outline-primary" href="/orders-statistic">
+                Статистика по заказам
+            </a>
+        </div>
+    </div>
+</AuthorizeView>
 
 <div class="row">
     <div class="form-inline">

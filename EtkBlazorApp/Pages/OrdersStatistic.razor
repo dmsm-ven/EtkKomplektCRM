@@ -1,0 +1,49 @@
+﻿@page "/orders-statistic"
+@inject NavigationManager nav
+
+<h1>Статистика по заказам</h1>
+
+<div class="container">
+    <div class="row">
+        <div class="d-inline-block my-2 mx-2">
+            <h2>Тип графика</h2>
+            @foreach (ChartKind k in Enum.GetValues(typeof(ChartKind)))
+            {
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" id="@($"chart_kind_{k.ToString()}")"
+                           @onchange="@(v => selectedChartKind = k)"
+                           name="kind_group"
+                           selected="@(selectedChartKind == k)">
+                    <label class="form-check-label" for="@($"chart_kind_{k.ToString()}")">
+                        @k.GetDescriptionAttribute()
+                    </label>
+                </div>
+            }
+        </div>
+        <div class="d-inline-block my-2 mx-2">
+            <h2>Период</h2>
+            @foreach (ChartDateRange e in Enum.GetValues(typeof(ChartDateRange)))
+            {
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" id="@($"range_{e.ToString()}")"
+                           name="range_group"
+                           @onchange="@(v => selectedRange = e)"
+                           selected="@(selectedRange == e)">
+                    <label class="form-check-label" for="@($"range_{e.ToString()}")">
+                        @e.GetDescriptionAttribute()
+                    </label>
+                </div>
+            }
+        </div>
+
+    </div>
+    <div id="orders-chart">
+        <OrdersChart Range="@selectedRange" Kind="@selectedChartKind"/>
+    </div>
+</div>
+
+@code {
+    ChartDateRange? selectedRange = null;
+    ChartKind? selectedChartKind = null;
+
+}
