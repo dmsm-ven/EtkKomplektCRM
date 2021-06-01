@@ -6,7 +6,7 @@
     <LoadingSpinner />
 }
 
-<div style="width: 100%; height: 600px;">
+<div>
     <canvas id="myChart" />
 </div>
 
@@ -14,7 +14,7 @@
 @code {
     [Parameter] public ChartDateRange? Range { get; set; }
     [Parameter] public ChartKind? Kind { get; set; }
-    [Parameter] public int MaxItems { get; set; } = 10;
+    [Parameter] public int MaxItems { get; set; }
 
     int uniqueOrdersInChart = 0;
     bool inProgress = false;
@@ -30,7 +30,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (isRendered && Range.HasValue && Kind.HasValue)
+        if (isRendered && Range.HasValue && Kind.HasValue && MaxItems != 0)
         {
             StateHasChanged();
             await GenerateChart();
@@ -64,71 +64,71 @@
             uniqueOrdersInChart = orders.Select(o => o.order_id).Distinct().Count();
 
             data = orders
-            .GroupBy(order => order.firstname)
+            .GroupBy(order => Regex.Replace(order.telephone, @"[^\d]", "").TrimStart('8', '7'))
             .Select(g => new
             {
-                Customer = HttpUtility.HtmlDecode(g.Key),
+                Customer = $"{HttpUtility.HtmlDecode(g.First().firstname)} (+7{g.Key})",
                 TotalSum = g.Sum(o => o.total)
             })
             .Where(g => g.Customer != null)
             .OrderByDescending(i => i.TotalSum)
             .Take(MaxItems)
             .ToDictionary(i => i.Customer, j => j.TotalSum);
-        }
-        if (Kind.Value == ChartKind.ByCity)
-        {
-            var orders = await ordersStorage.GetOrdersFromDate(startDate);
-            uniqueOrdersInChart = orders.Select(o => o.order_id).Distinct().Count();
+    }
+    if (Kind.Value == ChartKind.ByCity)
+    {
+        var orders = await ordersStorage.GetOrdersFromDate(startDate);
+    uniqueOrdersInChart = orders.Select(o => o.order_id).Distinct().Count();
 
-            data = orders
-                .GroupBy(order => order.payment_city, StringComparer.OrdinalIgnoreCase)
-                .Select(g => new
-                {
-                    City = HttpUtility.HtmlDecode(g.Key),
-                    TotalSum = g.Sum(o => o.total)
-                })
-                .Where(g => g.City != null)
-                .OrderByDescending(i => i.TotalSum)
-                .Take(MaxItems)
-                .ToDictionary(i => i.City, j => j.TotalSum);
-        }
-        if (Kind.Value == ChartKind.ByManufacturer)
-        {
-            var orders = await ordersStorage.GetOrderDetailsFromDate(startDate);
-            uniqueOrdersInChart = orders.Select(od => od.order_id).Distinct().Count();
-
-            data = orders
-            .GroupBy(od => od.manufacturer, StringComparer.OrdinalIgnoreCase)
+    data = orders
+        .GroupBy(order => order.payment_zone, StringComparer.OrdinalIgnoreCase)
             .Select(g => new
             {
-                Manufacturer = HttpUtility.HtmlDecode(g.Key),
+                City = HttpUtility.HtmlDecode(g.Key),
                 TotalSum = g.Sum(o => o.total)
             })
-            .Where(g => g.Manufacturer != null)
+            .Where(g => g.City != null)
             .OrderByDescending(i => i.TotalSum)
             .Take(MaxItems)
-            .ToDictionary(i => i.Manufacturer, j => j.TotalSum);
-        }
-        if (Kind.Value == ChartKind.ByProduct)
-        {
-            var orders = await ordersStorage.GetOrderDetailsFromDate(startDate);
-            uniqueOrdersInChart = orders.Select(od => od.order_id).Distinct().Count();
+            .ToDictionary(i => i.City, j => j.TotalSum);
+}
+if (Kind.Value == ChartKind.ByManufacturer)
+{
+var orders = await ordersStorage.GetOrderDetailsFromDate(startDate);
+uniqueOrdersInChart = orders.Select(od => od.order_id).Distinct().Count();
 
-            data = orders
-                .GroupBy(od => od.name, StringComparer.OrdinalIgnoreCase)
-                .Select(g => new
-                {
-                    ProductName = HttpUtility.HtmlDecode(g.Key),
-                    TotalSum = g.Sum(o => o.total)
-                })
-                .Where(g => g.ProductName != null)
-                .OrderByDescending(i => i.TotalSum)
-                .Take(MaxItems)
-                .ToDictionary(i => i.ProductName, j => j.TotalSum);
-        }
+data = orders
+.GroupBy(od => od.manufacturer, StringComparer.OrdinalIgnoreCase)
+.Select(g => new
+{
+    Manufacturer = HttpUtility.HtmlDecode(g.Key),
+    TotalSum = g.Sum(o => o.total)
+})
+.Where(g => g.Manufacturer != null)
+.OrderByDescending(i => i.TotalSum)
+.Take(MaxItems)
+.ToDictionary(i => i.Manufacturer, j => j.TotalSum);
+}
+if (Kind.Value == ChartKind.ByProduct)
+{
+var orders = await ordersStorage.GetOrderDetailsFromDate(startDate);
+uniqueOrdersInChart = orders.Select(od => od.order_id).Distinct().Count();
 
-        return data;
-    }
+data = orders
+    .GroupBy(od => od.name, StringComparer.OrdinalIgnoreCase)
+    .Select(g => new
+    {
+        ProductName = HttpUtility.HtmlDecode(g.Key),
+        TotalSum = g.Sum(o => o.total)
+    })
+    .Where(g => g.ProductName != null)
+    .OrderByDescending(i => i.TotalSum)
+    .Take(MaxItems)
+    .ToDictionary(i => i.ProductName, j => j.TotalSum);
+}
+
+return data;
+}
 
     private DateTime GetStartDate()
     {

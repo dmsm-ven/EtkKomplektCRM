@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.BL;
+﻿using Blazored.Toast.Services;
+using EtkBlazorApp.BL;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using EtkBlazorApp.Services;
@@ -16,6 +17,7 @@ namespace EtkBlazorApp.Pages
     {
         [Inject] public IPrikatTemplateStorage templateStorage { get; set; }
         [Inject] public ISettingStorage settingStorage { get; set; }
+        [Inject] public IToastService toasts { get; set; }
         [Inject] public IManufacturerStorage manufacturerStorage { get; set; }
         [Inject] public IJSRuntime js { get; set; }
         [Inject] public UserLogger logger { get; set; }
@@ -79,11 +81,15 @@ namespace EtkBlazorApp.Pages
             }
             catch (Exception ex)
             {
-                await logger.Write(LogEntryGroupName.Prikat, "Ошибка", $"Ошибка создания выгрузки для ВсеИнструменты: {ex.Message}");
+                await logger.Write(LogEntryGroupName.Prikat, "Ошибка", $"Ошибка создания выгрузки для ВсеИнструменты: {ex.Message}. {ex.StackTrace}");
+                toasts.ShowError("Ошибка создания отчета" + ex.Message, "ВсеИнструменты");
             }
             finally
             {
-                File.Delete(filePath);
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
                 inProgress = false;
             }
         }
