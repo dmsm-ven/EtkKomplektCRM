@@ -24,7 +24,11 @@ namespace EtkBlazorApp.DataAccess
         Task<ProductEntity> GetProductBySku(string sku);
         Task<ProductEntity> GetProductById(int id);
 
-        Task<List<StockStatusEntity>> GetStockStatuses();        
+        Task<List<StockStatusEntity>> GetStockStatuses();
+
+        Task<List<ProductEntity>> GetFixedProducts();
+        Task RemoveFixedProduct(int id);
+        Task AddFixedProduct(ProductEntity product);
     }
 
     public class ProductStorage : IProductStorage
@@ -214,6 +218,29 @@ namespace EtkBlazorApp.DataAccess
             var data = await database.GetList<ProductEntity, dynamic>(sql, new { stockParnerId });
 
             return data;
+        }
+
+        public async Task<List<ProductEntity>> GetFixedProducts()
+        {
+            string sql = @"SELECT fp.*, pd.name 
+                          FROM etk_app_fixed_product fp LEFT JOIN oc_product_description pd ON fp.product_id = pd.product_id";
+
+            var list = await database.GetList<ProductEntity>(sql);
+
+            return list;
+        }
+
+        public async Task RemoveFixedProduct(int id)
+        {
+            string sql = @"DELETE FROM etk_app_fixed_product WHERE product_id = @id";
+            await database.ExecuteQuery<dynamic>(sql, new { id });
+
+        }
+
+        public async Task AddFixedProduct(ProductEntity product)
+        {
+            string sql = @"INSERT INTO etk_app_fixed_product (product_id) VALUES (@product_id)";
+            await database.ExecuteQuery(sql, product);
         }
     }
 }

@@ -1,0 +1,72 @@
+﻿@inject IProductStorage productStorage
+    <div>
+        <input type="text" class="form-control"
+               list="replacement_list"
+               placeholder="Поиск товара ..."
+               autoComplete="on"
+               style="width: 100%;"
+               value="@searchText"
+               @onkeypress="ProductsSourceChanged"
+               @oninput="SelectedProductChanged"
+               id="replacement_product" />
+        <datalist id="replacement_list">
+            @foreach (var product in productsSource)
+            {
+                <option value="@product.name"
+                        selected="@(selectedProduct != null && product.product_id == selectedProduct.product_id)">
+                    @product.manufacturer
+                </option>
+            }
+        </datalist>
+    </div>
+
+    @code {
+        List<ProductEntity> productsSource = null;
+        ProductEntity selectedProduct = null;
+        string searchText = string.Empty;
+
+        [Parameter] public EventCallback<ProductEntity> ProductChanged { get; set; }
+
+        [Parameter]
+        public ProductEntity Product
+        {
+            get => selectedProduct;
+            set
+            {
+                if (selectedProduct != value)
+                {
+                    selectedProduct = value;
+                    ProductChanged.InvokeAsync(value);
+                }
+            }
+        }
+
+        protected override void OnInitialized()
+        {
+            productsSource = new List<ProductEntity>();
+        }
+
+        protected override async Task OnParametersSetAsync()
+        {
+            searchText = selectedProduct?.name ?? string.Empty;
+            var data = await productStorage.SearchProductsByName(searchText);
+            productsSource.AddRange(data.OrderBy(p => p.name));
+        }
+
+        private async Task ProductsSourceChanged(KeyboardEventArgs e)
+        {
+            if (e.Key != "Enter" || searchText.Length < 3) { return; }
+
+            productsSource.Clear();
+
+            var data = await productStorage.SearchProductsByName(searchText);
+            productsSource.AddRange(data.OrderBy(p => p.name));
+        }
+
+        private async Task SelectedProductChanged(ChangeEventArgs e)
+        {
+            searchText = e.Value?.ToString() ?? string.Empty;
+            selectedProduct = productsSource.FirstOrDefault(p => p.name.Equals(searchText));
+            await ProductChanged.InvokeAsync(selectedProduct);
+        }
+    }

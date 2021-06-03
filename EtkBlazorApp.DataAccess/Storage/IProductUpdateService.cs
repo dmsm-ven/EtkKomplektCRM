@@ -27,10 +27,11 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task UpdateProductsPrice(List<ProductUpdateData> data)
         {
-            List<int> discountProductIds = await GetDiscountProductIds();
+            //Если товар в акции или в специальном списке то не обновляем его
+            List<int> skipProducts = await GetSkipProductIds();
 
             List<ProductUpdateData> source = data
-                .Where(d => d.price.HasValue && !discountProductIds.Contains(d.product_id) && d.stock_partner == null)
+                .Where(d => d.price.HasValue && d.stock_partner == null && skipProducts.Contains(d.product_id) == false)
                 .ToList();
 
             Dictionary<string, List<int>> idsGroupedByCurrency = source
@@ -175,9 +176,24 @@ namespace EtkBlazorApp.DataAccess
             }
         }
 
+        private async Task<List<int>> GetSkipProductIds()
+        {
+            List<int> discountProductIds = await GetDiscountProductIds();
+            List<int> fixedProductIds = await GetFixedProductIds();
+
+            return discountProductIds.Concat(fixedProductIds).Distinct().ToList();
+        }
+
         private async Task<List<int>> GetDiscountProductIds()
         {
             var sql = "SELECT DISTINCT product_id FROM oc_product_special WHERE NOW() BETWEEN date_start AND date_end";
+            var ids = await database.GetList<int>(sql);
+            return ids;
+        }
+
+        private async Task<List<int>> GetFixedProductIds()
+        {
+            var sql = "SELECT product_id FROM etk_app_fixed_product";
             var ids = await database.GetList<int>(sql);
             return ids;
         }
