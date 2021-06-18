@@ -39,7 +39,8 @@ namespace EtkBlazorApp.BL.Templates
             {
                 foreach (var product in products)
                 {
-                    var linkedPriceLine = priceLines.FirstOrDefault(line => line.Sku.Equals(product.sku, StringComparison.OrdinalIgnoreCase) || (!string.IsNullOrEmpty(line.Model) && (line.Model.Equals(product.model, StringComparison.OrdinalIgnoreCase))));
+                    var linkedPriceLine = priceLines
+                        .FirstOrDefault(line => line.Sku.Equals(product.sku, StringComparison.OrdinalIgnoreCase) || (!string.IsNullOrEmpty(line.Model) && (line.Model.Equals(product.model, StringComparison.OrdinalIgnoreCase))));
 
                     if (linkedPriceLine != null)
                     {
@@ -47,7 +48,10 @@ namespace EtkBlazorApp.BL.Templates
                         {
                             product.name = linkedPriceLine.Name.Replace(";", " ").Trim();
                         }
-                        product.price = linkedPriceLine.Price.Value * CurrencyRatio;
+                        if (linkedPriceLine.Price.HasValue)
+                        {
+                            product.price = linkedPriceLine.Price.Value * CurrencyRatio;
+                        }
                     }
                     else
                     {
@@ -63,14 +67,21 @@ namespace EtkBlazorApp.BL.Templates
         }
 
         protected virtual void AppendLine(ProductEntity product, StreamWriter sw)
-        {          
-            decimal priceInCurrency = (Currency == CurrencyType.RUB) ? (int)product.price : Math.Round(product.price / CurrencyRatio, Precission);
-            decimal price1 = Math.Round(priceInCurrency * ((100m + Discount1) / 100m), Precission);
-            decimal price2 = Math.Round((price1 * (100m + Discount2)) / 100m, Precission);
-            
-            string vi_price = price1.ToString($"F{Precission}", new CultureInfo("en-EN"));
-            string vi_price_rrc = price2.ToString($"F{Precission}", new CultureInfo("en-EN"));
+        {
+            decimal priceInCurrency = (int)product.price;
+            if (Currency != CurrencyType.RUB)
+            {
+                priceInCurrency = (product.base_currency_code == Currency.ToString() && product.base_price != decimal.Zero) ? 
+                    product.base_price :
+                    Math.Round(product.price / CurrencyRatio, 2);
+            }
+           
+            decimal price1 = Math.Round(priceInCurrency * ((100m + Discount2) / 100m), Precission);
+            decimal price2 = Math.Round((price1 * (100m + Discount1)) / 100m, Precission);
 
+            string vi_price_rrc = price1.ToString($"F{Precission}", new CultureInfo("en-EN"));
+            string vi_price = price2.ToString($"F{Precission}", new CultureInfo("en-EN"));
+            
             string length = (product.length != decimal.Zero ? product.length : DEFAULT_DIMENSIONS[0]).ToString("F2", new CultureInfo("en-EN"));
             string width = (product.width != decimal.Zero ? product.width : DEFAULT_DIMENSIONS[1]).ToString("F2", new CultureInfo("en-EN"));
             string height = (product.height != decimal.Zero ? product.height : DEFAULT_DIMENSIONS[2]).ToString("F2", new CultureInfo("en-EN"));

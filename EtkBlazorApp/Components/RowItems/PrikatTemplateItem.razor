@@ -4,7 +4,7 @@
     <td>
         <input type="checkbox"
                style="display: inline-block;  margin: 2px 6px; vertical-align: middle;"
-               checked="@Item.IsChecked" 
+               checked="@Item.IsChecked"
                @onchange="@(e => { Item.IsChecked = !Item.IsChecked; Changed(); } )" />
     </td>
     <td>
@@ -14,14 +14,14 @@
     @if (Item.IsChecked)
     {
         <td>
-            <input type="number" class="form-control" 
-                   value="@Item.Discount1.ToString("G29", CultureInfo.InvariantCulture)"
-                   @onchange="@(e => { Item.Discount1 = decimal.Parse(e.Value.ToString(), CultureInfo.InvariantCulture); Changed(); } )" />
-        </td>
-        <td>
             <input type="number" class="form-control"
                    value="@Item.Discount2.ToString("G29", CultureInfo.InvariantCulture)"
                    @onchange="@(e => { Item.Discount2 = decimal.Parse(e.Value.ToString(), CultureInfo.InvariantCulture); Changed(); } )" />
+        </td>
+        <td>
+            <input type="number" class="form-control"
+                   value="@Item.Discount1.ToString("G29", CultureInfo.InvariantCulture)"
+                   @onchange="@(e => { Item.Discount1 = decimal.Parse(e.Value.ToString(), CultureInfo.InvariantCulture); Changed(); } )" />
         </td>
         <td>
             <select @onchange="@(e => { Item.CurrencyCode = (string)e.Value; Changed(); })" class="form-control">
@@ -41,13 +41,13 @@
 </tr>
 @if (ShowPriceExample && Item.IsChecked)
 {
-    <tr class="prikat-price-example-row">
-        <td></td>
-        <td>Пример цен</td>
-        <td>@GetExampleStringPart(1)</td>
-        <td>@GetExampleStringPart(2)</td>
-        <td></td>
-    </tr>
+<tr class="prikat-price-example-row">
+    <td></td>
+    <td>Пример цен</td>
+    <td>@GetExampleStringPart(1)</td>
+    <td>@GetExampleStringPart(2)</td>
+    <td></td>
+</tr>
 }
 
 
@@ -62,16 +62,16 @@
 
     private MarkupString GetExampleStringPart(int index)
     {
-        decimal priceExample1 = (ExamplePrice * (decimal)(1 + ((decimal)Item.Discount1 / 100)));
-        decimal priceExample2 = priceExample1 * (decimal)(1 + ((decimal)Item.Discount2 / 100));
+        decimal priceExample1 = (ExamplePrice * (decimal)(1 + ((decimal)Item.Discount2 / 100)));
+        decimal priceExample2 = priceExample1 * (decimal)(1 + ((decimal)Item.Discount1 / 100));
 
-        string sign1 = Math.Sign(Item.Discount1) < 0 ? "-" : "+";
-        string sign2 = Math.Sign(Item.Discount2) < 0 ? "-" : "+";
+        string sign1 = Math.Sign(Item.Discount2) < 0 ? "-" : "+";
+        string sign2 = Math.Sign(Item.Discount1) < 0 ? "-" : "+";
 
-        string part1 = $"{ExamplePrice.ToString("0.##")} {sign1} {Math.Abs(Item.Discount1).ToString("0.##")}% = <strong>{priceExample1.ToString("0.##")}<strong>";
-        string part2 = $"{priceExample1.ToString("0.##")} {sign2} {Math.Abs(Item.Discount2).ToString("0.##")}% = <strong>{priceExample2.ToString("0.##")}</strong>";
+        string part1 = $"{ExamplePrice.ToString("0.##")} {sign1} {Math.Abs(Item.Discount2).ToString("0.##")}% = <strong>{priceExample1.ToString("0.##")}<strong>";
+        string part2 = $"{priceExample1.ToString("0.##")} {sign2} {Math.Abs(Item.Discount1).ToString("0.##")}% = <strong>{priceExample2.ToString("0.##")}</strong>";
 
-        if(priceExample2 < priceExample1)
+        if(priceExample2 > priceExample1)
         {
             part2 = part2.Replace("<strong>", "<strong style=\"color: red;\">");
         }

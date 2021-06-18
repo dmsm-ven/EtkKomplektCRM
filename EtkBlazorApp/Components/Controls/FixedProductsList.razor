@@ -5,7 +5,7 @@
     Список товаров которые не нужно обновлять
 </h3>
 
-
+@*Добавить выделение верхней части и сделать виртуализацию строк таблицы*@
 <div id="fixed-products">
     <div class="table-responsive">
         <table width="100%">
@@ -25,7 +25,7 @@
                         </button>
                     </td>
                     <td style="padding-right: 10px;">
-                        <ProductsDropdown ProductChanged="@((p) => NewFixedProductChanged(p))" />
+                        <ProductsDropdown @bind-Product="newFixedProduct" />
                     </td>
                 </tr>
                 @foreach (var product in fixedProducts)
@@ -76,19 +76,6 @@
         else
         {
             toasts.ShowInfo("Товар уже добавлен в список игнорирования", "Информация");
-        }
-    }
-
-    private void NewFixedProductChanged(ProductEntity product)
-    {
-        if (product != null)
-        {
-            newFixedProduct.product_id = product.product_id;
-            newFixedProduct.name = product.name;
-        }
-        else
-        {
-            newFixedProduct = new ProductEntity();
         }
     }
 }

@@ -15,13 +15,13 @@
         {
             <div class="row my-3">
                 <div class="col-md-3">
-                    <button class="btn btn-info w-100" @onclick="(() => showSettingsBox = !showSettingsBox)">
+                    <button class="btn btn-info w-100 h-100" @onclick="(() => showSettingsBox = !showSettingsBox)">
                         <span class="oi oi-cog px-1"></span>
                         @(!showSettingsBox ? "Показать меню настроек" : "Скрыть меню настроек")
                     </button>
                 </div>
                 <div class="col-md-3">
-                    <button class="btn btn-info w-100 mx-2" @onclick="@(e => ShowPriceExample = !ShowPriceExample)">
+                    <button class="btn btn-info w-100 h-100 mx-2" @onclick="@(e => ShowPriceExample = !ShowPriceExample)">
                         <span class="oi oi-info px-1"></span>
                         @(!ShowPriceExample ? "Показать тестовые цены" : "Скрыть тестовые цены")
                     </button>
@@ -31,13 +31,12 @@
                     }
                 </div>
                 <div class="col-md-6">
-                    <button type="button" class="btn btn-primary w-100" @onclick="GetReport" disabled="@reportButtonDisabled">
+                    <button type="button" class="btn btn-primary w-100 h-100" @onclick="GetReport" disabled="@reportButtonDisabled">
                         <span class="oi oi-spreadsheet px-1"></span>
                         Скачать выгрузку
                     </button>
                 </div>
             </div>
-
 
 
             <ul class="list-group" hidden="@(!showSettingsBox)">
@@ -73,8 +72,8 @@
                                    @onchange="HeaderCheckAll" />
                         </th>
                         <th>Производитель</th>
-                        <th>Закупочная цена<br /><small>(наценка к цене от сайта)</small></th>
-                        <th>Рекомендуемая цена<br /><small>(наценка к закупочной цене)</small></th>
+                        <th>Рекомендуемая цена</th>
+                        <th>Закупочная цена</th>
                         <th>Валюта выгрузки</th>
                     </tr>
                 </thead>
