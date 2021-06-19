@@ -1,0 +1,136 @@
+﻿@inject IProductDiscountStorage discountStorage
+@inject IToastService toasts
+@inject UserLogger userLogger 
+@inherits DiscountTabBase
+
+@if (SelectedTab == TabName)
+{
+<div id="manufacturer-discounts">
+    <div class="row py-2">
+        <div class="col-md-3">
+            <button class="btn btn-primary w-100" type="button"
+                    style="display: block; vertical-align: bottom;"
+                    disabled="@addDiscountButtonDisabled"
+                    @onclick="AddDiscountItem">
+                <span class="oi oi-plus">&nbsp; Добавить</span>
+            </button>
+        </div>
+        <div class="col-md-9">
+            <SelectManufacturerDropdown ManufacturerChanged="@(e => ManufacturerChanged(e))" />
+        </div>
+    </div>
+    @if (discountData.manufacturer_id != 0)
+    {
+        <div class="row py-2">
+            <div class="col-md-6">
+                <label for="discount_value">Скидка, %</label>
+                <input type="number" pattern="\d*" min="0" max="99" id="discount_value" class="form-control"
+                       @bind="discountData.discount" />
+            </div>
+            <div class="col-md-6">
+                <label for="dateEnd">Дата окончания скидки</label>
+                <input type="date" class="form-control" id="dateEnd" @bind="discountData.date_end" />
+            </div>
+        </div>
+    }
+
+    <table class="table">
+        <thead style="margin-bottom: 12px;">
+            <tr>
+                <th></th>
+                <th>Производитель</th>
+                <th>Скидка</th>
+                <th>Дата, с</th>
+                <th>Дата, по</th>
+                <th>(осталось дней)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var brandDiscountInfo in discountedManufacturers)
+            {
+                <tr>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger"
+                                @onclick="(async e => await RemoveDiscountItem(brandDiscountInfo))">
+                            <span class="oi oi-minus"></span>
+                        </button>
+                    </td>
+                    <td>
+                        @(HttpUtility.HtmlDecode(brandDiscountInfo.manufacturer_name))
+                    </td>
+                    <td class="discount-percent">
+                        @(brandDiscountInfo.discount.ToString(".##") + " %")
+                    </td>
+                    <td>@brandDiscountInfo.date_start.ToShortDateString()</td>
+                    <td>@brandDiscountInfo.date_end.ToShortDateString()</td>
+                    <td>
+                        @(brandDiscountInfo.date_end > DateTime.Now.Date ? Math.Floor((brandDiscountInfo.date_end - DateTime.Now).TotalDays) : 0)
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+}
+
+@code {
+    List<DiscountToManufacturerEntity> discountedManufacturers;
+    DiscountToManufacturerEntity discountData;
+    bool addDiscountButtonDisabled
+    {
+        get => discountData.date_end <= DateTime.Now.Date || discountData.discount == 0 || discountData.manufacturer_id == 0;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            discountedManufacturers = await discountStorage.GetManufacturersWithDiscount();
+            discountData = new DiscountToManufacturerEntity();
+        }
+    }
+
+    private void ManufacturerChanged(ManufacturerEntity manufacturer)
+    {
+        discountData.manufacturer_id = manufacturer.manufacturer_id;
+        discountData.manufacturer_name = manufacturer.name;
+        discountData.discount = 0;
+    }
+
+    private async Task RemoveDiscountItem(DiscountToManufacturerEntity data)
+    {
+        discountedManufacturers.Remove(data);
+        await discountStorage.RemoveManufacturerDiscount(data.manufacturer_id);
+
+        toasts.ShowInfo("Скидка удаление", data.manufacturer_name);
+        await userLogger.Write(LogEntryGroupName.Discounts, "Удаление", $"Скидка для производителя '{discountData.manufacturer_name}' удалена");
+    }
+
+    private async Task AddDiscountItem()
+    {
+        await discountStorage.AddDiscountForManufacturer(discountData);
+
+        var item = discountedManufacturers.FirstOrDefault(di => di.manufacturer_id == discountData.manufacturer_id);
+
+        if (item == null)
+        {
+            discountedManufacturers.Insert(0, discountData);
+            await userLogger.Write(LogEntryGroupName.Discounts, "Добавлена", $"Добавлена скидка {discountData.discount}% для производителя '{discountData.manufacturer_name}'");
+        }
+        else
+        {
+            item.manufacturer_id = discountData.manufacturer_id;
+            item.manufacturer_name = discountData.manufacturer_name;
+            item.discount = discountData.discount;
+            item.date_start = discountData.date_start;
+            item.date_end = discountData.date_end;
+            await userLogger.Write(LogEntryGroupName.Discounts, "Обновление", $"Скидка для производителя '{discountData.manufacturer_name}' изменена на {discountData.discount}%");
+        }
+
+        discountData = new DiscountToManufacturerEntity();
+
+        toasts.ShowSuccess("Скидка добавлена", discountData.manufacturer_name);
+
+    }
+
+}

@@ -36,5 +36,8 @@ namespace EtkBlazorApp.BL
 
         [Description("Озон")]
         Ozon,
+
+        [Description("Скидки")]
+        Discounts,
     }
 }

@@ -18,26 +18,27 @@
         <IntermediateProgressBar></IntermediateProgressBar>
     }
 
-    <div class="row my-3">
-        <div class="col-md-4">
-            <button class="btn btn-info w-100" 
+<div class="row my-3">
+        <div class="col-md-6">
+            Последнее обновление: <storng>@lastUpdateDateTime</storng>
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-info w-100 h-100"
                     disabled="@updateButtonDisabled"
                     @onclick="(() => showSettingsBox = !showSettingsBox)">
                 <span class="oi oi-cog px-1"></span>
                 @(!showSettingsBox ? "Показать меню настроек" : "Скрыть меню настроек")
             </button>
         </div>
-
-        <div class="col-md-4 offset-4">
-            <button type="button" class="btn btn-primary w-100"
+        <div class="col-md-3">
+            <button type="button" class="btn btn-primary w-100 h-100"
                     @onclick="UpdateOzonButtonClick"
                     disabled="@updateButtonDisabled">
                 <span class="oi oi-arrow-circle-top px-1"></span>
                 Обновить цены и остатки
             </button>
-            <p>Последнее обновление: <storng>@lastUpdateDateTime</storng></p>
         </div>
-    </div>
+</div>
 
     <ul class="list-group" hidden="@(!showSettingsBox)">
         <li class=" list-group-item">

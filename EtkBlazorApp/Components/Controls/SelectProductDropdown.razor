@@ -68,6 +68,9 @@
         {
             searchText = e.Value?.ToString() ?? string.Empty;
             selectedProduct = productsSource.FirstOrDefault(p => p.name.Equals(searchText));
-            await ProductChanged.InvokeAsync(selectedProduct ?? new ProductEntity());
+            if (selectedProduct != null || string.IsNullOrWhiteSpace(searchText))
+            {
+                await ProductChanged.InvokeAsync(selectedProduct ?? new ProductEntity());
+            }
         }
     }

@@ -9,6 +9,7 @@ namespace EtkBlazorApp.DataAccess
         Task SaveManufacturer(ManufacturerEntity manufacturer);
         Task<List<ManufacturerEntity>> GetManufacturers();
 
+        //Для таблицы монобрендов (для обновления других сайтов) - нужно вынести в отдельный интерфейс
         Task<List<MonobrandEntity>> GetMonobrands();
         Task UpdateMonobrand(MonobrandEntity monobrand);
         Task DeleteMonobrand(int id);

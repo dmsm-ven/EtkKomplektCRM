@@ -11,7 +11,6 @@ namespace EtkBlazorApp.DataAccess
     public interface IProductStorage
     {
         Task<List<ProductEntity>> GetLastAddedProducts(int count);
-        Task<List<ProductEntity>> GetProductsWithMaxDiscount(int count);
         Task<List<ProductEntity>> GetBestsellersByQuantity(int count, int maxOrderOldInDays);
         Task<List<ProductEntity>> GetBestsellersBySum(int count, int maxOrderOldInDays);
         Task<List<ProductEntity>> GetProductQuantityInAdditionalStock(int stockId);
@@ -49,22 +48,6 @@ namespace EtkBlazorApp.DataAccess
                             WHERE p.status = 1
                             ORDER BY p.product_id DESC
                             LIMIT @Limit";
-
-            var products = await database.GetList<ProductEntity, dynamic>(sql, new { Limit = count });
-
-            return products;
-        }
-
-        public async Task<List<ProductEntity>> GetProductsWithMaxDiscount(int count)
-        {          
-            var sql = @"SELECT p.*, d.name as name, m.name as manufacturer, sp.price as discount_price
-                        FROM oc_product p
-                        JOIN oc_product_special sp ON p.product_id = sp.product_id
-                        JOIN oc_product_description d ON p.product_id = d.product_id
-                        JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id
-                        WHERE p.status = 1 AND (NOW() BETWEEN sp.date_start AND sp.date_end)
-                        ORDER BY Round(sp.price / p.price, 4)
-                        LIMIT @Limit";
 
             var products = await database.GetList<ProductEntity, dynamic>(sql, new { Limit = count });
 

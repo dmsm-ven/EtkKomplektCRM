@@ -1,0 +1,33 @@
+﻿@page "/discounts"
+@using EtkBlazorApp.Components.DiscountTabs
+
+<h3>Скидки</h3>
+
+<div class="btn-group">
+    @foreach (var tabName in tabs)
+    {
+        <button class="btn btn-outline-primary @(selectedTab == tabName ? "active" : "")"
+                @onclick="@(e => selectedTab = tabName)">
+            @tabName
+        </button>
+    }
+</div>
+
+<div class="container">
+    <h2>@selectedTab</h2>
+    <CascadingValue Value="selectedTab">
+        <DiscountsByProductTab TabName="@tabs[0]" />
+        <DiscountsByCategoryTab TabName="@tabs[1]" />
+        <DiscountsByManufacturerTab TabName="@tabs[2]" />
+    </CascadingValue>
+</div>
+
+@code {
+    string [] tabs = new string[] { "На товары", "На категории", "На производителей" };
+    string selectedTab;
+
+    protected override void OnInitialized()
+    {
+        selectedTab = tabs.First();
+    }
+}

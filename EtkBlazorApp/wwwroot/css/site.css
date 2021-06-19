@@ -1,6 +1,23 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+#product-discounts table td.discount-percent {
+    font-size: 18px;
+    font-weight: bold;
+    color: red;
+}
+
+#product-discounts table tr.expired{
+    opacity: 0.75;
+}
+
+    .nav-menu-html-symbol-icon {
+        color: #d7d7d7;
+        font-weight: bold;
+        font-size: 25px;
+        padding-right: 11px;
+    }
+
 .settings-tab-content {
     padding: 30px 5px;
 }
