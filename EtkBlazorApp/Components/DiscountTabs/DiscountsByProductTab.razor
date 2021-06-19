@@ -3,133 +3,146 @@
 @inject UserLogger userLogger
 @inherits DiscountTabBase
 
-<div id="product-discounts">
-    <div class="row py-2">
-        <div class="col-md-3">
-            <button class="btn btn-primary w-100" type="button"
-                    style="display: block; vertical-align: bottom;"
-                    disabled="@(newDiscountProduct.IsValidDiscount == false)"
-                    @onclick="(e => AddDiscountItem())">
-                <span class="oi oi-plus">&nbsp; Добавить</span>
-            </button>
+@if (SelectedTab == TabName)
+{
+    <div id="product-discounts">
+        <div class="row py-2">
+            <div class="col-md-3">
+                <button class="btn btn-primary w-100" type="button"
+                        style="display: block; vertical-align: bottom;"
+                        disabled="@(newDiscountProduct.IsValidDiscount == false)"
+                        @onclick="(e => AddDiscountItem())">
+                    <span class="oi oi-plus">&nbsp; Добавить</span>
+                </button>
+            </div>
+            <div class="col-md-9">
+                <SelectProductDropdown ProductChanged="@SelectedProductChanged" />
+            </div>
         </div>
-        <div class="col-md-9">
-            <SelectProductDropdown ProductChanged="@SelectedProductChanged" />
-        </div>
-    </div>
-    <div class="row py-2">
-        <div class="col-md-3">
-            @if (newDiscountProduct.BasePriceCurrency == "RUB")
-            {
-                <label>Обычная цена (руб.)</label>
-                <p><s>@newDiscountProduct.Price.ToString(".##")</s></p>
-            }
-            else
-            {
-                <label>Обычная цена (@newDiscountProduct.BasePriceCurrency)</label>
-                <p><s>@newDiscountProduct.BasePrice.ToString(".##")</s></p>
-            }
-        </div>
-        <div class="col-md-3">
-            @if (newDiscountProduct.BasePriceCurrency == "RUB")
-            {
-                <label for="new_price">Новая цена (руб.)</label>
-                <input type="number" class="form-control" id="new_price"
-                       min="0"
-                       max="@newDiscountProduct.Price.ToString(".##").Replace(",", ".")"
-                       value="@newDiscountProduct.NewPriceInRub.ToString(".##")"
-                       step="1" pattern="\d*"
-                       @onchange="@(e => newDiscountProduct.NewPriceInRub = int.Parse(e.Value.ToString()))" />
-            }
-            else
-            {
-                <label for="new_price">Новая цена (@newDiscountProduct.BasePriceCurrency)</label>
-                <input type="number" class="form-control" id="new_price"
-                       min="0"
-                       max="@newDiscountProduct.BasePrice.ToString(".##").Replace(",", ".")"
-                       value="@newDiscountProduct.NewPriceInCurrency.ToString(".##")"
-                       step="1" pattern="\d*"
-                       @onchange="@(e => newDiscountProduct.NewPriceInCurrency = decimal.Parse(e.Value.ToString()))" />
-            }
-        </div>
-        <div class="col-md-3">
-            <label for="discount_percent">Скидка, %</label>
-            <input type="number" min="0" max="99" id="discount_percent" class="form-control"
-                   value="@newDiscountProduct.DiscountPercent"
-                   @onchange="@(e => newDiscountProduct.DiscountPercent = int.Parse(e.Value.ToString()))" />
-        </div>
-        <div class="col-md-3">
-            <label for="date_end">Дата окончания скидки</label>
-            <input type="date" id="date_end" class="form-control"
-                   min="@DateTime.Now.Date.ToString("yyyy-MM-dd")"
-                   @bind="@newDiscountProduct.DiscountEndDate" />      
-        </div>
-    </div>
-    <table class="table">
-        <thead style="margin-bottom: 12px;">
-            <tr>
-                <th></th>
-                <th>Производитель</th>
-                <th width="100%">Товар</th>
-                <th>Валюта</th>
-                <th>Обычная цена</th>
-                <th>Новая цена</th>
-                <th>Скидка, %</th>
-                <th>Дата, с</th>
-                <th>Дата, по</th>
-                <th>Дней осталось</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in discountedProducts)
-            {
-                <tr class="@(item.IsExpired ? "expired" : "active")">
-                    <td>
-                        <button class="btn btn-sm btn-outline-danger"
-                                @onclick="(e => RemoveDiscountItem(item))">
-                            <span class="oi oi-minus"></span>
-                        </button>
-                    </td>
-                    <td>
-                        @item.Manufacturer
-                    </td>
-                    <td>
-                        <a href="@item.ProductIdUri" target="_blank">@item.Name</a>
-                    </td>
-                    <td>
-                        @item.BasePriceCurrency
-                    </td>
-                    <td>
-                        @if (item.BasePriceCurrency == "RUB")
-                        {
-                            @item.Price
-                        }
-                        else
-                        {
-                            @item.BasePrice
-                        }
-                    </td>
-                    <td>
-                        @if (item.BasePriceCurrency == "RUB")
-                        {
-                            @item.NewPriceInRub
-                        }
-                        else
-                        {
-                            @item.NewPriceInCurrency
-                        }
-                    </td>
-                    <td class="discount-percent">
-                        @item.DiscountPercent.ToString("P0")
-                    </td>
-                    <td>@item.DiscountStartDate</td>
-                    <td>@item.DiscountEndDate</td>
-                    <td>@item.DaysLeft</td>
+        @if (newDiscountProduct.Id != 0)
+        {
+            <div class="row py-2">
+                <div class="col-md-3">
+                    @if (newDiscountProduct.BasePriceCurrency == "RUB")
+                    {
+                        <label>Обычная цена (руб.)</label>
+                        <p><s>@newDiscountProduct.Price.ToString(".##")</s></p>
+                    }
+                    else
+                    {
+                        <label>Обычная цена (@newDiscountProduct.BasePriceCurrency)</label>
+                        <p><s>@newDiscountProduct.BasePrice.ToString(".##")</s></p>
+                    }
+                </div>
+                <div class="col-md-3">
+                    @if (newDiscountProduct.BasePriceCurrency == "RUB")
+                    {
+                        <label for="new_price">Новая цена (руб.)</label>
+                        <input type="number" class="form-control" id="new_price"
+                               min="0"
+                               max="@newDiscountProduct.Price.ToString(".##").Replace(",", ".")"
+                               value="@newDiscountProduct.NewPriceInRub.ToString(".##")"
+                               step="1" pattern="\d*"
+                               @onchange="@(e => newDiscountProduct.NewPriceInRub = int.Parse(e.Value.ToString()))" />
+                    }
+                    else
+                    {
+                        <label for="new_price">Новая цена (@newDiscountProduct.BasePriceCurrency)</label>
+                        <input type="number" class="form-control" id="new_price"
+                               min="0"
+                               max="@newDiscountProduct.BasePrice.ToString(".##").Replace(",", ".")"
+                               value="@newDiscountProduct.NewPriceInCurrency.ToString(".##")"
+                               step="1" pattern="\d*"
+                               @onchange="@(e => newDiscountProduct.NewPriceInCurrency = decimal.Parse(e.Value.ToString()))" />
+                    }
+                </div>
+                <div class="col-md-3">
+                    <label for="discount_percent">Скидка, %</label>
+                    <input type="number" min="0" max="99" id="discount_percent" class="form-control"
+                           value="@newDiscountProduct.DiscountPercent"
+                           @onchange="@(e => newDiscountProduct.DiscountPercent = int.Parse(e.Value.ToString()))" />
+                </div>
+                <div class="col-md-3">
+                    <label for="date_end">Дата окончания скидки</label>
+                    <input type="date" id="date_end" class="form-control"
+                           min="@DateTime.Now.Date.ToString("yyyy-MM-dd")"
+                           @bind="@newDiscountProduct.DiscountEndDate" />
+                </div>
+            </div>
+        }
+        <table class="table">
+            <thead style="margin-bottom: 12px;">
+                <tr>
+                    <th></th>
+                    <th>Производитель</th>
+                    <th width="100%">Товар</th>
+                    <th>Валюта</th>
+                    <th>Обычная цена</th>
+                    <th>Новая цена</th>
+                    <th>Скидка, %</th>
+                    <th>Дата, с</th>
+                    <th>Дата, по</th>
+                    <th>Дней осталось</th>
                 </tr>
-            }
-        </tbody>
-    </table>
-</div>
+            </thead>
+            <tbody>
+                @if (discountedProducts == null)
+                {
+                    <LoadingSpinner />
+                }
+                else
+                {
+                    foreach (var item in discountedProducts)
+                    {
+                        <tr class="@(item.IsExpired ? "expired" : "active")">
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger"
+                                        @onclick="(e => RemoveDiscountItem(item))">
+                                    <span class="oi oi-minus"></span>
+                                </button>
+                            </td>
+                            <td>
+                                @item.Manufacturer
+                            </td>
+                            <td>
+                                <a href="@item.ProductIdUri" target="_blank">@item.Name</a>
+                            </td>
+                            <td>
+                                @item.BasePriceCurrency
+                            </td>
+                            <td>
+                                @if (item.BasePriceCurrency == "RUB")
+                                {
+                                    @item.Price
+                                }
+                                else
+                                {
+                                    @item.BasePrice
+                                }
+                            </td>
+                            <td>
+                                @if (item.BasePriceCurrency == "RUB")
+                                {
+                                    @item.NewPriceInRub
+                                }
+                                else
+                                {
+                                    @item.NewPriceInCurrency
+                                }
+                            </td>
+                            <td class="discount-percent">
+                                @item.DiscountPercent.ToString("P0")
+                            </td>
+                            <td>@item.DiscountStartDate</td>
+                            <td>@item.DiscountEndDate</td>
+                            <td>@item.DaysLeft</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+}
 @code {
 
     List<ProductDiscountViewModel> discountedProducts;
@@ -160,8 +173,7 @@
                     DiscountEndDate = p.DateEnd
                 })
                 .ToList();
-
-
+            StateHasChanged();
         }
     }
 

@@ -87,6 +87,7 @@
         {
             discountedManufacturers = await discountStorage.GetManufacturersWithDiscount();
             discountData = new DiscountToManufacturerEntity();
+            StateHasChanged();
         }
     }
 

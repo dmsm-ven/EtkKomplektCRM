@@ -25,5 +25,6 @@
     {        
         MarsComponent = 1,
         _1C = 2,
+        Eltech = 3,
     }
 }
