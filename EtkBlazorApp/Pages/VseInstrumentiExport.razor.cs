@@ -31,7 +31,6 @@ namespace EtkBlazorApp.Pages
 
         bool reportOptionsHasStock = false;
         bool reportOptionsHasEan = false;
-        bool reportOptionsAdding1CQuantity = false;
         string reportOptionsGln;
 
         bool uncheckAllState = false;
@@ -58,7 +57,6 @@ namespace EtkBlazorApp.Pages
 
                 reportOptionsHasStock = await settingStorage.GetValue<bool>("vse_instrumenti_export_options_stock");
                 reportOptionsHasEan = await settingStorage.GetValue<bool>("vse_instrumenti_export_options_ean");
-                reportOptionsAdding1CQuantity = await settingStorage.GetValue<bool>("vse_instrumenti_export_options_1c");
                 reportOptionsGln = await settingStorage.GetValue("vse_instrumenti_gln");
 
                 StateHasChanged();
@@ -100,7 +98,6 @@ namespace EtkBlazorApp.Pages
             {
                 HasEan = reportOptionsHasEan,
                 StockGreaterThanZero = reportOptionsHasStock,
-                Adding1CStockQuantity = reportOptionsAdding1CQuantity,
                 GLN = reportOptionsGln
             };
 
@@ -116,7 +113,6 @@ namespace EtkBlazorApp.Pages
         {
             await settingStorage.SetValue("vse_instrumenti_export_options_stock", reportOptionsHasStock);
             await settingStorage.SetValue("vse_instrumenti_export_options_ean", reportOptionsHasEan);
-            await settingStorage.SetValue("vse_instrumenti_export_options_1c", reportOptionsAdding1CQuantity);
         }
 
         private void HeaderCheckAll(ChangeEventArgs e)

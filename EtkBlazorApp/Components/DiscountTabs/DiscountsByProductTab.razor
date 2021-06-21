@@ -75,11 +75,11 @@
                 <tr>
                     <th></th>
                     <th>Производитель</th>
-                    <th width="100%">Товар</th>
+                    <th width="50%">Товар</th>
                     <th>Валюта</th>
                     <th>Обычная цена</th>
                     <th>Новая цена</th>
-                    <th>Скидка, %</th>
+                    <th>Скидка</th>
                     <th>Дата, с</th>
                     <th>Дата, по</th>
                     <th>Дней осталось</th>
@@ -113,28 +113,28 @@
                             <td>
                                 @if (item.BasePriceCurrency == "RUB")
                                 {
-                                    @item.Price
+                                    @item.Price.ToString(".##")
                                 }
                                 else
                                 {
-                                    @item.BasePrice
+                                    @item.BasePrice.ToString(".##")
                                 }
                             </td>
                             <td>
                                 @if (item.BasePriceCurrency == "RUB")
                                 {
-                                    @item.NewPriceInRub
+                                    @item.NewPriceInRub.ToString(".##")
                                 }
                                 else
                                 {
-                                    @item.NewPriceInCurrency
+                                    @item.NewPriceInCurrency.ToString(".##")
                                 }
                             </td>
                             <td class="discount-percent">
-                                @item.DiscountPercent.ToString("P0")
+                                @(item.DiscountPercent.ToString() + " %")
                             </td>
-                            <td>@item.DiscountStartDate</td>
-                            <td>@item.DiscountEndDate</td>
+                            <td>@item.DiscountStartDate.ToShortDateString()</td>
+                            <td>@item.DiscountEndDate.ToShortDateString()</td>
                             <td>@item.DaysLeft</td>
                         </tr>
                     }
@@ -164,15 +164,16 @@
                     Id = p.product_id,
                     Name = p.name,
                     Manufacturer = p.manufacturer,
+                    BasePriceCurrency = p.base_currency_code,
                     Price = p.RegularPriceInRub,
                     BasePrice = p.RegularPriceInCurrency,
-                    BasePriceCurrency = p.base_currency_code,
                     NewPriceInRub = p.NewPriceInRub,
                     NewPriceInCurrency = p.NewPriceInCurrency,
-                    DiscountStartDate = p.DateStart,
-                    DiscountEndDate = p.DateEnd
+                    DiscountStartDate = p.date_start,
+                    DiscountEndDate = p.date_end
                 })
                 .ToList();
+            discountedProducts.ForEach(p => p.RefreshDiscountPercent());
             StateHasChanged();
         }
     }
@@ -186,10 +187,19 @@
     private async Task AddDiscountItem()
     {
         var item = discountedProducts.FirstOrDefault(di => di.Id == newDiscountProduct.Id);
+        await productStorage.AddDiscountForProduct(new ProductSpecialEntity()
+        {
+            product_id = newDiscountProduct.Id,
+            date_start = newDiscountProduct.DiscountStartDate,
+            date_end = newDiscountProduct.DiscountEndDate,
+            NewPriceInCurrency = newDiscountProduct.NewPriceInCurrency,
+            NewPriceInRub = newDiscountProduct.NewPriceInRub,
+            base_currency_code = newDiscountProduct.BasePriceCurrency
+        });
 
         if (item == null)
         {
-            discountedProducts.Insert(0, item);
+            discountedProducts.Insert(0, newDiscountProduct);
             await userLogger.Write(LogEntryGroupName.Discounts, "Добавлена", $"Добавлена скидка {newDiscountProduct.DiscountPercent}% для товара '{newDiscountProduct.Name}'");
         }
         else
@@ -206,7 +216,7 @@
         newDiscountProduct = new ProductDiscountViewModel();
         newDiscountProduct.PropertyChanged += (o, e) => InvokeAsync(() => StateHasChanged());
 
-        toasts.ShowSuccess("Скидка добавлена", item.Name);
+        toasts.ShowSuccess("Скидка добавлена", newDiscountProduct.Name);
     }
 
     private void SelectedProductChanged(ProductEntity product)

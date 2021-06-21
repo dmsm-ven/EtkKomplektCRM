@@ -13,6 +13,7 @@ namespace EtkBlazorApp.DataAccess
         Task UpdateProductsPrice(List<ProductUpdateData> data);
         Task UpdateProductsStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate);
         Task UpdateProductsStockPartner(List<ProductUpdateData> data);
+        Task ComputeStockQuantity(List<ProductUpdateData> data);
         Task UpdateDirectProduct(ProductEntity product);
     }
 
@@ -31,8 +32,10 @@ namespace EtkBlazorApp.DataAccess
             List<int> skipProducts = await GetSkipProductIds();
 
             List<ProductUpdateData> source = data
-                .Where(d => d.price.HasValue && d.stock_partner == null && skipProducts.Contains(d.product_id) == false)
+                .Where(d => d.price.HasValue && skipProducts.Contains(d.product_id) == false)
                 .ToList();
+
+            if (source.Count == 0) { return; }
 
             Dictionary<string, List<int>> idsGroupedByCurrency = source
                 .GroupBy(p => p.currency_code)
@@ -42,7 +45,7 @@ namespace EtkBlazorApp.DataAccess
 
             string idsArray = string.Join(",", source.Select(d => d.product_id).Distinct().OrderBy(id => id));
 
-            if (source.Count == 0) { return; }
+           
 
             var sb = new StringBuilder()
                 .AppendLine("UPDATE oc_product")
@@ -83,7 +86,9 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task UpdateProductsStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate)
         {
-            List<ProductUpdateData> source = data.Where(d => d.quantity.HasValue && d.stock_partner == null).ToList();
+            List<ProductUpdateData> source = data
+                .Where(d => d.quantity.HasValue && d.stock_partner == null)
+                .ToList();
 
             if (source.Count == 0) { return; }
 
@@ -118,17 +123,16 @@ namespace EtkBlazorApp.DataAccess
             await database.ExecuteQuery<dynamic>(sql, new { });
         }
 
-        public async Task UpdateProductsStockPartner(List<ProductUpdateData> data)
+        public async Task UpdateProductsStockPartner(List<ProductUpdateData> source)
         {
-            var source = data.Where(d => d.stock_partner != null).ToList();
+            source = source.Where(item => item.quantity.HasValue).ToList();
+
             if (source.Any())
             {
                 var groupedByPartner = source.GroupBy(line => line.stock_partner.Value);
                 var partnerIdArray = string.Join(",", groupedByPartner.Select(g => g.Key).Distinct().ToList());
 
-                var sb = new StringBuilder()
-                    .AppendLine($"DELETE FROM oc_product_to_stock WHERE stock_partner_id IN ({partnerIdArray});")
-                    .AppendLine("INSERT INTO oc_product_to_stock (stock_partner_id, product_id, quantity) VALUES");
+                var sb = new StringBuilder("INSERT INTO oc_product_to_stock (stock_partner_id, product_id, quantity) VALUES\n");
 
                 foreach (var group in groupedByPartner)
                 {
@@ -136,15 +140,36 @@ namespace EtkBlazorApp.DataAccess
                     {
                         sb.AppendLine($"({group.Key}, {kvp.product_id}, {kvp.quantity.Value}),");
                     }
-                    if (group != groupedByPartner.Last())
-                    {
-                        sb.Append("\n");
-                    }
                 }
 
-                var sql = sb.ToString().Trim('\r', '\n', ',');
+                var sql = sb.ToString().Trim('\r', '\n', ',') + " ON DUPLICATE KEY UPDATE quantity = VALUES(quantity)";
 
                 await database.ExecuteQuery<dynamic>(sql, new { });
+            }
+        }
+
+        /// <summary>
+        /// Суммируем все остатки из с дополнительных складов. Тут возможна проблема постоянного прибавления остатка на основной склад (в oc_product)
+        /// </summary>
+        /// <param name="affectedProductIds"></param>
+        /// <returns></returns>
+        public async Task ComputeStockQuantity(List<ProductUpdateData> data)
+        {
+            var idsToUpdate = data
+                .Where(d => d.quantity.HasValue)
+                .Select(d => d.product_id)
+                .Distinct()
+                .OrderBy(p => p)
+                .ToList();
+
+            var pidArray = string.Join(",", idsToUpdate);
+
+            if (idsToUpdate.Any())
+            {
+                string pileUpStockSql = $@"UPDATE oc_product
+                                       SET quantity = (SELECT SUM(oc_product_to_stock.quantity) FROM oc_product_to_stock WHERE oc_product_to_stock.product_id = oc_product.product_id)
+                                       WHERE product_id IN ({pidArray})";
+                await database.ExecuteQuery(pileUpStockSql);
             }
         }
 

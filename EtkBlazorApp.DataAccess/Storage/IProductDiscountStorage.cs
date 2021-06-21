@@ -79,7 +79,9 @@ namespace EtkBlazorApp.DataAccess
                                 p.price as RegularPriceInRub, 
                                 sp.price as NewPriceInRub, 
                                 p.base_price as RegularPriceInCurrency, 
-                                sp.base_price as NewPriceInCurrency
+                                sp.base_price as NewPriceInCurrency,
+                                sp.date_start, sp.date_end
+
                         FROM oc_product p
                         JOIN oc_product_special sp ON p.product_id = sp.product_id
                         JOIN oc_product_description d ON p.product_id = d.product_id
@@ -130,14 +132,16 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task AddDiscountForProduct(ProductSpecialEntity discountData)
         {
+            string priceRub = discountData.base_currency_code == "RUB" ? discountData.NewPriceInRub.ToString("F0") : "0";
+            string priceCur = discountData.base_currency_code == "RUB" ? "0" : discountData.NewPriceInCurrency.ToString("F2").Replace(",", ".");
             string sql = @$"INSERT INTO oc_product_special 
-                          (product_id, customer_group_id, priority, price, base_price, date_start, date_end)
-                           @product_id, 
-                                  {DEFAULT_CUSTOMER_GROUP_ID}, 
-                                  {PRODUCT_LEVEL_PRIORITY},
-                                  IF(p.base_currency_code = 'RUB', @NewPriceInRub, 0), 
-                                  IF(p.base_currency_code = 'RUB', 0, @NewPriceInCurrency), 
-                                  DATE(@date_start), DATE(@date_end)";
+                          (product_id, customer_group_id, priority, price, base_price, date_start, date_end) VALUES
+                          (@product_id, 
+                            {DEFAULT_CUSTOMER_GROUP_ID}, 
+                            {PRODUCT_LEVEL_PRIORITY},
+                            {priceRub}, 
+                            {priceCur}, 
+                            DATE(@date_start), DATE(@date_end))";
 
             await database.ExecuteQuery(sql, discountData);
         }

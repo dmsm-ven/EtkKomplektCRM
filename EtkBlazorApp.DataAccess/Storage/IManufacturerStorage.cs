@@ -9,6 +9,9 @@ namespace EtkBlazorApp.DataAccess
         Task SaveManufacturer(ManufacturerEntity manufacturer);
         Task<List<ManufacturerEntity>> GetManufacturers();
 
+        Task SaveStockPartner(StockPartnerEntity stock);
+        Task<List<StockPartnerEntity>> GetStockPartners();
+
         //Для таблицы монобрендов (для обновления других сайтов) - нужно вынести в отдельный интерфейс
         Task<List<MonobrandEntity>> GetMonobrands();
         Task UpdateMonobrand(MonobrandEntity monobrand);
@@ -74,6 +77,23 @@ namespace EtkBlazorApp.DataAccess
         public async Task AddMonobrand()
         {
             await database.ExecuteQuery("INSERT INTO etk_app_monobrand (website, currency_code) VALUES ('https://', 'RUB')");
+        }
+
+        public async Task SaveStockPartner(StockPartnerEntity stock)
+        {
+            string sql = @"UPDATE oc_stock_partner
+                         SET shipment_period = @shipment_period
+                         WHERE stock_partner_id = @stock_partner_id";
+            await database.ExecuteQuery(sql, stock);
+        }
+
+        public async Task<List<StockPartnerEntity>> GetStockPartners()
+        {
+            string sql = @"SELECT * FROM oc_stock_partner ORDER BY name";
+
+            var stocks = await database.GetList<StockPartnerEntity>(sql);
+
+            return stocks;
         }
     }
 }

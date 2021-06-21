@@ -39,7 +39,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Sku = sku,
                     Price = price,
                     Quantity = quantity,
-                    StockPartner = manufacturer.Equals("Pro'sKit") ? StockPartner.MarsComponent : null
+                    StockPartner = StockPartner.MarsComponent
                 };
 
                 list.Add(priceLine);

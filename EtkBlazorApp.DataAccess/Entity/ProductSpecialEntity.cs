@@ -19,7 +19,7 @@ namespace EtkBlazorApp.DataAccess.Entity
         public decimal RegularPriceInRub { get; set; }
         public decimal RegularPriceInCurrency { get; set; }
 
-        public DateTime DateStart { get; set; }
-        public DateTime DateEnd { get; set; }
+        public DateTime date_start { get; set; }
+        public DateTime date_end { get; set; }
     }
 }

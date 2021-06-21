@@ -76,7 +76,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Price = priceBezNds,
                     Manufacturer = manufacturer,
                     Sku = sku,
-                    Model = model
+                    Model = model,
+                    StockPartner = StockPartner.Eltech
                 };
                 list.Add(priceLine);
             }

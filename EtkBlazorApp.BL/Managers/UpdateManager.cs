@@ -36,10 +36,6 @@ namespace EtkBlazorApp.BL
             bool clearStockBeforeUpdate, 
             IProgress<string> progress = null)
         {
-            //TODO тут надо будет проверить, т.к. нужно следить что бы в прайс-листах (и шаблонах соответственно) имя производителя точно совпадало с именем из базы данных 
-            //Иначе товары не будут загружены и соответственно не обновлены
-            //Проблема с Bosch, и возможно другими брендами где pl.manufacturer = null
-
             progress?.Report("Подготовка списка производителей для обновления");
             int [] affectedBrandsIds = await GetAffectedBrandIds(priceLines);
 
@@ -52,21 +48,19 @@ namespace EtkBlazorApp.BL
             progress?.Report("Обновление цен etk-komplekt.ru");
             await productUpdateService.UpdateProductsPrice(data);
 
-            progress?.Report("Обновление остатков etk-komplekt.ru");
-            await productUpdateService.UpdateProductsStock(data, clearStockBeforeUpdate);
+            data.Where(d => d.stock_partner == null).ToList().ForEach(i => i.stock_partner = (int?)StockPartner.Symmetron);
+            progress?.Report("Обновление остатков на складах etk-komplekt.ru");
+            await productUpdateService.UpdateProductsStockPartner(data);
 
-            if (data.Any(data => data.stock_partner != null))
-            {
-                progress?.Report("Обновление дополнительных складов etk-komplekt.ru");
-                await productUpdateService.UpdateProductsStockPartner(data);
-            }
+            progress?.Report("Складывание остатков складов etk-komplekt.ru");
+            await productUpdateService.ComputeStockQuantity(data);
 
             if (data.Any(line => line.price.HasValue) && data.Any(pl => pl.currency_code != "RUB"))
             {
                 progress?.Report("Пересчет цен товаров в валюте");
                 await new WebClient().DownloadStringTaskAsync(CurrencyPlusUri);
             }
-          
+
             await UpdateMonobrands(affectedBrandsIds, progress);
             
             progress?.Report("Обновление завершено");
@@ -81,10 +75,7 @@ namespace EtkBlazorApp.BL
                 .Distinct()
                 .ToList();
 
-            if (affectedBrands.Contains("Bosch"))
-            {
-                affectedBrands.Add("Dremel");
-            }
+            AddAdditionalAffectedBrands(affectedBrands);
 
             var affectedBrandsIds = allManufacturers
                 .Where(m => affectedBrands.Contains(m.name, StringComparer.OrdinalIgnoreCase))
@@ -92,6 +83,24 @@ namespace EtkBlazorApp.BL
                 .ToList();
 
             return affectedBrandsIds.ToArray();
+        }
+
+        private void AddAdditionalAffectedBrands(List<string> affectedBrands)
+        {
+            // В производителе Bosch есть подбренд Dremel, но он так же считается и отдельным брендом. 
+            // Хотя находится в прайс-листе Bosch и там не указан как отдельный бренд
+            if (affectedBrands.Contains("Bosch"))
+            {
+                affectedBrands.Add("Dremel");
+            }
+
+            // Если есть какой-либо бренд из списка то добавляем всех, т.к. у них есть товары которые по факту один и тот же
+            // Но называется в каждом из брендов по разному и у всех одна модель (на сайте есть только 1 вариант)
+            var eltechBrands = new string[] { "Tianma", "BOE", "NEC", "AU Optronics" };
+            if (eltechBrands.Any(eltechBrand => affectedBrands.Contains(eltechBrand)))
+            {
+                affectedBrands.AddRange(eltechBrands);
+            }
         }
 
         private async Task UpdateMonobrands(IEnumerable<int> affectedBrandsIds, IProgress<string> progress = null)

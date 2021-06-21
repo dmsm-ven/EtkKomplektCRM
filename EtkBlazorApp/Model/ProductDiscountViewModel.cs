@@ -10,7 +10,7 @@ namespace EtkBlazorApp
     public class ProductDiscountViewModel : ProductViewModel, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        private bool preventUpdate = true;
+        private bool preventUpdate = false;
 
         private decimal newPriceInRub;
         public decimal NewPriceInRub
@@ -23,7 +23,7 @@ namespace EtkBlazorApp
                     newPriceInRub = value;                    
                     if (preventUpdate == false)
                     {
-                        discountPercent = (int)((1 - (NewPriceInRub / Price)) * 100);
+                        DiscountPercent = CalculateDiscountPercent("RUB");
                         RaisePropertyChanged();
                     }
                 }
@@ -41,7 +41,7 @@ namespace EtkBlazorApp
                     newPriceInCurrency = value;                 
                     if (preventUpdate == false)
                     {
-                        discountPercent = (int)((1 - (newPriceInCurrency / BasePrice)) * 100);
+                        DiscountPercent = CalculateDiscountPercent(BasePriceCurrency);
                         RaisePropertyChanged();
                     }
                 }
@@ -66,8 +66,6 @@ namespace EtkBlazorApp
         }
 
         int discountPercent;
-        
-
         public new int DiscountPercent
         {
             get => discountPercent;
@@ -78,11 +76,12 @@ namespace EtkBlazorApp
                     discountPercent = value;
 
                     preventUpdate = true;
-                    NewPriceInRub = (int)((base.Price / (100 + discountPercent)) * 100);
-                    NewPriceInCurrency = (int)((base.BasePrice / (100 + discountPercent)) * 100);
+                    NewPriceInRub = (int)((base.Price * (100 - discountPercent)) / 100);
+                    NewPriceInCurrency = (int)((base.BasePrice * (100 - discountPercent)) / 100);
+                    
                     preventUpdate = false;
-
                     RaisePropertyChanged();
+
                 }
             }
         }
@@ -121,6 +120,25 @@ namespace EtkBlazorApp
         protected void RaisePropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public void RefreshDiscountPercent()
+        {
+            discountPercent = CalculateDiscountPercent(BasePriceCurrency);
+            RaisePropertyChanged();
+        }
+
+        private int CalculateDiscountPercent(string currencyCode)
+        {
+            if(currencyCode == "RUB" && Price != 0)
+            {
+                return  (int)((1m - (NewPriceInRub / (decimal)Price)) * 100);
+            }
+            else if(BasePrice != 0)
+            {
+                return  (int)((1m - (NewPriceInCurrency / (decimal)BasePrice)) * 100);
+            }
+            return 0;
         }
     }
 }
