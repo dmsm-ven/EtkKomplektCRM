@@ -77,8 +77,8 @@
                     <th>Производитель</th>
                     <th width="50%">Товар</th>
                     <th>Валюта</th>
-                    <th>Обычная цена</th>
-                    <th>Новая цена</th>
+                    <th>Обычная</th>
+                    <th>По акции</th>
                     <th>Скидка</th>
                     <th>Дата, с</th>
                     <th>Дата, по</th>
@@ -182,6 +182,8 @@
     {
         discountedProducts.Remove(product);
         await productStorage.RemoveProductDiscount(product.Id);
+        await userLogger.Write(LogEntryGroupName.Discounts, "Удаление", $"Скидка для товара '{newDiscountProduct.Name}' удалена");
+
     }
 
     private async Task AddDiscountItem()

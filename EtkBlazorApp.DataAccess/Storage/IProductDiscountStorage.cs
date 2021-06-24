@@ -24,6 +24,7 @@ namespace EtkBlazorApp.DataAccess
 
     public class ProductDiscountStorage : IProductDiscountStorage
     {
+        readonly int SALE_CATEGORY_ID = 60396;
         readonly int MANUFACTURER_LEVEL_PRIORITY = 3;
         readonly int CATEGORY_LEVEL_PRIORITY = 2;
         readonly int PRODUCT_LEVEL_PRIORITY = 1;
@@ -104,23 +105,6 @@ namespace EtkBlazorApp.DataAccess
             return discounts;
         }
 
-        public async Task AddDiscountForCategory(DiscountToCategoryEntity discountData)
-        {
-            var sql = @"INSERT INTO etk_app_discount_to_category
-                       (category_id, discount, date_start, date_end)
-                       VALUES
-                       (@category_id, @discount, @date_start, @date_end)
-                       ON DUPLICATE KEY UPDATE
-                       discount = @discount,
-                       date_start = @date_start,
-                       date_end = @date_end";
-
-            await database.ExecuteQuery(sql, discountData);
-
-            await RemoveProductSpecialOnCategory(discountData.category_id);
-            await AddProductSpecialForCategory(discountData);
-        }
-
         public async Task RemoveCategoryDiscount(int category_id)
         {
             string sql = @"DELETE FROM etk_app_discount_to_category
@@ -144,6 +128,7 @@ namespace EtkBlazorApp.DataAccess
                             DATE(@date_start), DATE(@date_end))";
 
             await database.ExecuteQuery(sql, discountData);
+            await RefreshMainDiscountCategoryProducts();
         }
 
         public async Task RemoveProductDiscount(int product_id)
@@ -152,6 +137,48 @@ namespace EtkBlazorApp.DataAccess
                            WHERE product_id = @product_id AND priority = {PRODUCT_LEVEL_PRIORITY}";
 
             await database.ExecuteQuery<dynamic>(sql, new { product_id });
+
+            sql = @"DELETE FROM oc_product_to_category 
+                    WHERE category_id = @SALE_CATEGORY_ID AND product_id = @product_id";
+
+            await database.ExecuteQuery<dynamic>(sql, new { SALE_CATEGORY_ID, product_id });
+        }
+
+        public async Task AddDiscountForCategory(DiscountToCategoryEntity discountData)
+        {
+            var sql = @"INSERT INTO etk_app_discount_to_category
+                       (category_id, discount, date_start, date_end)
+                       VALUES
+                       (@category_id, @discount, @date_start, @date_end)
+                       ON DUPLICATE KEY UPDATE
+                       discount = @discount,
+                       date_start = @date_start,
+                       date_end = @date_end";
+
+            await database.ExecuteQuery(sql, discountData);
+
+            await RemoveProductSpecialOnCategory(discountData.category_id);
+            await AddProductSpecialForCategory(discountData);
+        }
+
+        private async Task AddProductSpecialForManufacturer(DiscountToManufacturerEntity discountData)
+        {
+            string rubStatement = $"ROUND(p.price / (100 + {discountData.discount}) * 100, 0)";
+            string curStatement = $"ROUND(p.base_price / (100 + {discountData.discount}) * 100, 2)";
+
+            string sql = @$"INSERT INTO oc_product_special (product_id, customer_group_id, priority, price, base_price, date_start, date_end)
+                           SELECT product_id, 
+                                  {DEFAULT_CUSTOMER_GROUP_ID}, 
+                                  {MANUFACTURER_LEVEL_PRIORITY}, 
+                                  IF(p.base_currency_code = 'RUB', {rubStatement}, 0), 
+                                  IF(p.base_currency_code = 'RUB', 0, {curStatement}), 
+                                  DATE(@date_start), DATE(@date_end)
+                           FROM oc_product p
+                           JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id
+                           WHERE p.status = 1 AND m.manufacturer_id = @manufacturer_id AND (p.price > 0 OR p.base_price > 0)";
+
+            await database.ExecuteQuery(sql, discountData);
+            await RefreshMainDiscountCategoryProducts();
         }
 
         private async Task AddProductSpecialForCategory(DiscountToCategoryEntity discountData)
@@ -172,45 +199,46 @@ namespace EtkBlazorApp.DataAccess
                            WHERE p.status = 1 AND ptc.category_id = @category_id AND (p.price > 0 OR p.base_price > 0)";
 
             await database.ExecuteQuery(sql, discountData);
+            await RefreshMainDiscountCategoryProducts();
         }
 
         private async Task RemoveProductSpecialOnCategory(int category_id)
         {
             string sql = $@"DELETE FROM oc_product_special
-                          WHERE oc_product_special.priority = {CATEGORY_LEVEL_PRIORITY} AND product_id IN 
+                          WHERE oc_product_special.priority = @CATEGORY_LEVEL_PRIORITY AND product_id IN 
                             (SELECT product_id FROM oc_product WHERE product_id IN 
                                 (SELECT DISTINCT product_id FROM oc_product_to_category WHERE category_id = @category_id))";
 
-            await database.ExecuteQuery<dynamic>(sql, new { category_id });
+            await database.ExecuteQuery<dynamic>(sql, new { CATEGORY_LEVEL_PRIORITY, category_id });
+            await RefreshMainDiscountCategoryProducts();
         }
 
         private async Task RemoveProductSpecialOnManufacturer(int manufacturer_id)
         {
             string sql = $@"DELETE FROM oc_product_special
-                          WHERE oc_product_special.priority = {MANUFACTURER_LEVEL_PRIORITY} AND product_id IN 
+                          WHERE oc_product_special.priority = @MANUFACTURER_LEVEL_PRIORITY AND product_id IN 
                             (SELECT product_id FROM oc_product WHERE manufacturer_id = @manufacturer_id)";
 
-            await database.ExecuteQuery<dynamic>(sql, new { manufacturer_id });
+            await database.ExecuteQuery<dynamic>(sql, new { MANUFACTURER_LEVEL_PRIORITY, manufacturer_id });
+            await RefreshMainDiscountCategoryProducts();
         }
 
-        private async Task AddProductSpecialForManufacturer(DiscountToManufacturerEntity discountData)
+        private async Task RefreshMainDiscountCategoryProducts()
         {
-            string rubStatement = $"ROUND(p.price / (100 + {discountData.discount}) * 100, 0)";
-            string curStatement = $"ROUND(p.base_price / (100 + {discountData.discount}) * 100, 2)";
+            string sql = @"INSERT IGNORE INTO oc_product_to_category (product_id, category_id, main_category)
+                           SELECT product_id, @SALE_CATEGORY_ID, 0
+                           FROM oc_product_special
+                           WHERE DATE(date_end) >= DATE(NOW())";
 
-            string sql = @$"INSERT INTO oc_product_special (product_id, customer_group_id, priority, price, base_price, date_start, date_end)
-                           SELECT product_id, 
-                                  {DEFAULT_CUSTOMER_GROUP_ID}, 
-                                  {MANUFACTURER_LEVEL_PRIORITY}, 
-                                  IF(p.base_currency_code = 'RUB', {rubStatement}, 0), 
-                                  IF(p.base_currency_code = 'RUB', 0, {curStatement}), 
-                                  DATE(@date_start), DATE(@date_end)
-                           FROM oc_product p
-                           JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id
-                           WHERE p.status = 1 AND m.manufacturer_id = @manufacturer_id AND (p.price > 0 OR p.base_price > 0)";
+            await database.ExecuteQuery<dynamic>(sql, new { SALE_CATEGORY_ID });
 
-            await database.ExecuteQuery(sql, discountData);
+            sql = @"DELETE FROM oc_product_to_category 
+                    WHERE category_id = @SALE_CATEGORY_ID AND 
+                    product_id NOT IN (
+                        SELECT product_id FROM oc_product_special WHERE DATE(date_end) >= DATE(NOW())
+                        );";
+
+            await database.ExecuteQuery<dynamic>(sql, new { SALE_CATEGORY_ID });
         }
-
     }
 }

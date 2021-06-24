@@ -37,7 +37,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                         Price = priceString,
                         Manufacturer = "Mean Well",
                         Sku = skuNumber,
-                        Model = skuNumber
+                        Model = skuNumber,
+                        StockPartner = StockPartner.Eltech
                     };
                     list.Add(priceLine);
                 }

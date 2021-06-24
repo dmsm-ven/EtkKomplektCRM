@@ -78,6 +78,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     .Select(cells => new PriceLine(this)
                     {
                         Sku = cells[0],                       
+                        Model = cells[0],                       
                         Name = cells[1],
                         Manufacturer = MapManufacturerName(cells[2]),
                         Quantity = ParseQuantity(cells[4].Replace(",000", string.Empty)),

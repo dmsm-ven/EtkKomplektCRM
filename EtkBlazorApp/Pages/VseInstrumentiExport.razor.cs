@@ -26,6 +26,8 @@ namespace EtkBlazorApp.Pages
         List<PrikatManufacturerDiscountViewModel> itemsSource;
         List<PrikatManufacturerDiscountViewModel> orderedSource => itemsSource.OrderByDescending(t => t.IsChecked).ToList();
 
+        Dictionary<StockPartnerEntity, bool> checkedStockPartners;
+
         public bool ShowPriceExample { get; set; } = false;
         public decimal ExamplePrice { get; set; } = 1000;
 
@@ -35,6 +37,8 @@ namespace EtkBlazorApp.Pages
 
         bool uncheckAllState = false;
         bool showSettingsBox = false;
+        bool selectStockPartners = true;
+
         bool inProgress = false;
 
         bool reportButtonDisabled => itemsSource == null || itemsSource.All(m => m.IsChecked == false);
@@ -43,6 +47,10 @@ namespace EtkBlazorApp.Pages
         {
             if (firstRender)
             {
+                checkedStockPartners = (await manufacturerStorage.GetStockPartners())
+                    .OrderBy(i => i.shipment_period)
+                    .ToDictionary(i => i, i => true);
+
                 itemsSource = (await templateStorage.GetPrikatTemplates())
                         .Select(t => new PrikatManufacturerDiscountViewModel()
                         {
@@ -93,12 +101,18 @@ namespace EtkBlazorApp.Pages
         }
 
         private VseInstrumentiReportOptions GetReportOptions()
-        {          
+        {
+            var checkedStocksList = checkedStockPartners
+                .ToDictionary(
+                    i => (StockPartner)i.Key.stock_partner_id, 
+                    i => (selectStockPartners ? true : i.Value));
+
             var options = new VseInstrumentiReportOptions()
             {
                 HasEan = reportOptionsHasEan,
                 StockGreaterThanZero = reportOptionsHasStock,
-                GLN = reportOptionsGln
+                GLN = reportOptionsGln,
+                UsePartnerStock = checkedStocksList
             };
 
             return options;

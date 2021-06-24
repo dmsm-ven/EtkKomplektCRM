@@ -10,7 +10,7 @@ namespace EtkBlazorApp
     public class ProductDiscountViewModel : ProductViewModel, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        private bool preventUpdate = false;
+        private bool preventPriceUpdate = false;
 
         private decimal newPriceInRub;
         public decimal NewPriceInRub
@@ -20,12 +20,9 @@ namespace EtkBlazorApp
             {
                 if (newPriceInRub != value && Price != 0)
                 {
-                    newPriceInRub = value;                    
-                    if (preventUpdate == false)
-                    {
-                        DiscountPercent = CalculateDiscountPercent("RUB");
-                        RaisePropertyChanged();
-                    }
+                    newPriceInRub = value;
+                    discountPercent = CalculateDiscountPercent("RUB");
+                    RaisePropertyChanged();
                 }
             }
         }
@@ -38,12 +35,9 @@ namespace EtkBlazorApp
             {
                 if (newPriceInCurrency != value && BasePrice != 0)
                 {
-                    newPriceInCurrency = value;                 
-                    if (preventUpdate == false)
-                    {
-                        DiscountPercent = CalculateDiscountPercent(BasePriceCurrency);
-                        RaisePropertyChanged();
-                    }
+                    newPriceInCurrency = value;
+                    discountPercent = CalculateDiscountPercent("RUB");
+                    RaisePropertyChanged();
                 }
             }
         }
@@ -51,6 +45,23 @@ namespace EtkBlazorApp
         public DateTime DiscountStartDate { get; set; } = DateTime.Now.Date;
         public DateTime DiscountEndDate { get; set; } = DateTime.Now.Date;
         public bool IsExpired => DaysLeft == 0;
+
+        public decimal PriceDiff
+        {
+            get
+            {
+                if(BasePriceCurrency == "RUB" && NewPriceInRub != 0 && Price != 0)
+                {
+                    return NewPriceInRub - Price;
+                }
+                else if(NewPriceInCurrency != 0 && BasePrice != 0)
+                {
+                    return NewPriceInCurrency - BasePrice;
+                }
+
+                return 0;
+            }
+        }
 
         public int DaysLeft
         {
@@ -75,11 +86,9 @@ namespace EtkBlazorApp
                 {
                     discountPercent = value;
 
-                    preventUpdate = true;
-                    NewPriceInRub = (int)((base.Price * (100 - discountPercent)) / 100);
-                    NewPriceInCurrency = (int)((base.BasePrice * (100 - discountPercent)) / 100);
-                    
-                    preventUpdate = false;
+                    newPriceInRub = (int)((base.Price * (100 - discountPercent)) / 100);
+                    newPriceInCurrency = (int)((base.BasePrice * (100 - discountPercent)) / 100);
+
                     RaisePropertyChanged();
 
                 }

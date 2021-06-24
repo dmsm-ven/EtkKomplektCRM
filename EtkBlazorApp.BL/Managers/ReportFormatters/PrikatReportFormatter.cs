@@ -83,10 +83,16 @@ namespace EtkBlazorApp.BL
         {
             var products = await productStorage.ReadProducts(manufacturer_id);
 
-            if (options.Adding1CStockQuantity)
+            var uncheckedStocks = options.UsePartnerStock.Where(c => !c.Value);
+            if (uncheckedStocks.Any())
             {
-                var additionalStock = await productStorage.GetProductQuantityInAdditionalStock((int)StockPartner._1C);
-                products.ForEach(product => product.quantity += additionalStock.FirstOrDefault(p => p.product_id == product.product_id)?.quantity ?? 0);
+                foreach (var stockPartner in uncheckedStocks)
+                {
+                    var additionalStock = await productStorage.GetProductQuantityInAdditionalStock((int)stockPartner.Key);
+                    products.ForEach(product => product.quantity -= additionalStock.FirstOrDefault(p => p.product_id == product.product_id)?.quantity ?? 0);
+                }
+
+                products.ForEach(product => product.quantity = Math.Max(product.quantity, 0)); 
             }
 
             if (options.StockGreaterThanZero) 
