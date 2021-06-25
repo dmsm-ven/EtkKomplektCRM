@@ -23,29 +23,32 @@
 <div class="settings-tab-content container">
     <h2>@selectedTab.Title</h2>
     <CascadingValue Value="selectedTab">
-        <EmailSettingsTab tabData="@emailTab" />
-        <MainSettingsControlTab tabData="@generalTab" />
-        <OzonSellerSettingsTab tabData="@ozonSellerTab" />
-        <VISettingsTab tabData="@viTab" />
+        <UserSettingsTab tabData="@tabData[0]" />
+        <MainSettingsControlTab tabData="@tabData[1]" />
+        <EmailSettingsTab tabData="@tabData[2]" />
+        <OzonSellerSettingsTab tabData="@tabData[3]" />
+        <VISettingsTab tabData="@tabData[4]" />
+        <MonobrandSettingsTab tabData="@tabData[5]" />
     </CascadingValue>
 </div>
 
 @code {
     public SettingsTabData selectedTab { get; set; }
-    List<SettingsTabData> tabData;
-    SettingsTabData generalTab, emailTab, ozonSellerTab, viTab;
 
+    List<SettingsTabData> tabData = new List<SettingsTabData>()
+    {
+        new SettingsTabData() { Title = "Пользователи" },    
+        new SettingsTabData() { Title = "Общие настройки" },
+        new SettingsTabData() { Title = "Почтовые ящики", Icon = new MarkupString("&#9993;")  },
+        new SettingsTabData() { Title = "Озон" },
+        new SettingsTabData() { Title = "ВсеИнструменты" },
+        new SettingsTabData() { Title = "Монобренды" , Icon = new MarkupString("&#127760;") }
+    };
     protected override void OnInitialized()
     {
-        generalTab = new SettingsTabData() { Title = "Основные настройки"  };
-        emailTab = new SettingsTabData() { Title = "Почтовые ящики", Icon = new MarkupString("&#9993;")  };
-        ozonSellerTab = new SettingsTabData() { Title = "Озон" };
-        viTab = new SettingsTabData() { Title = "ВсеИнструменты" };
-
-        tabData = new List<SettingsTabData>(new[] { generalTab, emailTab, ozonSellerTab, viTab });
-
-        selectedTab = generalTab;
+        selectedTab = tabData.First();
     }
+
     private void SaveCurrentTabSettings()
     {
         selectedTab.SaveButtonClicked.Invoke();

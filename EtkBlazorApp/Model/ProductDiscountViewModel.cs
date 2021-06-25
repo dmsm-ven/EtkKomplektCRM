@@ -10,7 +10,6 @@ namespace EtkBlazorApp
     public class ProductDiscountViewModel : ProductViewModel, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        private bool preventPriceUpdate = false;
 
         private decimal newPriceInRub;
         public decimal NewPriceInRub
