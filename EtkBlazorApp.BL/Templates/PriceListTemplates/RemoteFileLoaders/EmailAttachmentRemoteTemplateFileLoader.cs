@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.DataAccess;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -52,9 +53,9 @@ namespace EtkBlazorApp.BL
 
                 return new RemoteTemplateFileResponse(bytes, fileName);
             }
-            catch
+            catch(Exception ex)
             {
-                throw;
+                throw ex;
             }
             finally
             {

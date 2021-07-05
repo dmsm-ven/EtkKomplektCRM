@@ -37,19 +37,14 @@ namespace EtkBlazorApp.BL
 
 		public async Task<string> GetLastAttachment(ImapEmailSearchCriteria searchCriteria)
         {
-			using (var connection = new MailKit.Net.Imap.ImapClient())
+			var imapLogger = new ProtocolLogger("imap_extactor.log");
+			using (var connection = new MailKit.Net.Imap.ImapClient(imapLogger))
             {
 				await connection.ConnectAsync(connectionData.Host, int.Parse(connectionData.Port), useSsl: true);
 				await connection.AuthenticateAsync(new NetworkCredential(connectionData.Email, connectionData.Password));
 				await connection.Inbox.OpenAsync(FolderAccess.ReadOnly);
 
-				var searchQuery = SearchQuery
-					.FromContains(searchCriteria.Sender)
-					.And(SearchQuery.DeliveredAfter(DateTime.Now.AddDays(-searchCriteria.MaxOldInDays)));
-				if (!string.IsNullOrWhiteSpace(searchCriteria.Subject))
-				{
-					searchQuery = searchQuery.And(SearchQuery.SubjectContains(searchCriteria.Subject));
-				}
+				SearchQuery searchQuery = BuildSearchQuery(searchCriteria);
 
 				var fileName = await DownloadAttachmentFileWithCriteria(searchQuery, searchCriteria.FileNamePattern, connection);
 
@@ -60,8 +55,20 @@ namespace EtkBlazorApp.BL
 
 			throw new NotSupportedException();
         }
+
+		private SearchQuery BuildSearchQuery(ImapEmailSearchCriteria searchCriteria)
+        {
+			var searchQuery = SearchQuery
+					.FromContains(searchCriteria.Sender)
+					.And(SearchQuery.DeliveredAfter(DateTime.Now.AddDays(-searchCriteria.MaxOldInDays)));
+            if (!string.IsNullOrWhiteSpace(searchCriteria.Subject))
+            {
+                searchQuery = searchQuery.And(SearchQuery.SubjectContains(searchCriteria.Subject));
+            }
+            return searchQuery;
+		}
 		
-		private async Task<string> DownloadAttachmentFileWithCriteria(BinarySearchQuery searchQuery, string fileNamePattern, ImapClient connection)
+		private async Task<string> DownloadAttachmentFileWithCriteria(SearchQuery searchQuery, string fileNamePattern, ImapClient connection)
         {
 			var searchResult = await connection.Inbox.SearchAsync(searchQuery);
 
@@ -72,10 +79,10 @@ namespace EtkBlazorApp.BL
 
 			var id = searchResult
 				.Where(item => Regex.IsMatch(connection.Inbox.GetMessage(item).Attachments.First().ContentDisposition?.FileName, fileNamePattern))
-				.OrderByDescending(item => item.Id)
-				.FirstOrDefault();
+                .OrderByDescending(item => item.Id)
+                .FirstOrDefault();
 
-			if (id != default)
+            if (id != default)
 			{
 				var email = await connection.Inbox.GetMessageAsync(id);
 				var attachment = (MimePart)email.Attachments.First();

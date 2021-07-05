@@ -42,7 +42,7 @@ namespace EtkBlazorApp
         }
 
         public DateTime DiscountStartDate { get; set; } = DateTime.Now.Date;
-        public DateTime DiscountEndDate { get; set; } = DateTime.Now.Date;
+        public DateTime DiscountEndDate { get; set; }
         public bool IsExpired => DaysLeft == 0;
 
         public decimal PriceDiff
@@ -92,6 +92,13 @@ namespace EtkBlazorApp
 
                 }
             }
+        }
+
+        public ProductDiscountViewModel()
+        {
+            var olddate = DateTime.Now.AddMonths(1);
+
+            DiscountEndDate = new DateTime(olddate.Year, olddate.Month, 1, 0, 0, 0, olddate.Kind);
         }
 
         public double PriceInRubDiscountPercent

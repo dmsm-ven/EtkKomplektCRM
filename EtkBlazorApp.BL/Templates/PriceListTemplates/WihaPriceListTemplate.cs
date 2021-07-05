@@ -40,31 +40,49 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     }
 
     [PriceListTemplateGuid("A89C5911-12BE-4AD5-8A66-0621C4714360")]
-    public class WihaQuantityPriceListTemplate : ExcelPriceListTemplateBase
+    public class UmpPriceListTemplate : ExcelPriceListTemplateBase
     {
-        public WihaQuantityPriceListTemplate(string fileName) : base(fileName) { }
+        public UmpPriceListTemplate(string fileName) : base(fileName) 
+        {
+            ValidManufacturerNames.Add("Wiha");
+        }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {
             var list = new List<PriceLine>();
 
-            for (int row = 0; row < tab.Dimension.Rows; row++)
+            var tab = Excel.Workbook.Worksheets.FirstOrDefault(t => t.Name.Equals("TDSheet"));
+
+            for (int row = 2; row < tab.Dimension.Rows; row++)
             {
-                string skuNumber = tab.GetValue<string>(row, 0).ToString();
-                string quantityString = tab.GetValue<string>(row, 6);
+                string sku = tab.GetValue<string>(row, 1);
+                string name = tab.GetValue<string>(row, 2);
+                var quantity = ParseQuantity(tab.GetValue<string>(row, 3));
+                string brandPart = sku.Substring(0, 3);
 
-                if (decimal.TryParse(quantityString, out var quantity))
+                string manufacturer = string.Empty;             
+                if(brandPart == "wih")
                 {
-                    var priceLine = new PriceLine(this)
-                    {
-                        Manufacturer = "Wiha",
-                        Sku = skuNumber,
-                        Model = skuNumber,
-                        Quantity = (int)quantity
-                    };
-
-                    list.Add(priceLine);
+                    manufacturer = "Wiha";
+                    sku = sku.Replace("wih", "WI-");
                 }
+
+                if(!ValidManufacturerNames.Contains(manufacturer))
+                {
+                    continue;
+                }
+
+                var priceLine = new PriceLine(this)
+                {
+                    Manufacturer = manufacturer,
+                    Sku = sku,
+                    Model = sku,
+                    Name = name,
+                    Quantity = quantity,
+                    StockPartner = StockPartner.UMP
+                };
+
+                list.Add(priceLine);
             }
 
             return list;

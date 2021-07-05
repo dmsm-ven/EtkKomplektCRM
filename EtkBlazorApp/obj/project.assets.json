@@ -136,10 +136,10 @@
           "lib/netstandard2.0/K4os.Hash.xxHash.dll": {}
         }
       },
-      "MailKit/2.11.1": {
+      "MailKit/2.13.0": {
         "type": "package",
         "dependencies": {
-          "MimeKit": "2.11.0"
+          "MimeKit": "2.13.0"
         },
         "compile": {
           "lib/net50/MailKit.dll": {}
@@ -578,7 +578,7 @@
           }
         }
       },
-      "MimeKit/2.11.0": {
+      "MimeKit/2.13.0": {
         "type": "package",
         "dependencies": {
           "Portable.BouncyCastle": "1.8.10",
@@ -2355,7 +2355,7 @@
           "EtkBlazorApp.DataAccess": "1.0.0",
           "EtkBlazorApp.Integration": "1.0.0",
           "HtmlAgilityPack": "1.11.33",
-          "MailKit": "2.11.1",
+          "MailKit": "2.13.0",
           "Microsoft.AspNetCore.StaticFiles": "2.2.0",
           "Newtonsoft.Json": "13.0.1",
           "SharpCompress": "0.28.2",
@@ -2645,10 +2645,10 @@
         "lib/netstandard2.0/K4os.Hash.xxHash.xml"
       ]
     },
-    "MailKit/2.11.1": {
-      "sha512": "Z/MjVOicmCCLMgOQ3pr7MKQ9fsIrMt5qA2qqTO7Uux7Q6y4pYQFV4HBeJcc/oTjNxngiLzFlUoF9oSuQdFD/ig==",
+    "MailKit/2.13.0": {
+      "sha512": "h+2fxPnB/gb+8nniTwetvooM8r9nmbWVF116uXZn8d4+k6V+mf+IOA4Gqb7nwHcZooale0s/v13O7B/6StRHJA==",
       "type": "package",
-      "path": "mailkit/2.11.1",
+      "path": "mailkit/2.13.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -2671,7 +2671,10 @@
         "lib/netstandard2.0/MailKit.dll",
         "lib/netstandard2.0/MailKit.pdb",
         "lib/netstandard2.0/MailKit.xml",
-        "mailkit.2.11.1.nupkg.sha512",
+        "lib/netstandard2.1/MailKit.dll",
+        "lib/netstandard2.1/MailKit.pdb",
+        "lib/netstandard2.1/MailKit.xml",
+        "mailkit.2.13.0.nupkg.sha512",
         "mailkit.nuspec"
       ]
     },
@@ -3318,10 +3321,10 @@
         "version.txt"
       ]
     },
-    "MimeKit/2.11.0": {
-      "sha512": "xZGy3hLMxbw0ks82N/NjVYsW7Qb4pMEPtoJ+kcoJw566KVF2RJh2+kl0rdmzitghgf7FpxPGJmCNgIh+iciBmg==",
+    "MimeKit/2.13.0": {
+      "sha512": "wkHUQzy/sAtWCifZfNDq24DB/xshYoc+QeynSCJPSNeeA51DzZWjVaRslyix/9OEGhdSsUtvisL66dpGp0THjw==",
       "type": "package",
-      "path": "mimekit/2.11.0",
+      "path": "mimekit/2.13.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -3347,7 +3350,7 @@
         "lib/netstandard2.1/MimeKit.dll",
         "lib/netstandard2.1/MimeKit.pdb",
         "lib/netstandard2.1/MimeKit.xml",
-        "mimekit.2.11.0.nupkg.sha512",
+        "mimekit.2.13.0.nupkg.sha512",
         "mimekit.nuspec"
       ]
     },

@@ -157,6 +157,7 @@ else
                 .ToList();
 
             stockList = (await _database.GetStockPartners())
+                .OrderBy(stock => stock.shipment_period)
                 .Select(model => new StockPartnerViewModel(model.stock_partner_id, model.shipment_period)
                 {
                     Name = model.name,

@@ -204,7 +204,7 @@ namespace EtkBlazorApp.DataAccess
 
         private async Task RemoveProductSpecialOnCategory(int category_id)
         {
-            string sql = $@"DELETE FROM oc_product_special
+            string sql = @"DELETE FROM oc_product_special
                           WHERE oc_product_special.priority = @CATEGORY_LEVEL_PRIORITY AND product_id IN 
                             (SELECT product_id FROM oc_product WHERE product_id IN 
                                 (SELECT DISTINCT product_id FROM oc_product_to_category WHERE category_id = @category_id))";

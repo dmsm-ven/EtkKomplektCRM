@@ -29,7 +29,9 @@
             </div>
             <div class="col-md-6">
                 <label for="dateEnd">Дата окончания скидки</label>
-                <input type="date" class="form-control" id="dateEnd" @bind="discountData.date_end" />
+                <input type="date" class="form-control" id="dateEnd" 
+                       placeholder="yyyy-mm-dd"
+                       @bind="@discountData.date_end" />
             </div>
         </div>
     }

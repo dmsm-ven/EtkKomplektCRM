@@ -43,6 +43,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         public ZubrQuantityPriceListTemplate(string fileName) : base(fileName) 
         {
             ValidManufacturerNames.Add("Зубр");
+            QuantityMap["Есть"] = 5;
+            QuantityMap["Нет"] = 0;
         }
 
         protected override List<PriceLine> ReadDataFromExcel()
@@ -51,20 +53,23 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
-                string skuNumber = tab.GetValue<string>(row, 1);
-                string quantityString = tab.GetValue<string>(row, 13);
-                string manufacturer = tab.GetValue<string>(row, 9).Trim();
-
+                string manufacturer = tab.GetValue<string>(row, 4).Trim();
+                
                 if (!ValidManufacturerNames.Contains(manufacturer, StringComparer.OrdinalIgnoreCase)) { continue; }
+                string sku = tab.GetValue<string>(row, 1);
+                string model = tab.GetValue<string>(row, 2);               
+                string name = tab.GetValue<string>(row, 5);
 
-                int parsedQuantity = (quantityString == "Есть" ? 10 : 0);
-
+                int? quantity = ParseQuantity(tab.GetValue<string>(row, 6));
+               
                 var priceLine = new PriceLine(this)
                 {
                     Manufacturer = "Зубр",
-                    Sku = skuNumber,
-                    Model = skuNumber,
-                    Quantity = parsedQuantity
+                    Sku = sku,
+                    Model = model,
+                    Name = name,
+                    Quantity = quantity,
+                    StockPartner = StockPartner.Eridan,
                 };
 
                 list.Add(priceLine);

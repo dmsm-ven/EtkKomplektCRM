@@ -15,9 +15,9 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         protected override List<PriceLine> ReadDataFromExcel()
         {
             var list = new List<PriceLine>();
-            
-           foreach(var tab in Excel.Workbook.Worksheets.Skip(1))
-           {
+
+            foreach (var tab in Excel.Workbook.Worksheets.Skip(1))
+            {
                 for (int row = 1; row < tab.Dimension.Rows; row++)
                 {
                     string code = "KV-" + tab.Cells[row, 0].ToString();
@@ -38,7 +38,47 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                         list.Add(priceLine);
                     }
                 }
-           }
+            }
+
+            return list;
+        }
+    }
+
+    [PriceListTemplateGuid("0E5D0616-0FC0-422E-96FA-1A512D9A675A")]
+    public class TexElektroPriceListTemplate : ExcelPriceListTemplateBase
+    {
+        public TexElektroPriceListTemplate(string fileName) : base(fileName) { }
+
+        protected override List<PriceLine> ReadDataFromExcel()
+        {
+            var list = new List<PriceLine>();
+
+            for (int row = 1; row < tab.Dimension.Rows; row++)
+            {
+                string name = tab.GetValue<string>(row, 1);
+
+                if (!name.Contains("КВТ")) { continue; }
+
+                string code = "KV-" + tab.GetValue<string>(row, 2);
+                string ean = tab.GetValue<string> (row, 3);
+
+                var quantitySpb = ParseQuantity(tab.GetValue<string>(row, 5));
+                var price = ParsePrice(tab.GetValue<string>(row, 6));
+
+                var priceLine = new PriceLine(this)
+                {
+                    Manufacturer = "КВТ",
+                    Sku = code,
+                    Model = code,
+                    Ean = ean,
+                    Price = price,
+                    Quantity = quantitySpb,
+                    Currency = CurrencyType.RUB,
+                    StockPartner = StockPartner.TexElektro
+                };
+
+                list.Add(priceLine);
+            }
 
             return list;
         }
@@ -57,7 +97,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 string name = tab.Cells[row, 0].ToString();
                 string code = "KV-" + tab.Cells[row, 1].ToString();
-                string ean = tab.Cells[row, 2].ToString();               
+                string ean = tab.Cells[row, 2].ToString();
                 string priceString = tab.Cells[row, 4].ToString();
 
                 if (int.TryParse(priceString, out var quantity))

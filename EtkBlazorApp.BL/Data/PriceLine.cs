@@ -27,5 +27,9 @@
         _1C = 2,
         Eltech = 3,
         Symmetron = 4,
+        RGK = 5,
+        Eridan = 6,
+        UMP = 7,
+        TexElektro = 3,
     }
 }
