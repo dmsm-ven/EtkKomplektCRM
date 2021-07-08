@@ -30,6 +30,7 @@
         RGK = 5,
         Eridan = 6,
         UMP = 7,
-        TexElektro = 3,
+        TexElektro = 8,
+        KvtSu = 9,
     }
 }

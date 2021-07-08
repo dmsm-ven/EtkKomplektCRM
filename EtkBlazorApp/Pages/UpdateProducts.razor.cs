@@ -21,7 +21,6 @@ namespace EtkBlazorApp.Pages
         [Inject] public UpdateManager databaseManager { get; set; }
         [Inject] public UserLogger logger { get; set; }
 
-        bool clearStockBeforeUpdate = false;
         bool inProgress = false;
 
         CronTaskEntity activeTask;
@@ -30,24 +29,6 @@ namespace EtkBlazorApp.Pages
         List<string> updateProgressSteps = new List<string>();
 
         string selectedTabName = "tab-1";
-
-        string clearStockBrandsArrayString
-        {
-            get
-            {
-                var priceLinesBrands = priceListManager.PriceLines
-                    .Where(line => line.StockPartner == null && line.Quantity != null)
-                    .GroupBy(p => p.Manufacturer)
-                    .Select(g => g.Key)
-                    .OrderBy(m => m)
-                    .ToList();
-
-                var affectedBrands = priceLinesBrands
-                    .Intersect(websiteManufacturers, StringComparer.OrdinalIgnoreCase);
-
-                return string.Join(", ", affectedBrands);
-            }
-        }
 
         protected override void OnInitialized()
         {
@@ -99,7 +80,7 @@ namespace EtkBlazorApp.Pages
                     StateHasChanged();
                 });
 
-                await databaseManager.UpdatePriceAndStock(priceListManager.PriceLines, clearStockBeforeUpdate, progress);
+                await databaseManager.UpdatePriceAndStock(priceListManager.PriceLines, progress);
 
                 await logger.Write(LogEntryGroupName.PriceUpdate, "Выполнено", "Обновление цен выполнено");
                 toastService.ShowSuccess($"Остатки и цены на сайте etk-komplekt.ru обновлены", "Информация");

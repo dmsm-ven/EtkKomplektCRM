@@ -7,43 +7,6 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
-    [PriceListTemplateGuid("50B4B307-08B5-4498-B9D6-B2DA86D97F29")]
-    public class KvtPriceListTemplate : ExcelPriceListTemplateBase
-    {
-        public KvtPriceListTemplate(string fileName) : base(fileName) { }
-
-        protected override List<PriceLine> ReadDataFromExcel()
-        {
-            var list = new List<PriceLine>();
-
-            foreach (var tab in Excel.Workbook.Worksheets.Skip(1))
-            {
-                for (int row = 1; row < tab.Dimension.Rows; row++)
-                {
-                    string code = "KV-" + tab.Cells[row, 0].ToString();
-                    string model = Regex.Match(tab.Cells[row, 1].ToString(), @"^(.*?) \((.*?)\)$").Groups[1].Value.Trim();
-                    string opt = tab.Cells[row, 4].ToString();
-
-                    if (Regex.IsMatch(code, @"KV-\d+") && decimal.TryParse(opt, out var price))
-                    {
-                        var priceLine = new PriceLine(this)
-                        {
-                            Manufacturer = "КВТ",
-                            Sku = code,
-                            Model = model,
-                            Price = price,
-                            Currency = CurrencyType.RUB
-                        };
-
-                        list.Add(priceLine);
-                    }
-                }
-            }
-
-            return list;
-        }
-    }
-
     [PriceListTemplateGuid("0E5D0616-0FC0-422E-96FA-1A512D9A675A")]
     public class TexElektroPriceListTemplate : ExcelPriceListTemplateBase
     {
@@ -60,7 +23,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 if (!name.Contains("КВТ")) { continue; }
 
                 string code = "KV-" + tab.GetValue<string>(row, 2);
-                string ean = tab.GetValue<string> (row, 3);
+                string ean = tab.GetValue<string>(row, 3);
 
                 var quantitySpb = ParseQuantity(tab.GetValue<string>(row, 5));
                 var price = ParsePrice(tab.GetValue<string>(row, 6));
@@ -84,10 +47,10 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         }
     }
 
-    [PriceListTemplateGuid("CD4A4607-4623-4522-978D-D153F3650192")]
-    public class KvtQuantityListTemplate : ExcelPriceListTemplateBase
+    [PriceListTemplateGuid("F2272C31-48B7-4350-9C14-9CA44F542E1B")]
+    public class KvtSuPriceListTemplate : ExcelPriceListTemplateBase
     {
-        public KvtQuantityListTemplate(string fileName) : base(fileName) { }
+        public KvtSuPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {
@@ -95,24 +58,27 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int row = 1; row < tab.Dimension.Rows; row++)
             {
-                string name = tab.Cells[row, 0].ToString();
-                string code = "KV-" + tab.Cells[row, 1].ToString();
-                string ean = tab.Cells[row, 2].ToString();
-                string priceString = tab.Cells[row, 4].ToString();
+                string name = tab.GetValue<string>(row, 1);
+                string sku = "KV-" + tab.GetValue<string>(row, 2);
+                string model = "KVT-" + tab.GetValue<string>(row, 2);
+                string ean =  tab.GetValue<string>(row, 3);
+                var quantitySpb =  ParseQuantity(tab.GetValue<string>(row, 5));
+                var price =  ParsePrice(tab.GetValue<string>(row, 6));
 
-                if (int.TryParse(priceString, out var quantity))
+                var priceLine = new PriceLine(this)
                 {
-                    var priceLine = new PriceLine(this)
-                    {
-                        Manufacturer = "КВТ",
-                        Name = name,
-                        Sku = code,
-                        Model = ean,
-                        Quantity = quantity
-                    };
+                    Currency = CurrencyType.RUB,
+                    Price = price,
+                    Quantity = quantitySpb,
+                    Ean = ean,
+                    Sku = sku,
+                    Model = model,
+                    Name = name,
+                    Manufacturer = "КВТ",
+                    StockPartner = StockPartner.KvtSu
+                };
 
-                    list.Add(priceLine);
-                }
+                list.Add(priceLine);
             }
 
             return list;

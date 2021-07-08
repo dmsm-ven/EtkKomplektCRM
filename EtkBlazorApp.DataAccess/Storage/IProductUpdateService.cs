@@ -12,7 +12,7 @@ namespace EtkBlazorApp.DataAccess
     {
         Task UpdateProductsPrice(List<ProductUpdateData> data);
         Task UpdateProductsStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate);
-        Task UpdateProductsStockPartner(List<ProductUpdateData> data);
+        Task UpdateProductsStockPartner(List<ProductUpdateData> data, int [] affectedBrands);
         Task ComputeStockQuantity(List<ProductUpdateData> data);
         Task UpdateDirectProduct(ProductEntity product);
     }
@@ -123,7 +123,7 @@ namespace EtkBlazorApp.DataAccess
             await database.ExecuteQuery<dynamic>(sql, new { });
         }
 
-        public async Task UpdateProductsStockPartner(List<ProductUpdateData> source)
+        public async Task UpdateProductsStockPartner(List<ProductUpdateData> source, int[] affectedBrands)
         {
             source = source.Where(item => item.quantity.HasValue).ToList();
 
@@ -131,9 +131,17 @@ namespace EtkBlazorApp.DataAccess
             {
                 var groupedByPartner = source.GroupBy(line => line.stock_partner.Value);
                 var partnerIdArray = string.Join(",", groupedByPartner.Select(g => g.Key).Distinct().ToList());
+                var affectedBrandIdsArray = string.Join(",", affectedBrands);
+
+                string clearStockSql = $@"UPDATE oc_product_to_stock
+                                           JOIN oc_product ON oc_product.product_id = oc_product_to_stock.product_id
+                                           JOIN oc_manufacturer ON oc_product.manufacturer_id = oc_manufacturer.manufacturer_id
+                                           SET oc_product_to_stock.quantity = 0
+                                           WHERE oc_product_to_stock.stock_partner_id IN ({partnerIdArray}) AND oc_manufacturer.manufacturer_id IN ({affectedBrandIdsArray})";
+                await database.ExecuteQuery(clearStockSql);
+
 
                 var sb = new StringBuilder("INSERT INTO oc_product_to_stock (stock_partner_id, product_id, quantity) VALUES\n");
-
                 foreach (var group in groupedByPartner)
                 {
                     foreach (var kvp in group)
@@ -141,10 +149,8 @@ namespace EtkBlazorApp.DataAccess
                         sb.AppendLine($"({group.Key}, {kvp.product_id}, {kvp.quantity.Value}),");
                     }
                 }
-
                 var sql = sb.ToString().Trim('\r', '\n', ',') + " ON DUPLICATE KEY UPDATE quantity = VALUES(quantity)";
-
-                await database.ExecuteQuery<dynamic>(sql, new { });
+                await database.ExecuteQuery(sql);
             }
         }
 

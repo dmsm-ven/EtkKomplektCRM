@@ -43,6 +43,9 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         public ZubrQuantityPriceListTemplate(string fileName) : base(fileName) 
         {
             ValidManufacturerNames.Add("Зубр");
+            ValidManufacturerNames.Add("Kraftool");
+            ValidManufacturerNames.Add("Grinda");
+            ValidManufacturerNames.Add("Stayer");
             QuantityMap["Есть"] = 5;
             QuantityMap["Нет"] = 0;
         }
@@ -57,14 +60,15 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 
                 if (!ValidManufacturerNames.Contains(manufacturer, StringComparer.OrdinalIgnoreCase)) { continue; }
                 string sku = tab.GetValue<string>(row, 1);
-                string model = tab.GetValue<string>(row, 2);               
+                string model = tab.GetValue<string>(row, 2);                           
                 string name = tab.GetValue<string>(row, 5);
 
                 int? quantity = ParseQuantity(tab.GetValue<string>(row, 6));
+
                
                 var priceLine = new PriceLine(this)
                 {
-                    Manufacturer = "Зубр",
+                    Manufacturer = manufacturer,
                     Sku = sku,
                     Model = model,
                     Name = name,

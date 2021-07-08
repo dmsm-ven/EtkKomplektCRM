@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
@@ -18,8 +19,13 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 string name = tab.GetValue<string>(row, 1);
                 string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 4));
-                string sku = tab.GetValue<string>(row, 6);           
-                decimal? price = manufacturer.Equals("Fluke") ? null : ParsePrice(tab.GetValue<string>(row, 8));
+                string sku = tab.GetValue<string>(row, 6);
+
+                decimal? priceRrc = ParsePrice(tab.GetValue<string>(row, 8));
+                decimal? priceOpt = ParsePrice(tab.GetValue<string>(row, 9));
+                //TODO: тут игнорируется стандартный механизм добавления скидок
+                decimal price = manufacturer.Equals("Fluke") ? Math.Floor(priceOpt.Value * 1.2m) : priceRrc.Value;
+
                 int? quantity = ParseQuantity(tab.GetValue<string>(row, 16));
 
                 var priceLine = new PriceLine(this)

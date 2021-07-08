@@ -20,11 +20,6 @@
                         @onclick="UpdateProductsPriceAndStock" disabled="@(priceListManager.PriceLines.Count == 0)">
                     Обновить
                 </button>
-                <span><input type="checkbox" @bind="clearStockBeforeUpdate" />  Обнулять остатки</span>
-                if (clearStockBeforeUpdate && !string.IsNullOrWhiteSpace(clearStockBrandsArrayString))
-                {
-                    <div><small>Будут очищены остатки для следующих производителей: @clearStockBrandsArrayString</small></div>
-                }
             }
         </div>
     </div>

@@ -28,8 +28,7 @@ namespace EtkBlazorApp.BL.CronTask
             {
                 var lines = await service.priceListManager.ReadTemplateLines(templateType, ms, response.FileName);
                 
-                //TODO: тут напрямую указываем что остатки товаров перед обновлением очищаются, в будущем нужно будет вынести в опция для задачи
-                await service.updateManager.UpdatePriceAndStock(lines, clearStockBeforeUpdate: true);
+                await service.updateManager.UpdatePriceAndStock(lines);
             }
         }
     }

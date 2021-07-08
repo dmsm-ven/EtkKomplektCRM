@@ -33,7 +33,6 @@ namespace EtkBlazorApp.BL
 
         public async Task UpdatePriceAndStock(
             IEnumerable<PriceLine> priceLines, 
-            bool clearStockBeforeUpdate, 
             IProgress<string> progress = null)
         {
             progress?.Report("Подготовка списка производителей для обновления");
@@ -50,7 +49,7 @@ namespace EtkBlazorApp.BL
 
             data.Where(d => d.stock_partner == null).ToList().ForEach(i => i.stock_partner = (int?)StockPartner.Symmetron);
             progress?.Report("Обновление остатков на складах etk-komplekt.ru");
-            await productUpdateService.UpdateProductsStockPartner(data);
+            await productUpdateService.UpdateProductsStockPartner(data, affectedBrandsIds);
 
             progress?.Report("Складывание остатков складов etk-komplekt.ru");
             await productUpdateService.ComputeStockQuantity(data);
