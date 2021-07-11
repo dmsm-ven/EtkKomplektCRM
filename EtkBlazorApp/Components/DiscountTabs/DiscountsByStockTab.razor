@@ -1,0 +1,138 @@
+﻿@inject IProductDiscountStorage discountStorage
+@inject IToastService toasts
+@inject UserLogger userLogger 
+@inherits DiscountTabBase
+
+@if (SelectedTab == TabName)
+{
+<div id="stock-discounts">
+    <div class="row py-2">
+        <div class="col-md-3">
+            <button class="btn btn-primary w-100" type="button"
+                    style="display: block; vertical-align: bottom;"
+                    disabled="@addDiscountButtonDisabled"
+                    @onclick="AddDiscountItem">
+                <span class="oi oi-plus">&nbsp; Добавить</span>
+            </button>
+        </div>
+        <div class="col-md-9">
+            <SelectStockDropdown StockChanged="@(e => StockChanged(e))" />
+        </div>
+    </div>
+    @if (discountData.stock_id != 0)
+    {
+        <div class="row py-2">
+            <div class="col-md-6">
+                <label for="discount_value">Скидка, %</label>
+                <input type="number" pattern="\d*" min="0" max="99" id="discount_value" class="form-control"
+                       @bind="discountData.discount" />
+            </div>
+            <div class="col-md-6">
+                <label for="dateEnd">Дата окончания скидки</label>
+                <input type="date" 
+                       placeholder="yyyy-mm-dd"
+                       class="form-control" id="dateEnd"
+                       @bind="@discountData.date_end" />
+            </div>
+        </div>
+    }
+
+    <table class="table">
+        <thead style="margin-bottom: 12px;">
+            <tr>
+                <th></th>
+                <th>Склад</th>
+                <th>Скидка</th>
+                <th>Дата, с</th>
+                <th>Дата, по</th>
+                <th>(осталось дней)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var stockDiscount in stockDiscounts)
+            {
+                <tr>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger"
+                                @onclick="(async e => await RemoveDiscountItem(stockDiscount))">
+                            <span class="oi oi-minus"></span>
+                        </button>
+                    </td>
+                    <td>
+                        @(HttpUtility.HtmlDecode(stockDiscount.stock_name))
+                    </td>
+                    <td class="discount-percent">
+                        @(stockDiscount.discount.ToString(".##") + " %")
+                    </td>
+                    <td>@stockDiscount.date_start.ToShortDateString()</td>
+                    <td>@stockDiscount.date_end.ToShortDateString()</td>
+                    <td>
+                        @(stockDiscount.date_end > DateTime.Now.Date ? Math.Floor((stockDiscount.date_end - DateTime.Now).TotalDays) : 0)
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+}
+
+@code {
+    List<DiscountToStockEntity> stockDiscounts;
+    DiscountToStockEntity discountData;
+    bool addDiscountButtonDisabled
+    {
+        get => discountData.date_end <= DateTime.Now.Date || discountData.discount == 0 || discountData.stock_id == 0;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            stockDiscounts = await discountStorage.GetStocksWithDiscount();
+            discountData = new DiscountToStockEntity();
+            StateHasChanged();
+        }
+    }
+
+    private void StockChanged(StockPartnerEntity stock)
+    {
+        discountData.stock_id = stock.stock_partner_id;
+        discountData.stock_name = stock.name;
+        discountData.discount = 0;
+    }
+
+    private async Task RemoveDiscountItem(DiscountToStockEntity data)
+    {
+        stockDiscounts.Remove(data);
+        await discountStorage.RemoveStockDiscount(data.stock_id);
+
+        toasts.ShowInfo("Скидка удаление", data.stock_name);
+        await userLogger.Write(LogEntryGroupName.Discounts, "Удаление", $"Скидка для склада '{discountData.stock_name}' удалена");
+    }
+
+    private async Task AddDiscountItem()
+    {
+        await discountStorage.AddDiscountForStock(discountData);
+
+        var item = stockDiscounts.FirstOrDefault(di => di.stock_id == discountData.stock_id);
+
+        if (item == null)
+        {
+            stockDiscounts.Insert(0, discountData);
+            await userLogger.Write(LogEntryGroupName.Discounts, "Добавлена", $"Добавлена скидка {discountData.discount}% для склада '{discountData.stock_name}'");
+        }
+        else
+        {
+            item.stock_id = discountData.stock_id;
+            item.stock_name = discountData.stock_name;
+            item.discount = discountData.discount;
+            item.date_start = discountData.date_start;
+            item.date_end = discountData.date_end;
+            await userLogger.Write(LogEntryGroupName.Discounts, "Обновление", $"Скидка для склада '{discountData.stock_name}' изменена на {discountData.discount}%");
+        }
+
+        toasts.ShowSuccess("Скидка добавлена", discountData.stock_name);
+        discountData = new DiscountToStockEntity();
+    }
+
+}

@@ -182,8 +182,7 @@
     {
         discountedProducts.Remove(product);
         await productStorage.RemoveProductDiscount(product.Id);
-        await userLogger.Write(LogEntryGroupName.Discounts, "Удаление", $"Скидка для товара '{newDiscountProduct.Name}' удалена");
-
+        await userLogger.Write(LogEntryGroupName.Discounts, "Удаление", $"Скидка для товара '{product.Name}' удалена");
     }
 
     private async Task AddDiscountItem()
@@ -215,10 +214,10 @@
             await userLogger.Write(LogEntryGroupName.Discounts, "Обновление", $"Скидка для товара '{newDiscountProduct.Name}' изменена на {newDiscountProduct.DiscountPercent}%");
         }
 
+        toasts.ShowSuccess("Скидка добавлена", newDiscountProduct.Name);
+
         newDiscountProduct = new ProductDiscountViewModel();
         newDiscountProduct.PropertyChanged += (o, e) => InvokeAsync(() => StateHasChanged());
-
-        toasts.ShowSuccess("Скидка добавлена", newDiscountProduct.Name);
     }
 
     private void SelectedProductChanged(ProductEntity product)

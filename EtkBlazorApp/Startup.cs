@@ -43,7 +43,6 @@ namespace EtkBlazorApp
             services.AddSingleton<SystemEventsLogger>();
             services.AddSingleton<NewOrdersNotificationService>();
             services.AddSingleton<UpdateManager>();
-            services.AddSingleton<OzonSellerManager>();
             services.AddSingleton<PriceListManager>();
             services.AddSingleton<CronTaskService>();          
 
@@ -60,6 +59,7 @@ namespace EtkBlazorApp
         {
             services.AddTransient<IDatabaseAccess, EtkDatabaseDapperAccess>();
             services.AddTransient<IProductDiscountStorage, ProductDiscountStorage>();
+            services.AddTransient<IOzonSellerDiscountStorage, OzonSellerDiscountStorage>();
             services.AddTransient<IProductStorage, ProductStorage>();
             services.AddTransient<ICategoryStorage, CategoryStorage>();
             services.AddTransient<IProductUpdateService, ProductUpdateService>();
@@ -67,6 +67,7 @@ namespace EtkBlazorApp
             services.AddTransient<IPrikatTemplateStorage, PrikatTemplateStorage>();
             services.AddTransient<IOrderStorage, OrderStorage>();
             services.AddTransient<IManufacturerStorage, ManufacturerStorage>();
+            services.AddTransient<IMonobrandStorage, MonobrandStorage>();
             services.AddTransient<ILogStorage, LogStorage>();
             services.AddTransient<ISettingStorage, SettingStorage>();
             services.AddTransient<ICronTaskStorage, CronTaskStorage>();

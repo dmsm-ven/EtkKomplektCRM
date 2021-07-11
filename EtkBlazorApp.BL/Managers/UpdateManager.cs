@@ -16,18 +16,21 @@ namespace EtkBlazorApp.BL
         private readonly IProductUpdateService productUpdateService;
         private readonly ISettingStorage settingStorage;
         private readonly IManufacturerStorage manufacturerStorage;
+        private readonly IMonobrandStorage monobrandStorage;
         private readonly IDatabaseProductCorrelator correlator;
 
         public UpdateManager(IProductStorage productsStorage,
             IProductUpdateService productUpdateService,
             ISettingStorage settingStorage,
-            IManufacturerStorage manufacturerStorage, 
+            IManufacturerStorage manufacturerStorage,
+            IMonobrandStorage monobrandStorage, 
             IDatabaseProductCorrelator correlator)
         {
             this.productsStorage = productsStorage;
             this.productUpdateService = productUpdateService;
             this.settingStorage = settingStorage;
             this.manufacturerStorage = manufacturerStorage;
+            this.monobrandStorage = monobrandStorage;
             this.correlator = correlator;
         }
 
@@ -104,7 +107,7 @@ namespace EtkBlazorApp.BL
 
         private async Task UpdateMonobrands(IEnumerable<int> affectedBrandsIds, IProgress<string> progress = null)
         {
-            var monobrands = await manufacturerStorage.GetMonobrands();
+            var monobrands = await monobrandStorage.GetMonobrands();
             var affectedMonobrands = monobrands
                 .Where(monobrand => affectedBrandsIds.Contains(monobrand.manufacturer_id))
                 .ToList();

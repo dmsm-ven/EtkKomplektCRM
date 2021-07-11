@@ -1,5 +1,6 @@
 ﻿@page "/monobrands"
 @inject IManufacturerStorage manufacturerStorage
+@inject IMonobrandStorage monobrandStorage
 @inject NavigationManager navigationManager
 @inject UserLogger logger
 
@@ -105,7 +106,7 @@
 
     private async Task AddMonobrand()
     {
-        await manufacturerStorage.AddMonobrand();
+        await monobrandStorage.AddMonobrand();
         await RefreshMonobrandList();
     }
 
@@ -113,7 +114,7 @@
     {
         if (status)
         {
-            await manufacturerStorage.DeleteMonobrand(selectedMonobrand.MonobrandId);
+            await monobrandStorage.DeleteMonobrand(selectedMonobrand.MonobrandId);
             await logger.Write(LogEntryGroupName.ManufacturerUpdate, "Монобренд удален", $"Из списка удален монобренд: '{selectedMonobrand.WebsiteUri}'");
             monobrands.Remove(selectedMonobrand);
             selectedMonobrand = null;
@@ -123,7 +124,7 @@
     private async Task SaveChanges()
     {
         if(selectedMonobrand == null) { return; }
-        await manufacturerStorage.UpdateMonobrand(new MonobrandEntity()
+        await monobrandStorage.UpdateMonobrand(new MonobrandEntity()
         {
             currency_code = selectedMonobrand.CurrencyCode,
             manufacturer_id = selectedMonobrand.ManufacturerId,
@@ -135,7 +136,7 @@
 
     private async Task RefreshMonobrandList()
     {
-        monobrands = (await manufacturerStorage.GetMonobrands())
+        monobrands = (await monobrandStorage.GetMonobrands())
             .Select(entity => new MonobrandViewModel()
             {
                 ManufacturerId = entity.manufacturer_id,

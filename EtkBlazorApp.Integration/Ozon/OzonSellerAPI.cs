@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.Integration.Ozon
 {
+    [Obsolete("Перенесено в API controller на сайте для загрузки через фид. /controller/feed/ozon_seller")]
     public class OzonSellerApiClient
     {
         const int MAX_PRODUCTS_PER_PAGE = 1000;
@@ -18,7 +19,7 @@ namespace EtkBlazorApp.Integration.Ozon
         const int MAX_STOCK_ITEMS_PER_REQUEST = 100;
 
         readonly HttpClient client;
-
+       
         public OzonSellerApiClient(string client_id, string api_key)
         {
             client = new HttpClient();

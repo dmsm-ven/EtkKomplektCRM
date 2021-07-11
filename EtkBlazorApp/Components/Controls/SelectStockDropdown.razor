@@ -1,0 +1,31 @@
+﻿@inject IManufacturerStorage manufacturerStorage
+
+
+<select class="form-control" id="dropdown-manufacturer" style="min-width: 150px;"
+        @onchange="OnStockChanged">
+    @foreach (var stock in stocks)
+    {
+        <option value="@stock.stock_partner_id"
+                selected="@(Stock.stock_partner_id == stock.stock_partner_id)">
+            @($"{stock.name}, - {stock.shipment_period} дн. ({stock.description})")
+        </option>
+    }
+</select>
+
+@code {
+    List<StockPartnerEntity> stocks = null;
+
+    [Parameter] public EventCallback<StockPartnerEntity> StockChanged { get; set; }
+    [Parameter] public StockPartnerEntity Stock { get; set; } = new StockPartnerEntity();
+
+    protected override async Task OnInitializedAsync()
+    {
+        stocks = await manufacturerStorage.GetStockPartners();
+    }
+
+    protected void OnStockChanged(ChangeEventArgs e)
+    {
+        Stock = stocks.Single(s => s.stock_partner_id == int.Parse(e.Value.ToString()));
+        StockChanged.InvokeAsync(Stock);
+    }
+}

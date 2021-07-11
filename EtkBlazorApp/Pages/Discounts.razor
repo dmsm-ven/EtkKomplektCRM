@@ -1,4 +1,5 @@
 ﻿@page "/discounts"
+
 @using EtkBlazorApp.Components.DiscountTabs
 
 <h3>Скидки</h3>
@@ -19,15 +20,25 @@
         <DiscountsByProductTab TabName="@tabs[0]" />
         <DiscountsByCategoryTab TabName="@tabs[1]" />
         <DiscountsByManufacturerTab TabName="@tabs[2]" />
+        <DiscountsByStockTab TabName="@tabs[3]" />
     </CascadingValue>
 </div>
 
 @code {
-    string [] tabs = new string[] { "На товары", "На категории", "На производителей" };
+    string [] tabs = new string[] 
+    { 
+        "На товары", 
+        "На категории", 
+        "На производителей", 
+        "На склады" 
+    };
     string selectedTab;
 
     protected override void OnInitialized()
     {
-        selectedTab = tabs.First();
+        if (selectedTab == null)
+        {
+            selectedTab = tabs.First();
+        }
     }
 }

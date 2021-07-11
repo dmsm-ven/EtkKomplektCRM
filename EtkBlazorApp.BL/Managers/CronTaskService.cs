@@ -25,7 +25,6 @@ namespace EtkBlazorApp.BL
         internal readonly UpdateManager updateManager;
         internal readonly PriceListManager priceListManager;
         internal readonly RemoteTemplateFileLoaderFactory remoteTemplateLoaderFactory;
-        private readonly OzonSellerManager ozonSellerManager;
         private readonly Timer checkTimer;
         private readonly Dictionary<CronTaskBase, CronTaskEntity> tasks;
         private readonly List<CronTaskBase> inProgress;
@@ -36,8 +35,7 @@ namespace EtkBlazorApp.BL
             SystemEventsLogger logger,
             UpdateManager updateManager, 
             PriceListManager priceListManager,
-            RemoteTemplateFileLoaderFactory remoteTemplateLoaderFactory,
-            OzonSellerManager ozonSellerManager)
+            RemoteTemplateFileLoaderFactory remoteTemplateLoaderFactory)
         {
             this.cronTaskStorage = cronTaskStorage;
             this.templates = templates;
@@ -45,7 +43,6 @@ namespace EtkBlazorApp.BL
             this.updateManager = updateManager;
             this.priceListManager = priceListManager;
             this.remoteTemplateLoaderFactory = remoteTemplateLoaderFactory;
-            this.ozonSellerManager = ozonSellerManager;
             tasks = new Dictionary<CronTaskBase, CronTaskEntity>();
             inProgress = new List<CronTaskBase>();
 
@@ -159,8 +156,6 @@ namespace EtkBlazorApp.BL
             {
                 case CronTaskType.RemotePriceList:
                     return new BL.CronTask.LoadRemotePriceListCronTask(linkedPriceListType, this, taskId);
-                case CronTaskType.OzonSellerUpdate:
-                    return new BL.CronTask.OzonSellerUpdateProductsCronTask(this, taskId, ozonSellerManager);
             }
 
             throw new ArgumentException(taskType + " не реализован");
