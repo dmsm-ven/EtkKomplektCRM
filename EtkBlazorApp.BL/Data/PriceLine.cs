@@ -1,4 +1,6 @@
-﻿namespace EtkBlazorApp.BL
+﻿using System.Collections.Generic;
+
+namespace EtkBlazorApp.BL
 {
     public class PriceLine
     {
@@ -10,8 +12,7 @@
         public decimal? Price { get; set; }
         public int? Quantity { get; set; }
         public CurrencyType Currency { get; set; }
-        public bool IsSpecialLine { get; set; }
-        public StockPartner? StockPartner { get; set; }
+        public StockName Stock { get; set; }
 
         public PriceLine(IPriceListTemplate template)
         {
@@ -21,16 +22,10 @@
         public IPriceListTemplate Template { get; }
     }
 
-    public enum StockPartner
-    {        
-        MarsComponent = 1,
-        _1C = 2,
-        Eltech = 3,
-        Symmetron = 4,
-        RGK = 5,
-        Eridan = 6,
-        UMP = 7,
-        TexElektro = 8,
-        KvtSu = 9,
-    }
+    public class MultistockPriceLine : PriceLine
+    {
+        public MultistockPriceLine(IPriceListTemplate template) : base(template) { }
+
+        public readonly Dictionary<StockName, int> AdditionalStockQuantity = new Dictionary<StockName, int>();
+    }   
 }

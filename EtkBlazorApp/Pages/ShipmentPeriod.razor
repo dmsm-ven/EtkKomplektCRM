@@ -2,7 +2,8 @@
 
 @using EtkBlazorApp.DataAccess
 @using EtkBlazorApp.Components;
-@inject IManufacturerStorage _database
+@inject IManufacturerStorage manufacturerStorage
+@inject IToastService toasts
 @inject UserLogger logger
 @attribute [Authorize]
 
@@ -68,37 +69,46 @@ else
                 <tbody>
                     @foreach (var item in stockList)
                     {
-                    <tr>
-                        <td>@item.Name</td>
+                        <tr>
+                            <td>@item.Name</td>
 
 
-                        @if (editStock != item)
-                        {
-                            <td>@item.ShipmentPeriodInDays</td>
-                            <td>@item.NextShipmentDate.ToShortDateString()</td>
-                            <td>
-                                <button class="btn-secondary btn-sm" @onclick="@(e => editStock = item)">
-                                    <span class="oi oi-pencil"></span>
-                                </button>
-                            </td>
-                        }
-                        else
-                        {
-                            <td><input @bind="item.ShipmentPeriodInDays" /></td>
-                            <td>@item.NextShipmentDate.ToShortDateString()</td>
-                            <td>
-                                <button class="btn-info btn-sm" @onclick="@(e => ConfirmStockPartnerChanges(item))">Подтвердить</button>
-                            </td>
-                        }
-                        <td style="white-space: nowrap;">@item.Description</td>
-                    </tr>
+                            @if (editStock != item)
+                            {
+                                <td>@item.ShipmentPeriodInDays</td>
+                                <td>@item.NextShipmentDate.ToShortDateString()</td>
+                                <td>
+                                    <button class="btn-secondary btn-sm" @onclick="@(e => editStock = item)">
+                                        <span class="oi oi-pencil"></span>
+                                    </button>
+                                </td>
+                            }
+                            else
+                            {
+                                <td><input @bind="item.ShipmentPeriodInDays" /></td>
+                                <td>@item.NextShipmentDate.ToShortDateString()</td>
+                                <td>
+                                    <button class="btn-info btn-sm" @onclick="@(e => ConfirmStockPartnerChanges(item))">Подтвердить</button>
+                                </td>
+                            }
+                            <td style="white-space: nowrap;">@item.Description</td>
+                        </tr>
                     }
                 </tbody>
             </table>
+            <hr />
+                <AuthorizeView Roles="Administrator">
+                    <button class="btn btn-primary float-right" @onclick="@(e => newStockDialog.Show())">
+                        <span class="oi oi-plus"></span>
+                        Добавить новый
+                    </button>
+                </AuthorizeView>
         </div>
     </div>
 }
 
+
+<AddNewStockDialog @ref="newStockDialog" ConfirmationChanged="NewStockDialogStatusChanged" />
 
 @code {
 
@@ -107,6 +117,7 @@ else
 
     List<StockPartnerViewModel> stockList = null;
     StockPartnerViewModel editStock = null;
+    AddNewStockDialog newStockDialog;
 
 
     private async Task ConfirmManufacturerChanges(ManufacturerViewModel manufacturer)
@@ -119,8 +130,8 @@ else
 
         if (manufacturer.OldShipmentPeriod != manufacturer.ShipmentPeriodInDays)
         {
-            await _database.SaveManufacturer(data);
-            await logger.Write(LogEntryGroupName.ManufacturerUpdate, "Обновление", $"Срок поставки «{manufacturer.name}» измнен с {manufacturer.OldShipmentPeriod} на {manufacturer.ShipmentPeriodInDays} дн.");
+            await manufacturerStorage.SaveManufacturer(data);
+            await logger.Write(LogEntryGroupName.ManufacturerUpdate, "Обновление", $"Срок поставки «{manufacturer.name}» измнен на {manufacturer.ShipmentPeriodInDays} дн.");
         }
         editManufacturer = null;
         manufacturer.OldShipmentPeriod = manufacturer.ShipmentPeriodInDays;
@@ -134,38 +145,53 @@ else
             shipment_period = stock.ShipmentPeriodInDays
         };
 
-        if (stock.OldShipmentPeriod != stock.ShipmentPeriodInDays)
-        {
-            await _database.SaveStockPartner(data);
-            await logger.Write(LogEntryGroupName.ManufacturerUpdate, "Обновление", $"Срок поставки «{stock.Name}» измнен с {stock.OldShipmentPeriod} на {stock.ShipmentPeriodInDays} дн.");
-        }
+        await manufacturerStorage.SaveStockPartner(data);
+        await logger.Write(LogEntryGroupName.ManufacturerUpdate, "Обновление", $"Срок поставки «{stock.Name}» измнен с на {stock.ShipmentPeriodInDays} дн.");
+
         editStock = null;
-        stock.OldShipmentPeriod = stock.ShipmentPeriodInDays;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            manufacturers = (await _database.GetManufacturers())
-                .Select(model => new ManufacturerViewModel(model.manufacturer_id, model.shipment_period)
-                {
-                    name = model.name,
-                    keyword = model.keyword,
-                    productsCount = model.productsCount
-                })
-                .ToList();
+            manufacturers = (await manufacturerStorage.GetManufacturers())
+            .Select(model => new ManufacturerViewModel(model.manufacturer_id, model.shipment_period)
+            {
+                name = model.name,
+                keyword = model.keyword,
+                productsCount = model.productsCount
+            })
+            .ToList();
 
-            stockList = (await _database.GetStockPartners())
-                .OrderBy(stock => stock.shipment_period)
-                .Select(model => new StockPartnerViewModel(model.stock_partner_id, model.shipment_period)
-                {
-                    Name = model.name,
-                    Description = model.description
-                })
-                .ToList();
+            stockList = (await manufacturerStorage.GetStockPartners())
+            .OrderBy(stock => stock.shipment_period)
+            .Select(model => new StockPartnerViewModel()
+            {
+                Id = model.stock_partner_id,
+                ShipmentPeriodInDays = model.shipment_period,
+                Name = model.name,
+                Description = model.description
+            })
+            .ToList();
             StateHasChanged();
         }
     }
 
+    private async Task NewStockDialogStatusChanged(StockPartnerViewModel data)
+    {
+        if(data != null)
+        {
+            var stockEntity = new StockPartnerEntity()
+            {
+                name = data.Name,
+                shipment_period = data.ShipmentPeriodInDays,
+                description = data.Description
+            };
+            await manufacturerStorage.CreateStock(stockEntity);
+            data.Id = stockEntity.stock_partner_id;
+            stockList.Add(data);
+            toasts.ShowSuccess(data.Name, "Склад добавлен");
+        }
+    }
 }

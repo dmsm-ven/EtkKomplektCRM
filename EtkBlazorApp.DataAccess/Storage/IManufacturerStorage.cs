@@ -11,6 +11,7 @@ namespace EtkBlazorApp.DataAccess
 
         Task SaveStockPartner(StockPartnerEntity stock);
         Task<List<StockPartnerEntity>> GetStockPartners();
+        Task CreateStock(StockPartnerEntity stock);
     }
 
     public class ManufacturerStorage : IManufacturerStorage
@@ -55,6 +56,16 @@ namespace EtkBlazorApp.DataAccess
             var stocks = await database.GetList<StockPartnerEntity>(sql);
 
             return stocks;
+        }
+
+        public async Task CreateStock(StockPartnerEntity stock)
+        {
+            string sql = @"INSERT INTO oc_stock_partner (name, description, shipment_period) VALUES 
+                                                        (@name, @description, @shipment_period)";
+           
+            await database.ExecuteQuery(sql, stock);
+
+            stock.stock_partner_id = await database.GetScalar<int>("SELECT max(stock_partner_id) FROM oc_stock_partner");
         }
     }
 }

@@ -104,7 +104,7 @@ namespace EtkBlazorApp.Pages
         {
             var checkedStocksList = checkedStockPartners
                 .ToDictionary(
-                    i => (StockPartner)i.Key.stock_partner_id, 
+                    i => (StockName)i.Key.stock_partner_id, 
                     i => (selectStockPartners ? true : i.Value));
 
             var options = new VseInstrumentiReportOptions()

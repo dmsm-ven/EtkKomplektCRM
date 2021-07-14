@@ -66,7 +66,7 @@
                     <td>@categoryDiscountInfo.date_start.ToShortDateString()</td>
                     <td>@categoryDiscountInfo.date_end.ToShortDateString()</td>
                     <td>
-                        @(categoryDiscountInfo.date_end > DateTime.Now.Date ? Math.Floor((categoryDiscountInfo.date_end - DateTime.Now).TotalDays) : 0)
+                        @(categoryDiscountInfo.date_end > DateTime.Now.Date ? Math.Ceiling((categoryDiscountInfo.date_end - DateTime.Now).TotalDays) : 0)
                     </td>
                 </tr>
             }
@@ -107,7 +107,7 @@
         await discountStorage.RemoveCategoryDiscount(data.category_id);
 
         toasts.ShowInfo("Скидка удаление", data.category_name);
-        await userLogger.Write(LogEntryGroupName.Discounts, "Удаление", $"Скидка для категории '{discountData.category_name}' удалена");
+        await userLogger.Write(LogEntryGroupName.Discounts, "Удаление", $"Скидка для категории '{data.category_name}' удалена");
     }
 
     private async Task AddDiscountItem()

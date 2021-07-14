@@ -31,7 +31,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
                 var priceLine = new PriceLine(this)
                 {
-                    IsSpecialLine = true,
                     Name = name,
                     Sku = skuNumber,
                     Model = skuNumber,
@@ -82,7 +81,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                         Name = cells[1],
                         Manufacturer = MapManufacturerName(cells[2]),
                         Quantity = ParseQuantity(cells[4].Replace(",000", string.Empty)),
-                        StockPartner = StockPartner._1C
+                        Stock = StockName._1C
                     })
                     .Where(pl => !string.IsNullOrWhiteSpace(pl.Sku))
                     .ToList();

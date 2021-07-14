@@ -7,7 +7,7 @@
     {
         <option value="@stock.stock_partner_id"
                 selected="@(Stock.stock_partner_id == stock.stock_partner_id)">
-            @($"{stock.name}, - {stock.shipment_period} дн. ({stock.description})")
+            @($"{stock.name} ({stock.description})")
         </option>
     }
 </select>
@@ -16,16 +16,22 @@
     List<StockPartnerEntity> stocks = null;
 
     [Parameter] public EventCallback<StockPartnerEntity> StockChanged { get; set; }
-    [Parameter] public StockPartnerEntity Stock { get; set; } = new StockPartnerEntity();
+    [Parameter] public StockPartnerEntity Stock { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        stocks = await manufacturerStorage.GetStockPartners();
+        stocks = (await manufacturerStorage.GetStockPartners())
+            .OrderBy(s => s.shipment_period)
+            .ToList();
+
+        Stock = stocks.FirstOrDefault() ?? new StockPartnerEntity();
+
+        await StockChanged.InvokeAsync(Stock);
     }
 
-    protected void OnStockChanged(ChangeEventArgs e)
+    protected async Task OnStockChanged(ChangeEventArgs e)
     {
         Stock = stocks.Single(s => s.stock_partner_id == int.Parse(e.Value.ToString()));
-        StockChanged.InvokeAsync(Stock);
+        await StockChanged.InvokeAsync(Stock);
     }
 }

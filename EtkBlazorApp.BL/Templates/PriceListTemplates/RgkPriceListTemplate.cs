@@ -37,7 +37,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Sku = sku,
                     Price = price,
                     Quantity = quantity,
-                    StockPartner = StockPartner.RGK
+                    Stock = StockName.RGK
                 };
 
                 list.Add(priceLine);

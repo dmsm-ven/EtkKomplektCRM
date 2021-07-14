@@ -22,7 +22,7 @@ namespace EtkBlazorApp.DataAccess
         Task RemoveCategoryDiscount(int category_id);
 
         Task<List<DiscountToStockEntity>> GetStocksWithDiscount();
-        Task AddDiscountForStock(DiscountToStockEntity discountData);
+        Task AddDiscountForStock(DiscountToStockEntity discountData, int minQuantity);
         Task RemoveStockDiscount(int stock_id);
     }
 
@@ -62,7 +62,43 @@ namespace EtkBlazorApp.DataAccess
 
         #region Stock
 
-        private async Task AddProductSpecialForStock(DiscountToStockEntity discountData)
+        public async Task<List<DiscountToStockEntity>> GetStocksWithDiscount()
+        {
+            var sql = @"SELECT s.*, sp.name as stock_name
+                        FROM etk_app_discount_to_stock s
+                        JOIN oc_stock_partner sp ON sp.stock_partner_id = s.stock_id";
+
+            var discounts = await database.GetList<DiscountToStockEntity>(sql);
+
+            return discounts;
+        }
+
+        public async Task AddDiscountForStock(DiscountToStockEntity discountData, int minQuantity = 1)
+        {
+            var sql = @"INSERT INTO etk_app_discount_to_stock
+                           (stock_id, discount, date_start, date_end)
+                           VALUES
+                           (@stock_id, @discount, @date_start, @date_end)
+                           ON DUPLICATE KEY UPDATE
+                           discount = @discount,
+                           date_start = @date_start,
+                           date_end = @date_end";
+
+            await database.ExecuteQuery(sql, discountData);
+            await RemoveProductSpecialOnStock(discountData.stock_id);
+            await AddProductSpecialForStock(discountData, minQuantity);
+        }
+
+        public async Task RemoveStockDiscount(int stock_id)
+        {
+            string sql = @"DELETE FROM etk_app_discount_to_stock
+                           WHERE stock_id = @stock_id";
+
+            await database.ExecuteQuery<dynamic>(sql, new { stock_id });
+            await RemoveProductSpecialOnStock(stock_id);
+        }
+
+        private async Task AddProductSpecialForStock(DiscountToStockEntity discountData, int minQuantity)
         {
             string rubStatement = $"ROUND(p.price / (100 + {discountData.discount}) * 100, 0)";
             string curStatement = $"ROUND(p.base_price / (100 + {discountData.discount}) * 100, 2)";
@@ -77,46 +113,10 @@ namespace EtkBlazorApp.DataAccess
                                   DATE(@date_start), DATE(@date_end)
                            FROM oc_product p
                            JOIN oc_product_to_stock pts ON (p.product_id = pts.product_id AND pts.stock_partner_id = @stock_id)
-                           WHERE (p.status = 1) AND (pts.quantity > 0) AND (p.price > 0 OR p.base_price > 0)";
+                           WHERE (p.status = 1) AND (pts.quantity >= {minQuantity}) AND (p.price > 0 OR p.base_price > 0)";
 
             await database.ExecuteQuery(sql, discountData);
             await RefreshMainDiscountCategoryProducts();
-        }
-
-        public async Task<List<DiscountToStockEntity>> GetStocksWithDiscount()
-        {
-            var sql = @"SELECT s.*, sp.name as stock_name
-                        FROM etk_app_discount_to_stock s
-                        JOIN oc_stock_partner sp ON sp.stock_partner_id = s.stock_id";
-
-            var discounts = await database.GetList<DiscountToStockEntity>(sql);
-
-            return discounts;
-        }
-
-        public async Task AddDiscountForStock(DiscountToStockEntity discountData)
-        {
-            var sql = @"INSERT INTO etk_app_discount_to_stock
-                           (stock_id, discount, date_start, date_end)
-                           VALUES
-                           (@stock_id, @discount, @date_start, @date_end)
-                           ON DUPLICATE KEY UPDATE
-                           discount = @discount,
-                           date_start = @date_start,
-                           date_end = @date_end";
-
-            await database.ExecuteQuery(sql, discountData);
-            await RemoveProductSpecialOnStock(discountData.stock_id);
-            await AddProductSpecialForStock(discountData);
-        }
-
-        public async Task RemoveStockDiscount(int stock_id)
-        {
-            string sql = @"DELETE FROM etk_app_discount_to_stock
-                           WHERE stock_id = @stock_id";
-
-            await database.ExecuteQuery<dynamic>(sql, new { stock_id });
-            await RemoveProductSpecialOnStock(stock_id);
         }
 
         private async Task RemoveProductSpecialOnStock(int stock_id)

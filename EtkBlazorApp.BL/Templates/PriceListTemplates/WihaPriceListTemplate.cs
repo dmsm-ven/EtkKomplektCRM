@@ -79,7 +79,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Model = sku,
                     Name = name,
                     Quantity = quantity,
-                    StockPartner = StockPartner.UMP
+                    Stock = StockName.UMP
                 };
 
                 list.Add(priceLine);

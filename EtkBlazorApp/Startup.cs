@@ -36,7 +36,7 @@ namespace EtkBlazorApp
             services.AddTransient<IUserInfoChecker, UserInfoChecker>();
             services.AddTransient<ICompressedFileExtractor, SharpCompressFileExtractor>();
             ConfigureCorrelators(services);
-            ConfigureDatabase(services);
+            ConfigureDatabaseServices(services);
 
             services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
             services.AddSingleton<RemoteTemplateFileLoaderFactory>();        
@@ -55,7 +55,7 @@ namespace EtkBlazorApp
             services.AddBlazoredToast();
         }
 
-        private void ConfigureDatabase(IServiceCollection services)
+        private void ConfigureDatabaseServices(IServiceCollection services)
         {
             services.AddTransient<IDatabaseAccess, EtkDatabaseDapperAccess>();
             services.AddTransient<IProductDiscountStorage, ProductDiscountStorage>();

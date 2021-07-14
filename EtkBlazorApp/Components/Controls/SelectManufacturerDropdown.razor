@@ -16,11 +16,13 @@
     List<ManufacturerEntity> manufacturersSource = null;
 
     [Parameter] public EventCallback<ManufacturerEntity> ManufacturerChanged { get; set; }
-    [Parameter] public ManufacturerEntity Manufacturer { get; set; } = new ManufacturerEntity();
+    [Parameter] public ManufacturerEntity Manufacturer { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         manufacturersSource = await manufacturerStorage.GetManufacturers();
+        Manufacturer = manufacturersSource.FirstOrDefault() ?? new ManufacturerEntity();
+        await ManufacturerChanged.InvokeAsync(Manufacturer);
     }
 
     protected void OnManufacturerChanged(ChangeEventArgs e)

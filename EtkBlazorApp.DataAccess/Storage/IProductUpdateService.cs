@@ -11,7 +11,7 @@ namespace EtkBlazorApp.DataAccess
     public interface IProductUpdateService
     {
         Task UpdateProductsPrice(List<ProductUpdateData> data);
-        Task UpdateProductsStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate);
+        Task UpdateProductsStock(List<ProductUpdateData> data);
         Task UpdateProductsStockPartner(List<ProductUpdateData> data, int [] affectedBrands);
         Task ComputeStockQuantity(List<ProductUpdateData> data);
         Task UpdateDirectProduct(ProductEntity product);
@@ -84,10 +84,10 @@ namespace EtkBlazorApp.DataAccess
             await database.ExecuteQuery<dynamic>(sql, new { });
         }
 
-        public async Task UpdateProductsStock(List<ProductUpdateData> data, bool clearStockBeforeUpdate)
+        public async Task UpdateProductsStock(List<ProductUpdateData> data)
         {
             List<ProductUpdateData> source = data
-                .Where(d => d.quantity.HasValue && d.stock_partner == null)
+                .Where(d => d.quantity.HasValue && d.stock_id != 0)
                 .ToList();
 
             if (source.Count == 0) { return; }
@@ -107,16 +107,6 @@ namespace EtkBlazorApp.DataAccess
               .AppendLine("END, date_modified = NOW()")
               .AppendLine($"WHERE product_id IN ({pidArray});");
 
-            if (clearStockBeforeUpdate)
-            {
-                var clearStockQueryBuilder = new StringBuilder()
-                    .AppendLine("UPDATE oc_product")
-                    .AppendLine("SET quantity = 0")
-                    .AppendLine($"WHERE manufacturer_id IN (SELECT DISTINCT manufacturer_id FROM oc_product WHERE product_id IN ({pidArray}));");
-
-                sb.Insert(0, clearStockQueryBuilder.ToString());
-            }
-
 
             string sql = sb.ToString();
 
@@ -124,33 +114,57 @@ namespace EtkBlazorApp.DataAccess
         }
 
         public async Task UpdateProductsStockPartner(List<ProductUpdateData> source, int[] affectedBrands)
-        {
+        {           
             source = source.Where(item => item.quantity.HasValue).ToList();
 
             if (source.Any())
             {
-                var groupedByPartner = source.GroupBy(line => line.stock_partner.Value);
-                var partnerIdArray = string.Join(",", groupedByPartner.Select(g => g.Key).Distinct().ToList());
+                var groupedByPartner = source
+                    .GroupBy(line => line.stock_id)
+                    .ToDictionary(i => i.Key, j => j.ToList());
+
+                //Дополнительные склады
+                if (source.Any(i => i.AdditionalStocksQuantity != null))
+                { 
+                    AppendQuantityFromAdditionalStocks(source, groupedByPartner);
+                }
+
+                var partnerIdArray = string.Join(",", groupedByPartner.Select(g => g.Key).Distinct());
                 var affectedBrandIdsArray = string.Join(",", affectedBrands);
 
                 string clearStockSql = $@"UPDATE oc_product_to_stock
-                                           JOIN oc_product ON oc_product.product_id = oc_product_to_stock.product_id
-                                           JOIN oc_manufacturer ON oc_product.manufacturer_id = oc_manufacturer.manufacturer_id
-                                           SET oc_product_to_stock.quantity = 0
-                                           WHERE oc_product_to_stock.stock_partner_id IN ({partnerIdArray}) AND oc_manufacturer.manufacturer_id IN ({affectedBrandIdsArray})";
+                                          JOIN oc_product ON oc_product.product_id = oc_product_to_stock.product_id
+                                          JOIN oc_manufacturer ON oc_product.manufacturer_id = oc_manufacturer.manufacturer_id
+                                          SET oc_product_to_stock.quantity = 0
+                                          WHERE oc_product_to_stock.stock_partner_id IN ({partnerIdArray}) AND oc_manufacturer.manufacturer_id IN ({affectedBrandIdsArray})";
                 await database.ExecuteQuery(clearStockSql);
 
 
                 var sb = new StringBuilder("INSERT INTO oc_product_to_stock (stock_partner_id, product_id, quantity) VALUES\n");
                 foreach (var group in groupedByPartner)
                 {
-                    foreach (var kvp in group)
+                    foreach (var kvp in group.Value)
                     {
                         sb.AppendLine($"({group.Key}, {kvp.product_id}, {kvp.quantity.Value}),");
                     }
                 }
                 var sql = sb.ToString().Trim('\r', '\n', ',') + " ON DUPLICATE KEY UPDATE quantity = VALUES(quantity)";
                 await database.ExecuteQuery(sql);
+            }
+        }
+
+        private void AppendQuantityFromAdditionalStocks(List<ProductUpdateData> source, Dictionary<int, List<ProductUpdateData>> groupedByPartner)
+        {          
+            foreach (var item in source.Where(i => i.AdditionalStocksQuantity != null))
+            {
+                foreach (var kvp in item.AdditionalStocksQuantity)
+                {
+                    if (!groupedByPartner.ContainsKey(kvp.Key))
+                    {
+                        groupedByPartner.Add(kvp.Key, new List<ProductUpdateData>());
+                    }
+                    groupedByPartner[kvp.Key].Add(new ProductUpdateData() { product_id = item.product_id, quantity = kvp.Value });
+                }
             }
         }
 
@@ -173,8 +187,8 @@ namespace EtkBlazorApp.DataAccess
             if (idsToUpdate.Any())
             {
                 string pileUpStockSql = $@"UPDATE oc_product
-                                       SET quantity = GREATEST(0, (SELECT SUM(oc_product_to_stock.quantity) FROM oc_product_to_stock WHERE oc_product_to_stock.product_id = oc_product.product_id))
-                                       WHERE product_id IN ({pidArray})";
+                                           SET quantity = GREATEST(0, (SELECT SUM(oc_product_to_stock.quantity) FROM oc_product_to_stock WHERE oc_product_to_stock.product_id = oc_product.product_id))
+                                           WHERE product_id IN ({pidArray})";
                 await database.ExecuteQuery(pileUpStockSql);
             }
         }

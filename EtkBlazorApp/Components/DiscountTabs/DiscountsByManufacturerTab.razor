@@ -67,7 +67,7 @@
                     <td>@brandDiscountInfo.date_start.ToShortDateString()</td>
                     <td>@brandDiscountInfo.date_end.ToShortDateString()</td>
                     <td>
-                        @(brandDiscountInfo.date_end > DateTime.Now.Date ? Math.Floor((brandDiscountInfo.date_end - DateTime.Now).TotalDays) : 0)
+                        @(brandDiscountInfo.date_end > DateTime.Now.Date ? Math.Ceiling((brandDiscountInfo.date_end - DateTime.Now).TotalDays) : 0)
                     </td>
                 </tr>
             }
@@ -79,6 +79,7 @@
 @code {
     List<DiscountToManufacturerEntity> discountedManufacturers;
     DiscountToManufacturerEntity discountData;
+
     bool addDiscountButtonDisabled
     {
         get => discountData.date_end <= DateTime.Now.Date || discountData.discount == 0 || discountData.manufacturer_id == 0;
@@ -107,7 +108,7 @@
         await discountStorage.RemoveManufacturerDiscount(data.manufacturer_id);
 
         toasts.ShowInfo("Скидка удаление", data.manufacturer_name);
-        await userLogger.Write(LogEntryGroupName.Discounts, "Удаление", $"Скидка для производителя '{discountData.manufacturer_name}' удалена");
+        await userLogger.Write(LogEntryGroupName.Discounts, "Удаление", $"Скидка для производителя '{data.manufacturer_name}' удалена");
     }
 
     private async Task AddDiscountItem()

@@ -49,9 +49,9 @@ namespace EtkBlazorApp.BL
 
             progress?.Report("Обновление цен etk-komplekt.ru");
             await productUpdateService.UpdateProductsPrice(data);
-
-            data.Where(d => d.stock_partner == null).ToList().ForEach(i => i.stock_partner = (int?)StockPartner.Symmetron);
+           
             progress?.Report("Обновление остатков на складах etk-komplekt.ru");
+            data.Where(d => d.stock_id == 0).ToList().ForEach(i => i.stock_id = (int)StockName.Symmetron);
             await productUpdateService.UpdateProductsStockPartner(data, affectedBrandsIds);
 
             progress?.Report("Складывание остатков складов etk-komplekt.ru");

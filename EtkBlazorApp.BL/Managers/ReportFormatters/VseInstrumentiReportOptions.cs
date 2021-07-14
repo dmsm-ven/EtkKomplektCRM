@@ -7,6 +7,6 @@ namespace EtkBlazorApp.BL
         public bool HasEan { get; init; }
         public bool StockGreaterThanZero { get; init; }
         public string GLN { get; init; }
-        public Dictionary<StockPartner, bool> UsePartnerStock { get; init; } 
+        public Dictionary<StockName, bool> UsePartnerStock { get; init; } 
     }
 }

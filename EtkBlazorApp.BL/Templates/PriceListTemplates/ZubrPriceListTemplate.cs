@@ -62,10 +62,10 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string sku = tab.GetValue<string>(row, 1);
                 string model = tab.GetValue<string>(row, 2);                           
                 string name = tab.GetValue<string>(row, 5);
+                
+                var quantity = ParseQuantity(tab.GetValue<string>(row, 6));
+                var price = ParsePrice(tab.GetValue<string>(row, 8));
 
-                int? quantity = ParseQuantity(tab.GetValue<string>(row, 6));
-
-               
                 var priceLine = new PriceLine(this)
                 {
                     Manufacturer = manufacturer,
@@ -73,7 +73,9 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Model = model,
                     Name = name,
                     Quantity = quantity,
-                    StockPartner = StockPartner.Eridan,
+                    Price = price,
+                    Currency = CurrencyType.RUB,
+                    Stock = StockName.Eridan,
                 };
 
                 list.Add(priceLine);

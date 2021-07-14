@@ -38,7 +38,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                         Manufacturer = "Mean Well",
                         Sku = skuNumber,
                         Model = skuNumber,
-                        StockPartner = StockPartner.Eltech
+                        Stock = StockName.Eltech
                     };
                     list.Add(priceLine);
                 }
@@ -78,7 +78,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Manufacturer = manufacturer,
                     Sku = sku,
                     Model = model,
-                    StockPartner = StockPartner.Eltech
+                    Stock = StockName.Eltech
                 };
                 list.Add(priceLine);
             }

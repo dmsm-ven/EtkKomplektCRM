@@ -1,0 +1,66 @@
+﻿@inject IManufacturerStorage manufacturerStorage
+
+@if (isVisible)
+{
+    <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog" style="background: rgba(0,0,0, 0.5)">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <EditForm Model="@newStock" OnValidSubmit="@(e => OnConfirmationChange(newStock))">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modal-title">Добавление нового склада</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+                                @onclick="@(e => OnConfirmationChange(null))">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="stock_name">Сокращенное название</label>
+                            <input type="text" id="stock_name" class="form-control" @bind="newStock.Name" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="shipment_period">Срок поставки (дней)</label>
+                            <input type="number" min="0" id="shipment_period" class="form-control" @bind="newStock.ShipmentPeriodInDays" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="stock_description">Полное название</label>
+                            <textarea type="text" id="stock_description" class="form-control" @bind="newStock.Description" style="height: 80px;"/>
+                        </div>
+                    </div>
+
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                                @onclick="@(e => OnConfirmationChange(null))">
+                            Отмена
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            Добавить
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+@code {
+    [Parameter] public EventCallback<StockPartnerViewModel> ConfirmationChanged { get; set; }
+
+    StockPartnerViewModel newStock = new StockPartnerViewModel();
+    bool isVisible = false;
+
+    public void Show()
+    {
+        isVisible = true;
+        StateHasChanged();
+    }
+
+    private async Task OnConfirmationChange(StockPartnerViewModel item)
+    {
+        isVisible = false;
+        await ConfirmationChanged.InvokeAsync(item);
+        newStock = new StockPartnerViewModel();
+    }
+} 

@@ -37,7 +37,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Price = price,
                     Quantity = quantitySpb,
                     Currency = CurrencyType.RUB,
-                    StockPartner = StockPartner.TexElektro
+                    Stock = StockName.TexElektro
                 };
 
                 list.Add(priceLine);
@@ -62,10 +62,14 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string sku = "KV-" + tab.GetValue<string>(row, 2);
                 string model = "KVT-" + tab.GetValue<string>(row, 2);
                 string ean =  tab.GetValue<string>(row, 3);
+
+                var quantityKaluga = ParseQuantity(tab.GetValue<string>(row, 4));
                 var quantitySpb =  ParseQuantity(tab.GetValue<string>(row, 5));
                 var price =  ParsePrice(tab.GetValue<string>(row, 6));
 
-                var priceLine = new PriceLine(this)
+                
+
+                var priceLine = new MultistockPriceLine(this)
                 {
                     Currency = CurrencyType.RUB,
                     Price = price,
@@ -75,8 +79,10 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Model = model,
                     Name = name,
                     Manufacturer = "КВТ",
-                    StockPartner = StockPartner.KvtSu
+                    Stock = StockName.KvtSu_Spb
                 };
+
+                priceLine.AdditionalStockQuantity[StockName.KvtSu_Kaluga] = quantityKaluga.Value;
 
                 list.Add(priceLine);
             }

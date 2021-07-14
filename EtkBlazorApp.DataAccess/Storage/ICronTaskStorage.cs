@@ -100,7 +100,7 @@ namespace EtkBlazorApp.DataAccess
         {
             string sql = @"SELECT h.*, t.name as name
                            FROM etk_app_cron_task_history h
-                           LEFT JOIN etk_app_cron_task t ON h.task_id = t.task_id
+                           JOIN etk_app_cron_task t ON h.task_id = t.task_id
                            WHERE MONTH(h.date_time) = MONTH(NOW())";
 
             var data = await database.GetList<CronTaskHistoryEntity>(sql);

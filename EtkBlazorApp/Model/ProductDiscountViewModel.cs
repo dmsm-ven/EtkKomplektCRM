@@ -68,7 +68,7 @@ namespace EtkBlazorApp
             {
                 if(DiscountEndDate > DateTime.Now.Date)
                 {
-                    return (int)Math.Floor((DiscountEndDate - DateTime.Now.Date).TotalDays);
+                    return (int)Math.Ceiling((DiscountEndDate - DateTime.Now.Date).TotalDays);
                 }
 
                 return 0;
