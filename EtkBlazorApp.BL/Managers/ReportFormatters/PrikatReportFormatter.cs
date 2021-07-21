@@ -83,8 +83,8 @@ namespace EtkBlazorApp.BL
         {
             var products = await productStorage.ReadProducts(manufacturer_id);
 
-            var uncheckedStocks = options.UsePartnerStock.Where(c => !c.Value);
-            if (uncheckedStocks.Any())
+            var uncheckedStocks = options.UsePartnerStock?.Where(c => !c.Value);
+            if (uncheckedStocks != null && uncheckedStocks.Any())
             {
                 foreach (var stockPartner in uncheckedStocks)
                 {
@@ -94,6 +94,8 @@ namespace EtkBlazorApp.BL
 
                 products.ForEach(product => product.quantity = Math.Max(product.quantity, 0)); 
             }
+
+            await ApplyCustomProductsHandler(products, manufacturer_id);
 
             if (options.StockGreaterThanZero) 
             {
@@ -106,6 +108,33 @@ namespace EtkBlazorApp.BL
             }
 
             return products;
+        }
+
+        private async Task ApplyCustomProductsHandler(List<ProductEntity> products, int manufacturer_id)
+        {
+            int PROSKIT_MANUFACTURER_ID = 1;
+            int MEAN_WELL_MANUFACTURER_ID = 37;
+            int MEAN_WELL_MINIMUM_QUANTITY = 40;
+
+            if (manufacturer_id == MEAN_WELL_MANUFACTURER_ID)
+            {
+                products.RemoveAll(product => product.quantity < MEAN_WELL_MINIMUM_QUANTITY);
+            }
+
+            if(manufacturer_id == PROSKIT_MANUFACTURER_ID)
+            {
+                var mainStock = await productStorage.GetProductQuantityInAdditionalStock((int)StockName._1C);
+                var secondStock = await productStorage.GetProductQuantityInAdditionalStock((int)StockName.Symmetron);
+                Dictionary<int, int> quantityInStocks = mainStock
+                    .Concat(secondStock)
+                    .GroupBy(p => p.product_id)
+                    .ToDictionary(i => i.Key, j => j.Sum(p => p.quantity));
+
+                products.ForEach(product => 
+                {
+                    product.quantity = quantityInStocks.ContainsKey(product.product_id) ? quantityInStocks[product.product_id] : 0;
+                });
+            }
         }
     }
 }

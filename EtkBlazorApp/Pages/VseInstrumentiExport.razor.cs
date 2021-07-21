@@ -1,5 +1,6 @@
 ﻿using Blazored.Toast.Services;
 using EtkBlazorApp.BL;
+using EtkBlazorApp.Components.Controls;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using EtkBlazorApp.Services;
@@ -26,7 +27,7 @@ namespace EtkBlazorApp.Pages
         List<PrikatManufacturerDiscountViewModel> itemsSource;
         List<PrikatManufacturerDiscountViewModel> orderedSource => itemsSource.OrderByDescending(t => t.IsChecked).ToList();
 
-        Dictionary<StockPartnerEntity, bool> checkedStockPartners;
+        StocksCheckListBox selectedStocksCheckListBox;
 
         public bool ShowPriceExample { get; set; } = false;
         public decimal ExamplePrice { get; set; } = 1000;
@@ -37,20 +38,14 @@ namespace EtkBlazorApp.Pages
 
         bool uncheckAllState = false;
         bool showSettingsBox = false;
-        bool selectStockPartners = true;
 
         bool inProgress = false;
-
         bool reportButtonDisabled => itemsSource == null || itemsSource.All(m => m.IsChecked == false);
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender)
             {
-                checkedStockPartners = (await manufacturerStorage.GetStockPartners())
-                    .OrderBy(i => i.shipment_period)
-                    .ToDictionary(i => i, i => true);
-
                 itemsSource = (await templateStorage.GetPrikatTemplates())
                         .Select(t => new PrikatManufacturerDiscountViewModel()
                         {
@@ -102,17 +97,12 @@ namespace EtkBlazorApp.Pages
 
         private VseInstrumentiReportOptions GetReportOptions()
         {
-            var checkedStocksList = checkedStockPartners
-                .ToDictionary(
-                    i => (StockName)i.Key.stock_partner_id, 
-                    i => (selectStockPartners ? true : i.Value));
-
             var options = new VseInstrumentiReportOptions()
             {
                 HasEan = reportOptionsHasEan,
                 StockGreaterThanZero = reportOptionsHasStock,
                 GLN = reportOptionsGln,
-                UsePartnerStock = checkedStocksList
+                UsePartnerStock = selectedStocksCheckListBox.CheckedStocks
             };
 
             return options;

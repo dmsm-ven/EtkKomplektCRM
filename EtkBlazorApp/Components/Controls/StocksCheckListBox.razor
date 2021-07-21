@@ -1,0 +1,46 @@
+﻿@inject IManufacturerStorage manufacturerStorage
+
+<input class="form-check-input" type="checkbox"
+       checked="@(selectAllStocks)"
+       @onchange="@(async e => { selectAllStocks = (bool)e.Value; await CheckedStocksChanged(); })" />
+            @CheckedAllTitle
+@if (selectAllStocks == false && checkedStockPartners != null)
+{
+    @foreach (var stockPartner in checkedStockPartners)
+    {
+        <div class="form-check mx-2">
+            <input class="form-check-input" checked="@stockPartner.Value"
+                   type="checkbox" id="stock-partner-@stockPartner.Key.stock_partner_id"
+                   @onchange="@(async e => { checkedStockPartners[stockPartner.Key] = (bool)e.Value; await CheckedStocksChanged(); })" />
+            <label class="form-check-label"
+                   data-toggle="tooltip"
+                   style="border-bottom: 1px dashed gray;"
+                   title="@($"{stockPartner.Key.description} - срок поставки {stockPartner.Key.shipment_period} дн.")"
+                   for="stock-partner-@stockPartner.Key.stock_partner_id">@stockPartner.Key.name</label>
+            </div>
+        }
+}
+
+@code {
+    bool selectAllStocks = true;
+    Dictionary<StockPartnerEntity, bool> checkedStockPartners;
+
+    public Dictionary<StockName, bool> CheckedStocks { get; private set; }
+    [Parameter] public string CheckedAllTitle { get; set; }
+    [Parameter] public EventCallback<Dictionary<StockName, bool>> CheckedStateChanged { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        checkedStockPartners = (await manufacturerStorage.GetStockPartners())
+            .OrderBy(i => i.shipment_period)
+            .ToDictionary(i => i, i => false);
+    }
+
+    private async Task CheckedStocksChanged()
+    {
+        var checkedStocks = checkedStockPartners
+            .ToDictionary(s => (StockName)s.Key.stock_partner_id, b => b.Value);
+        CheckedStocks = selectAllStocks ? Enum.GetValues<StockName>().ToDictionary(i => i, j => true) : checkedStocks;
+        await CheckedStateChanged.InvokeAsync(CheckedStocks);
+    }
+}

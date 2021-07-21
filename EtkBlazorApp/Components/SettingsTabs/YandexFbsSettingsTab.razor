@@ -1,0 +1,29 @@
+﻿@inject ISettingStorage settings
+
+@if (selectedTab == tabData)
+{
+<div id="main_tab">
+    <div class="form-group">
+        <label for="min_export_price">Минимальная цена товара для выгрузки</label>
+        <input type="number"  min="0" class="form-control" id="min_export_price" @bind="minimumPrice">
+    </div>
+</div>
+}
+
+@code {
+
+    [Parameter] public SettingsTabData tabData { get; set; }
+    [CascadingParameter] public SettingsTabData selectedTab { get; set; }
+
+    decimal minimumPrice;
+
+    protected override async Task OnInitializedAsync()
+    {
+        minimumPrice = await settings.GetValue<decimal>("yandex_fbs_export_minimum_price");
+
+        tabData.SaveButtonClicked = new Action(async() =>
+        {
+            await settings.SetValue("yandex_fbs_export_minimum_price", minimumPrice);
+        });
+    }
+}
