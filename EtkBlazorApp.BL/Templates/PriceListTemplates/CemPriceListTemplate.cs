@@ -42,5 +42,4 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             return list;
         }
     }
-
 }
