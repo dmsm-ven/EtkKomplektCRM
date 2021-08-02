@@ -96,6 +96,12 @@ namespace EtkBlazorApp.BL
                 affectedBrands.Add("Dremel");
             }
 
+            //Вместе с Weller в прайс-листах Spring-E идет так же Erem, без указания бренда
+            if (affectedBrands.Contains("Weller"))
+            {
+                affectedBrands.Add("Erem");
+            }
+
             // Если есть какой-либо бренд из списка то добавляем всех, т.к. у них есть товары которые по факту один и тот же
             // Но называется в каждом из брендов по разному и у всех одна модель (на сайте есть только 1 вариант)
             var eltechBrands = new string[] { "Tianma", "BOE", "NEC", "AU Optronics" };

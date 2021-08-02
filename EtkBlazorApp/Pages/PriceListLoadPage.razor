@@ -72,22 +72,21 @@
                @bind="searchPhrase" class="form-control rounded mx-2" />
     </div>
 
-    <AuthorizeView Roles="Administrator">
-        <div class="d-inline px-2">
-            <button class="btn btn-outline-primary mx-1"
-                    title="Добавить новое описание для существующего шаблона прайс-листа"
-                    @onclick="@(e => navManager.NavigateTo($"/price-list/new"))">
-                <span class="oi oi-plus"></span>
-            </button>
+    <div class="d-inline px-2">
+        <button class="btn btn-outline-primary mx-1"
+                title="Добавить новое описание для существующего шаблона прайс-листа"
+                @onclick="@(e => navManager.NavigateTo($"/price-list/new"))">
+            <span class="oi oi-plus"></span>
+        </button>
 
-            <button class="btn btn-outline-primary mx-1"
-                    title="Редактированть описание выбранного шаблона прайс-листа"
-                    disabled="@(selectedTemplate == null)"
-                    @onclick="@(e => navManager.NavigateTo($"/price-list/edit/{selectedTemplate?.Guid}"))">
-                <span class="oi oi-pencil"></span>
-            </button>
-        </div>
-    </AuthorizeView>
+        <button class="btn btn-outline-primary mx-1"
+                title="Редактированть описание выбранного шаблона прайс-листа"
+                disabled="@(selectedTemplate == null)"
+                @onclick="@(e => navManager.NavigateTo($"/price-list/edit/{selectedTemplate?.Guid}"))">
+            <span class="oi oi-pencil"></span>
+        </button>
+    </div>
+
 </div>
 
 <div class="row my-2">
