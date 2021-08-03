@@ -5,7 +5,7 @@
 @inject IToastService toasts
 @inject UserLogger logger
 @inject NavigationManager navManager
-@attribute [Authorize(Roles = "Administrator")]
+@attribute [Authorize(Roles = "Manager, Administrator")]
 
 @if (item == null)
 {
@@ -141,8 +141,9 @@ else
                 <textarea type="text" @bind="@item.Description" id="description" class="form-control" style="height: 60px;" />
             </div>
 
-            <div class="form-row my-4">
-                @if (createNew == false)
+            <AuthorizeView Roles="Administrator" Context="auth_context">
+                <div class="form-row my-4">
+                    @if (createNew == false)
                 {
                     <div class="col-md-6">
                         <button type="button" class="btn btn-danger mx-2" @onclick="@(e => deleteDialog.Show())">
@@ -151,13 +152,14 @@ else
                         </button>
                     </div>
                 }
-                <div class="col-md-6">
-                    <button type="submit" class="btn btn-success mx-2">
-                        <span class="oi oi-check"></span>
-                        @buttonActionName
-                    </button>
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-success mx-2">
+                            <span class="oi oi-check"></span>
+                            @buttonActionName
+                        </button>
+                    </div>
                 </div>
-            </div>
+            </AuthorizeView>
         </EditForm>
         </div>
     </div>

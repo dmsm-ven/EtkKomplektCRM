@@ -187,7 +187,9 @@ namespace EtkBlazorApp.DataAccess
             if (idsToUpdate.Any())
             {
                 string pileUpStockSql = $@"UPDATE oc_product
-                                           SET quantity = GREATEST(0, (SELECT SUM(oc_product_to_stock.quantity) FROM oc_product_to_stock WHERE oc_product_to_stock.product_id = oc_product.product_id))
+                                           SET quantity = GREATEST(0, (SELECT SUM(oc_product_to_stock.quantity) 
+                                                                      FROM oc_product_to_stock 
+                                                                      WHERE oc_product_to_stock.product_id = oc_product.product_id))
                                            WHERE product_id IN ({pidArray})";
                 await database.ExecuteQuery(pileUpStockSql);
             }

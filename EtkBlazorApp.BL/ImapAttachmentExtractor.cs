@@ -37,8 +37,8 @@ namespace EtkBlazorApp.BL
 
 		public async Task<string> GetLastAttachment(ImapEmailSearchCriteria searchCriteria)
         {
-			var imapLogger = new ProtocolLogger("imap_extactor.log");
-			using (var connection = new MailKit.Net.Imap.ImapClient(imapLogger))
+			//var imapLogger = new ProtocolLogger("imap_extactor.log");
+			using (var connection = new MailKit.Net.Imap.ImapClient())
             {
 				await connection.ConnectAsync(connectionData.Host, int.Parse(connectionData.Port), useSsl: true);
 				await connection.AuthenticateAsync(new NetworkCredential(connectionData.Email, connectionData.Password));

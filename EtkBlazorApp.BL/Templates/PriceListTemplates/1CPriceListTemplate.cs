@@ -56,6 +56,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         {
             FileName = fileName;
             ManufacturerNameMap["Proskit"] = "Pro'sKit";
+            ManufacturerNameMap["Lambda"] = "TDK-Lambda";
             ManufacturerNameMap["АКТАКОМ"] = "Aktakom";
         }
 
