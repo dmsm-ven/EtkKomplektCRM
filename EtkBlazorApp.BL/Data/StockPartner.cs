@@ -16,5 +16,8 @@
         KvtSu_Kaluga = 11,
         Berger = 12,
         Hantek = 13,
+        MkEnergoset = 14,
+        Megeon = 15,
+        Prist = 16,
     }
 }

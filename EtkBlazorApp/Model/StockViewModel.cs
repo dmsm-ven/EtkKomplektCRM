@@ -20,6 +20,15 @@ namespace EtkBlazorApp
         [StringLength(64)]
         public string City { get; set; }
 
+        [StringLength(64)]
+        public string PhoneNumber { get; set; }
+
+        [StringLength(512)]
+        public string Address { get; set; }
+
+        [StringLength(128)]
+        public string Email { get; set; }
+
         [Range(0, 365, ErrorMessage = "Срок поставки (в днях) должен быть от 0 до 365")]
         public int ShipmentPeriodInDays { get; set; }
 

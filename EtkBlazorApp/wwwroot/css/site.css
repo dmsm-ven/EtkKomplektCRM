@@ -33,6 +33,16 @@
     width: 225px;
     height: 38px;
 }
+.button-cell-header {
+    font-size: 12px;
+    transform: translateY(14px) rotate(-40deg);
+    max-width: 0px;
+}
+
+button:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed;
+}
 
     .file-input-zone,
     .file-input-zone span,

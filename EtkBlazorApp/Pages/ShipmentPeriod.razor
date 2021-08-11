@@ -4,6 +4,7 @@
 @using EtkBlazorApp.Components;
 @inject IManufacturerStorage manufacturerStorage
 @inject IToastService toasts
+@inject IJSRuntime js 
 @inject UserLogger logger
 @attribute [Authorize]
 
@@ -13,19 +14,91 @@
 }
 else
 {
-    <div class="row py-2">
-        <div class="col-md-4 col-sm-12">
-            <h1>Производители</h1>
-            <table class="table table-hover manufacturers-shipment-period-table w-100">
-                <thead class="thead-etk" style="height: 40px;">
-                    <tr>
-                        <th width="90%">Производитель</th>
-                        <th width="10%"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in manufacturers)
-                    {
+<div class="row py-2">
+    <div class="col-md-12 col-sm-12">
+        <h1>Склады</h1>
+        <table class="table table-hover manufacturers-shipment-period-table w-100">
+            <thead class="thead-etk" style="height: 40px;">
+                <tr>
+                    <th width="15%">Склад</th>
+                    <th width="5%">Изменить</th>
+                    <th width="20%">Город</th>
+                    <th width="10%">Дней</th>
+                    <th width="10%">След. поставка</th>
+                    <th class="button-cell-header">Бренды</th>
+                    <th class="button-cell-header">Адрес</th>
+                    <th class="button-cell-header">Телефон</th>
+                    <th class="button-cell-header">Email</th>
+                    <th width="40%">Описание</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in stockList)
+                {
+                <tr>
+                    <td>@item.Name</td>
+                    <td>
+                        <button class="btn-secondary btn-sm" @onclick="@(e => newStockDialog.Show(item))">
+                            <span class="oi oi-pencil"></span>
+                        </button>
+                    </td>
+                    <td>@item.City</td>
+                    <td>@item.ShipmentPeriodInDays</td>
+                    <td>@item.NextShipmentDate.ToShortDateString()</td>
+                    <td>
+                        <button class="btn-secondary btn-sm"                                
+                                @onclick="@(e => ShowStockLinkedManufacturers(item))">
+                            <span class="oi oi-layers"></span>
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn-secondary btn-sm" 
+                                disabled="@(string.IsNullOrWhiteSpace(item.Address))"
+                                @onclick="@(e => ShowStockAddress(item))">
+                            <span class="oi oi-map-marker"></span>
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn-secondary btn-sm" 
+                                disabled="@(string.IsNullOrWhiteSpace(item.PhoneNumber))"
+                                @onclick="@(e => ShowStockPhoneNumber(item))">
+                            <span class="oi oi-phone"></span>
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn-secondary btn-sm" 
+                                disabled="@(string.IsNullOrWhiteSpace(item.Email))"
+                                @onclick="@(e => ShowStockEmail(item))">
+                            <span class="oi oi-envelope-open"></span>
+                        </button>
+                    </td>
+                    <td style="white-space: nowrap; overflow-x: auto; max-width: 200px;">@item.Description</td>
+                </tr>
+                }
+            </tbody>
+        </table>
+        <hr />
+        <AuthorizeView Roles="Administrator">
+            <button class="btn btn-primary float-right" @onclick="@(e => newStockDialog.Show())">
+                <span class="oi oi-plus"></span>
+                Добавить новый
+            </button>
+        </AuthorizeView>
+    </div>   
+</div>
+<div class="row py-2">
+    <div class="col-md-12 col-sm-12">
+        <h1>Производители</h1>
+        <table class="table table-hover manufacturers-shipment-period-table w-100">
+            <thead class="thead-etk" style="height: 40px;">
+                <tr>
+                    <th width="90%">Производитель</th>
+                    <th width="10%"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in manufacturers)
+                {
                     <tr>
                         <td><a href="@item.Uri" target="_blank">@item.name</a></td>
                         <td>
@@ -35,58 +108,12 @@ else
                             </button>
                         </td>
                     </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-        <div class="col-md-8 col-sm-12">
-            <h1>Склады</h1>
-            <table class="table table-hover manufacturers-shipment-period-table w-100">
-                <thead class="thead-etk" style="height: 40px;">
-                    <tr>
-                        <th width="15%">Город</th>
-                        <th width="15%">Склад</th>                      
-                        <th width="15%">Дней</th>
-                        <th width="15%">След. поставка</th>
-                        <th width="5%"></th>
-                        <th width="5%"></th>
-                        <th width="30%">Описание</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in stockList)
-                    {
-                    <tr>
-                        <td>@item.City</td>
-                        <td>@item.Name</td>
-                        <td>@item.ShipmentPeriodInDays</td>                      
-                        <td>@item.NextShipmentDate.ToShortDateString()</td>
-                        <td>
-                            <button class="btn-secondary btn-sm" @onclick="@(e => ShowStockLinkedManufacturers(item))">
-                                <span class="oi oi-layers"></span>
-                            </button>
-                        </td>
-                        <td>
-                            <button class="btn-secondary btn-sm" @onclick="@(e => newStockDialog.Show(item))">
-                                <span class="oi oi-pencil"></span>
-                            </button>
-                        </td>
-                        <td style="white-space: nowrap;">@item.Description</td>
-                    </tr>
-                    }
-                </tbody>
-            </table>
-            <hr />
-                <AuthorizeView Roles="Administrator">
-                    <button class="btn btn-primary float-right" @onclick="@(e => newStockDialog.Show())">
-                        <span class="oi oi-plus"></span>
-                        Добавить новый
-                    </button>
-                </AuthorizeView>
-        </div>
+                }
+            </tbody>
+        </table>
     </div>
+</div>
 }
-
 
 <AddNewStockDialog @ref="newStockDialog" ConfirmationChanged="NewStockDialogStatusChanged" />
 
@@ -117,10 +144,34 @@ else
                 Name = model.name,
                 Description = model.description,
                 City = model.city,
-                CityId = model.city_id
+                CityId = model.city_id,
+                Address = model.address,
+                PhoneNumber = model.phone_number,
+                Email = model.email
             })
             .ToList();
             StateHasChanged();
+        }
+    }
+
+    private void ShowStockEmail(StockPartnerViewModel stock) => toasts.ShowInfo(stock.Email ?? "Email не заполнен", stock.Name);
+
+    private void ShowStockPhoneNumber(StockPartnerViewModel stock) => toasts.ShowInfo(stock.PhoneNumber ?? "Телефон не заполнен", stock.Name);
+
+    private async void ShowStockAddress(StockPartnerViewModel stock)
+    {
+        toasts.ShowInfo(stock.Address ?? "Адрес не заполнен", stock.Name);
+        if (!string.IsNullOrWhiteSpace(stock.Address))
+        {
+            string yandexMapUrl = $"https://yandex.ru/maps/?text={stock.Address}";
+            try
+            {
+                await js.InvokeAsync<object>("open", yandexMapUrl, "_blank");
+            }
+            catch (TaskCanceledException)
+            {
+
+            }
         }
     }
 
@@ -135,7 +186,10 @@ else
                 city = data.City,
                 city_id = data.CityId,
                 description = data.Description,
-                name = data.Name
+                name = data.Name,
+                phone_number = data.PhoneNumber,
+                address = data.Address,
+                email = data.Email
             };
 
             if (data.Id == 0)

@@ -42,7 +42,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Sku = sku,
                     Price = price,
                     Quantity = quantity,
-                    Name = name
+                    Name = name,
+                    Stock = StockName.Megeon
                 };
                 list.Add(priceLine);              
             }

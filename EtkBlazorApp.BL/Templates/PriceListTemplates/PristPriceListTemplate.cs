@@ -44,7 +44,8 @@ namespace EtkBlazorApp.BL
                     Model = offer.Model,
                     Sku = offer.Model,
                     Price = offer.Price,
-                    Quantity = offer.Amount
+                    Quantity = offer.Amount,
+                    Stock = StockName.Prist
                 };
 
                 list.Add(priceLine);

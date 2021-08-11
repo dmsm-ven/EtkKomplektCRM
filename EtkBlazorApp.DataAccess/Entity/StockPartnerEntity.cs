@@ -14,5 +14,8 @@ namespace EtkBlazorApp.DataAccess.Entity
         public string name { get; set; }
         public string city { get; set; }
         public string description { get; set; }
+        public string phone_number { get; set; }
+        public string address { get; set; }
+        public string email { get; set; }
     }
 }
