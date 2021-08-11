@@ -20,8 +20,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        stocks = (await manufacturerStorage.GetStockPartners())
-            .OrderBy(s => s.shipment_period)
+        stocks = (await manufacturerStorage.GetStocks())
             .ToList();
 
         Stock = stocks.FirstOrDefault() ?? new StockPartnerEntity();

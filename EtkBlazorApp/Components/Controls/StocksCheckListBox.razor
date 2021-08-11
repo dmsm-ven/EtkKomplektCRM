@@ -31,8 +31,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        checkedStockPartners = (await manufacturerStorage.GetStockPartners())
-            .OrderBy(i => i.shipment_period)
+        checkedStockPartners = (await manufacturerStorage.GetStocks())
             .ToDictionary(i => i, i => false);
     }
 

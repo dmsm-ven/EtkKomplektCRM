@@ -7,7 +7,7 @@
             <div class="modal-content">
                 <EditForm Model="@newStock" OnValidSubmit="@(e => OnConfirmationChange(newStock))">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="modal-title">Добавление нового склада</h5>
+                        <h5 class="modal-title" id="modal-title">Информация о складе</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"
                                 @onclick="@(e => OnConfirmationChange(null))">
                             <span aria-hidden="true">&times;</span>
@@ -20,12 +20,26 @@
                             <input type="text" id="stock_name" class="form-control" @bind="newStock.Name" required />
                         </div>
                         <div class="form-group">
+                            <label for="city_name">Город</label>
+                            <input type="text" id="city_name" list="city-names"
+                               class="form-control" 
+                               value="@newStock.City"
+                               @onchange="CityChanged"
+                               required />
+                    <datalist id="city-names">
+                        @foreach (var city in stockCities)
+                        {
+                            <option selected="@(newStock.City == city.name)" value="@city.name">@city.name</option>
+                        }
+                    </datalist>
+                        </div>
+                        <div class="form-group">
                             <label for="shipment_period">Срок поставки (дней)</label>
                             <input type="number" min="0" id="shipment_period" class="form-control" @bind="newStock.ShipmentPeriodInDays" required />
                         </div>
                         <div class="form-group">
                             <label for="stock_description">Полное название</label>
-                            <textarea type="text" id="stock_description" class="form-control" @bind="newStock.Description" style="height: 80px;"/>
+                            <textarea type="text" id="stock_description" class="form-control" @bind="newStock.Description" style="height: 80px;" />
                         </div>
                     </div>
 
@@ -37,7 +51,7 @@
                             Отмена
                         </button>
                         <button type="submit" class="btn btn-success">
-                            Добавить
+                            @confirmButtonText
                         </button>
                     </div>
                 </EditForm>
@@ -47,14 +61,36 @@
 }
 @code {
     [Parameter] public EventCallback<StockPartnerViewModel> ConfirmationChanged { get; set; }
+    List<StockCityEntity> stockCities = new List<StockCityEntity>();
 
     StockPartnerViewModel newStock = new StockPartnerViewModel();
     bool isVisible = false;
+    string confirmButtonText = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        stockCities = await manufacturerStorage.GetStockCities();
+    }
 
     public void Show()
     {
+        confirmButtonText = "Добавить склад";
         isVisible = true;
         StateHasChanged();
+    }
+
+    public void Show(StockPartnerViewModel stock)
+    {
+        confirmButtonText = "Обновить склад склад";
+        newStock = stock;
+        isVisible = true;
+        StateHasChanged();
+    }
+
+    private void CityChanged(ChangeEventArgs e)
+    {
+        newStock.City = e.Value.ToString();
+        newStock.CityId = stockCities.FirstOrDefault(sc => sc.name == newStock.City)?.city_id ?? -1;
     }
 
     private async Task OnConfirmationChange(StockPartnerViewModel item)

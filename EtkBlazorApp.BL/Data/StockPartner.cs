@@ -15,5 +15,6 @@
         GedoreTools = 10,
         KvtSu_Kaluga = 11,
         Berger = 12,
+        Hantek = 13,
     }
 }

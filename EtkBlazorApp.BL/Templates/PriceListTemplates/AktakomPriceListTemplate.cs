@@ -9,8 +9,8 @@ namespace EtkBlazorApp.BL.Templates
     [PriceListTemplateGuid("D31FFE97-53BC-41DC-9D54-43FABBC51BCD")]
     public class AktakomPriceListTemplate : CsvPriceListTemplateBase
     {
-        public AktakomPriceListTemplate(string fileName) : base(fileName) 
-        { 
+        public AktakomPriceListTemplate(string fileName) : base(fileName)
+        {
 
         }
 

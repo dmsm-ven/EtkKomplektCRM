@@ -22,12 +22,15 @@ else
             }
             <tr class="footer">
                 <td>
+                    @if(historyItems.Any())
+                    {
                     <span class="oi oi-arrow-left" @onclick="@(e => MoveHistoryTableMonth(-1))"></span>
-                    @DateTime.Now.ToString("MMMM yyyy")
+                    }
+                    @(new DateTime(currentYear, currentMonth, currentDay).ToString("MMMM yyyy"))
                     @if (moveNextButtonIsActive)
                     {
-                        <span class="oi oi-arrow-right" @onclick="@(e => MoveHistoryTableMonth(+1))"></span>
-                        <span class="oi oi-arrow-circle-right" @onclick="@(e => MoveHistoryTableMonth(0))"></span>
+                    <span class="oi oi-arrow-right" @onclick="@(e => MoveHistoryTableMonth(+1))"></span>
+                    <span class="oi oi-arrow-circle-right" @onclick="@(e => MoveHistoryTableMonth(0))"></span>
                     }
                 </td>
                 @for (int day = 1; day <= daysInMoth; day++)
@@ -108,31 +111,38 @@ else
 
     private string GetCellClassForTaskInDay(int id, int day)
     {
-        if (day > currentDay)
+        try
         {
-            return "in-future";
+            var items = historyItems[id].Where(t => t.date_time.Date == new DateTime(currentYear, currentMonth, day));
+
+            if (items.Any())
+            {
+                bool allSuccess = items.All(item => item.exec_result == true);
+                bool allFailed = items.All(item => item.exec_result == false);
+                bool bothResulsts = allSuccess == false && allFailed == false;
+
+                if (allSuccess)
+                {
+                    return "success";
+                }
+                if (allFailed)
+                {
+                    return "failed";
+                }
+                if (bothResulsts)
+                {
+                    return "many-results";
+                }
+
+                if (new DateTime(currentYear, currentMonth, day) > DateTime.Now.Date)
+                {
+                    return "in-future";
+                }
+            }
         }
-
-        var items = historyItems[id].Where(t => t.date_time.Date == new DateTime(currentYear, currentMonth, day));
-
-        if (items.Any())
+        catch
         {
-            bool allSuccess = items.All(item => item.exec_result == true);
-            bool allFailed = items.All(item => item.exec_result == false);
-            bool bothResulsts = allSuccess == false && allFailed == false;
 
-            if (allSuccess)
-            {
-                return "success";
-            }
-            if (allFailed)
-            {
-                return "failed";
-            }
-            if (bothResulsts)
-            {
-                return "many-results";
-            }
         }
 
         return "empty";
@@ -146,7 +156,7 @@ else
         }
         else
         {
-            currentDay = -1;
+            currentDay = 1;
             currentMonth += direction;
             if (currentMonth == 0)
             {
@@ -158,6 +168,11 @@ else
                 currentMonth = 1;
                 currentYear++;
             }
+            if(currentMonth == DateTime.Now.Month && currentYear == DateTime.Now.Year)
+            {
+                currentDay = DateTime.Now.Day;
+            }
+            daysInMoth = DateTime.DaysInMonth(currentYear, currentMonth);
         }
         await RefreshHistoryTableSource();
     }

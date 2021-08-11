@@ -7,6 +7,8 @@ namespace EtkBlazorApp.BL
 {
     public abstract class PriceListTemplateReaderBase
     {
+        //TODO: вынести все эти данные в отдельные таблицы БД
+        //для возможности добавления/обновления данных из личного кабинета
         protected Dictionary<string, string> ManufacturerNameMap { get; private set; }
         protected Dictionary<string, int> QuantityMap { get; private set; }
         protected List<string> ValidManufacturerNames { get; private set; }

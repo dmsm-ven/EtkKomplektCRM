@@ -6,13 +6,12 @@ namespace EtkBlazorApp.DataAccess
 {
     public interface IManufacturerStorage
     {
-        Task SaveManufacturer(ManufacturerEntity manufacturer);
         Task<List<ManufacturerEntity>> GetManufacturers();
         Task<List<StockPartnerManufacturerInfoEntity>> GetManufacturerStockPartners(int manufacturer_id);
 
-        Task SaveStockPartner(StockPartnerEntity stock);
-        Task<List<StockPartnerEntity>> GetStockPartners();
-        Task CreateStock(StockPartnerEntity stock);
+        Task CreateOrUpdateStock(StockPartnerEntity stock);
+        Task<List<StockPartnerEntity>> GetStocks();
+        Task<List<StockCityEntity>> GetStockCities();
         Task<List<StockPartnerLinkedManufacturerInfoEntity>> GetStockManufacturers(int stock_partner_id);
     }
 
@@ -25,14 +24,6 @@ namespace EtkBlazorApp.DataAccess
             this.database = database;
         }
 
-        public async Task SaveManufacturer(ManufacturerEntity manufacturer)
-        {
-            string sql = @"UPDATE oc_manufacturer
-                         SET shipment_period = @shipment_period
-                         WHERE manufacturer_id = @manufacturer_id";
-            await database.ExecuteQuery(sql, manufacturer);
-        }
-
         public async Task<List<ManufacturerEntity>> GetManufacturers()
         {
             string sql = @"SELECT m.*, url.keyword
@@ -42,32 +33,40 @@ namespace EtkBlazorApp.DataAccess
             var manufacturers = await database.GetList<ManufacturerEntity, dynamic>(sql, new { });
             return manufacturers;
         }            
-    
-        public async Task SaveStockPartner(StockPartnerEntity stock)
+   
+        public async Task<List<StockPartnerEntity>> GetStocks()
         {
-            string sql = @"UPDATE oc_stock_partner
-                         SET shipment_period = @shipment_period
-                         WHERE stock_partner_id = @stock_partner_id";
-            await database.ExecuteQuery(sql, stock);
-        }
-
-        public async Task<List<StockPartnerEntity>> GetStockPartners()
-        {
-            string sql = @"SELECT * FROM oc_stock_partner ORDER BY name";
+            string sql = @"SELECT sp.*, sc.name as city
+                          FROM oc_stock_partner sp
+                          LEFT JOIN oc_stock_city sc ON sp.city_id = sc.city_id
+                          ORDER BY sp.shipment_period";
 
             var stocks = await database.GetList<StockPartnerEntity>(sql);
 
             return stocks;
         }
 
-        public async Task CreateStock(StockPartnerEntity stock)
+        public async Task CreateOrUpdateStock(StockPartnerEntity stock)
         {
-            string sql = @"INSERT INTO oc_stock_partner (name, description, shipment_period) VALUES 
-                                                        (@name, @description, @shipment_period)";
-           
+            if(stock.city_id == -1)
+            {
+                await database.ExecuteQuery("INSERT INTO oc_stock_city (name) VALUES (@city)", stock);
+                stock.city_id = await database.GetScalar<int>("SELECT max(city_id) FROM oc_stock_city");
+            }
+            string sql = @"INSERT INTO oc_stock_partner (stock_partner_id, shipment_period, city_id, name, description)
+                         VALUES (@stock_partner_id, @shipment_period, @city_id, @name, @description)
+                         ON DUPLICATE KEY 
+                            UPDATE shipment_period = @shipment_period,
+                            city_id = @city_id,
+                            name = @name,
+                            description = @description";
+
             await database.ExecuteQuery(sql, stock);
 
-            stock.stock_partner_id = await database.GetScalar<int>("SELECT max(stock_partner_id) FROM oc_stock_partner");
+            if (stock.stock_partner_id == 0)
+            {
+                stock.stock_partner_id = await database.GetScalar<int>("SELECT max(stock_partner_id) FROM oc_stock_partner");
+            }
         }
 
         public async Task<List<StockPartnerManufacturerInfoEntity>> GetManufacturerStockPartners(int manufacturer_id)
@@ -99,6 +98,15 @@ namespace EtkBlazorApp.DataAccess
             var linkedBrands = await database.GetList<StockPartnerLinkedManufacturerInfoEntity, dynamic>(sql, new { stock_partner_id });
 
             return linkedBrands;
+        }
+
+        public async Task<List<StockCityEntity>> GetStockCities()
+        {
+            string sql = @"SELECT * FROM oc_stock_city ORDER BY city_id";
+
+            var cities = await database.GetList<StockCityEntity>(sql);
+
+            return cities;
         }
     }
 }
