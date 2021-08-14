@@ -25,7 +25,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Name = name,
                     Model = sku,
                     Sku = sku,
-                    Quantity = quantity
+                    Quantity = quantity,
+                    Stock = StockName.Testo
                 };
 
                 list.Add(priceLine);

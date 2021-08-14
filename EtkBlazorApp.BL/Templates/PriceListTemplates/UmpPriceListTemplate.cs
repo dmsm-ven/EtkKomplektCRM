@@ -23,7 +23,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string sku = tab.GetValue<string>(row, 1);
                 string name = tab.GetValue<string>(row, 2);
                 var quantity = ParseQuantity(tab.GetValue<string>(row, 4));
-                var rrcPrice = ParsePrice(tab.GetValue<string>(row, 7));
+                var rrcPrice = ParsePrice(tab.GetValue<string>(row, 8));
                
                 string manufacturer = GetManufacturerBySkuPrefix(ref sku);
 

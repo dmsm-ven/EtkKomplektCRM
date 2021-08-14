@@ -11,7 +11,18 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("3D41DDC2-BB5C-4D6A-8129-C486BD953A3D")]
     public class MeanWellSilverPriceListTemplate : ExcelPriceListTemplateBase
     {
-        public MeanWellSilverPriceListTemplate(string fileName) : base(fileName) { }
+        public MeanWellSilverPriceListTemplate(string fileName) : base(fileName) 
+        {
+            ValidManufacturerNames.Add("Tianma");
+            ValidManufacturerNames.Add("NEC");
+            ValidManufacturerNames.Add("Mean Well");
+            ValidManufacturerNames.Add("DMC");
+            ValidManufacturerNames.Add("Avalue");
+            ValidManufacturerNames.Add("ICS Components");
+            ManufacturerNameMap["MeanWell"] = "Mean Well";
+            ManufacturerNameMap["ICSComponents"] = "ICS Components";
+            ManufacturerNameMap["SpectrahDynamics"] = "Spectrah Dynamics";
+        }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {
@@ -19,7 +30,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int row = 3; row < tab.Dimension.Rows; row++)
             {
-                string manufacturer = tab.GetValue<string>(row, 1);
+                string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 1));
                 string skuNumber = tab.GetValue<string>(row, 2);
                 int quantityString = tab.GetValue<int>(row, 6);
 
@@ -28,20 +39,19 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
                 decimal priceString = new decimal[] { regularPriceString, discountPriceString }.Max();
 
-                if (manufacturer.Equals("MeanWell", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(skuNumber))
+                if(!ValidManufacturerNames.Contains(manufacturer, StringComparer.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(skuNumber)) { continue; }
+
+                var priceLine = new PriceLine(this)
                 {
-                    var priceLine = new PriceLine(this)
-                    {
-                        Quantity = quantityString,
-                        Currency = CurrencyType.USD,
-                        Price = priceString,
-                        Manufacturer = "Mean Well",
-                        Sku = skuNumber,
-                        Model = skuNumber,
-                        Stock = StockName.Eltech
-                    };
-                    list.Add(priceLine);
-                }
+                    Quantity = quantityString,
+                    Currency = CurrencyType.USD,
+                    Price = priceString,
+                    Manufacturer = manufacturer,
+                    Sku = skuNumber,
+                    Model = skuNumber,
+                    Stock = StockName.Eltech
+                };
+                list.Add(priceLine);
             }
 
             return list;

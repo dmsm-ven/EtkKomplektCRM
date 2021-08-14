@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.BL;
+using EtkBlazorApp.DataAccess.Entity;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,6 +17,6 @@ namespace EtkBlazorApp.BL.CronTask
             this.TaskId = taskId;
         }
         
-        public abstract Task Run();
+        public abstract Task Run(CronTaskEntity taskInfo);
     }
 }

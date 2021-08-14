@@ -17,6 +17,7 @@ namespace EtkBlazorApp.DataAccess.Entity
         public bool enabled { get; set; }
         public TimeSpan exec_time { get; set; }
         public DateTime? last_exec_date_time { get; set; }
-        public bool? last_exec_result { get; set; }
+        public CronTaskExecResult? last_exec_result { get; set; }
+        public int? last_exec_file_size { get; set; }
     }
 }

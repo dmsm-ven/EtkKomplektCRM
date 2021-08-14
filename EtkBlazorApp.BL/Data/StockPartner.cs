@@ -19,5 +19,7 @@
         MkEnergoset = 14,
         Megeon = 15,
         Prist = 16,
+        Testo = 17,
+        Dipaul = 18,
     }
 }

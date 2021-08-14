@@ -42,19 +42,32 @@
         {
             string color = "gray";
             string iconClass = "oi-question-mark";
+            string tooltipText = "Информация отсутствует";
 
-            if (Item.LastExecResult == false)
+            if (Item.LastExecResult.HasValue)
             {
-                color = "darkred";
-                iconClass = "oi-x";
-            }
-            else if (Item.LastExecResult == true)
-            {
-                color = "#50C878";
-                iconClass = "oi-check";
+                switch (Item.LastExecResult.Value)
+                {
+                    case CronTaskExecResult.Failed:
+                        color = "darkred";
+                        iconClass = "oi-x";
+                        tooltipText = "Ошибка выполнения задания";
+                        break;
+                    case CronTaskExecResult.Success:
+                        color = "#50C878";
+                        iconClass = "oi-check";
+                        tooltipText = "Задание успешно выполнено";
+                        break;
+                    case CronTaskExecResult.Skipped:
+                        color = "#50C878";
+                        iconClass = "oi-arrow-thick-right";
+                        tooltipText = "Выполнение задания пропущено - файл загружен но в нем нет новых данных";
+                        break;
+                }
             }
 
-            string result = $"<span class=\"oi {iconClass}\" style=\"color: {color}; font-size: 24px; padding-right: 8px; \" ></span>";
+
+            string result = $"<span class=\"oi {iconClass}\" style=\"color: {color}; font-size: 24px; padding-right: 8px; \" title=\"{tooltipText}\"></span>";
             return (MarkupString)result;
 
         }

@@ -31,18 +31,28 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task SavePrikatTemplate(PrikatReportTemplateEntity template)
         {
-            var sql = @"INSERT INTO etk_app_prikat_template
+            if(template.template_id == 0)
+            {
+                string insertSql = @"INSERT INTO etk_app_prikat_template
                        (manufacturer_id, enabled, discount1, discount2, currency_code)
                        VALUES
-                       (@manufacturer_id, @enabled, @discount1, @discount2, @currency_code)
-                       ON DUPLICATE KEY UPDATE
-                       enabled = @enabled,
-                       discount1 = @discount1,
-                       discount2 = @discount2,
-                       currency_code = @currency_code";
+                       (@manufacturer_id, @enabled, @discount1, @discount2, @currency_code)";
+                await database.ExecuteQuery(insertSql, template);
+                template.template_id = await database.GetScalar<int>("SELECT max(template_id) FROM etk_app_prikat_template");
+            }
+            else
+            {
+                string updateSql = @"UPDATE etk_app_prikat_template
+                                    SET 
+                                        manufacturer_id = @manufacturer_id,
+                                        enabled = @enabled,
+                                        discount1 = @discount1,
+                                        discount2 = @discount2,
+                                        currency_code = @currency_code
+                                    WHERE template_id = @template_id";
 
-
-            await database.ExecuteQuery(sql, template);
+                await database.ExecuteQuery(updateSql, template);
+            }        
         }
 
     }

@@ -10,6 +10,6 @@ namespace EtkBlazorApp.DataAccess.Entity
         public string name { get; set; }
 
         public DateTime date_time { get; set; }
-        public bool exec_result { get; set; }
+        public CronTaskExecResult? exec_result { get; set; }
     }
 }

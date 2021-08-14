@@ -54,7 +54,8 @@ namespace EtkBlazorApp.Pages
                             Discount2 = t.discount2,
                             Manufacturer_id = t.manufacturer_id,
                             Manufacturer = t.manufacturer_name,
-                            CurrencyCode = t.currency_code
+                            CurrencyCode = t.currency_code ?? "RUB",
+                            TemplateId = t.template_id
                         })
                         .ToList();
 
@@ -139,9 +140,12 @@ namespace EtkBlazorApp.Pages
                 discount1 = vmItem.Discount1,
                 discount2 = vmItem.Discount2,
                 enabled = vmItem.IsChecked,
-                currency_code = vmItem.CurrencyCode
+                currency_code = vmItem.CurrencyCode ?? "RUB",
+                template_id = vmItem.TemplateId
             };
+
             await templateStorage.SavePrikatTemplate(dbItem);
+            vmItem.TemplateId = dbItem.template_id;
 
             StateHasChanged();
         }

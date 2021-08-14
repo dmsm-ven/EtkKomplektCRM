@@ -64,7 +64,8 @@ namespace EtkBlazorApp.DataAccess
         {
             string mainTableSql = @"UPDATE etk_app_cron_task
                            SET last_exec_date_time = @last_exec_date_time,
-                               last_exec_result = @last_exec_result
+                               last_exec_result = @last_exec_result,
+                               last_exec_file_size = @last_exec_file_size
                            WHERE task_id = @task_id";
 
             await database.ExecuteQuery(mainTableSql, task);

@@ -720,7 +720,7 @@ app {
 
 @media (min-width: 1200px){
     .price-list-template-outer{
-        max-width: 13%!important;
+        max-width: 25%!important;
     }
 }
 

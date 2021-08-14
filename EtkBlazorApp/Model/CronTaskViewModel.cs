@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.BL;
+using EtkBlazorApp.DataAccess;
 using System;
 using System.ComponentModel.DataAnnotations;
 
@@ -24,7 +25,7 @@ namespace EtkBlazorApp
         public bool IsEnabled { get; set; }
         public string Description { get; set; }
         public DateTime? LastExec { get; set; }
-        public bool? LastExecResult { get; set; }
+        public CronTaskExecResult? LastExecResult { get; set; }
 
         private DateTime executionDateTime = new DateTime();
         public DateTime ExecutionDateTime

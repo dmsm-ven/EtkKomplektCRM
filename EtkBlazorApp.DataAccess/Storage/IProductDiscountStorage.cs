@@ -112,8 +112,8 @@ namespace EtkBlazorApp.DataAccess
                                   IF(p.base_currency_code = 'RUB', 0, {curStatement}), 
                                   DATE(@date_start), DATE(@date_end)
                            FROM oc_product p
-                           JOIN oc_product_to_stock pts ON (p.product_id = pts.product_id AND pts.stock_partner_id = @stock_id)
-                           WHERE (p.status = 1) AND (pts.quantity >= {minQuantity}) AND (p.price > 0 OR p.base_price > 0)";
+                           JOIN oc_product_to_stock pts ON (p.product_id = pts.product_id)
+                           WHERE (p.status = 1) AND (pts.stock_partner_id = @stock_id) AND (pts.quantity >= {minQuantity}) AND (p.price > 0 OR p.base_price > 0)";
 
             await database.ExecuteQuery(sql, discountData);
             await RefreshMainDiscountCategoryProducts();

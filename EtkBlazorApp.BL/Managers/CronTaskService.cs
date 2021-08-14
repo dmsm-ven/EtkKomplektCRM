@@ -101,22 +101,26 @@ namespace EtkBlazorApp.BL
             TaskInProgress = taskInfo;
 
             var sw = Stopwatch.StartNew();
-            bool exec_result = false;
+            CronTaskExecResult exec_result = CronTaskExecResult.Failed;
 
             try
             {
-                await Task.Run(async () => await task.Run());
-                
-                exec_result = true;
+                await Task.Run(async () => await task.Run(taskInfo));
+
+                exec_result = CronTaskExecResult.Success;
 
                 sw.Stop();
                       
                 await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {taskInfo.name} выполнено. Длительность выполнения {(int)sw.Elapsed.TotalSeconds} сек.");
             }
+            catch (CronTaskSkipException)
+            {
+                await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Пропуск", $"Задание '{taskInfo.name}' пропущено т.к. файл уже был загружен прежде");
+                exec_result = CronTaskExecResult.Skipped;
+            }
             catch (Exception ex)
-            {               
+            {
                 await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Ошибка", $"Ошибка выполнения задания '{taskInfo.name}'. {ex.Message}");
-                //...exec_result = false 
             }
             finally
             {
@@ -127,11 +131,12 @@ namespace EtkBlazorApp.BL
                 TaskInProgress = null;
 
                 OnTaskExecutionEnd?.Invoke(taskInfo);
-                if (exec_result)
+
+                if (exec_result == CronTaskExecResult.Success)
                 {
                     OnTaskExecutionSuccess?.Invoke(taskInfo);
                 }
-                else
+                else if(exec_result == CronTaskExecResult.Failed)
                 {
                     OnTaskExecutionError?.Invoke(taskInfo);
                 }

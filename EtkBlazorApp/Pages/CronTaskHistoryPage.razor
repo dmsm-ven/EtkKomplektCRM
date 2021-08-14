@@ -14,29 +14,49 @@ else
                     <td>
                         @historyItems[kvp.Key].FirstOrDefault()?.name
                     </td>
-                    @for (int day = 1; day <= daysInMoth; day++)
+                    @for (int day = 1; day <= daysInSelectedMoth; day++)
                     {
-                        <td class="@GetCellClassForTaskInDay(kvp.Key, day)"></td>
+                        @GetCellForDay(kvp.Key, day)
                     }
                 </tr>
             }
             <tr class="footer">
                 <td>
-                    @if(historyItems.Any())
+                    @if (historyItems.Any())
                     {
-                    <span class="oi oi-arrow-left" @onclick="@(e => MoveHistoryTableMonth(-1))"></span>
+                        <span class="oi oi-arrow-left" @onclick="@(e => MoveHistoryTableMonth(-1))"></span>
                     }
-                    @(new DateTime(currentYear, currentMonth, currentDay).ToString("MMMM yyyy"))
+                    @(new DateTime(selectedYear, selectedMonth, selectedDay).ToString("MMMM yyyy"))
                     @if (moveNextButtonIsActive)
                     {
-                    <span class="oi oi-arrow-right" @onclick="@(e => MoveHistoryTableMonth(+1))"></span>
-                    <span class="oi oi-arrow-circle-right" @onclick="@(e => MoveHistoryTableMonth(0))"></span>
+                        <span class="oi oi-arrow-right" @onclick="@(e => MoveHistoryTableMonth(+1))"></span>
+                        <span class="oi oi-arrow-circle-right" @onclick="@(e => MoveHistoryTableMonth(0))"></span>
                     }
                 </td>
-                @for (int day = 1; day <= daysInMoth; day++)
+                @for (int day = 1; day <= daysInSelectedMoth; day++)
                 {
-                    <td class="@(day == currentDay ? "today" : "")">@day</td>
+                    <td class="@(day == selectedDay ? "today" : "")">@day</td>
                 }
+            </tr>
+            <tr>
+                <td style="height: 40px;" colspan="@(daysInSelectedMoth + 1)"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td colspan="@(daysInSelectedMoth - 1)" style="text-align: left;">&nbsp;задание не выполнялось</td>
+            </tr>
+            <tr>
+                <td></td>
+                @GetExampleCell(CronTaskExecResult.Success)
+            </tr>
+            <tr>
+                <td></td>
+                @GetExampleCell(CronTaskExecResult.Skipped)
+            </tr>
+            <tr>
+                <td></td>
+                @GetExampleCell(CronTaskExecResult.Failed)
             </tr>
         </tbody>
     </table>
@@ -44,6 +64,10 @@ else
 <style>
     #cron-task-history-table td.success {
         background: #50C878;
+    }
+
+    #cron-task-history-table td.skipped {
+        background: antiquewhite;
     }
 
     #cron-task-history-table td.failed {
@@ -55,7 +79,7 @@ else
     }
 
     #cron-task-history-table td.in-future {
-        background: #ececec;
+        background: #50C878;
     }
 
     #cron-task-history-table td.empty {
@@ -79,6 +103,10 @@ else
         vertical-align: middle;
     }
 
+        #cron-task-history-table td:not(:first-child):hover {
+            border: 1px solid lightblue;
+        }
+
     #cron-task-history-table .today {
         background: blue;
         color: white;
@@ -89,12 +117,12 @@ else
 @code {
     Dictionary<int, List<CronTaskHistoryEntity>> historyItems;
 
-    int currentDay;
-    int currentMonth;
-    int currentYear;
-    int daysInMoth;
+    int selectedDay;
+    int selectedMonth;
+    int selectedYear;
+    int daysInSelectedMoth;
 
-    bool moveNextButtonIsActive => (currentMonth < DateTime.Now.Month) || (currentYear < DateTime.Now.Year);
+    bool moveNextButtonIsActive => (selectedMonth < DateTime.Now.Month) || (selectedYear < DateTime.Now.Year);
 
     protected override void OnInitialized()
     {
@@ -109,77 +137,92 @@ else
         }
     }
 
-    private string GetCellClassForTaskInDay(int id, int day)
+    private MarkupString GetCellForDay(int id, int day)
     {
-        try
+        if (!historyItems.ContainsKey(id))
         {
-            var items = historyItems[id].Where(t => t.date_time.Date == new DateTime(currentYear, currentMonth, day));
+            return new MarkupString("<td class=\"empty\"></td>");
+        }
 
-            if (items.Any())
+        var lastExecResultForDay = historyItems[id]
+            .Where(t => t.date_time.Date == new DateTime(selectedYear, selectedMonth, day))
+            .OrderBy(t => t.date_time)
+            .LastOrDefault();
+
+        var data = GetCellOfType(lastExecResultForDay?.exec_result);
+
+        string tooltipText = lastExecResultForDay != null ?
+             $"[{lastExecResultForDay.date_time.ToShortDateString()}] {lastExecResultForDay.name} - {data.toolitipText}" :
+             string.Empty;
+
+        return new MarkupString($"<td class=\"{data.css}\" title=\"{tooltipText}\"></td>");
+    }
+
+    private MarkupString GetExampleCell(CronTaskExecResult kind)
+    {
+        var data = GetCellOfType(kind);
+        int colspan = daysInSelectedMoth - 1;
+        return new MarkupString($"<td class=\"{data.css}\"></td><td style=\"text-align: left;\" colspan=\"{colspan}\">&nbsp;{data.toolitipText}</td>");
+    }
+
+    private (string css, string toolitipText) GetCellOfType(CronTaskExecResult? result)
+    {
+        string cellCss = "empty";
+        string tooltipText = "";
+
+        if (result.HasValue)
+        {
+            cellCss = result.Value.ToString().ToLower();
+
+            switch (result.Value)
             {
-                bool allSuccess = items.All(item => item.exec_result == true);
-                bool allFailed = items.All(item => item.exec_result == false);
-                bool bothResulsts = allSuccess == false && allFailed == false;
-
-                if (allSuccess)
-                {
-                    return "success";
-                }
-                if (allFailed)
-                {
-                    return "failed";
-                }
-                if (bothResulsts)
-                {
-                    return "many-results";
-                }
-
-                if (new DateTime(currentYear, currentMonth, day) > DateTime.Now.Date)
-                {
-                    return "in-future";
-                }
+                case CronTaskExecResult.Failed:
+                    tooltipText = $"ошибка выполнения задания";
+                    break;
+                case CronTaskExecResult.Success:
+                    tooltipText = $"задание успешно выполнено";
+                    break;
+                case CronTaskExecResult.Skipped:
+                    tooltipText = $"выполнение задания пропущено - данный файл уже был загружен раньше";
+                    break;
             }
         }
-        catch
-        {
 
-        }
-
-        return "empty";
+        return new (cellCss, tooltipText);
     }
 
     private async Task MoveHistoryTableMonth(int direction)
     {
-        if(direction == 0)
+        if (direction == 0)
         {
             InitializeCurrentDateVariables();
         }
         else
         {
-            currentDay = 1;
-            currentMonth += direction;
-            if (currentMonth == 0)
+            selectedDay = 1;
+            selectedMonth += direction;
+            if (selectedMonth == 0)
             {
-                currentMonth = 12;
-                currentYear--;
+                selectedMonth = 12;
+                selectedYear--;
             }
-            else if (currentMonth == 13)
+            else if (selectedMonth == 13)
             {
-                currentMonth = 1;
-                currentYear++;
+                selectedMonth = 1;
+                selectedYear++;
             }
-            if(currentMonth == DateTime.Now.Month && currentYear == DateTime.Now.Year)
+            if (selectedMonth == DateTime.Now.Month && selectedYear == DateTime.Now.Year)
             {
-                currentDay = DateTime.Now.Day;
+                selectedDay = DateTime.Now.Day;
             }
-            daysInMoth = DateTime.DaysInMonth(currentYear, currentMonth);
+            daysInSelectedMoth = DateTime.DaysInMonth(selectedYear, selectedMonth);
         }
         await RefreshHistoryTableSource();
     }
 
     private async Task RefreshHistoryTableSource()
     {
-        historyItems = (await storage.GetCronTaskHistoryInfo(month: currentMonth, year: currentYear))
+        historyItems = (await storage.GetCronTaskHistoryInfo(month: selectedMonth, year: selectedYear))
             .GroupBy(h => h.task_id)
             .ToDictionary(t => t.Key, t => t.ToList());
         StateHasChanged();
@@ -187,9 +230,9 @@ else
 
     private void InitializeCurrentDateVariables()
     {
-        currentDay = DateTime.Now.Day;
-        currentMonth = DateTime.Now.Month;
-        currentYear = DateTime.Now.Year;
-        daysInMoth = DateTime.DaysInMonth(currentYear, currentMonth);
+        selectedDay = DateTime.Now.Day;
+        selectedMonth = DateTime.Now.Month;
+        selectedYear = DateTime.Now.Year;
+        daysInSelectedMoth = DateTime.DaysInMonth(selectedYear, selectedMonth);
     }
 }
