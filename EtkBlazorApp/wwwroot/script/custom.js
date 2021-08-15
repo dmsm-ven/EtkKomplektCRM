@@ -14,3 +14,9 @@
 function getUserInfo() {
     return $.getJSON('https://api.db-ip.com/v2/free/self');
 }
+
+window.CookieFunction = {
+    acceptMessage: function (cookieString) {
+        document.cookie = cookieString;
+    }
+}; 

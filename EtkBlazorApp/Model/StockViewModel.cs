@@ -29,6 +29,8 @@ namespace EtkBlazorApp
         [StringLength(128)]
         public string Email { get; set; }
 
+        public bool ShowNameForAll { get; set; }
+
         [Range(0, 365, ErrorMessage = "Срок поставки (в днях) должен быть от 0 до 365")]
         public int ShipmentPeriodInDays { get; set; }
 

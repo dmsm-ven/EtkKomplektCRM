@@ -147,7 +147,8 @@ else
                 CityId = model.city_id,
                 Address = model.address,
                 PhoneNumber = model.phone_number,
-                Email = model.email
+                Email = model.email,
+                ShowNameForAll = model.show_name_for_all
             })
             .ToList();
             StateHasChanged();
@@ -189,7 +190,8 @@ else
                 name = data.Name,
                 phone_number = data.PhoneNumber,
                 address = data.Address,
-                email = data.Email
+                email = data.Email,
+                show_name_for_all = data.ShowNameForAll
             };
 
             if (data.Id == 0)

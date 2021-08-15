@@ -53,6 +53,10 @@
                             <label for="stock_email">Email</label>
                             <input type="email" id="stock_email" class="form-control" @bind="newStock.Email" />
                         </div>
+                        <div class="form-group">
+                            <input type="checkbox" id="stock_show_name_for_all" @bind="newStock.ShowNameForAll" />
+                            <label for="stock_show_name_for_all" style="font-size: 11px;">Отображать название склада в карточке товара для всех пользователей</label>
+                        </div>
                     </div>
 
                     <DataAnnotationsValidator />

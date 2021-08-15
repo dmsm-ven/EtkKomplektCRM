@@ -1,6 +1,8 @@
 using EtkBlazorApp.DataAccess;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.JSInterop;
+using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -11,16 +13,19 @@ namespace EtkBlazorApp.Services
     {
         private readonly IAuthenticationDataStorage auth;
         private readonly IUserInfoChecker userInfoChecker;
+        private readonly IJSRuntime js;
         private readonly ProtectedLocalStorage storage;
 
         public MyCustomAuthProvider(
             IAuthenticationDataStorage auth,
             IUserInfoChecker userInfoChecker,
+            IJSRuntime js,
             ProtectedLocalStorage storage)
         {
             this.storage = storage;
             this.auth = auth;
             this.userInfoChecker = userInfoChecker;
+            this.js = js;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -69,13 +74,24 @@ namespace EtkBlazorApp.Services
             var user = new ClaimsPrincipal(identity);
             var state = new AuthenticationState(user);
 
+           
+
             NotifyAuthenticationStateChanged(Task.FromResult(state));
 
             await auth.UpdateUserLastLoginDate(userData.Login);
 
+            SetUserCookie(userData.Login);
+
             return state;
-        }  
-        
+        }
+
+        //если юзер активен в ЛК то отображать склады на странице товара
+        private void SetUserCookie(string name)
+        {
+            string cookieString = $"lk_user={name}; expires=9999-12-31T23:59:59.000Z;path=/;domain=etk-komplekt.ru";
+            js.InvokeVoidAsync("CookieFunction.acceptMessage", cookieString);
+        }
+
         public async Task LogOutUser()
         {                      
             await storage.DeleteAsync("user_login");
