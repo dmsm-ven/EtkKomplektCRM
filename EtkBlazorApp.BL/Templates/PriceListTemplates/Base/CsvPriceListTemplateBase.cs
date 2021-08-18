@@ -19,7 +19,7 @@ namespace EtkBlazorApp.BL
         protected async Task<List<string[]>> ReadCsvLines(char cellSeparator = '\t', Encoding encoding = null)
         {
             var lines = await Task.Run(() => File.ReadAllLines(FileName, encoding ?? Encoding.Default)
-                  .Select(line => line.Split(cellSeparator))
+                  .Select(line => line.Split(cellSeparator).Select(cell => cell.Trim('"')).ToArray())
                   .ToList());
 
             return lines;

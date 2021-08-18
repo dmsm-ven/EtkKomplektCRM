@@ -51,7 +51,6 @@ namespace EtkBlazorApp.BL
                     Price = (priceInCurrency.HasValue && priceCurreny != CurrencyType.RUB) ? priceInCurrency : priceInRub,                   
                     Currency = priceCurreny,
                     Quantity = quantity,
-                    //StockPartner = manufacturer.Equals("TDK-Lambda") ? StockPartner.
                 };
 
                 list.Add(priceLine);

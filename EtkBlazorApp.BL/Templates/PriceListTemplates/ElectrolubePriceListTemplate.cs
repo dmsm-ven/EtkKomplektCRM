@@ -6,27 +6,25 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
-    [PriceListTemplateGuid("003F2DB1-34AB-4B98-9742-1708E3C6C0A7")]
-    public class EinhellPriceListTemplate : ExcelPriceListTemplateBase
+    [PriceListTemplateGuid("7F3DE005-28A6-4E02-9148-EF068B40C4E8")]
+    public class ElectrolubePriceListTemplate : ExcelPriceListTemplateBase
     {
-        public EinhellPriceListTemplate(string fileName) : base(fileName) { }
+        public ElectrolubePriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {
             var list = new List<PriceLine>();
 
-            for(int row = 3; row < tab.Dimension.Rows; row++)
+            for(int row = 2; row < tab.Dimension.Rows; row++)
             {
-                string skuNumber = "EIN-" + tab.GetValue<string>(row, 2);
-                string name = tab.GetValue<string>(row, 3);
-                var quantity = ParseQuantity(tab.GetValue<string>(row, 4));
+                string skuNumber = tab.GetValue<string>(row, 1);
+                var quantity = ParseQuantity(tab.GetValue<string>(row, 2));
 
                 var priceLine = new PriceLine(this)
                 {
-                    Manufacturer = "Einhell",
-                    Stock = StockName.Einhell,
+                    Manufacturer = "Electrolube",
+                    Stock = StockName.Borel,
                     Sku = skuNumber,
-                    Name = name,
                     Model = skuNumber,
                     Quantity = quantity
                 };

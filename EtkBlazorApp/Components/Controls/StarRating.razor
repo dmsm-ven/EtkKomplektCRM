@@ -1,0 +1,36 @@
+﻿<div class="star-rating-outer">
+    @for(int i = 0; i < MaxRating; i++)
+    {
+        int loopRating = i + 1;
+        <button class="btn btn-sm" 
+                type="button"
+                style="border: 0px; outline: none; outline-width: 0; background: transparent; font-size: @($"{StarSize}px"); padding: 2px; display: inline-block;" 
+                @onclick="@(async (e) => await StarClicked(loopRating))">
+            <span class="oi oi-star" style="color: @GetColorForRating(loopRating)"></span>
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public int Rating { get; set; }
+    [Parameter] public EventCallback<int> RatingChanged { get; set; }
+    [Parameter] public int MaxRating { get; set; } = 5;
+    [Parameter] public int StarSize { get; set; } = 18;
+    [Parameter] public bool IsReadOnly { get; set; } = false;
+
+
+
+    private async Task StarClicked(int clickedRating)
+    {
+        if (IsReadOnly) { return; }
+        Rating = clickedRating;
+        await RatingChanged.InvokeAsync(Rating);
+        StateHasChanged();
+    }
+
+    private string GetColorForRating(int rating)
+    {
+        return rating > Rating ? "Lightgray" : "Gold";
+    }
+
+}

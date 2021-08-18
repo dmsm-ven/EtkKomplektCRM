@@ -39,5 +39,8 @@ namespace EtkBlazorApp.BL
 
         [Description("Скидки")]
         Discounts,
+
+        [Description("Партнеры")]
+        Partners,
     }
 }

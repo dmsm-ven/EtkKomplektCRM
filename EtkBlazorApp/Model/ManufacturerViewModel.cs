@@ -5,7 +5,7 @@ namespace EtkBlazorApp
 {
     public class ManufacturerViewModel
     {
-        public int Id { get; }
+        public int Id { get; set; }
         public string name { get; set; }
         public string keyword { get; set; }
         public int ShipmentPeriodInDays { get; set; }
@@ -17,11 +17,5 @@ namespace EtkBlazorApp
         public DateTime NextShipmentDate => ShipmentPeriodInDays > 0 ?
             DateTime.Now.AddDays(ShipmentPeriodInDays).Date :
             DateTime.Now.Date;
-
-        public ManufacturerViewModel(int id, int shipmentPeriod)
-        {
-            Id = id;
-            ShipmentPeriodInDays = OldShipmentPeriod = shipmentPeriod;
-        }
     }
 }

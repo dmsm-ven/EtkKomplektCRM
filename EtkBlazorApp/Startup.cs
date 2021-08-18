@@ -58,6 +58,7 @@ namespace EtkBlazorApp
         private void ConfigureDatabaseServices(IServiceCollection services)
         {
             services.AddTransient<IDatabaseAccess, EtkDatabaseDapperAccess>();
+            services.AddTransient<IPartnersInformationService, PartnersInformationService>();
             services.AddTransient<IProductDiscountStorage, ProductDiscountStorage>();
             services.AddTransient<IOzonSellerDiscountStorage, OzonSellerDiscountStorage>();
             services.AddTransient<IProductStorage, ProductStorage>();

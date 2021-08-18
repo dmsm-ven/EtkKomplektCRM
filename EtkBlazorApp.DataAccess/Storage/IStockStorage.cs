@@ -53,8 +53,8 @@ namespace EtkBlazorApp.DataAccess
                 await database.ExecuteQuery("INSERT INTO oc_stock_city (name) VALUES (@city)", stock);
                 stock.city_id = await database.GetScalar<int>("SELECT max(city_id) FROM oc_stock_city");
             }
-            string sql = @"INSERT INTO oc_stock_partner (stock_partner_id, shipment_period, city_id, name, description, phone_number, address, email, show_name_for_all)
-                         VALUES (@stock_partner_id, @shipment_period, @city_id, @name, @description, @phone_number, @address, @email, @show_name_for_all)
+            string sql = @"INSERT INTO oc_stock_partner (stock_partner_id, shipment_period, city_id, name, description, phone_number, address, email, website, show_name_for_all)
+                         VALUES (@stock_partner_id, @shipment_period, @city_id, @name, @description, @phone_number, @address, @email, @website, @show_name_for_all)
                          ON DUPLICATE KEY 
                             UPDATE shipment_period = @shipment_period,
                             city_id = @city_id,
@@ -63,6 +63,7 @@ namespace EtkBlazorApp.DataAccess
                             phone_number = @phone_number,
                             address = @address,
                             email = @email,
+                            website = @website,
                             show_name_for_all = @show_name_for_all";
 
             await database.ExecuteQuery(sql, stock);

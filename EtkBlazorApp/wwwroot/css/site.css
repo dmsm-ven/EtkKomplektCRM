@@ -28,6 +28,12 @@
     padding: 30px 5px;
 }
 
+.partner-list-item {
+    cursor: pointer; 
+    font-size: 16px; 
+    padding: 4px 6px;
+}
+
 .file-input-zone {
     position: relative;
     width: 225px;
@@ -425,6 +431,12 @@ input[type='radio'], input[type='checkbox'] {
 .new-order-row {
     animation: highlight-new-order-row-animation 60s;
     animation-timing-function: ease-in;
+}
+
+.partner-last-access-date-time-changed-blink {
+    animation: blink-animation 1.5s;
+    animation-timing-function: linear;
+    animation-iteration-count: 3;
 }
 
 @keyframes highlight-new-order-row-animation {

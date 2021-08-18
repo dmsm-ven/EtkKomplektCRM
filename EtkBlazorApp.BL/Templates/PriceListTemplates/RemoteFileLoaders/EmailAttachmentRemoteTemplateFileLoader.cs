@@ -53,9 +53,9 @@ namespace EtkBlazorApp.BL
 
                 return new RemoteTemplateFileResponse(bytes, fileName);
             }
-            catch(Exception ex)
+            catch
             {
-                throw ex;
+                throw;
             }
             finally
             {
