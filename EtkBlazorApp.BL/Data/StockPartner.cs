@@ -27,5 +27,6 @@
         UnitServis = 21,
         Sfbel = 22,
         CEM = 23,
+        FIT = 24,
     }
 }

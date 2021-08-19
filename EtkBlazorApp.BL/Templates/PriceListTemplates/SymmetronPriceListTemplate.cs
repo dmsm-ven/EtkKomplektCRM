@@ -9,6 +9,7 @@ namespace EtkBlazorApp.BL
         public SymmetronPriceListTemplate(string fileName) : base(fileName) 
         {
             SkipManufacturerNames.Add("Mean Well");
+            SkipManufacturerNames.Add("FIT");
 
             ManufacturerNameMap["Pro'skit"] = "Pro'sKit";
             ManufacturerNameMap["TIANMA Europe GmbH"] = "Tianma";

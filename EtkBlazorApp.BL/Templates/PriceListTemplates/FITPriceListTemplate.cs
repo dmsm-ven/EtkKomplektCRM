@@ -34,6 +34,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 var priceLine = new PriceLine(this)
                 {
                     Manufacturer = manufacturer,
+                    Stock = StockName.FIT,
                     Price = price,
                     Currency = CurrencyType.RUB,
                     Sku = skuNumber,
