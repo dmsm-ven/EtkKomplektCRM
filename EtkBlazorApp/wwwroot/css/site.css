@@ -451,6 +451,11 @@ input[type='radio'], input[type='checkbox'] {
     animation-iteration-count: 3;
 }
 
+.new-log-item-blink {
+    animation: highlight-new-order-row-animation 5s;
+    animation-timing-function: ease-in;
+}
+
 @keyframes highlight-new-order-row-animation {
     /* You could think of as "step 1" */
     0% {
