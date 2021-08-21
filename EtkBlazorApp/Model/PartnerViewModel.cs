@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace EtkBlazorApp
 {
@@ -31,7 +32,7 @@ namespace EtkBlazorApp
         {
             get 
             {
-                if(CheckedManufacturers.Count == 0)
+                if(DiscountBrandsInfo.Count == 0)
                 {
                     return "Необходимо выбрать хотя бы одного производителя";
                 }
@@ -45,6 +46,30 @@ namespace EtkBlazorApp
             }
         }
 
-        public List<ManufacturerViewModel> CheckedManufacturers { get; set; } = new List<ManufacturerViewModel>();
+        public List<DateTime> RequestHistory { get; set; } = new List<DateTime>();
+
+        public List<PartnerManufacturerDiscountItemViewModel> DiscountBrandsInfo { get; set; } = new List<PartnerManufacturerDiscountItemViewModel>();
+    
+        public bool HasItem(PartnerManufacturerDiscountItemViewModel item)
+        {
+            return DiscountBrandsInfo.FirstOrDefault(i => i.ManufacturerId == item.ManufacturerId) != null;
+        }
+
+        public void RemoveItem(PartnerManufacturerDiscountItemViewModel item)
+        {
+            var itemToRemove = DiscountBrandsInfo.FirstOrDefault(i => i.ManufacturerId == item.ManufacturerId);
+            if(itemToRemove != null)
+            {
+                DiscountBrandsInfo.Remove(itemToRemove);
+            }
+        }
+    }
+
+    public class PartnerManufacturerDiscountItemViewModel
+    {
+        public string ManufacturerName { get; set; }
+        public Guid PartnerGuid { get; set; }
+        public int ManufacturerId { get; set; }
+        public decimal? Discount { get; set; }
     }
 }

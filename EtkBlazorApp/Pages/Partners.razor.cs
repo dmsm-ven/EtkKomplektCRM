@@ -1,6 +1,7 @@
 ﻿using EtkBlazorApp.BL;
 using EtkBlazorApp.Components.Dialogs;
 using EtkBlazorApp.DataAccess.Entity;
+using Microsoft.AspNetCore.Components.Web;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,35 +12,22 @@ namespace EtkBlazorApp.Pages
 {
     public partial class Partners
     {
+        ConfirmDialog deleteDialog;
+        ConfirmDialog changePasswordDialog;
+        CustomDataDialog historyRequestDialog;
+        Timer lastAccessRefreshTimer;
+
+        bool blinkLastAccessLabel = false;
         List<PartnerViewModel> partners = null;
         List<ManufacturerViewModel> manufacturers = null;
         PartnerViewModel selectedPartner = null;
-        ConfirmDialog deleteDialog;
-        ConfirmDialog changePasswordDialog;
-
-        Timer lastAccessRefreshTimer;
+        PartnerManufacturerDiscountItemViewModel editingDiscount = null;
 
         bool isNewPartner => selectedPartner.Id == Guid.Empty;
-        bool blinkLastAccessLabel = false;
-
+ 
         protected override void OnInitialized()
         {
             lastAccessRefreshTimer = new Timer(UpdateLastAccessLabel, null, 0, 5000);
-        }
-
-        private async void UpdateLastAccessLabel(object timer)
-        {
-            string guid = selectedPartner?.Id.ToString();
-            if(string.IsNullOrWhiteSpace(guid) || guid == Guid.Empty.ToString()) { return; }
-
-            var lastAccess = await partnerService.GetPartnerLastAccessDateTime(guid);
-            if(selectedPartner.PriceListLastAccessDateTime != lastAccess)
-            {
-                blinkLastAccessLabel = true;
-                selectedPartner.PriceListLastAccessDateTime = lastAccess;
-                await InvokeAsync(StateHasChanged);
-                blinkLastAccessLabel = false;
-            }
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -63,7 +51,7 @@ namespace EtkBlazorApp.Pages
                     Priority = p.priority,
                     Updated = p.updated,
                     Website = p.website
-                })                
+                })
                 .OrderByDescending(p => p.Priority)
                 .ThenByDescending(p => p.Discount)
                 .ToList();
@@ -78,7 +66,6 @@ namespace EtkBlazorApp.Pages
             }
 
             StateHasChanged();
-
         }
 
         private async Task OnPartnerChanged(PartnerViewModel newPartner)
@@ -87,46 +74,57 @@ namespace EtkBlazorApp.Pages
 
             await settingsStorage.SetValue("last_viewed_partner_id", newPartner.Id.ToString());
 
-            newPartner.CheckedManufacturers = (await partnerService.GetPartnerManufacturers(newPartner.Id.ToString()))
-                .Select(m => new ManufacturerViewModel()
+            newPartner.DiscountBrandsInfo = (await partnerService.GetPartnerManufacturers(newPartner.Id.ToString()))
+                .Select(m => new PartnerManufacturerDiscountItemViewModel()
                 {
-                    Id = m.manufacturer_id,
-                    name = m.name
+                    PartnerGuid = Guid.Parse(m.partner_id),
+                    ManufacturerId = m.manufacturer_id,
+                    ManufacturerName = m.name,
+                    Discount = m.discount
                 })
                 .ToList();
             selectedPartner = newPartner;
         }
 
-        private Dictionary<ManufacturerViewModel, bool> OrderedManufacturersForSelectedPartner
+        private List<PartnerManufacturerDiscountItemViewModel> ManufacturerButtonsSource
         {
             get
             {
-                var data = manufacturers.Select(m => new
-                {
-                    Manufacturer = m,
-                    IsChecked = selectedPartner.CheckedManufacturers?.FirstOrDefault(ma => ma.Id == m.Id) != null
-                })
-                .OrderBy(d => d.IsChecked ? 0 : 1)
-                .ToDictionary(i => i.Manufacturer, j => j.IsChecked);
+                var data = manufacturers
+                    .Select(m => new PartnerManufacturerDiscountItemViewModel()
+                    {
+                        PartnerGuid = selectedPartner.Id,
+                        Discount = selectedPartner.DiscountBrandsInfo.FirstOrDefault(b => b.ManufacturerId == m.Id)?.Discount,
+                        ManufacturerId = m.Id,
+                        ManufacturerName = m.name
+                    })
+                    .OrderBy(d => selectedPartner.DiscountBrandsInfo.FirstOrDefault(b => b.ManufacturerId == d.ManufacturerId) == null ? 1 : 0)
+                    .ToList();
 
                 return data;
             }
         }
 
-        private async Task OnManufacturerButtonClick(ManufacturerViewModel manufacturer, bool isChecked)
+        private async Task RemoveBrandDiscount(PartnerManufacturerDiscountItemViewModel item)
         {
-            if (isChecked)
-            {
-                var item = selectedPartner.CheckedManufacturers.FirstOrDefault(m => m.Id == manufacturer.Id);
-                selectedPartner.CheckedManufacturers.Remove(item);
-                await partnerService.RemoveManufacturerFromPartner(selectedPartner.Id.ToString(), manufacturer.Id);
-            }
-            else
-            {
-                selectedPartner.CheckedManufacturers.Add(manufacturer);
-                await partnerService.AddManufacturerToPartner(selectedPartner.Id.ToString(), manufacturer.Id);
-            }
+            selectedPartner.RemoveItem(item);
+            await partnerService.RemoveManufacturerFromPartner(item.PartnerGuid.ToString(), item.ManufacturerId);
             StateHasChanged();
+        }
+
+        private async Task AddAndSaveBrandDiscount(PartnerManufacturerDiscountItemViewModel item)
+        {       
+            if (!selectedPartner.HasItem(item))
+            {
+                selectedPartner.DiscountBrandsInfo.Add(item);
+            }
+
+            if(item?.Discount != null && item.Discount.Value == selectedPartner.Discount)
+            {
+                item = null;
+            }
+            await partnerService.AddManufacturerToPartner(item.PartnerGuid.ToString(), item.ManufacturerId, item?.Discount);
+            editingDiscount = null;
         }
 
         private async Task GeneratePassword()
@@ -205,7 +203,48 @@ namespace EtkBlazorApp.Pages
             }
             selectedPartner.Updated = dt;
         }
-    
+
+        private void BrandDiscountLabelClicked(PartnerManufacturerDiscountItemViewModel item)
+        {
+            if (editingDiscount?.ManufacturerId == item.ManufacturerId) 
+            {
+                editingDiscount = null;
+            }
+            else
+            {
+                editingDiscount = selectedPartner.DiscountBrandsInfo.FirstOrDefault(i => i.ManufacturerId == item.ManufacturerId);
+                editingDiscount.Discount = item.Discount.HasValue ? (int)item.Discount : (int)selectedPartner.Discount;
+            }
+            StateHasChanged();
+        }
+
+        private void ChangeSelectedBrandDiscount(int direction)
+        {
+            editingDiscount.Discount += direction;
+            StateHasChanged();
+        }
+
+        private async void UpdateLastAccessLabel(object timer)
+        {
+            string guid = selectedPartner?.Id.ToString();
+            if (string.IsNullOrWhiteSpace(guid) || guid == Guid.Empty.ToString()) { return; }
+
+            var lastAccess = await partnerService.GetPartnerLastAccessDateTime(guid);
+            if (selectedPartner.PriceListLastAccessDateTime != lastAccess)
+            {
+                blinkLastAccessLabel = true;
+                selectedPartner.PriceListLastAccessDateTime = lastAccess;
+                await InvokeAsync(StateHasChanged);
+                blinkLastAccessLabel = false;
+            }
+        }
+
+        private async Task ShowHistoryDialog()
+        {
+            selectedPartner.RequestHistory = await partnerService.GetPartnerRequestHistory(selectedPartner.Id.ToString(), limit: 100);
+            historyRequestDialog.Show();
+        }
+
         public void Dispose()
         {
             lastAccessRefreshTimer?.Dispose();

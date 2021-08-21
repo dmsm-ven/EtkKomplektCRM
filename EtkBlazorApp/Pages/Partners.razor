@@ -25,7 +25,6 @@ else
             <p style="margin: 1px;"><StarRating @bind-Rating="selectedPartner.Priority" /></p>
         </div>
 
-
         <EditForm Model="@selectedPartner" OnValidSubmit="@(e => OnPartnerChangeSubmitted())">
             <DataAnnotationsValidator />
             <ValidationSummary />
@@ -60,6 +59,7 @@ else
                 </label>
                 <input type="text" id="website" class="form-control" @bind="selectedPartner.Website" />
             </div>
+           
             <div class="form-group">
                 <label for="description">Примечание</label>
                 <textarea type="text" id="description" class="form-control" @bind="selectedPartner.Description" style="height: 60px;" />
@@ -120,6 +120,7 @@ else
                     <span class="@(blinkLastAccessLabel ? "partner-last-access-date-time-changed-blink" : "")" style="color: #2937e2;">
                         @selectedPartner.PriceListLastAccessDateTime.Value.ToString("g")
                     </span>
+                    <span class="oi oi-spreadsheet px-1" style="color: blue;" @onclick="ShowHistoryDialog"></span>
                 </p>
                 }
             </div>
@@ -128,13 +129,40 @@ else
                 <label class="my-2">Какие бренды выгружать для данного партнера</label>
                 <hr />
                 <div>
-                    @foreach (var kvp in OrderedManufacturersForSelectedPartner)
+                    @foreach (var brand_info in ManufacturerButtonsSource)
                     {
-                    <button type="button"
-                            class="btn @(kvp.Value ? "btn-primary" : "btn-outline-primary") mx-1 my-2"
-                            @onclick="@(e => OnManufacturerButtonClick(kvp.Key, kvp.Value))">
-                        @kvp.Key.name
-                    </button>
+                        if (selectedPartner.HasItem(brand_info))
+                        {
+                            <button type="button" class="btn btn-primary mx-1 my-2">
+                                <span class="oi oi-trash partner-brand-label" 
+                                      @onclick="(e => RemoveBrandDiscount(brand_info))">
+                                </span>
+
+                                @brand_info.ManufacturerName
+
+                                @if (editingDiscount?.ManufacturerId == brand_info.ManufacturerId)
+                                {
+                                    <span class="oi oi-minus partner-brand-label" @onclick="@(e => ChangeSelectedBrandDiscount(-1))"></span>
+                                    <span @onclick="@(e => AddAndSaveBrandDiscount(brand_info))"> @($"{(brand_info?.Discount ?? selectedPartner.Discount).ToString("F0")}%")</span>
+                                    <span class="oi oi-plus partner-brand-label" @onclick="@(e => ChangeSelectedBrandDiscount(+1))"></span>
+                                }
+                                else if (selectedPartner.HasItem(brand_info))
+                                {
+                                    <span class="partner-brand-label"
+                                          @onclick="(e => BrandDiscountLabelClicked(brand_info))">
+                                       @($"{(brand_info?.Discount ?? selectedPartner.Discount).ToString("F0")}%")
+                                    </span>
+                                }
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" 
+                                    @onclick="@(e => AddAndSaveBrandDiscount(brand_info))"
+                                    class="btn btn-sm btn-outline-primary mx-1 my-2">
+                                @brand_info.ManufacturerName
+                            </button>
+                        }
                     }
                 </div>
                 <hr />
@@ -169,7 +197,6 @@ else
                 style="color: @(partner==selectedPartner ? "white" : "#007bff")"
                 @onclick="@(async e => await OnPartnerChanged(partner))">
                 <span>@partner.Name</span>
-                <span class="d-md-none d-lg-block float-right">@partner.Discount.ToString(".##")%</span>
             </li>
             }
         </ul>
@@ -186,3 +213,19 @@ else
                ConfirmationChanged="PasswordDialogStatusChanged"
                ConfirmationTitle="Подтверждение"
                ConfirmationMessage="@(() => $"Подтвердите смену пароля для партнера '{selectedPartner.Name}'. После смены пароля он сможет получать прайс-лист только по новой ссылке")" />
+
+<CustomDataDialog @ref="historyRequestDialog" 
+                  ConfirmationTitle="Последние запросы прайс-листа">
+    <DialogBody>
+        <div class="table-responsive">
+            <table class="table table-condensed table-bordered" style="text-align: center; color: indigo;">
+                @foreach (var dt in selectedPartner.RequestHistory)
+                {
+                    <tr>
+                        <td>@dt.ToString("g")</td>
+                    </tr>
+                }
+            </table>
+        </div>
+    </DialogBody>
+</CustomDataDialog>

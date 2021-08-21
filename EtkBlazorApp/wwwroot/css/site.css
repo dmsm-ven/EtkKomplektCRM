@@ -1,6 +1,18 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+.partner-brand-label {
+    font-size: 14px;
+    color: white;
+    font-weight: bold;
+    padding: 2px 4px 2px 6px;
+}
+
+    .partner-brand-label:hover {
+        color: yellow;
+        transition: 100ms;
+    }
+
 #product-discounts td, #product-discounts th {
     font-size: 13px;
     vertical-align: middle;

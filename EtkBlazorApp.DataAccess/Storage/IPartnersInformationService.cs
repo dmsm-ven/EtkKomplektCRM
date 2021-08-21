@@ -9,14 +9,15 @@ namespace EtkBlazorApp.DataAccess
 {
     public interface IPartnersInformationService
     {
-        Task<List<PartnerEntity>> GetAllPartners();
-        Task<DateTime?> GetPartnerLastAccessDateTime(string guid);
+        Task<List<PartnerEntity>> GetAllPartners();        
         Task AddOrUpdatePartner(PartnerEntity partner);
         Task DeletePartner(string guid);
+        Task<DateTime?> GetPartnerLastAccessDateTime(string guid);
+        Task<List<DateTime>> GetPartnerRequestHistory(string guid, int limit);
 
-        Task AddManufacturerToPartner(string partner_id, int manufacturer_id);
+        Task AddManufacturerToPartner(string partner_id, int manufacturer_id, decimal? discount);
         Task RemoveManufacturerFromPartner(string partner_id, int manufacturer_id);
-        Task<List<ManufacturerEntity>> GetPartnerManufacturers(string partner_id);
+        Task<List<PartnerManufacturerDiscountEntity>> GetPartnerManufacturers(string partner_id);
     }
 
     public class PartnersInformationService : IPartnersInformationService
@@ -65,10 +66,13 @@ namespace EtkBlazorApp.DataAccess
             await database.ExecuteQuery("DELETE FROM etk_app_partner WHERE id = @partner_id", new { partner_id });
         }
 
-        public async Task AddManufacturerToPartner(string partner_id, int manufacturer_id)
+        public async Task AddManufacturerToPartner(string partner_id, int manufacturer_id, decimal? discount)
         {
-            string sql = "INSERT INTO etk_app_partner_checked_brand (partner_id, manufacturer_id) VALUES (@partner_id, @manufacturer_id)";
-            await database.ExecuteQuery(sql, new { partner_id, manufacturer_id });
+            string sql = @"INSERT INTO etk_app_partner_checked_brand (partner_id, manufacturer_id, discount) 
+                          VALUES (@partner_id, @manufacturer_id, @discount)
+                          ON DUPLICATE KEY UPDATE discount = @discount";
+
+            await database.ExecuteQuery(sql, new { partner_id, manufacturer_id, discount });
             await database.ExecuteQuery("UPDATE etk_app_partner SET updated = NOW() WHERE id = @partner_id", new { partner_id });
         }
 
@@ -79,13 +83,14 @@ namespace EtkBlazorApp.DataAccess
             await database.ExecuteQuery("UPDATE etk_app_partner SET updated = NOW() WHERE id = @partner_id", new { partner_id });
         }
 
-        public async Task<List<ManufacturerEntity>> GetPartnerManufacturers(string partner_id)
+        public async Task<List<PartnerManufacturerDiscountEntity>> GetPartnerManufacturers(string partner_id)
         {
-            string sql = @"SELECT m.*
+            string sql = @"SELECT p.*, m.name
                            FROM etk_app_partner_checked_brand p                        
                            JOIN oc_manufacturer m ON (p.manufacturer_id = m.manufacturer_id)
                            WHERE p.partner_id = @partner_id";
-            var data = await database.GetList<ManufacturerEntity, dynamic>(sql, new { partner_id });
+
+            var data = await database.GetList<PartnerManufacturerDiscountEntity, dynamic>(sql, new { partner_id });
 
             return data;
         }
@@ -94,6 +99,13 @@ namespace EtkBlazorApp.DataAccess
         {
             string sql = "SELECT date_time FROM etk_app_partner_request_history WHERE partner_id = @partner_id ORDER BY date_time DESC LIMIT 1";
             var dt = await database.GetScalar<DateTime?, dynamic>(sql, new { partner_id });
+            return dt;
+        }
+
+        public async Task<List<DateTime>> GetPartnerRequestHistory(string partner_id, int limit)
+        {
+            string sql = "SELECT date_time FROM etk_app_partner_request_history WHERE partner_id = @partner_id ORDER BY date_time DESC LIMIT @limit";
+            var dt = await database.GetList<DateTime, dynamic>(sql, new { partner_id, limit });
             return dt;
         }
     }

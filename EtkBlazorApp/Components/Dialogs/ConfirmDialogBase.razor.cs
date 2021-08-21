@@ -9,7 +9,7 @@ namespace EtkBlazorApp.Components
         protected bool ShowConfirmation { get; set; }
 
         [Parameter]
-        public string ConfirmationTitle { get; set; } 
+        public string ConfirmationTitle { get; set; }
 
         [Parameter]
         public Func<string> ConfirmationMessage { get; set; }

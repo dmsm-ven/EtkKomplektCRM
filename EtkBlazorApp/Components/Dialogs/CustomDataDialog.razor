@@ -1,0 +1,50 @@
+﻿@if (ShowConfirmation)
+{
+    <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">@ConfirmationTitle</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+                            @onclick="() => OnConfirmationChange()">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+                   @DialogBody
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success"
+                            @onclick="() => OnConfirmationChange()">
+                        Закрыть
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    protected bool ShowConfirmation { get; set; }
+
+    [Parameter]
+    public string ConfirmationTitle { get; set; }
+
+    [Parameter]
+    public RenderFragment DialogBody { get; set; }
+
+    public void Show()
+    {
+        ShowConfirmation = true;
+        StateHasChanged();
+    }
+
+    [Parameter]
+    public EventCallback ConfirmationChanged { get; set; }
+
+    protected async Task OnConfirmationChange()
+    {
+        ShowConfirmation = false;
+        await ConfirmationChanged.InvokeAsync();
+    }
+} 
