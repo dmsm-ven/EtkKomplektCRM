@@ -20,7 +20,7 @@ namespace EtkBlazorApp.BL
             ManufacturerNameMap["Teledyne LeCroy"] = "LeCroy";
             ManufacturerNameMap["Keysight Technologies"] = "Keysight";
 
-            SkipManufacturerNames.AddRange(new[] { "ERSA", "TDK-Lambda", "Weller", "ProsKit", "Bernstein" });
+            SkipManufacturerNames.AddRange(new[] { "ERSA", "TDK-Lambda", "Weller", "ProsKit", "Bernstein", "Testo", "Viking" });
         }
 
         public async Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)

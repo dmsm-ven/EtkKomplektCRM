@@ -12,6 +12,7 @@ namespace EtkBlazorApp.DataAccess
     {
         Task UpdateProductsPrice(List<ProductUpdateData> data);
         Task UpdateProductsStock(List<ProductUpdateData> data);
+        Task UpdateNextStockDelivery(List<ProductUpdateData> data);
         Task UpdateProductsStockPartner(List<ProductUpdateData> data, int [] affectedBrands);
         Task ComputeStockQuantity(List<ProductUpdateData> data);
         Task UpdateDirectProduct(ProductEntity product);
@@ -168,11 +169,6 @@ namespace EtkBlazorApp.DataAccess
             }
         }
 
-        /// <summary>
-        /// Суммируем все остатки из с дополнительных складов. Тут возможна проблема постоянного прибавления остатка на основной склад (в oc_product)
-        /// </summary>
-        /// <param name="affectedProductIds"></param>
-        /// <returns></returns>
         public async Task ComputeStockQuantity(List<ProductUpdateData> data)
         {
             var idsToUpdate = data
@@ -221,6 +217,28 @@ namespace EtkBlazorApp.DataAccess
             {
                 await database.ExecuteQuery("DELETE FROM oc_product_replacement WHERE product_id = @product_id", product);
             }
+        }
+
+        public async Task UpdateNextStockDelivery(List<ProductUpdateData> data)
+        {
+            var source = data.Where(pl => pl.NextStockDelivery != null).ToList();
+            
+            if(source.Count == 0) { return; }
+
+            string stock_ids = string.Join(",", source.GroupBy(p => p.stock_id).Select(g => g.Key));
+            await database.ExecuteQuery($"DELETE FROM oc_stock_next_delivery WHERE stock_id IN ({stock_ids})");
+
+            var sb = new StringBuilder();
+
+            sb.AppendLine("INSERT INTO oc_stock_next_delivery (stock_id, product_id, quantity, next_shipment_days) VALUES");
+            foreach(var line in source)
+            {
+                sb.AppendLine($"({line.stock_id}, {line.product_id}, {line.NextStockDelivery.Quantity}, {line.NextStockDelivery.Days}),");
+            }
+
+            string sql = sb.ToString().Trim('\r', '\n', '\t', ' ', ',') + ";";
+            await database.ExecuteQuery(sql);
+
         }
 
         private async Task<List<int>> GetSkipProductIds()

@@ -21,24 +21,28 @@
         </div>
         @if (discountData.stock_id != 0)
         {
-            <div class="row py-2">
-                <div class="col-md-4">
-                    <label for="discount_value">Скидка, %</label>
-                    <input type="number" pattern="\d*" min="0" max="99" id="discount_value" class="form-control"
-                           @bind="discountData.discount" />
-                </div>
-                <div class="col-md-4">
-                    <label for="min_quantity">Минимальный остаток, шт.</label>
-                    <input type="number" min="1" max="9999" class="form-control" id="min_quantity" @bind="minimumQuantity" />
-                </div>
-                <div class="col-md-4">
-                    <label for="dateEnd">Дата окончания скидки</label>
-                    <input type="date"
-                           placeholder="yyyy-mm-dd"
-                           class="form-control" id="dateEnd"
-                           @bind="@discountData.date_end" />
-                </div>
-            </div>
+<div class="row py-2">
+    <div class="col-md-3">
+        <label for="discount_value">Скидка, %</label>
+        <input type="number" pattern="\d*" min="0" max="99" id="discount_value" class="form-control"
+               @bind="discountData.discount" />
+    </div>
+    <div class="col-md-3">
+        <label for="min_quantity">Минимальный остаток, шт.</label>
+        <input type="number" min="1" max="9999" class="form-control" id="min_quantity" @bind="minimumQuantity" />
+    </div>
+    <div class="col-md-2">
+        <label for="dateEnd">Дата окончания</label>
+        <input type="date"
+               placeholder="yyyy-mm-dd"
+               class="form-control" id="dateEnd"
+               @bind="@discountData.date_end" />
+    </div>
+    <div class="col-md-4" style="max-height: 300px; overflow-y: auto;">
+        <label for="checked_brands">Список брендов</label>
+        <ManufacturersCheckList @ref="manufacturersCheckList" />
+    </div>
+</div>
         }
 
         <table class="table">
@@ -81,6 +85,7 @@
 }
 
 @code {
+    ManufacturersCheckList manufacturersCheckList;
     List<DiscountToStockEntity> stockDiscounts;
     DiscountToStockEntity discountData;
 
@@ -119,7 +124,8 @@
 
     private async Task AddDiscountItem()
     {
-        await discountStorage.AddDiscountForStock(discountData, minimumQuantity);
+        var affectedBrands = manufacturersCheckList.CheckedAll ? null : manufacturersCheckList.CheckedManufacturerIds;
+        await discountStorage.AddDiscountForStock(discountData, minimumQuantity, affectedBrands);
 
         var item = stockDiscounts.FirstOrDefault(di => di.stock_id == discountData.stock_id);
 

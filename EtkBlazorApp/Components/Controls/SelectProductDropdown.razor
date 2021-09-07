@@ -19,22 +19,22 @@
         </datalist>
 
     @code {
-            List<ProductEntity> productsSource = null;
-            ProductEntity selectedProduct = null;
-            string searchText = string.Empty;
+        List<ProductEntity> productsSource = null;
+        ProductEntity selectedProduct = null;
+        string searchText = string.Empty;
 
-            [Parameter] public EventCallback<ProductEntity> ProductChanged { get; set; }
+        [Parameter] public EventCallback<ProductEntity> ProductChanged { get; set; }
 
-            [Parameter]
-            public ProductEntity Product
+        [Parameter]
+        public ProductEntity Product
         {
-                get => selectedProduct;
-                set
+            get => selectedProduct;
+            set
             {
-                    selectedProduct = value;
+                selectedProduct = value;
 
-                }
             }
+        }
 
         protected override void OnInitialized()
         {
@@ -62,12 +62,18 @@
 
             var data = await productStorage.SearchProductsByName(searchText);
             productsSource.AddRange(data.OrderBy(p => p.name));
+
+            if(data.Count == 1)
+            {
+                await ProductChanged.InvokeAsync(data.First());
+            }
         }
 
         private async Task SelectedProductChanged(ChangeEventArgs e)
         {
             searchText = e.Value?.ToString() ?? string.Empty;
-            selectedProduct = productsSource.FirstOrDefault(p => p.name.Equals(searchText));
+            selectedProduct = productsSource.FirstOrDefault(p => p.name.Equals(searchText, StringComparison.OrdinalIgnoreCase));
+
             if (selectedProduct != null || string.IsNullOrWhiteSpace(searchText))
             {
                 await ProductChanged.InvokeAsync(selectedProduct ?? new ProductEntity());

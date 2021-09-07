@@ -40,11 +40,16 @@ namespace EtkBlazorApp.BL
                             stock_id = (int)findedLine.Stock
                         };
 
-                        if(findedLine is MultistockPriceLine)
+                        if (findedLine is MultistockPriceLine)
                         {
                             updateData.AdditionalStocksQuantity = (findedLine as MultistockPriceLine)
                                 .AdditionalStockQuantity
                                 .ToDictionary(i => (int)i.Key, i => i.Value);
+                        }
+
+                        if (findedLine is PriceLineWithNextDeliveryDate)
+                        {
+                            updateData.NextStockDelivery = (findedLine as PriceLineWithNextDeliveryDate).NextStockDelivery;
                         }
 
                         list.Add(updateData);

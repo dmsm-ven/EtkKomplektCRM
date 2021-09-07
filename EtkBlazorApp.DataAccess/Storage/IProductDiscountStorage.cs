@@ -22,7 +22,7 @@ namespace EtkBlazorApp.DataAccess
         Task RemoveCategoryDiscount(int category_id);
 
         Task<List<DiscountToStockEntity>> GetStocksWithDiscount();
-        Task AddDiscountForStock(DiscountToStockEntity discountData, int minQuantity);
+        Task AddDiscountForStock(DiscountToStockEntity discountData, int minQuantity, List<int> affectedManufacturerIds);
         Task RemoveStockDiscount(int stock_id);
     }
 
@@ -73,7 +73,7 @@ namespace EtkBlazorApp.DataAccess
             return discounts;
         }
 
-        public async Task AddDiscountForStock(DiscountToStockEntity discountData, int minQuantity = 1)
+        public async Task AddDiscountForStock(DiscountToStockEntity discountData, int minQuantity = 1, List<int> affectedManufacturerIds = null)
         {
             var sql = @"INSERT INTO etk_app_discount_to_stock
                            (stock_id, discount, date_start, date_end)
@@ -86,7 +86,7 @@ namespace EtkBlazorApp.DataAccess
 
             await database.ExecuteQuery(sql, discountData);
             await RemoveProductSpecialOnStock(discountData.stock_id);
-            await AddProductSpecialForStock(discountData, minQuantity);
+            await AddProductSpecialForStock(discountData, minQuantity, affectedManufacturerIds);
         }
 
         public async Task RemoveStockDiscount(int stock_id)
@@ -98,7 +98,7 @@ namespace EtkBlazorApp.DataAccess
             await RemoveProductSpecialOnStock(stock_id);
         }
 
-        private async Task AddProductSpecialForStock(DiscountToStockEntity discountData, int minQuantity)
+        private async Task AddProductSpecialForStock(DiscountToStockEntity discountData, int minQuantity, List<int> affectedManufacturerIds = null)
         {
             string rubStatement = $"ROUND(p.price / (100 + {discountData.discount}) * 100, 0)";
             string curStatement = $"ROUND(p.base_price / (100 + {discountData.discount}) * 100, 2)";
@@ -114,6 +114,12 @@ namespace EtkBlazorApp.DataAccess
                            FROM oc_product p
                            JOIN oc_product_to_stock pts ON (p.product_id = pts.product_id)
                            WHERE (p.status = 1) AND (pts.stock_partner_id = @stock_id) AND (pts.quantity >= {minQuantity}) AND (p.price > 0 OR p.base_price > 0)";
+
+            if(affectedManufacturerIds != null && affectedManufacturerIds.Any())
+            {
+                string manufacturerIdsString = string.Join(",", affectedManufacturerIds);
+                sql += $" AND p.manufacturer_id IN ({manufacturerIdsString})";
+            }
 
             await database.ExecuteQuery(sql, discountData);
             await RefreshMainDiscountCategoryProducts();

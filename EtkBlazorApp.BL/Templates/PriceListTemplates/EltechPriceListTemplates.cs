@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtkBlazorApp.DataAccess;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -32,16 +33,30 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 1));
                 string skuNumber = tab.GetValue<string>(row, 2);
+
+                if (!ValidManufacturerNames.Contains(manufacturer, StringComparer.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(skuNumber)) { continue; }
+       
                 int quantityString = tab.GetValue<int>(row, 6);
 
                 decimal regularPriceString = tab.GetValue<decimal>(row, 7);
                 decimal discountPriceString = tab.GetValue<decimal>(row, 8);
 
+                int? stockNextShipmentQuantity = ParseQuantity(tab.GetValue<string>(row, 9), canBeNull: true);
+                int? stockNextShipmentWeeks = ParseQuantity(tab.GetValue<string>(row, 10), canBeNull: true);
+
                 decimal priceString = new decimal[] { regularPriceString, discountPriceString }.Max();
 
-                if(!ValidManufacturerNames.Contains(manufacturer, StringComparer.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(skuNumber)) { continue; }
+                NextStockDelivery productDeliveryInfo = null;
+                if (stockNextShipmentQuantity.HasValue && stockNextShipmentWeeks.HasValue)
+                {
+                    productDeliveryInfo = new DataAccess.NextStockDelivery()
+                    {
+                        Days = stockNextShipmentWeeks.Value * 7,
+                        Quantity = stockNextShipmentQuantity.Value
+                    };
+                }
 
-                var priceLine = new PriceLine(this)
+                var priceLine = new PriceLineWithNextDeliveryDate(this)
                 {
                     Quantity = quantityString,
                     Currency = CurrencyType.USD,
@@ -49,8 +64,11 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Manufacturer = manufacturer,
                     Sku = skuNumber,
                     Model = skuNumber,
-                    Stock = StockName.Eltech
+                    Stock = StockName.Eltech,
+                    NextStockDelivery = productDeliveryInfo
                 };
+
+
                 list.Add(priceLine);
             }
 

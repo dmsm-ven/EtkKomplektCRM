@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using EtkBlazorApp.DataAccess;
+using System.Collections.Generic;
 
 namespace EtkBlazorApp.BL
 {
@@ -27,5 +28,12 @@ namespace EtkBlazorApp.BL
         public MultistockPriceLine(IPriceListTemplate template) : base(template) { }
 
         public readonly Dictionary<StockName, int> AdditionalStockQuantity = new Dictionary<StockName, int>();
-    }   
+    }
+    
+    public class PriceLineWithNextDeliveryDate : PriceLine
+    {
+        public PriceLineWithNextDeliveryDate(IPriceListTemplate template) : base(template) { }
+
+        public NextStockDelivery NextStockDelivery { get; init; }
+    }
 }

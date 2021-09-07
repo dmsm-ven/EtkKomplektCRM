@@ -45,6 +45,7 @@ namespace EtkBlazorApp.BL.Templates
                     {
                         Name = name,
                         Currency = CurrencyType.RUB,
+                        Stock = StockName.Aktakom,
                         Model = sku,
                         Sku = sku,
                         Price = parsedPrice,

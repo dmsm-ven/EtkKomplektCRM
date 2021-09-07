@@ -28,5 +28,7 @@
         Sfbel = 22,
         CEM = 23,
         FIT = 24,
+        Knipex = 25,
+        Aktakom = 26,
     }
 }

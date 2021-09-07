@@ -65,6 +65,11 @@
 
         var data = await categoryStorage.SearchCategoriesByName(searchText);
         categoriesSource.AddRange(data.OrderBy(p => p.name));
+
+        if (data.Count == 1)
+        {
+            await CategoryChanged.InvokeAsync(data.First());
+        }
     }
 
     private async Task SelectedCategoryChanged(ChangeEventArgs e)

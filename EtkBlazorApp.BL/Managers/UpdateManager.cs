@@ -51,11 +51,17 @@ namespace EtkBlazorApp.BL
             await productUpdateService.UpdateProductsPrice(data);
            
             progress?.Report("Обновление остатков на складах etk-komplekt.ru");
-            data.Where(d => d.stock_id == 0).ToList().ForEach(i => i.stock_id = (int)StockName.Symmetron);
+            data.Where(d => d.stock_id == 0).ToList().ForEach(i => i.stock_id = (int)StockName.None);
             await productUpdateService.UpdateProductsStockPartner(data, affectedBrandsIds);
 
             progress?.Report("Складывание остатков складов etk-komplekt.ru");
             await productUpdateService.ComputeStockQuantity(data);
+
+            if (data.Any(d => d.NextStockDelivery != null))
+            {
+                progress?.Report("Обновление следующих поставок товара для складов");
+                await productUpdateService.UpdateNextStockDelivery(data);
+            }
 
             if (data.Any(line => line.price.HasValue) && data.Any(pl => pl.currency_code != "RUB"))
             {

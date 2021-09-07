@@ -10,6 +10,7 @@ namespace EtkBlazorApp.BL
         {
             SkipManufacturerNames.Add("Mean Well");
             SkipManufacturerNames.Add("FIT");
+            SkipManufacturerNames.Add("Viking");
 
             ManufacturerNameMap["Pro'skit"] = "Pro'sKit";
             ManufacturerNameMap["TIANMA Europe GmbH"] = "Tianma";

@@ -121,8 +121,9 @@ namespace EtkBlazorApp.Pages
 
             if(item?.Discount != null && item.Discount.Value == selectedPartner.Discount)
             {
-                item = null;
+                item.Discount = null;
             }
+
             await partnerService.AddManufacturerToPartner(item.PartnerGuid.ToString(), item.ManufacturerId, item?.Discount);
             editingDiscount = null;
         }

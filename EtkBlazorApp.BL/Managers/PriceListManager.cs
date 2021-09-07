@@ -87,6 +87,7 @@ namespace EtkBlazorApp.BL
                 IPriceListTemplate templateInstance = (IPriceListTemplate)Activator.CreateInstance(templateType, filePath);
                 var templateInfo = await GetTemplateDescription(templateType);
 
+                //TODO добвить в templateInstance templateInfo (данные из БД) включая Бренды которые нужно пропускать ... и т.д.
                 var list = await templateInstance.ReadPriceLines(null);
                 await ApplyDiscounts(list, templateInfo.discount, templateInfo.nds);
 

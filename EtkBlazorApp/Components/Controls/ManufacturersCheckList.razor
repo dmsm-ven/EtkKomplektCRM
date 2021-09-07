@@ -1,0 +1,71 @@
+﻿@inject IManufacturerStorage manufacturerStorage
+
+@if (checkedManufacturers == null)
+{
+    <LoadingSpinner />
+}
+else
+{
+<ul class="list-group list-group-flush">
+    @if (hideList)
+    {
+        <li class="list-group-item">
+            <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" @bind="hideList" id="hide-brands-checklistbox">
+                <label class="custom-control-label" for="hide-brands-checklistbox">Все производители</label>
+            </div>
+        </li>
+    }
+    else
+    {
+        @foreach (var kvp in checkedManufacturers)
+        {
+            <li class="list-group-item">
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="@($"brand-{kvp.Key.manufacturer_id}")"
+                           checked="@kvp.Value"
+                           @onchange="@(e => ManufacturerCheckedStateChanged(kvp.Key, kvp.Value))">
+                    <label class="custom-control-label" for="@($"brand-{kvp.Key.manufacturer_id}")">@kvp.Key.name</label>
+                </div>
+            </li>
+        }
+    }
+</ul>
+}
+
+<style>
+    .list-group-item {
+        padding: 2px;
+    }
+</style>
+
+@code {
+    Dictionary<ManufacturerEntity, bool> checkedManufacturers = null;
+    bool hideList = true;
+    public bool CheckedAll => checkedManufacturers.All(kvp => kvp.Value);
+
+    public List<int> CheckedManufacturerIds
+    {
+        get
+        {
+            var data = checkedManufacturers.Where(m => m.Value).Select(m => m.Key.manufacturer_id).ToList();
+            return data;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            checkedManufacturers = (await manufacturerStorage.GetManufacturers())
+                .ToDictionary(i => i, i => true);
+            StateHasChanged();
+        }
+    }
+
+    private void ManufacturerCheckedStateChanged(ManufacturerEntity e, bool currentState)
+    {
+        checkedManufacturers[e] = !currentState;
+        hideList = CheckedAll;
+    }
+}
