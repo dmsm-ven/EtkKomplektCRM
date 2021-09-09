@@ -53,6 +53,7 @@ namespace EtkBlazorApp.BL
                     Price = (priceInCurrency.HasValue && priceCurreny != CurrencyType.RUB) ? priceInCurrency : priceInRub,                   
                     Currency = priceCurreny,
                     Quantity = quantity,
+                    Stock = StockName.Symmetron
                 };
 
                 list.Add(priceLine);

@@ -34,6 +34,6 @@ namespace EtkBlazorApp.BL
     {
         public PriceLineWithNextDeliveryDate(IPriceListTemplate template) : base(template) { }
 
-        public NextStockDelivery NextStockDelivery { get; init; }
+        public NextStockDelivery NextStockDelivery { get; set; }
     }
 }

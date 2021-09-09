@@ -76,7 +76,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Model = skuNumber,
                     Quantity = quantity,
                     Ean = ean,
-                    Manufacturer = "Weller"
+                    Manufacturer = "Weller",
+                    Stock = StockName.SpringE
                 };
                 list.Add(line);
             }

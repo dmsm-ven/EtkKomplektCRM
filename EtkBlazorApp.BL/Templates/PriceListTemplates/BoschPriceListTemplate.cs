@@ -33,7 +33,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Sku = sku,
                     Price = price,
                     Quantity = QuantityMap[stockStatusCode],
-                    Manufacturer = "Bosch"
+                    Manufacturer = "Bosch",
+                    Stock = StockName.BoschB2B
                 };
 
                 list.Add(priceLine);
