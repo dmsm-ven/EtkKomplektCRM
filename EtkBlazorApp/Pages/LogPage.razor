@@ -3,7 +3,6 @@
 @using System.Threading;
 @attribute [Authorize(Roles = "Administrator")]
 @inject ILogStorage database
-@implements IDisposable
 
 <h3>Журнал событий приложения</h3>
 @if (entries == null)
@@ -101,9 +100,6 @@ else
 
 @code {
     const int MAX_ITEMS = 100;
-    //Интервал должен совпадать с анимацией в site.css что бы не прерывать предыдущую
-    readonly TimeSpan RefreshTimerInterval = TimeSpan.FromSeconds(5);
-    Timer newItemsTimer;
 
     int filterMaxDays = 0;
     string selectedUser = null;
@@ -114,22 +110,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        newItemsTimer = new Timer(RefreshTimerTick, null, (int)RefreshTimerInterval.TotalMilliseconds, (int)RefreshTimerInterval.TotalMilliseconds);
         await ApplyFilter();
-    }
-
-    private async void RefreshTimerTick(object o)
-    {
-        var lastItems = await database.GetLogItems(MAX_ITEMS, filterMaxDays);
-        var alreadyAddedIds = entries.Select(e => e.id).ToList();
-        lastItems.RemoveAll(i => alreadyAddedIds.Contains(i.id));
-        if (lastItems.Any())
-        {
-            newLogEntries.Clear();
-            newLogEntries.AddRange(lastItems);
-            entries.InsertRange(0, newLogEntries);
-            await InvokeAsync(StateHasChanged);
-        }
     }
 
     private async Task ApplyFilter()
@@ -164,10 +145,5 @@ else
         {
             selectedGroup = Enum.Parse<LogEntryGroupName>(e.Value.ToString());
         }
-    }
-
-    public void Dispose()
-    {
-        newItemsTimer?.Dispose();
     }
 }

@@ -14,13 +14,15 @@ namespace EtkBlazorApp.BL
     {
         public string FileName { get; private set; }
 
+        readonly string[] ONLY_QUANTITY_BRANDS = new[] { "ERSA" };
+
         public PristPriceListTemplate(string uri)
         {
             FileName = uri;
             ManufacturerNameMap["Teledyne LeCroy"] = "LeCroy";
             ManufacturerNameMap["Keysight Technologies"] = "Keysight";
 
-            SkipManufacturerNames.AddRange(new[] { "ERSA", "TDK-Lambda", "Weller", "ProsKit", "Bernstein", "Testo", "Viking" });
+            SkipManufacturerNames.AddRange(new[] { "TDK-Lambda", "Weller", "ProsKit", "Bernstein", "Testo", "Viking" });
         }
 
         public async Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)
@@ -36,6 +38,8 @@ namespace EtkBlazorApp.BL
 
                 if (SkipManufacturerNames.Contains(manufacturer)) { continue; }
 
+                decimal? price = ONLY_QUANTITY_BRANDS.Contains(manufacturer, StringComparer.OrdinalIgnoreCase) ? null : offer.Price;
+
                 var priceLine = new PriceLine(this)
                 {
                     Name = offer.Name,
@@ -43,7 +47,7 @@ namespace EtkBlazorApp.BL
                     Manufacturer = manufacturer,
                     Model = offer.Model,
                     Sku = offer.Model,
-                    Price = offer.Price,
+                    Price = price,
                     Quantity = offer.Amount,
                     Stock = StockName.Prist
                 };

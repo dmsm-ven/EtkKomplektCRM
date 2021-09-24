@@ -15,6 +15,7 @@ namespace EtkBlazorApp.DataAccess.Entity
         public string linked_price_list_guid { get; set; }
         public string description { get; set; }
         public bool enabled { get; set; }
+        public bool archived { get; set; }
         public TimeSpan exec_time { get; set; }
         public DateTime? last_exec_date_time { get; set; }
         public CronTaskExecResult? last_exec_result { get; set; }

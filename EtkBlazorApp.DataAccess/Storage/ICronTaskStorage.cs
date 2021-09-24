@@ -30,7 +30,8 @@ namespace EtkBlazorApp.DataAccess
         {
             string sql = @"SELECT ta.*, tp.name as task_type_name
                            FROM etk_app_cron_task ta
-                           LEFT JOIN etk_app_cron_task_type tp ON (ta.task_type_id = tp.task_type_id)";
+                           LEFT JOIN etk_app_cron_task_type tp ON (ta.task_type_id = tp.task_type_id)
+                           WHERE archived = 0";
 
             var data = await database.GetList<CronTaskEntity, dynamic>(sql, new { });
 
@@ -94,7 +95,7 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task DeleteCronTask(int task_id)
         {
-            await database.ExecuteQuery<dynamic>("DELETE FROM etk_app_cron_task WHERE task_id = @task_id", new { task_id });
+            await database.ExecuteQuery<dynamic>("UPDATE etk_app_cron_task SET archived = 1 WHERE task_id = @task_id", new { task_id });
         }
 
         public async Task<List<CronTaskHistoryEntity>> GetCronTaskHistoryInfo(int month, int year)

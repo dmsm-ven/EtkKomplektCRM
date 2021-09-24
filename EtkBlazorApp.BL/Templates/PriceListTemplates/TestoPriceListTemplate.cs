@@ -53,50 +53,28 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 for (int row = 2; row < tab.Dimension.Rows; row++)
                 {
-                    string model = tab.GetValue<string>(row, 1).Trim();
+                    string model = tab.GetValue<string>(row, 1);
 
-                    if (!IsValidModel(model)) { continue; }
+                    var price = ParsePrice(tab.GetValue<string>(row, 3));
 
-                    string priceString = tab.GetValue<string>(row, 3);
-                    if ((string.IsNullOrWhiteSpace(priceString) || priceString == "По запросу"))
+                    var priceLine = new PriceLine(this)
                     {
-                        priceString = "0";
-                    }
+                        Currency = CurrencyType.RUB,
+                        Price = price,
+                        Manufacturer = "Testo",
+                        Model = model,
+                        Sku = model
+                    };
 
-                    if (decimal.TryParse(priceString, out var price))
+
+                    if (!list.Any(p => p.Model == priceLine.Model))
                     {
-                        var priceLine = new PriceLine(this)
-                        {
-                            Currency = CurrencyType.RUB,
-                            Price = price,
-                            Manufacturer = "Testo",
-                            Model = model,
-                            Sku = model
-                        };
-
-
-                        if (!list.Any(p => p.Model == priceLine.Model))
-                        {
-                            list.Add(priceLine);
-                        }
+                        list.Add(priceLine);
                     }
                 }
             }
 
             return list;
         }
-
-        private bool IsValidModel(string model)
-        {
-            if (!string.IsNullOrWhiteSpace(model) && model.Length >= 8)
-            {
-                if (Regex.IsMatch(model, @"^\d{8}"))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
     }
 }

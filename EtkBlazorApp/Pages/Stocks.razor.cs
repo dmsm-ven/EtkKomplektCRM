@@ -10,7 +10,7 @@ namespace EtkBlazorApp.Pages
 {
     public partial class Stocks
     {
-        List<ManufacturerViewModel> manufacturers = null;
+        Dictionary<char, List<ManufacturerViewModel>> manufacturersByFirstLetter = null;
         List<StockPartnerViewModel> stockList = null;
         List<StockPartnerViewModel> filteredStockList
         {
@@ -23,6 +23,7 @@ namespace EtkBlazorApp.Pages
                 return stockList.Where(s => s.City == cityFilter).ToList();
             }
         }
+
 
         AddNewStockDialog newStockDialog;
         string cityFilter = string.Empty;
@@ -38,6 +39,7 @@ namespace EtkBlazorApp.Pages
                 return source;
             }
         }
+        bool hasAlphabetSeparator = false;
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
@@ -60,7 +62,7 @@ namespace EtkBlazorApp.Pages
                     })
                     .ToList();
 
-                manufacturers = (await manufacturerStorage.GetManufacturers())
+                manufacturersByFirstLetter = (await manufacturerStorage.GetManufacturers())
                 .Select(model => new ManufacturerViewModel()
                 {
                     Id = model.manufacturer_id,
@@ -70,7 +72,8 @@ namespace EtkBlazorApp.Pages
                     keyword = model.keyword,
                     productsCount = model.productsCount
                 })
-                .ToList();
+                .GroupBy(m => m.name[0])
+                .ToDictionary(i => i.Key, j => j.OrderBy(m => m.name).ToList());
 
                 StateHasChanged();
             }

@@ -11,6 +11,8 @@ namespace EtkBlazorApp.BL
     {
         //Запуск пересчета цен товаров в валюте
         readonly string CurrencyPlusUri = "https://etk-komplekt.ru/cron/currency_plus.php";
+        //Запуск пересчета цен товаров в валюте - собственный улучшенный модуль
+        readonly string CurrencyCustomUri = "https://etk-komplekt.ru/index.php?route=tool/price_currency&refresh_token=a875efbc-3724-4451-86b7-0129e5d5b06d";
 
         private readonly IProductStorage productsStorage;
         private readonly IProductUpdateService productUpdateService;
@@ -65,7 +67,7 @@ namespace EtkBlazorApp.BL
             if (data.Any(line => line.price.HasValue) && data.Any(pl => pl.currency_code != "RUB"))
             {
                 progress?.Report("Пересчет цен товаров в валюте");
-                await new WebClient().DownloadStringTaskAsync(CurrencyPlusUri);
+                await new WebClient().DownloadStringTaskAsync(CurrencyCustomUri);
             }
 
             await UpdateMonobrands(affectedBrandsIds, progress);

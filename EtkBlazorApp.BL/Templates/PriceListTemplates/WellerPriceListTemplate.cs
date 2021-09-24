@@ -22,8 +22,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
                 string partNumber = tab.GetValue<string>(i, 2);
 
-                string name = tab.GetValue<string>(i, 4);
-                decimal? priceInEuro = ParsePrice(tab.GetValue<string>(i, 7));
+                string name = tab.GetValue<string>(i, 3);
+                decimal? priceInEuro = ParsePrice(tab.GetValue<string>(i, 4));
 
                 var priceLine = new PriceLine(this)
                 {
