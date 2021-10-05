@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
@@ -10,7 +11,7 @@ namespace EtkBlazorApp.BL
     public class UpdateManager
     {
         //Запуск пересчета цен товаров в валюте
-        readonly string CurrencyPlusUri = "https://etk-komplekt.ru/cron/currency_plus.php";
+        //readonly string CurrencyPlusUri = "https://etk-komplekt.ru/cron/currency_plus.php";
         //Запуск пересчета цен товаров в валюте - собственный улучшенный модуль
         readonly string CurrencyCustomUri = "https://etk-komplekt.ru/index.php?route=tool/price_currency&refresh_token=a875efbc-3724-4451-86b7-0129e5d5b06d";
 
@@ -67,7 +68,7 @@ namespace EtkBlazorApp.BL
             if (data.Any(line => line.price.HasValue) && data.Any(pl => pl.currency_code != "RUB"))
             {
                 progress?.Report("Пересчет цен товаров в валюте");
-                await new WebClient().DownloadStringTaskAsync(CurrencyCustomUri);
+                await (new WebClient().DownloadStringTaskAsync(CurrencyCustomUri));
             }
 
             await UpdateMonobrands(affectedBrandsIds, progress);
@@ -139,7 +140,7 @@ namespace EtkBlazorApp.BL
                     progress?.Report($"Обновление сайта {monobrand.website}");
                     await Task.Delay(TimeSpan.FromSeconds(1));
 
-                    var result = await new WebClient().DownloadStringTaskAsync(apiUri);
+                    await (new WebClient().DownloadStringTaskAsync(apiUri));
                 }
                 catch(Exception ex)
                 {

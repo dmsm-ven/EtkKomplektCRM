@@ -105,6 +105,6 @@ namespace EtkBlazorApp.DataAccess
                 throw;
             }
         }    
-    
+   
     }
 }

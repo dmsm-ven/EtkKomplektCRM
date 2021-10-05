@@ -45,7 +45,7 @@ namespace EtkBlazorApp.Pages
         {
             if (firstRender)
             {
-                stockList = (await manufacturerStorage.GetStocks())
+                stockList = (await stockStorage.GetStocks())
                     .Select(model => new StockPartnerViewModel()
                     {
                         Id = model.stock_partner_id,
@@ -112,7 +112,7 @@ namespace EtkBlazorApp.Pages
 
                 if (data.Id == 0)
                 {
-                    await manufacturerStorage.CreateOrUpdateStock(stockEntity);
+                    await stockStorage.CreateOrUpdateStock(stockEntity);
                     data.Id = stockEntity.stock_partner_id;
                     stockList.Add(data);
 
@@ -121,7 +121,7 @@ namespace EtkBlazorApp.Pages
                 }
                 else
                 {
-                    await manufacturerStorage.CreateOrUpdateStock(stockEntity);
+                    await stockStorage.CreateOrUpdateStock(stockEntity);
                     await logger.Write(LogEntryGroupName.ManufacturerUpdate, "Обновление", $"Данные склада «{stockEntity.name}» обновлены");
                     toasts.ShowSuccess(data.Name, "Склад обновлен");
                 }
@@ -137,7 +137,7 @@ namespace EtkBlazorApp.Pages
 
         private async Task ShowLinkedStocksForBrand(ManufacturerViewModel manufacturer)
         {
-            var data = await manufacturerStorage.GetManufacturerStockPartners(manufacturer.Id);
+            var data = await stockStorage.GetManufacturerStockPartners(manufacturer.Id);
 
             if (data != null && data.Any())
             {
@@ -157,7 +157,7 @@ namespace EtkBlazorApp.Pages
 
         private async Task ShowStockLinkedManufacturers(StockPartnerViewModel stock)
         {
-            var data = await manufacturerStorage.GetStockManufacturers(stock.Id);
+            var data = await stockStorage.GetStockManufacturers(stock.Id);
 
             if (data != null && data.Any())
             {

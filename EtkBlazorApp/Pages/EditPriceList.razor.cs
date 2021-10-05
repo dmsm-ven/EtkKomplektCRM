@@ -42,7 +42,7 @@ namespace EtkBlazorApp.Pages
                     GroupName = entity.group_name,
                     Image = entity.image,
                     Nds = entity.nds,
-                    PriceListTypeId = entity.content_type_id,
+                    PriceListTypeId = 3, // - пофиксить правильную обработку или убрать это свойство
                     PriceListTypeName = entity.content_type_name,
                     RemoteUrl = entity.remote_uri,
                     RemoteUrlMethodId = entity.remote_uri_method_id,
@@ -79,7 +79,6 @@ namespace EtkBlazorApp.Pages
         }
 
         string buttonActionName => string.IsNullOrWhiteSpace(TemplateGuid) ? "Создать" : "Сохранить изменения";
-        bool showCredentialsBox => item.RemoteUrlMethodName == "HttpGetWithCredentials";
         bool showEmailPatternBox => item.RemoteUrlMethodName == "EmailAttachment";
 
         private void LoadMethodChanged(ChangeEventArgs e)

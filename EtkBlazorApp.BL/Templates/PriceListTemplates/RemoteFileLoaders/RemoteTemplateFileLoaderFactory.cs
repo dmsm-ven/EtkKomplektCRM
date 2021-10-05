@@ -34,6 +34,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     return new YandexDiskRemoteTemplateFileLoader(remoteUri, zipExtractor);
                 case "EmailAttachment":
                     return new EmailAttachmentRemoteTemplateFileLoader(settings, zipExtractor, templateStorage, guid);
+                case "mks.master.pro API":
+                    return new MksMasterProApiFileLoader(templateStorage, guid);
             }
 
             throw new NotSupportedException($"Шаблон загрузки файла '{methodName}' не поддерживается");

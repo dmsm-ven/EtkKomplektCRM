@@ -1,4 +1,4 @@
-﻿@inject IManufacturerStorage manufacturerStorage
+﻿@inject IStockStorage stockStorage
 
 
 <select class="form-control" id="dropdown-manufacturer" style="min-width: 150px;"
@@ -20,7 +20,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        stocks = (await manufacturerStorage.GetStocks())
+        stocks = (await stockStorage.GetStocks())
             .ToList();
 
         Stock = stocks.FirstOrDefault() ?? new StockPartnerEntity();

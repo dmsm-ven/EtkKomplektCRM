@@ -30,8 +30,8 @@ else
                 <input type="text" class="form-control" maxlength="15" @bind="@User.AllowedIp" />
             }
         </td>
-        <td>@User.CreatingDate</td>
-        <td>@(User.LastLoginDateTime.HasValue ? User.LastLoginDateTime.ToString() : "")</td>
+        <td>@User.CreatingDate.ToString("dd.MM.yyyy")</td>
+        <td>@lastSigninDate</td>
         <td>
             @if (hasChanges)
             {
@@ -63,6 +63,21 @@ else
     bool changePasswordActive;
     int currentState;
     bool hasChanges => currentState != GetCurrentState();
+    string lastSigninDate
+    {
+        get
+        {
+            if (User.LastLoginDateTime.HasValue)
+            {
+                if(User.LastLoginDateTime.Value.Date == DateTime.Now.Date)
+                {
+                    return $"Сегодня в {User.LastLoginDateTime.Value.TimeOfDay.ToString(@"hh\:mm")}";
+                }
+                return User.LastLoginDateTime.Value.ToString("g");
+            }
+            return string.Empty;
+        }
+    }
 
     protected override void OnInitialized()
     {

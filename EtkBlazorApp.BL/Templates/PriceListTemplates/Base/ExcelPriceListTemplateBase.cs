@@ -66,7 +66,7 @@ namespace EtkBlazorApp.BL
         }
 
         /// <summary>
-        /// Конвертация с помощью C# много зависимостей. Делаем конвертацию с помощью Python
+        /// При конвертация с помощью C# - много зависимостей. Делаем конвертацию с помощью Python
         /// </summary>
         protected abstract List<PriceLine> ReadDataFromExcel();
 

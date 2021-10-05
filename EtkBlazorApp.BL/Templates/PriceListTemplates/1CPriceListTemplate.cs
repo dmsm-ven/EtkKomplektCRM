@@ -22,6 +22,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             ManufacturerNameMap["АКТАКОМ"] = "Aktakom";
             ManufacturerNameMap["Dinolite"] = "Dino-Lite";
             ManufacturerNameMap["Megeon"] = "Мегеон";
+
+            SkipManufacturerNames.Add("Etari");
         }
 
         protected override List<PriceLine> ReadDataFromExcel()
@@ -36,7 +38,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string name = tab.GetValue<string>(row, 4);
                 var quantity = ParseQuantity(tab.GetValue<string>(row, 7));
 
-                if (string.IsNullOrWhiteSpace(skuNumber)) { continue; }
+                if (string.IsNullOrWhiteSpace(skuNumber) || SkipManufacturerNames.Contains(manufacturer)) { continue; }
 
                 var priceLine = new PriceLine(this)
                 {

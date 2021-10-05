@@ -150,11 +150,11 @@ namespace EtkBlazorApp.DataAccess
 
             if (data.credentials_login != null && data.credentials_password != null)
             {
-                await InsertOrUpdatePriceListEmailSearchCriteria(data);
+                await InsertOrUpdatePriceListCredentials(data);
             }
             if (data.email_criteria_sender != null)
             {
-                await InsertOrUpdatePriceListCredentials(data);
+                await InsertOrUpdatePriceListEmailSearchCriteria(data);
             }
 
         }

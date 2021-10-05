@@ -13,6 +13,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Globalization;
+using System.Net;
+using System.Net.Security;
 
 namespace EtkBlazorApp
 {
@@ -68,6 +70,7 @@ namespace EtkBlazorApp
             services.AddTransient<IPrikatTemplateStorage, PrikatTemplateStorage>();
             services.AddTransient<IOrderStorage, OrderStorage>();
             services.AddTransient<IManufacturerStorage, ManufacturerStorage>();
+            services.AddTransient<IStockStorage, StockStorage>();
             services.AddTransient<IMonobrandStorage, MonobrandStorage>();
             services.AddTransient<ILogStorage, LogStorage>();
             services.AddTransient<ISettingStorage, SettingStorage>();

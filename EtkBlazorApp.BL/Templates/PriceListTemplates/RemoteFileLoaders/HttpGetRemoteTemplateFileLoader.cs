@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
@@ -18,9 +19,8 @@ namespace EtkBlazorApp.BL
         {
             using (var wc = new WebClient())
             {
-                var bytes = await Task.Run(() => wc.DownloadData(new Uri(remoteUri)));
+                var bytes = await wc.DownloadDataTaskAsync(remoteUri);
                 string fileName = Path.GetFileName(remoteUri);
-
                 return new RemoteTemplateFileResponse(bytes, fileName);
             }
         }

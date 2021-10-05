@@ -44,6 +44,8 @@ else
     bool hideList = true;
     public bool CheckedAll => checkedManufacturers.All(kvp => kvp.Value);
 
+    [Parameter]public bool StartUnchecked { get; set; }
+
     public List<int> CheckedManufacturerIds
     {
         get
@@ -59,6 +61,11 @@ else
         {
             checkedManufacturers = (await manufacturerStorage.GetManufacturers())
                 .ToDictionary(i => i, i => true);
+            if (StartUnchecked)
+            {
+                UncheckAll();
+                hideList = false;
+            }
             StateHasChanged();
         }
     }
@@ -67,5 +74,35 @@ else
     {
         checkedManufacturers[e] = !currentState;
         hideList = CheckedAll;
+    }
+
+    public void ToggleAll()
+    {
+        if (CheckedAll)
+        {
+            UncheckAll();
+        }
+        else
+        {
+            CheckAll();
+        }
+    }
+
+    public void UncheckAll()
+    {
+        foreach(var kvp in checkedManufacturers)
+        {
+            checkedManufacturers[kvp.Key] = false;
+        }
+        StateHasChanged();
+    }
+
+    public void CheckAll()
+    {
+        foreach (var kvp in checkedManufacturers)
+        {
+            checkedManufacturers[kvp.Key] = true;
+        }
+        StateHasChanged();
     }
 }

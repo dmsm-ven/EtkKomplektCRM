@@ -47,8 +47,12 @@ namespace EtkBlazorApp.BL
             inProgress = new List<CronTaskBase>();
 
             checkTimer = new Timer(TimeSpan.FromSeconds(60).TotalMilliseconds);
-            checkTimer.Elapsed += CheckTimer_Elapsed;
-            checkTimer.Start();
+           
+            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
+            {
+                checkTimer.Elapsed += CheckTimer_Elapsed;
+                checkTimer.Start();
+            }
         }
 
         public async Task ExecuteImmediately(int task_id)
@@ -120,7 +124,8 @@ namespace EtkBlazorApp.BL
             }
             catch (Exception ex)
             {
-                await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Ошибка", $"Ошибка выполнения задания '{taskInfo.name}'. {ex.Message}");
+                string innerException = ex.InnerException?.Message ?? string.Empty;
+                await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Ошибка", $"Ошибка выполнения задания '{taskInfo.name}'. {ex.Message} {innerException}".Trim());
             }
             finally
             {

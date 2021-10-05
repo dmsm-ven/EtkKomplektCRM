@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.Integration.Ozon
 {
+    //Можно удалять, скорее всего использовать больше не будет
     [Obsolete("Перенесено в API controller на сайте для загрузки через фид. /controller/feed/ozon_seller")]
     public class OzonSellerApiClient
     {

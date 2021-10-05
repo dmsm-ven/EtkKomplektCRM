@@ -1,4 +1,4 @@
-﻿@inject IManufacturerStorage manufacturerStorage
+﻿@inject IStockStorage stockStorage
 
 @if (isVisible)
 {
@@ -89,7 +89,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        stockCities = await manufacturerStorage.GetStockCities();
+        stockCities = await stockStorage.GetStockCities();
     }
 
     public void Show()

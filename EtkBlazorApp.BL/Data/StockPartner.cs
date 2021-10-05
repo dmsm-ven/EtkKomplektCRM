@@ -32,5 +32,7 @@
         Aktakom = 26,
         SpringE = 29,
         BoschB2B = 30,
+        ForumElectro_Moscow = 31,
+        ForumElectro_Spb = 32,
     }
 }

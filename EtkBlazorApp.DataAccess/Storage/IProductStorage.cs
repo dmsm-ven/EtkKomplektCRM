@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace EtkBlazorApp.DataAccess
 {
@@ -190,6 +191,7 @@ namespace EtkBlazorApp.DataAccess
                         LIMIT 10";
 
             var findedProducts = await database.GetList<ProductEntity, dynamic>(sql, new { pattern = $"%{searchText}%" });
+            findedProducts.ForEach(p => p.name = HttpUtility.HtmlDecode(p.name));
 
             return findedProducts;
         }

@@ -4,36 +4,25 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.DataAccess
 {
-    public interface IManufacturerStorage
+    public interface IStockStorage
     {
-        Task<List<ManufacturerEntity>> GetManufacturers();
-        Task<List<StockPartnerManufacturerInfoEntity>> GetManufacturerStockPartners(int manufacturer_id);
-
         Task CreateOrUpdateStock(StockPartnerEntity stock);
         Task<List<StockPartnerEntity>> GetStocks();
         Task<List<StockCityEntity>> GetStockCities();
         Task<List<StockPartnerLinkedManufacturerInfoEntity>> GetStockManufacturers(int stock_partner_id);
+        Task<List<StockPartnerManufacturerInfoEntity>> GetManufacturerStockPartners(int manufacturer_id);
     }
 
-    public class ManufacturerStorage : IManufacturerStorage
+
+    public class StockStorage : IStockStorage
     {
         private readonly IDatabaseAccess database;
 
-        public ManufacturerStorage(IDatabaseAccess database)
+        public StockStorage(IDatabaseAccess database)
         {
             this.database = database;
         }
 
-        public async Task<List<ManufacturerEntity>> GetManufacturers()
-        {
-            string sql = @"SELECT m.*, url.keyword
-                         FROM oc_manufacturer m
-                         LEFT JOIN oc_url_alias url ON CONCAT('manufacturer_id=', m.manufacturer_id) = url.query
-                         ORDER BY name";
-            var manufacturers = await database.GetList<ManufacturerEntity, dynamic>(sql, new { });
-            return manufacturers;
-        }            
-   
         public async Task<List<StockPartnerEntity>> GetStocks()
         {
             string sql = @"SELECT sp.*, sc.name as city
@@ -48,7 +37,7 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task CreateOrUpdateStock(StockPartnerEntity stock)
         {
-            if(stock.city_id == -1)
+            if (stock.city_id == -1)
             {
                 await database.ExecuteQuery("INSERT INTO oc_stock_city (name) VALUES (@city)", stock);
                 stock.city_id = await database.GetScalar<int>("SELECT max(city_id) FROM oc_stock_city");
@@ -114,4 +103,9 @@ namespace EtkBlazorApp.DataAccess
             return cities;
         }
     }
+
+
+
+
+
 }

@@ -1,12 +1,17 @@
 ﻿using EtkBlazorApp.BL;
+using EtkBlazorApp.Components.Controls;
+using EtkBlazorApp.Components.Dialogs;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using static EtkBlazorApp.BL.EtkKomplektReportGenerator;
 
 namespace EtkBlazorApp.Pages
 {
@@ -15,24 +20,27 @@ namespace EtkBlazorApp.Pages
         const int MAX_UPLOAD_FILE_SIZE = 15_000_000; // 15 мб
         const int UPLOAD_BUFFER_SIZE = 64_000; // 64 кб
 
+        FileLoadProgress? uploadProgress;
+        CustomDataDialog exportPriceDialog;
+        ManufacturersCheckList exportPriceManufacturerList;
+
         Dictionary<string, List<PriceListTemplateItemViewModel>> templates = null;
         Dictionary<string, List<PriceListTemplateItemViewModel>> filteredTemplates;
         PriceListTemplateItemViewModel selectedTemplate = null;
         PriceListTemplateItemViewModel editingTemplate = null;
 
+        bool filterHasUri = false;
+        bool filterFromEmail = false;
+        bool etkPriceListDownloadInProgress = false;
         bool isIntermediateProgress = false;
         bool isFileUploading = false;
         bool isBusy => isIntermediateProgress || isFileUploading;
         bool selectedTemplateHasEmailSource => !string.IsNullOrWhiteSpace(selectedTemplate?.EmailSearchCriteria_Sender);
-        bool selectedTemplateHasRemoteUri => !string.IsNullOrWhiteSpace(selectedTemplate?.RemoteUrl);
-        FileLoadProgress? uploadProgress;
-
+        bool selectedTemplateHasRemoteUri => (selectedTemplate?.RemoteUrlMethodName != null) && !selectedTemplateHasEmailSource;
         string searchPhrase;
-        bool filterHasUri;
-        bool filterFromEmail;
 
         protected override async Task OnInitializedAsync()
-        {
+        {          
             templates = (await templateStorage.GetPriceListTemplates())
                 .Select(t => new PriceListTemplateItemViewModel(t.id)
                 {
@@ -52,6 +60,7 @@ namespace EtkBlazorApp.Pages
                 .ToDictionary(i => i.Key, i => i.ToList());
 
             filteredTemplates = templates;
+            
         }
 
         private async Task UploadSelectedPriceListTemplateFile(InputFileChangeEventArgs e)
@@ -217,6 +226,50 @@ namespace EtkBlazorApp.Pages
                 return false;
             }
             return true;
+        }
+
+        private async Task ExportEtkPriceDialogStatusChanged(bool status)
+        {
+            await DownloadEtkPriceList();
+        }
+
+        private async Task DownloadEtkPriceList()
+        {
+            
+            StateHasChanged();
+
+            var options = new EtkKomplektPriceListExportOptions()
+            {
+                AllowedManufacturers = exportPriceManufacturerList?.CheckedManufacturerIds
+            };
+
+            if (options.AllowedManufacturers == null || options.AllowedManufacturers.Count == 0) { return; }
+
+            etkPriceListDownloadInProgress = true;
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            string filePath = null;
+
+            try
+            {
+
+                
+
+                filePath = await reportManager.EtkPricelist.Create(options);
+
+                await js.InvokeAsync<object>("saveAsFile", Path.GetFileName(filePath), Convert.ToBase64String(File.ReadAllBytes(filePath)));
+            }
+            catch(Exception ex) 
+            {
+                toast.ShowError(ex.Message);
+            }
+            finally
+            {
+                if (filePath != null && File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+                etkPriceListDownloadInProgress = false;
+            }
         }
     }
 }

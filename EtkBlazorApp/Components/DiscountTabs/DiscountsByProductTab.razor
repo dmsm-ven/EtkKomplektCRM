@@ -113,7 +113,7 @@
                                 </button>
                             </td>
                             <td>
-                                <a href="@item.ProductIdUri" target="_blank">@item.Name</a>
+                                <a href="@item.ProductIdUri" target="_blank">@HttpUtility.HtmlDecode(item.Name)</a>
                             </td>
                             <td>
                                 @item.BasePriceCurrency
