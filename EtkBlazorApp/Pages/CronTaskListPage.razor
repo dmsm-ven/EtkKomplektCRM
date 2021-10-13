@@ -3,32 +3,44 @@
 @inject CronTaskService taskManager
 @inject UserLogger userLogger
 @inject NavigationManager navigationManager
-@attribute [Authorize(Roles = "Administrator, Manager")]
-@implements IDisposable
-@using System.Timers
+@inject CronTaskService cronTaskService
+    @attribute [Authorize(Roles = "Administrator, Manager")]
+    @implements IDisposable
+    @using System.Timers
 
-<h3>Переодические задачи</h3>
-@if (cronTaskList == null)
-{
-    <LoadingSpinner />
-}
-else
-{
-    <div class="row py-2">
-        <div class="btn-group">
-            <button class="btn btn-info" @onclick="@(e => addNewDialog.Show())">
-                <span class="oi oi-timer"></span>
-                Создать новое задание
-            </button>
-            <a class="btn btn-info mx-2" href="/cron-task-history">
-                <span class="oi oi-book"></span>
-                Журнал выполнения
-            </a>
+    <h3>Переодические задачи</h3>
+    @if (cronTaskList == null)
+    {
+        <LoadingSpinner />
+    }
+    else
+    {
+        <div class="row py-2">
+            <div class="btn-group">
+                <button class="btn btn-info" @onclick="@(e => addNewDialog.Show())">
+                    <span class="oi oi-timer"></span>
+                    Создать новое задание
+                </button>
+                <a class="btn btn-info mx-2" href="/cron-task-history">
+                    <span class="oi oi-book"></span>
+                    Журнал выполнения
+                </a>
+            </div>
+            <div class="float-right" style="margin-left: auto;">
+                <p>Время на сервере: <span style="color: Highlight">@DateTime.Now.ToShortTimeString()</span></p>
+            </div>
         </div>
-        <div class="float-right" style="margin-left: auto;">
-            <p>Время на сервере: <span style="color: Highlight">@DateTime.Now.ToShortTimeString()</span></p>
-        </div>
-    </div>
+        if (activeTask != null)
+        {
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12 my-1">
+                        <h3>В данный момент выполняется задание @($"'{activeTask.name}'")</h3>
+                        <IntermediateProgressBar></IntermediateProgressBar>
+                    </div>
+                </div>
+            </div>
+        }
         <div class="row py-2">
             <div class="table-responsive cron-task-table">
                 <table class="table">
@@ -50,17 +62,19 @@ else
                 </table>
             </div>
         </div>
-        }
+    }
 
-        <AddNewCronTaskDialog @ref="addNewDialog" ConfirmationChanged="NewTaskDialogStateChanged" />
+    <AddNewCronTaskDialog @ref="addNewDialog" ConfirmationChanged="NewTaskDialogStateChanged" />
 
 
-        @code {
-            Timer timeLeftRefresh = new Timer(TimeSpan.FromSeconds(15).TotalMilliseconds);
-            List<CronTaskViewModel> cronTaskList = null;
-            AddNewCronTaskDialog addNewDialog;
+    @code {
+        Timer timeLeftRefresh = new Timer(TimeSpan.FromSeconds(15).TotalMilliseconds);
+        List<CronTaskViewModel> cronTaskList = null;
+        AddNewCronTaskDialog addNewDialog;
 
-    protected override async Task OnInitializedAsync()
+        CronTaskEntity activeTask;
+
+        protected override async Task OnInitializedAsync()
         {
             cronTaskList = (await cronTaskStorage.GetCronTasks())
                         .Select(ct => new CronTaskViewModel()
@@ -81,11 +95,12 @@ else
                         .ThenBy(ct => ct.Title)
                         .ToList();
 
-            timeLeftRefresh.Elapsed += (o, e) =>
-            {
-                InvokeAsync(() => StateHasChanged());
-            };
+            timeLeftRefresh.Elapsed += (o, e) => InvokeAsync(() => StateHasChanged());
             timeLeftRefresh.Start();
+
+            activeTask = cronTaskService.TaskInProgress;
+            cronTaskService.OnTaskExecutionStart += OnTaskManagerStart;
+            cronTaskService.OnTaskExecutionEnd += OnTaskManagerFinish;
         }
 
         private async Task NewTaskDialogStateChanged(CronTaskViewModel item)
@@ -108,9 +123,23 @@ else
             }
         }
 
+        private async void OnTaskManagerStart(CronTaskEntity t)
+        {
+            activeTask = t;
+            await InvokeAsync(() => StateHasChanged());
+        }
+
+        private async void OnTaskManagerFinish(CronTaskEntity t)
+        {
+            activeTask = null;
+            await InvokeAsync(() => StateHasChanged());
+        }
+
         public void Dispose()
         {
+            cronTaskService.OnTaskExecutionStart -= OnTaskManagerStart;
+            cronTaskService.OnTaskExecutionEnd -= OnTaskManagerFinish;
             timeLeftRefresh?.Stop();
             timeLeftRefresh?.Dispose();
         }
-        }
+    }

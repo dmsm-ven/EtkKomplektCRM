@@ -21,13 +21,14 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             for (int row = 11; row < tab.Dimension.Rows; row++)
             {
                 string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 10));
+                
                 if (!ValidManufacturerNames.Contains(manufacturer)) { continue; }           
 
                 string prefix = $"{manufacturer} ";
                 string sku = prefix + tab.GetValue<string>(row, 1);
                 string name = tab.GetValue<string>(row, 2);
                 int quantity = (int)tab.GetValue<decimal>(row, 5);
-                decimal price = tab.GetValue<decimal>(row, 7);
+                decimal? price = manufacturer.Equals("Pro'sKit") ? null : tab.GetValue<decimal>(row, 7);
                 string model = tab.GetValue<string>(row, 9);
 
                 var priceLine = new PriceLine(this)

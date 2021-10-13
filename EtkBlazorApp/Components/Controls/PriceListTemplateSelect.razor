@@ -5,17 +5,24 @@
     @foreach (var plt in priceListTemplates)
     {
         <option selected="@(Guid.Equals(plt.id))"
+                disabled="@(DisableMethodlessTemplate && plt.remote_uri_method_name == null)"
                 value="@plt.id">
            @GetIconMarkup(plt) &nbsp; @plt.title
         </option>
     }
 </select>
 
+<style>
+    option:disabled {
+        color: rgba(128, 128, 128, 0.75);
+    }
+</style>
+
 @code {
     List<PriceListTemplateEntity> priceListTemplates = null;
+    [Parameter] public bool DisableMethodlessTemplate { get; set; } = false;
 
-    [Parameter]
-    public string Guid
+    [Parameter] public string Guid
     {
         get => guid ?? string.Empty;
         set
@@ -37,17 +44,14 @@
 
     private MarkupString GetIconMarkup(PriceListTemplateEntity plt)
     {
-        if (!string.IsNullOrEmpty(plt.remote_uri))
+        if (plt.remote_uri_method_name != null)
         {
+            if (!string.IsNullOrWhiteSpace(plt.email_criteria_sender))
+            {
+                return (MarkupString)"&#9993;";
+            }
             return (MarkupString)"&#9729;";
         }
-
-        if (!string.IsNullOrWhiteSpace(plt.email_criteria_sender))
-        {
-            return (MarkupString)"&#9993;";
-        }
-
-
-        return (MarkupString)"&star;";
+        return (MarkupString)"&#9711;";
     }
 }

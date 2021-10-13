@@ -20,9 +20,6 @@ namespace EtkBlazorApp.DataAccess.Entity
         public int? remote_uri_method_id { get; set; }
         public string remote_uri_method_name { get; set; }
 
-        public int content_type_id { get; set; }
-        public string content_type_name { get; set; }
-
         public string email_criteria_subject { get; set; }
         public string email_criteria_sender { get; set; }
         public string email_criteria_file_name_pattern { get; set; }

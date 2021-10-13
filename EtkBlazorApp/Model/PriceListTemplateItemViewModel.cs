@@ -25,9 +25,6 @@ namespace EtkBlazorApp
         public decimal Discount { get; set; }       
         public bool Nds { get; set; }
 
-        public int PriceListTypeId { get; set; }
-        public string PriceListTypeName { get; set; }
-
         public string RemoteUrl { get; set; }
         public int? RemoteUrlMethodId { get; set; }
         public string RemoteUrlMethodName { get; set; }

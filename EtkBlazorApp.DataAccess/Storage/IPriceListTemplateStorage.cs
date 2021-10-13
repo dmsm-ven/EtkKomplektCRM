@@ -16,7 +16,6 @@ namespace EtkBlazorApp.DataAccess
         Task DeletePriceList(string guid);
         Task ChangePriceListTemplateDiscount(string guid, decimal discount);
         Task<List<PriceListTemplateRemoteUriMethodEntity>> GetPricelistTemplateRemoteLoadMethods();
-        Task<List<PriceListTemplateContentTypeEntity>> GetPriceListTemplateContentTypes();
         Task<List<string>> GetPriceListTemplatGroupNames();      
     }
 
@@ -31,9 +30,8 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task<List<PriceListTemplateEntity>> GetPriceListTemplates()
         {
-            string sql = @"SELECT t.*, ct.name as content_type_name, lm.name as remote_uri_method_name, esc.sender as email_criteria_sender
+            string sql = @"SELECT t.*, lm.name as remote_uri_method_name, esc.sender as email_criteria_sender
                           FROM etk_app_price_list_template t
-                          JOIN etk_app_price_list_template_content_type ct ON t.content_type_id = ct.id
                           LEFT JOIN etk_app_price_list_template_load_method lm ON t.remote_uri_method_id = lm.id
                           LEFT JOIN etk_app_price_list_template_email_search_criteria esc ON t.id = esc.template_guid";
 
@@ -44,7 +42,6 @@ namespace EtkBlazorApp.DataAccess
         public async Task<PriceListTemplateEntity> GetPriceListTemplateById(string guid)
         {
             string sql = @"SELECT t.*, 
-                                    ct.name as content_type_name, 
                                     lm.name as remote_uri_method_name, 
                                     cred.login as credentials_login, cred.password as credentials_password,
                                     esc.subject as email_criteria_subject, 
@@ -52,7 +49,6 @@ namespace EtkBlazorApp.DataAccess
                                     esc.file_name_pattern as email_criteria_file_name_pattern,
                                     esc.max_age_in_days as email_criteria_max_age_in_days
                           FROM etk_app_price_list_template t
-                          JOIN etk_app_price_list_template_content_type ct ON t.content_type_id = ct.id
                           LEFT JOIN etk_app_price_list_template_load_method lm ON t.remote_uri_method_id = lm.id 
                           LEFT JOIN etk_app_price_list_template_email_search_criteria esc ON t.id = esc.template_guid 
                           LEFT JOIN etk_app_price_list_template_credentials cred ON t.id = cred.template_guid 
@@ -75,13 +71,6 @@ namespace EtkBlazorApp.DataAccess
             return data;
         }
 
-        public async Task<List<PriceListTemplateContentTypeEntity>> GetPriceListTemplateContentTypes()
-        {
-            string sql = "SELECT * FROM etk_app_price_list_template_content_type";
-            var data = await database.GetList<PriceListTemplateContentTypeEntity>(sql);
-            return data;
-        }
-
         public async Task<List<string>> GetPriceListTemplatGroupNames()
         {
             string sql = "SELECT DISTINCT group_name FROM etk_app_price_list_template ORDER BY group_name";
@@ -96,7 +85,6 @@ namespace EtkBlazorApp.DataAccess
                                 title = @title,
                                 description = @description,
                                 group_name = @group_name,
-                                content_type_id = @content_type_id,
                                 remote_uri = @remote_uri,
                                 remote_uri_method_id = @remote_uri_method_id,
                                 nds = @nds,
@@ -143,8 +131,8 @@ namespace EtkBlazorApp.DataAccess
         public async Task CreatePriceList(PriceListTemplateEntity data)
         {          
             string sql = @"INSERT INTO etk_app_price_list_template
-                        (id, title, description, group_name, content_type_id, remote_uri, remote_uri_method_id, nds, discount, image) VALUES
-                        (@id, @title, @description, @group_name, @content_type_id, @remote_uri, @remote_uri_method_id, @nds, @discount, @image)";
+                        (id, title, description, group_name, remote_uri, remote_uri_method_id, nds, discount, image) VALUES
+                        (@id, @title, @description, @group_name, @remote_uri, @remote_uri_method_id, @nds, @discount, @image)";
 
             await database.ExecuteQuery(sql, data);
 

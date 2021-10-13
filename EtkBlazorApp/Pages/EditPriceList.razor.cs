@@ -20,13 +20,14 @@ namespace EtkBlazorApp.Pages
         PriceListTemplateItemViewModel item;
 
         List<PriceListTemplateRemoteUriMethodEntity> remoteUriLoadMethods;
-        List<PriceListTemplateContentTypeEntity> contentTypeNames;
         List<string> groupNames;
         List<string> guidList;
         List<string> alreadyUsedGuids;
 
-        string remoteUriCredentialsLogin, remoteUriCredentialsPassword;
         bool createNew = false;
+        bool expandedQuantityMap = false;
+        bool expandedManufacturerMap = false;
+        bool expandedSkipList = false;
 
         protected override async Task OnInitializedAsync()
         {
@@ -42,8 +43,6 @@ namespace EtkBlazorApp.Pages
                     GroupName = entity.group_name,
                     Image = entity.image,
                     Nds = entity.nds,
-                    PriceListTypeId = 3, // - пофиксить правильную обработку или убрать это свойство
-                    PriceListTypeName = entity.content_type_name,
                     RemoteUrl = entity.remote_uri,
                     RemoteUrlMethodId = entity.remote_uri_method_id,
                     RemoteUrlMethodName = entity.remote_uri_method_name,
@@ -63,7 +62,6 @@ namespace EtkBlazorApp.Pages
             }
 
             remoteUriLoadMethods = await templateStorage.GetPricelistTemplateRemoteLoadMethods();
-            contentTypeNames = await templateStorage.GetPriceListTemplateContentTypes();
             groupNames = await templateStorage.GetPriceListTemplatGroupNames();
             alreadyUsedGuids = (await templateStorage.GetPriceListTemplates()).Select(t => t.id).ToList();
 
@@ -87,14 +85,7 @@ namespace EtkBlazorApp.Pages
             var method = remoteUriLoadMethods.FirstOrDefault(m => m.id.ToString().Equals(id));
             item.RemoteUrlMethodId = method?.id;
             item.RemoteUrlMethodName = method?.name;
-        }
-
-        private void ContentTypeChangedChanged(ChangeEventArgs e)
-        {
-            string id = e?.Value?.ToString();
-            var contentType = contentTypeNames.FirstOrDefault(m => m.id.ToString().Equals(id));
-            item.PriceListTypeId = contentType?.id ?? 0;
-            item.PriceListTypeName = contentType?.name;
+            StateHasChanged();
         }
 
         private async Task ImageFileChanged(string selectedFilePath)
@@ -119,7 +110,6 @@ namespace EtkBlazorApp.Pages
                 group_name = item.GroupName,
                 remote_uri = item.RemoteUrl,
                 remote_uri_method_id = item.RemoteUrlMethodId,
-                content_type_id = item.PriceListTypeId,
                 credentials_login = item.Cridentials_Login,
                 credentials_password = item.Cridentials_Password,
                 email_criteria_sender = item.EmailSearchCriteria_Sender,

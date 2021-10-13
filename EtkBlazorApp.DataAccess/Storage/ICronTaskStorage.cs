@@ -54,6 +54,7 @@ namespace EtkBlazorApp.DataAccess
         {
             string sql = @"UPDATE etk_app_cron_task 
                            SET enabled = @enabled,
+                               description = @description,
                                exec_time = @exec_time,
                                linked_price_list_guid = @linked_price_list_guid
                            WHERE task_id = @task_id";

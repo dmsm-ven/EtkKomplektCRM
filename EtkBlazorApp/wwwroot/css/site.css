@@ -1,6 +1,50 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+.expander-button-item {
+    background-color: whitesmoke;
+    color: black;
+    cursor: pointer;
+    padding: 18px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 15px;
+}
+
+.expander-button-item.expanded, .expander-button-item:hover {
+    background-color: lightblue;
+}
+.expander-content {
+    padding: 20px;
+    display: none;
+    overflow: hidden;
+    background-color: whitesmoke;
+    color: black;
+}
+.expander-button-item:after {
+    content: '\002B'; /* Unicode character for "plus" sign (+) */
+    font-size: 15px;
+    color: black;
+    float: right;
+    margin-left: 5px;
+}
+
+.expander-button-item.expanded:after {
+    content: "\2212"; /* Unicode character for "minus" sign (-) */
+}
+
+
+.price-list-load-method-box {
+    margin: 10px 2px;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 2px solid #868a8d;
+    border-radius: .25rem;
+    padding: 8px;
+}
+
 .partner-brand-label {
     font-size: 14px;
     color: white;

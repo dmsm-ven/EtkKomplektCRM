@@ -14,7 +14,7 @@
 else
 {
 <div class="row justify-content-center">
-    <div class="col-md-6 col-sm-12">
+    <div class="container">
         <EditForm OnValidSubmit="ValidSubmit" Model="item">
             <DataAnnotationsValidator />
             <div class="row my-2">
@@ -57,103 +57,139 @@ else
                 </datalist>
             </div>
 
-            <div class="form-group">
-                <label for="remote-uri-method">Метод загрузки файла</label>
-                <select class="form-control" @onchange="LoadMethodChanged" id="remote-uri-method">
-                    <option value="">Выбрать</option>
-                    @foreach (var method in remoteUriLoadMethods)
-                    {
-                        <option selected="@(method.id == item.RemoteUrlMethodId)" value="@method.id">@method.name</option>
-                    }
-                </select>
-            </div>
-
-            @if (showEmailPatternBox)
+            @if (item.RemoteUrlMethodId.HasValue)
             {
-                <div class="form-row">
-                    <div class="form-group col-md-6">
-                        <label for="criteria-subject">Тема письма</label>
-                        <input type="text" class="form-control" id="criteria-subject" @bind="item.EmailSearchCriteria_Subject" />
+                <h3>Данные для загрузки прайс-листа</h3>
+                <div class="price-list-load-method-box">
+                    <div class="form-group">
+                        <label for="remote-uri-method">Метод загрузки файла</label>
+                        <select class="form-control" @onchange="LoadMethodChanged" id="remote-uri-method">
+                            <option value="">Выбрать</option>
+                            @foreach (var method in remoteUriLoadMethods)
+                            {
+                                <option selected="@(item.RemoteUrlMethodId.HasValue && method.id == item.RemoteUrlMethodId)"
+                                        value="@method.id">
+                                    @method.name
+                                </option>
+                            }
+                        </select>
                     </div>
-                    <div class="form-group col-md-6">
-                        <label for="criteria-sender">Отправитель</label>
-                        <input type="text" class="form-control" id="criteria-sender" @bind="item.EmailSearchCriteria_Sender" />
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group col-md-6">
-                        <label for="criteria-filename">Паттерн имени файла</label>
-                        <input type="text" class="form-control" id="criteria-filename" @bind="item.EmailSearchCriteria_FileNamePattern" />
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label for="criteria-max-old">Не старее чем (дней)</label>
-                        <input type="number" min="0" max="14" class="form-control" id="criteria-max-old" @bind="item.EmailSearchCriteria_MaxAgeInDays" />
-                    </div>
+                    @if (showEmailPatternBox)
+                    {
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="criteria-subject">Тема письма</label>
+                                <input type="text" class="form-control" id="criteria-subject" @bind="item.EmailSearchCriteria_Subject" />
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="criteria-sender">Отправитель</label>
+                                <input type="text" class="form-control" id="criteria-sender" @bind="item.EmailSearchCriteria_Sender" />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="criteria-filename">Паттерн имени файла</label>
+                                <input type="text" class="form-control" id="criteria-filename" @bind="item.EmailSearchCriteria_FileNamePattern" />
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="criteria-max-old">Не старее чем (дней)</label>
+                                <input type="number" min="0" max="14" class="form-control" id="criteria-max-old" @bind="item.EmailSearchCriteria_MaxAgeInDays" />
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="form-group">
+                            <label for="description">Прямая ссылка на скачивание</label>
+                            <input type="url" @bind="@item.RemoteUrl" id="remote_url" class="form-control" />
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="remote-method-login">Логин</label>
+                                <input type="text" class="form-control" id="remote-method-login" @bind="item.Cridentials_Login" />
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="remote-method-password">Пароль</label>
+                                <input type="password" class="form-control" id="remote-method-password" @bind="item.Cridentials_Password" />
+                            </div>
+                        </div>
+                    }
                 </div>
             }
             else
             {
-                <div class="form-row">
-                    <div class="form-group col-md-6">
-                        <label for="remote-method-login">Логин</label>
-                        <input type="text" class="form-control" id="remote-method-login" @bind="item.Cridentials_Login" />
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label for="remote-method-password">Пароль</label>
-                        <input type="password" class="form-control" id="remote-method-password" @bind="item.Cridentials_Password" />
-                    </div>
-                </div>
-            }
-
-            @if (item.RemoteUrlMethodId != null && showEmailPatternBox == false)
-            {
                 <div class="form-group">
-                    <label for="description">Прямая ссылка на скачивание</label>
-                    <input type="url" @bind="@item.RemoteUrl" id="remote_url" class="form-control" />
-                </div>
-            }
-
-                <div class="form-group">
-                    <label for="content-type">Тип прайс-листа</label>
-                    <select class="form-control" @onchange="ContentTypeChangedChanged" id="content-type" required>
-                        @foreach (var ct in contentTypeNames)
+                    <label for="remote-uri-method">Метод загрузки файла</label>
+                    <select class="form-control" @onchange="LoadMethodChanged" id="remote-uri-method">
+                        <option value="">Выбрать</option>
+                        @foreach (var method in remoteUriLoadMethods)
                         {
-                            <option selected="@(ct.id == item.PriceListTypeId)" value="@ct.id">@ct.name</option>
+                            <option selected="@(item.RemoteUrlMethodId.HasValue && method.id == item.RemoteUrlMethodId)"
+                                    value="@method.id">
+                                @method.name
+                            </option>
                         }
                     </select>
                 </div>
-            @if (item.PriceListTypeName != "Остатки")
-            {
-
-                <div class="form-group">
-                    <input type="checkbox" @bind="@item.Nds" id="nds" class="form-check-inline" />
-                    <label for="nds">Добавлять к цене НДС</label>
-                </div>
-
-                <div class="form-group">
-                    <label for="discount">Наценка, %</label>
-                    <input type="number" @bind="@item.Discount" id="discount" class="form-control" />
-                </div>
             }
+
+            <div class="form-group">
+                <input type="checkbox" @bind="@item.Nds" id="nds" class="form-check-inline" />
+                <label for="nds">Добавлять к цене НДС</label>
+            </div>
+
+            <div class="form-group">
+                <label for="discount">Наценка, %</label>
+                <input type="number" @bind="@item.Discount" id="discount" class="form-control" />
+            </div>
 
             <div class="form-group">
                 <label for="description">Примечание</label>
                 <textarea type="text" @bind="@item.Description" id="description" class="form-control" style="height: 60px;" />
             </div>
 
+            <!-- В разработке -->
+            <div class="additional-settings" style="display: none;">
+
+                <button type="button"
+                        @onclick="@(e => expandedQuantityMap = !expandedQuantityMap)"
+                        class="btn expander-button-item @(expandedQuantityMap ? "expanded" : string.Empty)">
+                    Преобразование строки остатков
+                </button>
+                <div class="expander-content" id="quantity-map-panel" style="display: @(expandedQuantityMap ? "block" : "none")">
+                    <p>Тут будет карта остатков, например: Да = 50 штук, Нет = 0 штук, и т.д.</p>
+                </div>
+
+                <button type="button"
+                        @onclick="@(e => expandedManufacturerMap = !expandedManufacturerMap)"
+                        class="btn expander-button-item @(expandedManufacturerMap ? "expanded" : string.Empty)">
+                    Преобразование названий брендов
+                </button>
+                <div class="expander-content" id="manufacturer-map-panel" style="display: @(expandedManufacturerMap ? "block" : "none")">
+                    <p>Тут будет карта названий брендов, например: Proskit = Pro'sKit</p>
+                </div>
+
+                <button type="button"
+                        @onclick="@(e => expandedSkipList = !expandedSkipList)"
+                        class="btn expander-button-item @(expandedSkipList ? "expanded" : string.Empty)">
+                    Список игнорирования брендов
+                </button>
+                <div class="expander-content" id="manufacturer-skip-panel" style="display: @(expandedSkipList ? "block" : "none")">
+                    <p>Тут будет список брендов которые не нужно брать из этого прайс-листа</p>
+                </div>
+            </div>
+
             <AuthorizeView Roles="Administrator" Context="auth_context">
-                <div class="form-row my-4">
-                    @if (createNew == false)
-                {
-                    <div class="col-md-6">
-                        <button type="button" class="btn btn-danger mx-2" @onclick="@(e => deleteDialog.Show())">
-                            <span class="oi oi-x"></span>
-                            Удалить данный шаблон
-                        </button>
-                    </div>
-                }
-                    <div class="col-md-6">
-                        <button type="submit" class="btn btn-success mx-2">
+                <div class="row my-2">
+                    <div class="col-md-12">
+                        @if (!createNew)
+                        {
+                            <button type="button" class="btn btn-danger float-left" @onclick="@(e => deleteDialog.Show())">
+                                <span class="oi oi-x"></span>
+                                Удалить данный шаблон
+                            </button>
+                        }
+                        <button type="submit" class="btn btn-success float-right">
                             <span class="oi oi-check"></span>
                             @buttonActionName
                         </button>
@@ -161,8 +197,11 @@ else
                 </div>
             </AuthorizeView>
         </EditForm>
-        </div>
+
     </div>
+
+
+</div>
 
     <FtpFileSelectDialog @ref="imageSelectDialog"
                          InitialFolder="/image/price-list-templates"

@@ -55,7 +55,7 @@ namespace EtkBlazorApp.BL
             }
         }
 
-        public async Task ExecuteImmediately(int task_id)
+        public async Task ExecuteForced(int task_id)
         {            
             await RefreshTaskList(force: true);
             var kvp = tasks.FirstOrDefault(t => t.Key.TaskId == task_id);
@@ -63,7 +63,7 @@ namespace EtkBlazorApp.BL
 
             if (!inProgress.Contains(kvp.Key))
             {
-                await ExecuteTask(kvp.Key, kvp.Value);
+                await ExecuteTask(kvp.Key, kvp.Value, forced: true);
             }
         }
 
@@ -98,7 +98,7 @@ namespace EtkBlazorApp.BL
             }
         }
 
-        private async Task ExecuteTask(CronTaskBase task, CronTaskEntity taskInfo)
+        private async Task ExecuteTask(CronTaskBase task, CronTaskEntity taskInfo, bool forced = false)
         {
             inProgress.Add(task);
             OnTaskExecutionStart?.Invoke(taskInfo);
@@ -106,6 +106,11 @@ namespace EtkBlazorApp.BL
 
             var sw = Stopwatch.StartNew();
             CronTaskExecResult exec_result = CronTaskExecResult.Failed;
+
+            if (forced)
+            {
+                taskInfo.last_exec_file_size = null;
+            }
 
             try
             {
@@ -124,8 +129,7 @@ namespace EtkBlazorApp.BL
             }
             catch (Exception ex)
             {
-                string innerException = ex.InnerException?.Message ?? string.Empty;
-                await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Ошибка", $"Ошибка выполнения задания '{taskInfo.name}'. {ex.Message} {innerException}".Trim());
+                await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Ошибка", $"Ошибка выполнения задания '{taskInfo.name}'. {ex.Message} {ex.InnerException?.Message ?? string.Empty}".Trim());
             }
             finally
             {

@@ -5,7 +5,7 @@
 @inject CronTaskService taskManager
 @inject UserLogger userLogger
 @inject NavigationManager navigationManager
-@attribute [Authorize(Roles = "Administrator")]
+@attribute [Authorize(Roles = "Administrator, Manager")]
 
 <h3>Настройки задачи</h3>
 
@@ -24,7 +24,7 @@
             {
             <div class="form-group">
                 <label for="price-list-template-guid mx-2">Закрепленный прайс-лист</label>
-                <PriceListTemplateSelect @bind-Guid="@item.PriceListGuid" />
+                <PriceListTemplateSelect @bind-Guid="@item.PriceListGuid" DisableMethodlessTemplate="true" />
             </div>
             }
             <div class="btn-group" role="group" style="width: 100%">
@@ -106,7 +106,7 @@
 
             await Task.Delay(TimeSpan.FromSeconds(1));
 
-            await InvokeAsync(() => taskManager.ExecuteImmediately(item.Id));
+            await InvokeAsync(() => taskManager.ExecuteForced(item.Id));
 
             isProgressBarVisible = false;
 

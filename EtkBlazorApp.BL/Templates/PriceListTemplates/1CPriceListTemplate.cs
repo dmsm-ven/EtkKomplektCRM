@@ -70,6 +70,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             ManufacturerNameMap["АКТАКОМ"] = "Aktakom";
             ManufacturerNameMap["Dinolite"] = "Dino-Lite";
             ManufacturerNameMap["Megeon"] = "Мегеон";
+
+            SkipManufacturerNames.Add("Etari");
         }
 
         public Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)
@@ -100,7 +102,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     .Select(tr => tr.SelectNodes("./td").Select(td => HttpUtility.HtmlDecode(td.InnerText.Trim())).ToArray())
                     .Where(cells => cells.Length >= 5 && cells[0] != "Итого")
                     .Select(cells => ParseRow(cells, nextDeliveryDays))
-                    .Where(pl => !string.IsNullOrWhiteSpace(pl.Sku))
+                    .Where(pl => !string.IsNullOrWhiteSpace(pl.Sku) && !SkipManufacturerNames.Contains(pl.Manufacturer))
                     .ToList();
 
                 list.AddRange(data);
@@ -122,28 +124,22 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 Stock = StockName._1C,
             };
 
-            try
-            {
 
-                for (int i = 0; i < headerColumnsDays.Length; i++)
+            for (int i = 0; i < headerColumnsDays.Length; i++)
+            {
+                int? nextQuantity = ParseQuantity(cells[5 + i].Replace(",000", string.Empty), canBeNull: true);
+                //берем первый попавшийся столбец (ближайший), остальные отбрасываем
+                if (nextQuantity.HasValue)
                 {
-                    int? nextQuantity = ParseQuantity(cells[5 + i].Replace(",000", string.Empty), canBeNull: true);
-                    //берем первый попавшийся столбец (ближайший), остальные отбрасываем
-                    if (nextQuantity.HasValue)
+                    line.NextStockDelivery = new DataAccess.NextStockDelivery()
                     {
-                        line.NextStockDelivery = new DataAccess.NextStockDelivery()
-                        {
-                            Days = headerColumnsDays[i],
-                            Quantity = nextQuantity.Value
-                        };
-                        break;
-                    }
+                        Days = headerColumnsDays[i],
+                        Quantity = nextQuantity.Value
+                    };
+                    break;
                 }
             }
-            catch
-            {
-                throw;
-            }
+
 
             return line;
         }

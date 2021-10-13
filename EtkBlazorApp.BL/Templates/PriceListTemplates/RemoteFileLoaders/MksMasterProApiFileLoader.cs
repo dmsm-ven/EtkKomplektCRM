@@ -59,10 +59,12 @@ namespace EtkBlazorApp.BL
                     var contentBytes = await response.Content.ReadAsByteArrayAsync();
                     var str = Encoding.UTF8.GetString(contentBytes);
 
+                    //Очищаем от ненужных заголовков и экранируем
                     str = str
                         .Substring(str.LastIndexOf(',') + 1)
                         .Trim('"')
                         .Replace(@"\/","/");
+
                     byte[] bytes = Convert.FromBase64String(str);
 
                     return new RemoteTemplateFileResponse(bytes, "eridan_etk_komplekt.xlsx");
