@@ -13,94 +13,104 @@
 }
 else
 {
-@if (!string.IsNullOrWhiteSpace(singleManufacturer))
-{
-    <h2>Производитель "@singleManufacturer"</h2>
-}
-else
-{
-    <div class="price-list-template-manufacturers">
-        <button type="button" class="btn btn-@(filteredManufacturer == null ? "warning" : "primary") mx-1 my-2" @onclick="@(e => ApplyManufacturerFilter(null))">
-            Все <span class="badge badge-pill badge-info">@source.Count</span>
-        </button>
-
-        @foreach (var kvp in productsByBrand)
-        {
-            <button type="button"
-                    class="btn btn-@(filteredManufacturer == kvp.Key ? "warning" : "primary") mx-1 my-2" 
-                    @onclick="@(e => ApplyManufacturerFilter(kvp.Key))">
-                @kvp.Key <span class="badge badge-pill badge-info">@kvp.Value</span>
+    @if (!string.IsNullOrWhiteSpace(singleManufacturer))
+    {
+        <h2>Производитель "@singleManufacturer"</h2>
+    }
+    else if (string.IsNullOrWhiteSpace(searchText))
+    {
+        <div class="price-list-template-manufacturers">
+            <button type="button" class="btn btn-@(filteredManufacturer == null ? "warning" : "primary") mx-1 my-2" @onclick="@(e => ApplyManufacturerFilter(null))">
+                Все <span class="badge badge-pill badge-info">@source.Count</span>
             </button>
-        }
-    </div>
-}
 
-<div style="overflow-y: visible; height: 900px;">
-    <table class="table table-striped table-bordered uploaded-price-list-lines-table">
-        <thead class="thead-etk">
-            <tr>
-                @if (hasManufacturerColumn)
-                {
-                    <th>Производитель</th>
-                }
-                @if (hasNameColumn)
-                {
-                    <th>Товар</th>
-                }
-                <th>Артикул</th>
-                @if (hasModelColumn)
-                {
-                    <th>Модель</th>
-                }
-                @if (hasQuantityColumn)
-                {
-                    <th>Количество</th>
-                }
-                @if (hasPriceColumn)
-                {
-                    <th>Цена</th>
-                    <th>Валюта</th>
-                }
-            </tr>
-        </thead>
-        <tbody>
-            <Virtualize Context="line" Items="@priceLines" ItemSize="20" TItem="PriceLine" OverscanCount="25" @key="TemplateGuid">
-                <tr @key="RowGuids[line].ToString()">
+            @foreach (var kvp in productsByBrand)
+            {
+                <button type="button"
+                        class="btn btn-@(filteredManufacturer == kvp.Key ? "warning" : "primary") mx-1 my-2" 
+                        @onclick="@(e => ApplyManufacturerFilter(kvp.Key))">
+                    @kvp.Key <span class="badge badge-pill badge-info">@kvp.Value</span>
+                </button>
+            }
+        </div>
+    }
+
+    <div class="row py-2">
+        <input type="text" 
+               @bind="searchText"
+               placeholder="Поиск ..." class="form-control" style="max-width: 250px; margin-left: 12px; margin-right: 4px;" />
+        <button class="btn btn-outline-primary" @onclick="ApplySearchFilter">
+            <i class="bi bi-search"></i>
+            Поиск
+        </button>
+    </div>
+
+    <div style="overflow-y: visible; height: 900px;">
+        <table class="table table-striped table-bordered uploaded-price-list-lines-table">
+            <thead class="thead-etk">
+                <tr>
                     @if (hasManufacturerColumn)
                     {
-                        <td>@line.Manufacturer</td>
+                        <th>Производитель</th>
                     }
                     @if (hasNameColumn)
                     {
-                        <td>@line.Name</td>
+                        <th>Товар</th>
                     }
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary mx-1" @onclick="@( e => SearchSkuOnWebsite("findBySku", line.Sku))">
-                            <span class="oi oi-magnifying-glass"></span>
-                        </button>
-                        @line.Sku
-                    </td>
+                    <th>Артикул</th>
                     @if (hasModelColumn)
                     {
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary mx-1" @onclick="@( e => SearchSkuOnWebsite("findByModel", line.Model))">
-                                <span class="oi oi-magnifying-glass"></span>
-                            </button>
-                            @line.Model
-                        </td>
+                        <th>Модель</th>
                     }
                     @if (hasQuantityColumn)
                     {
-                        <td>@line.Quantity</td>
+                        <th>Количество</th>
                     }
                     @if (hasPriceColumn)
                     {
-                        <td>@line.Price</td>
-                        <td>@line.Currency</td>
+                        <th>Цена</th>
+                        <th>Валюта</th>
                     }
                 </tr>
-            </Virtualize>
-        </tbody>
-    </table>
-</div>
+            </thead>
+            <tbody>
+                <Virtualize TItem="PriceLine" OverscanCount="50" Items="priceLines" Context="line" ItemSize="20">
+                    <tr @key="@line.GetHashCode()">
+                        @if (hasManufacturerColumn)
+                        {
+                            <td>@line.Manufacturer</td>
+                        }
+                        @if (hasNameColumn)
+                        {
+                            <td>@line.Name</td>
+                        }
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary mx-1" @onclick="@( e => SearchSkuOnWebsite("findBySku", line.Sku))">
+                                <span class="oi oi-magnifying-glass"></span>
+                            </button>
+                            @line.Sku
+                        </td>
+                        @if (hasModelColumn)
+                        {
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary mx-1" @onclick="@( e => SearchSkuOnWebsite("findByModel", line.Model))">
+                                    <span class="oi oi-magnifying-glass"></span>
+                                </button>
+                                @line.Model
+                            </td>
+                        }
+                        @if (hasQuantityColumn)
+                        {
+                            <td>@line.Quantity</td>
+                        }
+                        @if (hasPriceColumn)
+                        {
+                            <td>@line.Price</td>
+                            <td>@line.Currency</td>
+                        }
+                    </tr>
+                </Virtualize>
+            </tbody>
+        </table>
+    </div>
 }

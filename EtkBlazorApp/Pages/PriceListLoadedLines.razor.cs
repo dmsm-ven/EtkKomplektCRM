@@ -24,14 +24,13 @@ namespace EtkBlazorApp.Pages
         PriceLine selectedPriceLine = null;
         List<PriceLine> source = new List<PriceLine>();
         List<PriceLine> priceLines = null;
-
-        Dictionary<PriceLine, Guid> RowGuids = new Dictionary<PriceLine, Guid>();
         Dictionary<string, int> productsByBrand;
 
         PriceListTemplateEntity templateInformation = null;
 
         string filteredManufacturer;
         string singleManufacturer;
+        string searchText;
 
         bool hasManufacturerColumn;
         bool hasModelColumn;
@@ -46,8 +45,6 @@ namespace EtkBlazorApp.Pages
             templateInformation = await templateStorage.GetPriceListTemplateById(TemplateGuid);
 
             var data = manager.LoadedFiles.FirstOrDefault(p => p.TemplateDescription.id == TemplateGuid)?.ReadedPriceLines;
-
-            RowGuids = data.ToDictionary(i => i, i => Guid.NewGuid());
 
             source.AddRange(data);
             priceLines = new List<PriceLine>(data);
@@ -112,6 +109,30 @@ namespace EtkBlazorApp.Pages
                 filteredManufacturer = manufacturer;
                 priceLines = source.Where(pl => pl.Manufacturer.Equals(manufacturer)).ToList();
             }
+        }
+
+        private void ApplySearchFilter()
+        {
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                priceLines = source
+                    .Where(pl => 
+                        (pl.Name != null && pl.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
+                        (pl.Ean != null && pl.Ean.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
+                        (pl.Model != null && pl.Model.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
+                       (pl.Sku != null && pl.Sku.Contains(searchText, StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
+                
+            }
+            else if(!string.IsNullOrWhiteSpace(filteredManufacturer))
+            {
+                ApplyManufacturerFilter(filteredManufacturer);
+            }
+            else
+            {
+                priceLines = source;
+            }
+            StateHasChanged();
         }
     }
 }
