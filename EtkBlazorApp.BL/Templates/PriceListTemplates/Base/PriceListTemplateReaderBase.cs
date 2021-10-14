@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtkBlazorApp.DataAccess.Entity;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -66,6 +67,24 @@ namespace EtkBlazorApp.BL
             }
 
             return canBeNull ? quantity : (quantity ?? 0);
+        }
+    
+        public void FillTemplateInfo(PriceListTemplateEntity templateInfo)
+        {
+            if (templateInfo.quantity_map != null)
+            {
+                foreach (var kvp in templateInfo.quantity_map)
+                {
+                    QuantityMap[kvp.text] = kvp.quantity;
+                }
+            }
+            if (templateInfo.manufacturer_name_map != null)
+            {
+                foreach (var kvp in templateInfo.manufacturer_name_map)
+                {
+                    ManufacturerNameMap[kvp.text] = kvp.name;
+                }
+            }
         }
     }
 }

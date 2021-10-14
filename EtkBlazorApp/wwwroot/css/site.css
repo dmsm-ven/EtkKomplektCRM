@@ -1,11 +1,24 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+.price-list-template-map-control {
+    width: 250px;
+    display: inline-block;
+    font-size: smaller;
+}
+
+.pl-template-add-settings-desc {
+    font-size: smaller;
+    font-style: italic;
+    color: #604f4f;
+}
+
 .expander-button-item {
-    background-color: whitesmoke;
-    color: black;
+    background-color: #4e667c;
+    color: #ffffff;
     cursor: pointer;
     padding: 18px;
+    margin: 3px 0px;
     width: 100%;
     border: none;
     text-align: left;
@@ -13,9 +26,9 @@
     font-size: 15px;
 }
 
-.expander-button-item.expanded, .expander-button-item:hover {
-    background-color: lightblue;
-}
+    .expander-button-item.expanded, .expander-button-item:hover {
+        background-color: #0077ff;
+    }
 .expander-content {
     padding: 20px;
     display: none;
@@ -26,7 +39,7 @@
 .expander-button-item:after {
     content: '\002B'; /* Unicode character for "plus" sign (+) */
     font-size: 15px;
-    color: black;
+    color: white;
     float: right;
     margin-left: 5px;
 }

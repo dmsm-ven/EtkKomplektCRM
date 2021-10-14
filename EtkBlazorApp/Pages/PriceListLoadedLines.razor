@@ -2,7 +2,7 @@
 
 @if (templateInformation != null)
 {
-    <img src="@templateInformation.image" 
+    <img src="@templateInformation.image"
          style="width: 300px; margin-bottom: 20px; border: 1px solid lightgray;"
          class="rounded mx-auto d-block">
 }
@@ -27,7 +27,7 @@ else
             @foreach (var kvp in productsByBrand)
             {
                 <button type="button"
-                        class="btn btn-@(filteredManufacturer == kvp.Key ? "warning" : "primary") mx-1 my-2" 
+                        class="btn btn-@(filteredManufacturer == kvp.Key ? "warning" : "primary") mx-1 my-2"
                         @onclick="@(e => ApplyManufacturerFilter(kvp.Key))">
                     @kvp.Key <span class="badge badge-pill badge-info">@kvp.Value</span>
                 </button>
@@ -36,7 +36,7 @@ else
     }
 
     <div class="row py-2">
-        <input type="text" 
+        <input type="text"
                @bind="searchText"
                placeholder="Поиск ..." class="form-control" style="max-width: 250px; margin-left: 12px; margin-right: 4px;" />
         <button class="btn btn-outline-primary" @onclick="ApplySearchFilter">
@@ -44,6 +44,15 @@ else
             Поиск
         </button>
     </div>
+
+    @if (templateInformation.discount != decimal.Zero)
+    {
+        <p><i>Цены указаны с учетом наценки:</i> <strong>@templateInformation.discount.ToString("F2")%</strong></p>
+    }
+    @if (templateInformation.nds)
+    {
+        <p><i>Цены указана с учетом дополнительной наценки <strong>НДС</strong></i></p>
+    }
 
     <div style="overflow-y: visible; height: 900px;">
         <table class="table table-striped table-bordered uploaded-price-list-lines-table">

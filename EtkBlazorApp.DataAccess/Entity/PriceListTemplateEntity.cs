@@ -27,5 +27,8 @@ namespace EtkBlazorApp.DataAccess.Entity
 
         public string credentials_login { get; set; }
         public string credentials_password { get; set; }
+
+        public List<QuantityMapRecordEntity> quantity_map { get; set; }
+        public List<ManufacturerMapRecordEntity> manufacturer_name_map { get; set; }
     }
 }

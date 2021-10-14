@@ -1,6 +1,7 @@
 ﻿using EtkBlazorApp.BL;
 using EtkBlazorApp.Infrastructure;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
@@ -38,7 +39,11 @@ namespace EtkBlazorApp
 
         public string Cridentials_Login { get; set; }
         public string Cridentials_Password { get; set; }
-        
+
+        public Dictionary<string, int> QuantityMap { get; set; } = new Dictionary<string, int>();
+        public Dictionary<string, string> ManufacturerNameMap { get; set; } = new Dictionary<string, string>();
+        public List<ManufacturerSkipItemViewModel> ManufacturerSkipList { get; set; } = new List<ManufacturerSkipItemViewModel>();
+
         public PriceListTemplateItemViewModel(string guid)
         {
             Guid = guid;
@@ -49,4 +54,15 @@ namespace EtkBlazorApp
                 .FirstOrDefault(type => type.GetCustomAttribute<PriceListTemplateGuidAttribute>()?.Guid == guid);
         }
     }
+
+    public class ManufacturerSkipItemViewModel
+    {
+        public int manufacturer_id { get; set; }
+        public string Name { get; set; }
+        public SkipManufacturerListType ListType { get; set; }
+        public string ListTypeDescription => (ListType == SkipManufacturerListType.black_list ? "Исключить этот" : "Включить только этот");        
+    }
+
+    public enum SkipManufacturerListType { black_list, white_list }
+
 }

@@ -1,7 +1,7 @@
 ﻿@inject IManufacturerStorage manufacturerStorage
 
 
-<select class="form-control" id="dropdown-manufacturer" style="min-width: 150px;"
+<select class="form-control" id="dropdown-manufacturer" style="min-width: 150px;@CustomStyle"
         @onchange="OnManufacturerChanged">
     @foreach (var manufacturer in manufacturersSource)
     {
@@ -17,6 +17,7 @@
 
     [Parameter] public EventCallback<ManufacturerEntity> ManufacturerChanged { get; set; }
     [Parameter] public ManufacturerEntity Manufacturer { get; set; }
+    [Parameter] public string CustomStyle { get; set; }
 
     protected override async Task OnInitializedAsync()
     {

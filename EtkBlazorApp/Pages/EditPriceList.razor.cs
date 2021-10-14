@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static EtkBlazorApp.ManufacturerSkipItemViewModel;
 
 namespace EtkBlazorApp.Pages
 {
@@ -24,10 +25,36 @@ namespace EtkBlazorApp.Pages
         List<string> guidList;
         List<string> alreadyUsedGuids;
 
+        SkipManufacturerListType newSkipManufacturerListType = SkipManufacturerListType.black_list;
+        ManufacturerEntity newSkipManufacturerItem;
+        string newManufacturerMapRecordWord;
+        ManufacturerEntity newManufacturerMapRecordItem;
+        string newQuantityMapRecordWord;
+        int newQuantityMapRecordValue;
+
         bool createNew = false;
         bool expandedQuantityMap = false;
         bool expandedManufacturerMap = false;
-        bool expandedSkipList = false;
+        bool expandedSkipList = false;    
+        bool showEmailPatternBox => item.RemoteUrlMethodName == "EmailAttachment";
+        bool addNewManufacturerMapButtonDisabled
+        {
+            get
+            {
+                return string.IsNullOrWhiteSpace(newManufacturerMapRecordWord) || 
+                    newManufacturerMapRecordItem == null || 
+                    newManufacturerMapRecordItem.name.Equals(newManufacturerMapRecordWord, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+        bool skipManufacturerAddNewRecordButtonDisabled
+        { 
+            get
+            {
+                return newSkipManufacturerItem == null ||
+                    item.ManufacturerSkipList.Any(i => i.manufacturer_id == newSkipManufacturerItem.manufacturer_id || i.ListType != newSkipManufacturerListType);
+            } 
+        }
+        string buttonActionName => string.IsNullOrWhiteSpace(TemplateGuid) ? "Создать" : "Сохранить изменения";
 
         protected override async Task OnInitializedAsync()
         {
@@ -53,6 +80,21 @@ namespace EtkBlazorApp.Pages
                     Cridentials_Login = entity.credentials_login,
                     Cridentials_Password = entity.credentials_password
                 };
+
+                item.QuantityMap = (await templateStorage.GetQuantityMapRecordsForTemplate(TemplateGuid))
+                    .ToDictionary(i => i.text, i => i.quantity);
+
+                item.ManufacturerNameMap = (await templateStorage.GetManufacturerNameMapRecordsForTemplate(TemplateGuid))
+                    .ToDictionary(i => i.text, i => i.name);
+
+                item.ManufacturerSkipList = (await templateStorage.GetManufacturerSkipRecordsForTemplate(TemplateGuid))
+                    .Select(e => new ManufacturerSkipItemViewModel()
+                    {
+                        ListType = Enum.Parse<SkipManufacturerListType>(e.list_type),
+                        manufacturer_id = e.manufacturer_id,
+                        Name = e.name
+                    })
+                    .ToList();
             }
             else
             {
@@ -66,18 +108,15 @@ namespace EtkBlazorApp.Pages
             alreadyUsedGuids = (await templateStorage.GetPriceListTemplates()).Select(t => t.id).ToList();
 
             guidList = typeof(IPriceListTemplate).Assembly.GetTypes()
-                .Select(type => type.GetCustomAttributes(typeof(PriceListTemplateGuidAttribute), false)
-                .OfType<PriceListTemplateGuidAttribute>().FirstOrDefault())
-                .Where(a => a != null)
-                .Select(a => a.Guid)
-                .OrderBy(g => g == item.Guid ? 0 : 1)
-                .ThenBy(g => alreadyUsedGuids.Contains(g) ? 1 : 0)
-                .ThenBy(g => g)
-                .ToList();
+                    .Select(type => type.GetCustomAttributes(typeof(PriceListTemplateGuidAttribute), false)
+                    .OfType<PriceListTemplateGuidAttribute>().FirstOrDefault())
+                    .Where(a => a != null)
+                    .Select(a => a.Guid)
+                    .OrderBy(g => g == item.Guid ? 0 : 1)
+                    .ThenBy(g => alreadyUsedGuids.Contains(g) ? 1 : 0)
+                    .ThenBy(g => g)
+                    .ToList();
         }
-
-        string buttonActionName => string.IsNullOrWhiteSpace(TemplateGuid) ? "Создать" : "Сохранить изменения";
-        bool showEmailPatternBox => item.RemoteUrlMethodName == "EmailAttachment";
 
         private void LoadMethodChanged(ChangeEventArgs e)
         {
@@ -171,5 +210,53 @@ namespace EtkBlazorApp.Pages
             }
         }
 
+        private async Task AddManufacturerMapRecord()
+        {
+            await templateStorage.AddManufacturerMapRecord(item.Guid, newManufacturerMapRecordWord, newManufacturerMapRecordItem.manufacturer_id);
+            if (newManufacturerMapRecordItem != null)
+            {
+                item.ManufacturerNameMap[newManufacturerMapRecordWord] = newManufacturerMapRecordItem.name;
+                StateHasChanged();
+            }
+        }
+
+        private async Task RemoveManufacturerMapRecord(string word)
+        {
+            await templateStorage.RemoveManufacturerMapRecord(item.Guid, word);
+            item.ManufacturerNameMap.Remove(word);
+            StateHasChanged();
+        }
+     
+        private async Task AddNewQuantityMapRecord()
+        {
+            await templateStorage.AddQuantityMapRecord(item.Guid, newQuantityMapRecordWord, newQuantityMapRecordValue);
+            item.QuantityMap[newQuantityMapRecordWord] = newQuantityMapRecordValue;
+            StateHasChanged();
+        }
+
+        private async Task RemoveQuantityMapRecord(string word)
+        {
+            await templateStorage.RemoveQuantityMapRecord(item.Guid, word);
+            item.QuantityMap.Remove(word);
+            StateHasChanged();
+        }
+
+        private async Task AddSkipManufacturerRecord()
+        {
+            await templateStorage.AddSkipManufacturerRecord(item.Guid, newSkipManufacturerItem.manufacturer_id, newSkipManufacturerListType.ToString());
+            item.ManufacturerSkipList.Add(new ManufacturerSkipItemViewModel() {
+                manufacturer_id = newSkipManufacturerItem.manufacturer_id,
+                Name = newSkipManufacturerItem.name, 
+                ListType = newSkipManufacturerListType
+            });
+            StateHasChanged();
+        }
+
+        private async Task RemoveSkipManufacturerRecord(ManufacturerSkipItemViewModel skipInfo)
+        {
+            await templateStorage.RemoveSkipManufacturerRecord(item.Guid, skipInfo.manufacturer_id, skipInfo.ListType.ToString());
+            item.ManufacturerSkipList.Remove(skipInfo);
+            StateHasChanged();
+        }
     }
 }
