@@ -8,16 +8,7 @@ namespace EtkBlazorApp.BL
     [PriceListTemplateGuid("6C238D2C-145E-4320-B4E3-DCA8B8FAECB0")]
     public class PraktikaQuantityPriceListTemplate : ExcelPriceListTemplateBase
     {
-        public PraktikaQuantityPriceListTemplate(string fileName) : base(fileName) 
-        {
-            QuantityMap["нет"] = 0;
-            QuantityMap["*"] = 5;
-            QuantityMap["**"] = 10;
-            QuantityMap["***"] = 30;
-            QuantityMap["****"] = 40;
-            QuantityMap["*****"] = 50;
-            QuantityMap["******"] = 100;
-        }
+        public PraktikaQuantityPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {

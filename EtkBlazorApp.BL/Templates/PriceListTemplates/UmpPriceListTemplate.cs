@@ -6,13 +6,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("A89C5911-12BE-4AD5-8A66-0621C4714360")]
     public class UmpPriceListTemplate : ExcelPriceListTemplateBase
     {
-        public UmpPriceListTemplate(string fileName) : base(fileName) 
-        {
-            ValidManufacturerNames.Add("Wiha");
-            ValidManufacturerNames.Add("Klauke");
-            ValidManufacturerNames.Add("Weicon");
-            ValidManufacturerNames.Add("Brady");
-        }
+        public UmpPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {

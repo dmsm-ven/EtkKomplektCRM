@@ -14,15 +14,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     {
         public MeanWellSilverPriceListTemplate(string fileName) : base(fileName) 
         {
-            ValidManufacturerNames.Add("Tianma");
-            ValidManufacturerNames.Add("NEC");
-            ValidManufacturerNames.Add("Mean Well");
-            ValidManufacturerNames.Add("DMC");
-            ValidManufacturerNames.Add("Avalue");
-            ValidManufacturerNames.Add("ICS Components");
-            ManufacturerNameMap["MeanWell"] = "Mean Well";
-            ManufacturerNameMap["ICSComponents"] = "ICS Components";
-            ManufacturerNameMap["SpectrahDynamics"] = "Spectrah Dynamics";
+
         }
 
         protected override List<PriceLine> ReadDataFromExcel()

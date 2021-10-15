@@ -7,12 +7,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("83488F9E-CCA7-4BDB-A6CC-7C3D4CF054EA")]
     public class MegeonPriceListTemplate : ExcelPriceListTemplateBase
     {
-        public MegeonPriceListTemplate(string fileName) : base(fileName) 
-        {
-            QuantityMap["Более 10"] = 10;
-            ManufacturerNameMap["МЕГЕОН"] = "Мегеон";
-            ValidManufacturerNames.Add("Мегеон");
-        }
+        public MegeonPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {

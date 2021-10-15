@@ -12,8 +12,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     {
         public DipaulPriceListTemplate(string fileName) : base(fileName) 
         {
-            ValidManufacturerNames.AddRange(new[] { "Hakko", "Keysight", "ITECH" });
-            ManufacturerNameMap["ITECH ВЭД"] = "ITECH";
+
         }
 
         protected override List<PriceLine> ReadDataFromExcel()

@@ -6,12 +6,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("5785C822-A57D-4DD2-9B68-E0301DDF135B")]
     public class BoschPriceListTemplate : ExcelPriceListTemplateBase
     {
-        public BoschPriceListTemplate(string fileName): base(fileName) 
-        {
-            QuantityMap["A"] = 10;
-            QuantityMap["B"] = 5;
-            QuantityMap["C"] = 0;
-        }
+        public BoschPriceListTemplate(string fileName): base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {

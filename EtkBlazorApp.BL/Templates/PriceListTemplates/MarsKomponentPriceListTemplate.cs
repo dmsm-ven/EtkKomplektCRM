@@ -7,12 +7,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("E11729F8-244B-420A-801C-110FC81BE61B")]
     public class MarsKomponentPriceListTemplate : ExcelPriceListTemplateBase
     {              
-        public MarsKomponentPriceListTemplate(string fileName) : base(fileName) 
-        {
-            ManufacturerNameMap["PROSKIT"] = "Pro'sKit";
-            ManufacturerNameMap["MASTECH"] = "Mastech";
-            ValidManufacturerNames.AddRange(new [] { "Pro'sKit", "Mastech", "UNI-T" });
-        }
+        public MarsKomponentPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {

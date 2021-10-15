@@ -41,15 +41,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [Obsolete]
     public class ZubrQuantityPriceListTemplate : ExcelPriceListTemplateBase
     {
-        public ZubrQuantityPriceListTemplate(string fileName) : base(fileName) 
-        {
-            ValidManufacturerNames.Add("Зубр");
-            ValidManufacturerNames.Add("Kraftool");
-            ValidManufacturerNames.Add("Grinda");
-            ValidManufacturerNames.Add("Stayer");
-            QuantityMap["Есть"] = 5;
-            QuantityMap["Нет"] = 0;
-        }
+        public ZubrQuantityPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {
@@ -90,15 +82,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("2267B1A2-F80C-4AA4-B5AC-D3CBFF6793C6")]
     public class MksMasterPriceListTemplate : ExcelPriceListTemplateBase
     {
-        public MksMasterPriceListTemplate(string fileName) : base(fileName) 
-        {
-            ValidManufacturerNames.Add("Зубр");
-            ValidManufacturerNames.Add("Kraftool");
-            ValidManufacturerNames.Add("Grinda");
-            ValidManufacturerNames.Add("Stayer");
-            QuantityMap["Да"] = 5;
-            QuantityMap["Нет"] = 0;
-        }
+        public MksMasterPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {

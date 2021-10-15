@@ -68,14 +68,9 @@ namespace EtkBlazorApp.DataAccess
 
             var templateInfo = await database.GetFirstOrDefault<PriceListTemplateEntity, dynamic>(sql, new { guid });
 
-            string qnmSql = "SELECT * FROM etk_app_price_list_template_quantity_map WHERE price_list_guid = @guid";
-            templateInfo.quantity_map = await database.GetList<QuantityMapRecordEntity, dynamic>(qnmSql, new { guid });
-
-            string mnmSql = @"SELECT t.*, m.name 
-                             FROM etk_app_price_list_template_manufacturer_map t
-                             LEFT JOIN oc_manufacturer m ON (t.manufacturer_id = m.manufacturer_id)
-                             WHERE t.price_list_guid = @guid";
-            templateInfo.manufacturer_name_map = await database.GetList<ManufacturerMapRecordEntity, dynamic>(mnmSql, new { guid });
+            templateInfo.quantity_map = await GetQuantityMapRecordsForTemplate(guid);
+            templateInfo.manufacturer_name_map = await GetManufacturerNameMapRecordsForTemplate(guid);
+            templateInfo.manufacturer_skip_list = await GetManufacturerSkipRecordsForTemplate(guid);
 
             return templateInfo;
         }
@@ -237,7 +232,8 @@ namespace EtkBlazorApp.DataAccess
         {
             string sql = @"SELECT t.*, m.name
                            FROM etk_app_price_list_template_manufacturer_list t
-                           LEFT JOIN oc_manufacturer m ON (t.manufacturer_id = m.manufacturer_id)";
+                           LEFT JOIN oc_manufacturer m ON (t.manufacturer_id = m.manufacturer_id)
+                           WHERE price_list_guid = @guid";
             var data = await database.GetList<ManufacturerSkipRecordEntity, dynamic>(sql, new { guid = guid });
             return data;
         }

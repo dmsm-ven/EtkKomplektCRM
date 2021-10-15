@@ -15,16 +15,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     {
         const int START_ROW_NUMBER = 7;
 
-        public _1CPriceListTemplate(string fileName) : base(fileName) 
-        {
-            ManufacturerNameMap["Proskit"] = "Pro'sKit";
-            ManufacturerNameMap["Lambda"] = "TDK-Lambda";
-            ManufacturerNameMap["АКТАКОМ"] = "Aktakom";
-            ManufacturerNameMap["Dinolite"] = "Dino-Lite";
-            ManufacturerNameMap["Megeon"] = "Мегеон";
-
-            SkipManufacturerNames.Add("Etari");
-        }
+        public _1CPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {
@@ -65,13 +56,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         public _1CHtmlPriceListTemplate(string fileName)
         {
             FileName = fileName;
-            ManufacturerNameMap["Proskit"] = "Pro'sKit";
-            ManufacturerNameMap["Lambda"] = "TDK-Lambda";
-            ManufacturerNameMap["АКТАКОМ"] = "Aktakom";
-            ManufacturerNameMap["Dinolite"] = "Dino-Lite";
-            ManufacturerNameMap["Megeon"] = "Мегеон";
-
-            SkipManufacturerNames.Add("Etari");
         }
 
         public Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)

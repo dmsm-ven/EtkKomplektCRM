@@ -8,7 +8,6 @@ using System.Xml;
 
 namespace EtkBlazorApp.BL
 {
-    //TODO тут нужно разбить класс, не должно быть что шаблон считывает данные
     [PriceListTemplateGuid("438B5182-62DD-42C4-846F-4901C3B38B14")]
     public class PristPriceListTemplate : PriceListTemplateReaderBase, IPriceListTemplate
     {
@@ -19,10 +18,7 @@ namespace EtkBlazorApp.BL
         public PristPriceListTemplate(string uri)
         {
             FileName = uri;
-            ManufacturerNameMap["Teledyne LeCroy"] = "LeCroy";
-            ManufacturerNameMap["Keysight Technologies"] = "Keysight";
 
-            SkipManufacturerNames.AddRange(new[] { "TDK-Lambda", "Weller", "ProsKit", "Bernstein", "Testo", "Viking" });
         }
 
         public async Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)

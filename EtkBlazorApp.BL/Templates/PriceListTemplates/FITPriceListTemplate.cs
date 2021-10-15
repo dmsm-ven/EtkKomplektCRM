@@ -9,10 +9,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("91EE5CFF-4752-4D6F-8E36-E5557149225B")]
     public class FITQuantityTemplate : ExcelPriceListTemplateBase
     {
-        public FITQuantityTemplate(string fileName) : base(fileName) 
-        {
-            ValidManufacturerNames.Add("FIT");
-        }
+        public FITQuantityTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {

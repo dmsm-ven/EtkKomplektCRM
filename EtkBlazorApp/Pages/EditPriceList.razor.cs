@@ -78,23 +78,18 @@ namespace EtkBlazorApp.Pages
                     EmailSearchCriteria_MaxAgeInDays = entity.email_criteria_max_age_in_days,
                     EmailSearchCriteria_Subject = entity.email_criteria_subject,
                     Cridentials_Login = entity.credentials_login,
-                    Cridentials_Password = entity.credentials_password
+                    Cridentials_Password = entity.credentials_password,
+                    QuantityMap = entity.quantity_map.ToDictionary(i => i.text, i => i.quantity),
+                    ManufacturerNameMap = entity.manufacturer_name_map.ToDictionary(i => i.text, i => i.name),
+                    ManufacturerSkipList = entity.manufacturer_skip_list
+                        .Select(e => new ManufacturerSkipItemViewModel()
+                        {
+                            ListType = Enum.Parse<SkipManufacturerListType>(e.list_type),
+                            manufacturer_id = e.manufacturer_id,
+                            Name = e.name
+                        })
+                        .ToList()
                 };
-
-                item.QuantityMap = (await templateStorage.GetQuantityMapRecordsForTemplate(TemplateGuid))
-                    .ToDictionary(i => i.text, i => i.quantity);
-
-                item.ManufacturerNameMap = (await templateStorage.GetManufacturerNameMapRecordsForTemplate(TemplateGuid))
-                    .ToDictionary(i => i.text, i => i.name);
-
-                item.ManufacturerSkipList = (await templateStorage.GetManufacturerSkipRecordsForTemplate(TemplateGuid))
-                    .Select(e => new ManufacturerSkipItemViewModel()
-                    {
-                        ListType = Enum.Parse<SkipManufacturerListType>(e.list_type),
-                        manufacturer_id = e.manufacturer_id,
-                        Name = e.name
-                    })
-                    .ToList();
             }
             else
             {

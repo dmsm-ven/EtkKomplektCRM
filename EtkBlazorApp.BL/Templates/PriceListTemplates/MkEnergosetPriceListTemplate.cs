@@ -7,11 +7,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("9EEB7A82-1029-4C1F-A282-196C0907160B")]
     public class MkEnergosetPriceListTemplate : ExcelPriceListTemplateBase
     {
-        public MkEnergosetPriceListTemplate(string fileName) : base(fileName) 
-        {
-            ValidManufacturerNames.AddRange(new[] { "MTD", "Cub Cadet", "Wolf Garten" });
-            QuantityMap["Достаточное количество"] = 50;
-        }
+        public MkEnergosetPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {

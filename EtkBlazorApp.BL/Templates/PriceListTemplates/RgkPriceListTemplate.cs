@@ -6,10 +6,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("58F658D6-483C-4EE6-9E23-9932514624CF")]
     public class RgkPriceListTemplate : ExcelPriceListTemplateBase
     {
-        public RgkPriceListTemplate(string fileName) : base(fileName)
-        {
-            ManufacturerNameMap["Leica Geosystems"] = "Leica";
-        }
+        public RgkPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {

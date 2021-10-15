@@ -9,10 +9,7 @@ namespace EtkBlazorApp.BL.Templates
     [PriceListTemplateGuid("B6B23CAF-0D0C-416F-AB96-C7FD42FD0DED")]
     public class HantekPriceListTemplate : CsvPriceListTemplateBase
     {
-        public HantekPriceListTemplate(string fileName) : base(fileName)
-        {
-            QuantityMap["+"] = 3;
-        }
+        public HantekPriceListTemplate(string fileName) : base(fileName) { }
 
         public override async Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)
         {

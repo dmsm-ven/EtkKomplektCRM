@@ -6,21 +6,7 @@ namespace EtkBlazorApp.BL
     [PriceListTemplateGuid("3853B988-DB37-4B6E-861F-3000B643FAC4")]
     public class SymmetronPriceListTemplate : ExcelPriceListTemplateBase
     {
-        public SymmetronPriceListTemplate(string fileName) : base(fileName) 
-        {
-            SkipManufacturerNames.Add("Mean Well");
-            SkipManufacturerNames.Add("FIT");
-            SkipManufacturerNames.Add("Viking");
-
-            ManufacturerNameMap["Pro'skit"] = "Pro'sKit";
-            ManufacturerNameMap["TIANMA Europe GmbH"] = "Tianma";
-            ManufacturerNameMap["BOE Technology Group Corp"] = "BOE";
-            ManufacturerNameMap["TechStar Electronics Corp"] = "TechStar";
-            ManufacturerNameMap["Sinotectronics Inc."] = "Sinotectronics";
-            ManufacturerNameMap["Disteck Display Inc."] = "Disteck";
-            ManufacturerNameMap["Apex Material Technology Corp."] = "AMT";
-            ManufacturerNameMap["Onetouch Technologies Co., Ltd"] = "Onetouch";
-        }
+        public SymmetronPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {

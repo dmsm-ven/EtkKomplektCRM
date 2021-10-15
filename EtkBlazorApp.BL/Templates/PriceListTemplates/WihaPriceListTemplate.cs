@@ -42,10 +42,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("FFA35661-230F-431F-AEA0-BC57F4A7C8AE")]
     public class WihaQuantity2Template : ExcelPriceListTemplateBase
     {
-        public WihaQuantity2Template(string fileName) : base(fileName)
-        {
-            ValidManufacturerNames.AddRange(new[] { "Wiha", "Schut" });
-        }
+        public WihaQuantity2Template(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {
@@ -61,22 +58,19 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 string skuNumber = tab.GetValue<string>(row, 0);
                 string manufacturer = tab.GetValue<string>(row, 1);
-                string quantityString = tab.GetValue<string>(row, 4);
+                int? quantity = ParseQuantity(tab.GetValue<string>(row, 4), canBeNull: true);
 
                 if (!ValidManufacturerNames.Contains(manufacturer, StringComparer.OrdinalIgnoreCase)) { continue; }
 
-                if (decimal.TryParse(quantityString, out var quantity))
+                var priceLine = new PriceLine(this)
                 {
-                    var priceLine = new PriceLine(this)
-                    {
-                        Manufacturer = manufacturer,
-                        Sku = skuNumber,
-                        Model = skuNumber,
-                        Quantity = (int)quantity
-                    };
+                    Manufacturer = manufacturer,
+                    Sku = skuNumber,
+                    Model = skuNumber,
+                    Quantity = quantity
+                };
 
-                    list.Add(priceLine);
-                }
+                list.Add(priceLine);
 
             }
 

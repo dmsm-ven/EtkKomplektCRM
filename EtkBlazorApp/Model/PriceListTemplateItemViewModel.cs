@@ -60,7 +60,7 @@ namespace EtkBlazorApp
         public int manufacturer_id { get; set; }
         public string Name { get; set; }
         public SkipManufacturerListType ListType { get; set; }
-        public string ListTypeDescription => (ListType == SkipManufacturerListType.black_list ? "Исключить этот" : "Включить только этот");        
+        public string ListTypeDescription => (ListType == SkipManufacturerListType.black_list ? "Черный список" : "Белый список");        
     }
 
     public enum SkipManufacturerListType { black_list, white_list }

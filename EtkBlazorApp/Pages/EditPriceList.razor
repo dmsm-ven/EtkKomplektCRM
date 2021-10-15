@@ -150,7 +150,6 @@ else
 
             <!-- В разработке -->
             <div class="additional-settings" style="display: block;">
-
                 <button type="button"
                         @onclick="@(e => expandedQuantityMap = !expandedQuantityMap)"
                         class="btn expander-button-item @(expandedQuantityMap ? "expanded" : string.Empty)">
@@ -223,8 +222,8 @@ else
                 </button>
                 <div class="expander-content" id="manufacturer-skip-panel" style="display: @(expandedSkipList ? "block" : "none")">
                     <div>
-                        <p class="pl-template-add-settings-desc"><strong>Черный список</strong> - бренд исключается из загрузки, все остальные загружаются как и прежде</p>
-                        <p class="pl-template-add-settings-desc"><strong>Белый список</strong> - бренд загружается, все остальные исключаются из загрузки (кроме тех, которые так же как и этот помечены белым списком)</p>
+                        <p class="pl-template-add-settings-desc"><strong>Черный список</strong> - данный бренд исключается</p>
+                        <p class="pl-template-add-settings-desc"><strong>Белый список</strong> - данный бренд будет загружен, но все остальные исключаются</p>
                         <button type="button" class="btn btn-success"
                                 disabled="@skipManufacturerAddNewRecordButtonDisabled"
                                 @onclick="AddSkipManufacturerRecord">
