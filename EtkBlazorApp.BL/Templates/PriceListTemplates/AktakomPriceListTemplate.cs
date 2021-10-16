@@ -9,10 +9,7 @@ namespace EtkBlazorApp.BL.Templates
     [PriceListTemplateGuid("D31FFE97-53BC-41DC-9D54-43FABBC51BCD")]
     public class AktakomPriceListTemplate : CsvPriceListTemplateBase
     {
-        public AktakomPriceListTemplate(string fileName) : base(fileName)
-        {
-
-        }
+        public AktakomPriceListTemplate(string fileName) : base(fileName) { }
 
         public override async Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)
         {
@@ -45,7 +42,7 @@ namespace EtkBlazorApp.BL.Templates
                     {
                         Name = name,
                         Currency = CurrencyType.RUB,
-                        Stock = StockName.Aktakom,
+                        //Stock = StockName.Aktakom,
                         Model = sku,
                         Sku = sku,
                         Price = parsedPrice,

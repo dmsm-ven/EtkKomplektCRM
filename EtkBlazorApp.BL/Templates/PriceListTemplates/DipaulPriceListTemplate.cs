@@ -10,10 +10,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("C53B8C85-3115-421F-A579-0B5BFFF6EF48")]
     public class DipaulPriceListTemplate : ExcelPriceListTemplateBase
     {
-        public DipaulPriceListTemplate(string fileName) : base(fileName) 
-        {
-
-        }
+        public DipaulPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {
@@ -24,7 +21,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 3));
 
-                if (!ValidManufacturerNames.Contains(manufacturer, StringComparer.OrdinalIgnoreCase)) { continue; }
+                if(ManufacturerSkipCheck(manufacturer)) { continue; }
 
                 string skuNumber = tab.GetValue<string>(row, 1);
                 string productName = tab.GetValue<string>(row, 2);
@@ -45,7 +42,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Price = price,
                     Currency = priceCurreny,
                     Quantity = quantity,
-                    Stock = StockName.Dipaul
+                    //Stock = StockName.Dipaul
                 };
                 list.Add(priceLine);
             }

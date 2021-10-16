@@ -11,10 +11,10 @@ namespace EtkBlazorApp.DataAccess
     {
         Task CreatePriceList(PriceListTemplateEntity data);
         Task UpdatePriceList(PriceListTemplateEntity data);
-        Task<List<PriceListTemplateEntity>> GetPriceListTemplates();
-        Task<PriceListTemplateEntity> GetPriceListTemplateById(string guid);
         Task DeletePriceList(string guid);
         Task ChangePriceListTemplateDiscount(string guid, decimal discount);
+        Task<List<PriceListTemplateEntity>> GetPriceListTemplates();
+        Task<PriceListTemplateEntity> GetPriceListTemplateById(string guid);
         Task<List<PriceListTemplateRemoteUriMethodEntity>> GetPricelistTemplateRemoteLoadMethods();
         Task<List<string>> GetPriceListTemplatGroupNames();
         
@@ -38,17 +38,6 @@ namespace EtkBlazorApp.DataAccess
         public PriceListTemplateStorage(IDatabaseAccess database)
         {
             this.database = database;
-        }
-
-        public async Task<List<PriceListTemplateEntity>> GetPriceListTemplates()
-        {
-            string sql = @"SELECT t.*, lm.name as remote_uri_method_name, esc.sender as email_criteria_sender
-                          FROM etk_app_price_list_template t
-                          LEFT JOIN etk_app_price_list_template_load_method lm ON t.remote_uri_method_id = lm.id
-                          LEFT JOIN etk_app_price_list_template_email_search_criteria esc ON t.id = esc.template_guid";
-
-            var templatesInfo = await database.GetList<PriceListTemplateEntity, dynamic>(sql, new { });
-            return templatesInfo;
         }
 
         public async Task<PriceListTemplateEntity> GetPriceListTemplateById(string guid)
@@ -75,6 +64,17 @@ namespace EtkBlazorApp.DataAccess
             return templateInfo;
         }
 
+        public async Task<List<PriceListTemplateEntity>> GetPriceListTemplates()
+        {
+            string sql = @"SELECT t.*, lm.name as remote_uri_method_name, esc.sender as email_criteria_sender
+                          FROM etk_app_price_list_template t
+                          LEFT JOIN etk_app_price_list_template_load_method lm ON t.remote_uri_method_id = lm.id
+                          LEFT JOIN etk_app_price_list_template_email_search_criteria esc ON t.id = esc.template_guid";
+
+            var templatesInfo = await database.GetList<PriceListTemplateEntity, dynamic>(sql, new { });
+            return templatesInfo;
+        }
+
         public async Task ChangePriceListTemplateDiscount(string id, decimal discount)
         {
             string sql = "UPDATE etk_app_price_list_template SET discount = @discount WHERE id = @id";
@@ -99,6 +99,7 @@ namespace EtkBlazorApp.DataAccess
         {
             string sql = @"UPDATE etk_app_price_list_template
                            SET id = @id,
+                                stock_partner_id = @stock_partner_id,
                                 title = @title,
                                 description = @description,
                                 group_name = @group_name,
@@ -148,8 +149,8 @@ namespace EtkBlazorApp.DataAccess
         public async Task CreatePriceList(PriceListTemplateEntity data)
         {          
             string sql = @"INSERT INTO etk_app_price_list_template
-                        (id, title, description, group_name, remote_uri, remote_uri_method_id, nds, discount, image) VALUES
-                        (@id, @title, @description, @group_name, @remote_uri, @remote_uri_method_id, @nds, @discount, @image)";
+                        (id, stock_partner_id, title, description, group_name, remote_uri, remote_uri_method_id, nds, discount, image) VALUES
+                        (@id, @stock_partner_id, @title, @description, @group_name, @remote_uri, @remote_uri_method_id, @nds, @discount, @image)";
 
             await database.ExecuteQuery(sql, data);
 
@@ -169,6 +170,9 @@ namespace EtkBlazorApp.DataAccess
             await database.ExecuteQuery("DELETE FROM etk_app_price_list_template WHERE id = @guid", new { guid });
             await database.ExecuteQuery("DELETE FROM etk_app_price_list_email_search_criteria WHERE template_id = @guid", new { guid });
             await database.ExecuteQuery("DELETE FROM etk_app_price_list_credentials WHERE template_id = @guid", new { guid });
+            await database.ExecuteQuery("DELETE FROM etk_app_price_list_manufacturer_list WHERE price_list_guid = @guid", new { guid });
+            await database.ExecuteQuery("DELETE FROM etk_app_price_list_manufacturer_map WHERE price_list_guid = @guid", new { guid });
+            await database.ExecuteQuery("DELETE FROM etk_app_price_list_quantity_map WHERE price_list_guid = @guid", new { guid });
         }
 
         public async Task<List<QuantityMapRecordEntity>> GetQuantityMapRecordsForTemplate(string guid)

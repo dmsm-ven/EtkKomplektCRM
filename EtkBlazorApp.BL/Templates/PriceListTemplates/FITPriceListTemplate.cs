@@ -17,21 +17,19 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
+                string manufacturer = tab.GetValue<string>(row, 3);
+                if (ManufacturerSkipCheck(manufacturer)) { continue; }
+
                 string skuNumber = "FIT-" + tab.GetValue<string>(row, 1);
                 string name = tab.GetValue<string>(row, 2);
-                string manufacturer = tab.GetValue<string>(row, 3);
                 string ean = tab.GetValue<string>(row, 4);
                 decimal price = tab.GetValue<decimal>(row, 6);
-                string quantityString = tab.GetValue<string>(row, 7).Trim(' ', '>', '<');
-
-                if (!ValidManufacturerNames.Contains(manufacturer)) { continue; }
-
-                int? quantity = ParseQuantity(quantityString);
+                var quantity = ParseQuantity(tab.GetValue<string>(row, 7).Trim(' ', '>', '<'));
 
                 var priceLine = new PriceLine(this)
                 {
                     Manufacturer = manufacturer,
-                    Stock = StockName.FIT,
+                    //Stock = StockName.FIT,
                     Price = price,
                     Currency = CurrencyType.RUB,
                     Sku = skuNumber,

@@ -29,7 +29,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Manufacturer = manufacturer,
                     Price = price,
                     Currency = CurrencyType.RUB,
-                    Stock = StockName.Knipex,
+                    //Stock = StockName.Knipex,
                     Sku = skuNumber,
                     Model = skuNumber,
                     Quantity = quantity,

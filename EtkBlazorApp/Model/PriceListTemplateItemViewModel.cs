@@ -10,6 +10,8 @@ namespace EtkBlazorApp
 {
     public class PriceListTemplateItemViewModel
     {
+        public Type Type { get; private set; }
+
         [Required]
         public string Guid { get; set; }
         [Required]
@@ -30,7 +32,7 @@ namespace EtkBlazorApp
         public int? RemoteUrlMethodId { get; set; }
         public string RemoteUrlMethodName { get; set; }
         
-        public Type Type { get; private set; }
+        public int? LinkedStockId { get; set; }
 
         public string EmailSearchCriteria_Subject { get; set; }
         public string EmailSearchCriteria_Sender { get; set; }

@@ -24,7 +24,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 var priceLine = new PriceLine(this)
                 {
                     Manufacturer = "Einhell",
-                    Stock = StockName.Einhell,
+                    //Stock = StockName.Einhell,
                     Sku = skuNumber,
                     Name = name,
                     Model = skuNumber,

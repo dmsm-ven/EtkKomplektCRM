@@ -14,12 +14,15 @@ namespace EtkBlazorApp.BL
 
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
+                string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 26));
+                if (ManufacturerSkipCheck(manufacturer)) { continue; }
+
                 string sku = tab.GetValue<string>(row, 3);
                 string name = tab.GetValue<string>(row, 4);             
                 int quantity = tab.GetValue<int>(row, 10);
                 decimal? priceInCurrency = ParsePrice(tab.GetValue<string>(row, 11));                
                 decimal? priceInRub = ParsePrice(tab.GetValue<string>(row, 13));
-                string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 26));
+                
                 string model = tab.GetValue<string>(row, 27);
 
                 CurrencyType priceCurreny = CurrencyType.RUB;
@@ -27,9 +30,7 @@ namespace EtkBlazorApp.BL
                 {
                     priceCurreny = parsedCurrency;
                 }
-
-                if (SkipManufacturerNames.Contains(manufacturer)) { continue; }
-                          
+                        
                 var priceLine = new PriceLine(this)
                 {
                     Name = name,
@@ -39,7 +40,7 @@ namespace EtkBlazorApp.BL
                     Price = (priceInCurrency.HasValue && priceCurreny != CurrencyType.RUB) ? priceInCurrency : priceInRub,                   
                     Currency = priceCurreny,
                     Quantity = quantity,
-                    Stock = StockName.Symmetron
+                    //Stock = StockName.Symmetron
                 };
 
                 list.Add(priceLine);

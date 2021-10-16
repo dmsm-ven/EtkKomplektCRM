@@ -13,6 +13,7 @@ namespace EtkBlazorApp.BL
     {
         public string FileName { get; private set; }
 
+        //Возможность стоить вынести такие значения тоже в базу данных (в таблицу где white_list и black_list)
         readonly string[] ONLY_QUANTITY_BRANDS = new[] { "ERSA" };
 
         public PristPriceListTemplate(string uri)
@@ -31,8 +32,7 @@ namespace EtkBlazorApp.BL
             foreach (var offer in offers)
             {
                 string manufacturer = MapManufacturerName(offer.Vendor);
-
-                if (SkipManufacturerNames.Contains(manufacturer)) { continue; }
+                if (ManufacturerSkipCheck(manufacturer)) { continue; }
 
                 decimal? price = ONLY_QUANTITY_BRANDS.Contains(manufacturer, StringComparer.OrdinalIgnoreCase) ? null : offer.Price;
 
@@ -45,7 +45,7 @@ namespace EtkBlazorApp.BL
                     Sku = offer.Model,
                     Price = price,
                     Quantity = offer.Amount,
-                    Stock = StockName.Prist
+                    //Stock = StockName.Prist
                 };
 
                 list.Add(priceLine);

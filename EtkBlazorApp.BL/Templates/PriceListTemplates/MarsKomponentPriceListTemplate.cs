@@ -17,12 +17,14 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 10));
                 
-                if (!ValidManufacturerNames.Contains(manufacturer)) { continue; }           
+                if (ManufacturerSkipCheck(manufacturer)) { continue; }           
 
                 string prefix = $"{manufacturer} ";
                 string sku = prefix + tab.GetValue<string>(row, 1);
                 string name = tab.GetValue<string>(row, 2);
                 int quantity = (int)tab.GetValue<decimal>(row, 5);
+
+                //Проскит берем только остатки
                 decimal? price = manufacturer.Equals("Pro'sKit") ? null : tab.GetValue<decimal>(row, 7);
                 string model = tab.GetValue<string>(row, 9);
 
@@ -35,7 +37,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Sku = sku,
                     Price = price,
                     Quantity = quantity,
-                    Stock = StockName.MarsComponent
+                    //Stock = StockName.MarsComponent
                 };
 
                 list.Add(priceLine);

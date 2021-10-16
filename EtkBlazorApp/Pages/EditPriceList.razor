@@ -1,13 +1,14 @@
 ﻿@page "/price-list/edit/{TemplateGuid}"
 @page "/price-list/new"
 @inject IPriceListTemplateStorage templateStorage
+@inject IStockStorage stockStorage
 @inject ISettingStorage settings
 @inject IToastService toasts
 @inject UserLogger logger
 @inject NavigationManager navManager
 @attribute [Authorize(Roles = "Manager, Administrator")]
 
-@if (item == null)
+@if (sourceTemplate == null)
 {
     <LoadingSpinner />
 }
@@ -15,12 +16,12 @@ else
 {
 <div class="row justify-content-center">
     <div class="container">
-        <EditForm OnValidSubmit="ValidSubmit" Model="item">
+        <EditForm OnValidSubmit="ValidSubmit" Model="sourceTemplate">
             <DataAnnotationsValidator />
             <div class="row my-2">
-                <ValidationMessage For="() => item.Image" />
+                <ValidationMessage For="() => sourceTemplate.Image" />
                 <div class="mx-auto d-block image-select-container m-1 p-1">
-                    <img src="@item.Image" class="rounded image"
+                    <img src="@sourceTemplate.Image" class="rounded image"
                          @onclick="@(e => imageSelectDialog.Show())"
                          style="width: 100%; height: 100%;" />
                 </div>
@@ -28,14 +29,14 @@ else
 
             <div class=" form-group">
                 <label for="guid-select">GUID</label>
-                <select class="form-control" @bind="item.Guid" required id="guid-select">
+                <select class="form-control" @bind="sourceTemplate.Guid" required id="guid-select">
                     <option value="">Выбрать</option>
                     @foreach (var attributeGuid in guidList)
                     {
-                        <option selected="@(attributeGuid == item.Guid)"
-                                disabled="@(alreadyUsedGuids.Contains(attributeGuid) && attributeGuid != item.Guid)"
+                        <option selected="@(attributeGuid == sourceTemplate.Guid)"
+                                disabled="@(alreadyUsedGuids.Contains(attributeGuid) && attributeGuid != sourceTemplate.Guid)"
                                 value="@attributeGuid">
-                            @(((alreadyUsedGuids.Contains(attributeGuid) && attributeGuid != item.Guid) ? "занят " : "") +  @attributeGuid)
+                            @(((alreadyUsedGuids.Contains(attributeGuid) && attributeGuid != sourceTemplate.Guid) ? "занят " : "") +  @attributeGuid)
                         </option>
                     }
                 </select>
@@ -43,21 +44,25 @@ else
 
             <div class="form-group">
                 <label for="title">Заголовок</label>
-                <input type="text" @bind="@item.Title" id="title" class="form-control" required />
+                <input type="text" @bind="@sourceTemplate.Title" id="title" class="form-control" required />
             </div>
 
             <div class="form-group">
                 <label for="group_name">Группа</label>
-                <input type="text" list="group-name" class="form-control" @bind="item.GroupName" required />
+                <input type="text" list="group-name" class="form-control" @bind="sourceTemplate.GroupName" required />
                 <datalist id="group-name">
                     @foreach (var groupName in groupNames)
                     {
-                        <option selected="@(groupName == item.GroupName)" value="@groupName">@groupName</option>
+                        <option selected="@(groupName == sourceTemplate.GroupName)" value="@groupName">@groupName</option>
                     }
                 </datalist>
             </div>
+            <div class="form-group">
+                <label for="stock_name">Связанный склад поставщика</label>
+                <SelectStockDropdown @bind-Stock="@linkedStock"/>
+            </div>
 
-            @if (item.RemoteUrlMethodId.HasValue)
+            @if (sourceTemplate.RemoteUrlMethodId.HasValue)
             {
                 <h3>Данные для загрузки прайс-листа</h3>
                 <div class="price-list-load-method-box">
@@ -67,7 +72,7 @@ else
                             <option value="">Выбрать</option>
                             @foreach (var method in remoteUriLoadMethods)
                             {
-                                <option selected="@(item.RemoteUrlMethodId.HasValue && method.id == item.RemoteUrlMethodId)"
+                                <option selected="@(sourceTemplate.RemoteUrlMethodId.HasValue && method.id == sourceTemplate.RemoteUrlMethodId)"
                                         value="@method.id">
                                     @method.name
                                 </option>
@@ -79,21 +84,21 @@ else
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label for="criteria-subject">Тема письма</label>
-                                <input type="text" class="form-control" id="criteria-subject" @bind="item.EmailSearchCriteria_Subject" />
+                                <input type="text" class="form-control" id="criteria-subject" @bind="sourceTemplate.EmailSearchCriteria_Subject" />
                             </div>
                             <div class="form-group col-md-6">
                                 <label for="criteria-sender">Отправитель</label>
-                                <input type="text" class="form-control" id="criteria-sender" @bind="item.EmailSearchCriteria_Sender" />
+                                <input type="text" class="form-control" id="criteria-sender" @bind="sourceTemplate.EmailSearchCriteria_Sender" />
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label for="criteria-filename">Паттерн имени файла</label>
-                                <input type="text" class="form-control" id="criteria-filename" @bind="item.EmailSearchCriteria_FileNamePattern" />
+                                <input type="text" class="form-control" id="criteria-filename" @bind="sourceTemplate.EmailSearchCriteria_FileNamePattern" />
                             </div>
                             <div class="form-group col-md-6">
                                 <label for="criteria-max-old">Не старее чем (дней)</label>
-                                <input type="number" min="0" max="14" class="form-control" id="criteria-max-old" @bind="item.EmailSearchCriteria_MaxAgeInDays" />
+                                <input type="number" min="0" max="14" class="form-control" id="criteria-max-old" @bind="sourceTemplate.EmailSearchCriteria_MaxAgeInDays" />
                             </div>
                         </div>
                     }
@@ -101,16 +106,16 @@ else
                     {
                         <div class="form-group">
                             <label for="description">Прямая ссылка на скачивание</label>
-                            <input type="url" @bind="@item.RemoteUrl" id="remote_url" class="form-control" />
+                            <input type="url" @bind="@sourceTemplate.RemoteUrl" id="remote_url" class="form-control" />
                         </div>
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label for="remote-method-login">Логин</label>
-                                <input type="text" class="form-control" id="remote-method-login" @bind="item.Cridentials_Login" />
+                                <input type="text" class="form-control" id="remote-method-login" @bind="sourceTemplate.Cridentials_Login" />
                             </div>
                             <div class="form-group col-md-6">
                                 <label for="remote-method-password">Пароль</label>
-                                <input type="password" class="form-control" id="remote-method-password" @bind="item.Cridentials_Password" />
+                                <input type="password" class="form-control" id="remote-method-password" @bind="sourceTemplate.Cridentials_Password" />
                             </div>
                         </div>
                     }
@@ -124,7 +129,7 @@ else
                         <option value="">Выбрать</option>
                         @foreach (var method in remoteUriLoadMethods)
                         {
-                            <option selected="@(item.RemoteUrlMethodId.HasValue && method.id == item.RemoteUrlMethodId)"
+                            <option selected="@(sourceTemplate.RemoteUrlMethodId.HasValue && method.id == sourceTemplate.RemoteUrlMethodId)"
                                     value="@method.id">
                                 @method.name
                             </option>
@@ -134,18 +139,18 @@ else
             }
 
             <div class="form-group">
-                <input type="checkbox" @bind="@item.Nds" id="nds" class="form-check-inline" />
+                <input type="checkbox" @bind="@sourceTemplate.Nds" id="nds" class="form-check-inline" />
                 <label for="nds">Добавлять к цене НДС</label>
             </div>
 
             <div class="form-group">
                 <label for="discount">Наценка, %</label>
-                <input type="number" @bind="@item.Discount" id="discount" class="form-control" />
+                <input type="number" @bind="@sourceTemplate.Discount" id="discount" class="form-control" />
             </div>
 
             <div class="form-group">
                 <label for="description">Примечание</label>
-                <textarea type="text" @bind="@item.Description" id="description" class="form-control" style="height: 60px;" />
+                <textarea type="text" @bind="@sourceTemplate.Description" id="description" class="form-control" style="height: 60px;" />
             </div>
 
             <!-- В разработке -->
@@ -170,7 +175,7 @@ else
                         </div>
                     </div>
                     <hr />
-                    @foreach (var qitem in item.QuantityMap)
+                    @foreach (var qitem in sourceTemplate.QuantityMap)
                     {
                         <div style="margin-top: 8px;">
                             <button type="button" class="btn btn-outline-danger" @onclick="@(e => RemoveQuantityMapRecord(qitem.Key))">
@@ -202,7 +207,7 @@ else
                                                     @bind-Manufacturer="newManufacturerMapRecordItem" />
                     </div>
                     <hr />
-                    @foreach (var mitem in item.ManufacturerNameMap)
+                    @foreach (var mitem in sourceTemplate.ManufacturerNameMap)
                     {
                     <div style="margin-top: 8px;">
                         <button type="button" class="btn btn-outline-danger" @onclick="@(e => RemoveManufacturerMapRecord(mitem.Key))">
@@ -222,8 +227,8 @@ else
                 </button>
                 <div class="expander-content" id="manufacturer-skip-panel" style="display: @(expandedSkipList ? "block" : "none")">
                     <div>
-                        <p class="pl-template-add-settings-desc"><strong>Черный список</strong> - данный бренд исключается</p>
-                        <p class="pl-template-add-settings-desc"><strong>Белый список</strong> - данный бренд будет загружен, но все остальные исключаются</p>
+                        <p class="pl-template-add-settings-desc"><strong>Черный список</strong> - выбранный производитель будет пропущен</p>
+                        <p class="pl-template-add-settings-desc"><strong>Белый список</strong> - выбранный производитель будет загружен, но все остальные бренды будут пропущены</p>
                         <button type="button" class="btn btn-success"
                                 disabled="@skipManufacturerAddNewRecordButtonDisabled"
                                 @onclick="AddSkipManufacturerRecord">
@@ -240,7 +245,7 @@ else
                         </select>
                     </div>
                     <hr />
-                    @foreach (var si in item.ManufacturerSkipList)
+                    @foreach (var si in sourceTemplate.ManufacturerSkipList)
                     {
                         <div style="margin-top: 8px;">
                             <button type="button" class="btn btn-outline-danger" @onclick="@(e => RemoveSkipManufacturerRecord(si))">
@@ -280,7 +285,7 @@ else
 
     <FtpFileSelectDialog @ref="imageSelectDialog"
                          InitialFolder="/image/price-list-templates"
-                         InitialFileName="@item.Image"
+                         InitialFileName="@sourceTemplate.Image"
                          OnChange="ImageFileChanged"
                          Title="Выбор изображения" />
 

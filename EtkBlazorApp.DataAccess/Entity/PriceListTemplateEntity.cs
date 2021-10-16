@@ -25,6 +25,8 @@ namespace EtkBlazorApp.DataAccess.Entity
         public string email_criteria_file_name_pattern { get; set; }
         public int email_criteria_max_age_in_days { get; set; }
 
+        public int? stock_partner_id { get; set; }
+
         public string credentials_login { get; set; }
         public string credentials_password { get; set; }
 

@@ -12,10 +12,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("3D41DDC2-BB5C-4D6A-8129-C486BD953A3D")]
     public class MeanWellSilverPriceListTemplate : ExcelPriceListTemplateBase
     {
-        public MeanWellSilverPriceListTemplate(string fileName) : base(fileName) 
-        {
-
-        }
+        public MeanWellSilverPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {
@@ -26,7 +23,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 1));
                 string skuNumber = tab.GetValue<string>(row, 2);
 
-                if (!ValidManufacturerNames.Contains(manufacturer, StringComparer.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(skuNumber)) { continue; }
+                if (string.IsNullOrWhiteSpace(skuNumber) || ManufacturerSkipCheck(manufacturer)) { continue; }
        
                 int quantityString = tab.GetValue<int>(row, 6);
 
@@ -56,7 +53,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Manufacturer = manufacturer,
                     Sku = skuNumber,
                     Model = skuNumber,
-                    Stock = StockName.Eltech,
+                    //Stock = StockName.Eltech,
                     NextStockDelivery = productDeliveryInfo
                 };
 
@@ -98,7 +95,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Manufacturer = manufacturer,
                     Sku = sku,
                     Model = model,
-                    Stock = StockName.Eltech
+                    //Stock = StockName.Eltech
                 };
                 list.Add(priceLine);
             }

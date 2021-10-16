@@ -8,17 +8,18 @@ namespace EtkBlazorApp.BL
 {
     public abstract class PriceListTemplateReaderBase
     {
+        //TODO: Тут стоит поменят словари и списки на ReadOnly версии
         protected Dictionary<string, string> ManufacturerNameMap { get; private set; }
         protected Dictionary<string, int> QuantityMap { get; private set; }
-        protected List<string> ValidManufacturerNames { get; private set; }
-        protected List<string> SkipManufacturerNames { get; private set; }
+        protected List<string> BrandsWhiteList { get; private set; }
+        protected List<string> BrandsBlackList { get; private set; }
 
         public PriceListTemplateReaderBase()
         {
             ManufacturerNameMap = new Dictionary<string, string>();
             QuantityMap = new Dictionary<string, int>();
-            ValidManufacturerNames = new List<string>();
-            SkipManufacturerNames = new List<string>();
+            BrandsWhiteList = new List<string>();
+            BrandsBlackList = new List<string>();
 
             /*
             INSERT INTO etk_app_price_list_template_manufacturer_map(price_list_guid, text, manufacturer_id) VALUES
@@ -162,7 +163,20 @@ namespace EtkBlazorApp.BL
 
             return canBeNull ? quantity : (quantity ?? 0);
         }
-    
+
+        /// <summary>
+        /// Проверка на пропуск из загрузки прайс-листа. Скорее всего нужно перенести эту проверки на момент после загрузки прайс-листа, там можно будет убрать проверку из каждого шаблона и оставить только в одном месте
+        /// </summary>
+        /// <param name="manufacturer"></param>
+        /// <returns></returns>
+        protected bool ManufacturerSkipCheck(string manufacturer)
+        {
+            bool blackListCondition = BrandsBlackList.Any() && BrandsBlackList.Contains(manufacturer, StringComparer.OrdinalIgnoreCase);
+            bool whiteListCondition = BrandsWhiteList.Any() && (BrandsWhiteList.Contains(manufacturer, StringComparer.OrdinalIgnoreCase) == false);
+
+            return blackListCondition || whiteListCondition;
+        }
+
         public void FillTemplateInfo(PriceListTemplateEntity templateInfo)
         {
             if (templateInfo.quantity_map != null)
@@ -179,18 +193,18 @@ namespace EtkBlazorApp.BL
                     ManufacturerNameMap[kvp.text] = kvp.name;
                 }
             }
-            if(templateInfo.manufacturer_skip_list != null)
+            if (templateInfo.manufacturer_skip_list != null)
             {
                 var listsSource = templateInfo.manufacturer_skip_list.Where(i => !string.IsNullOrWhiteSpace(i.name) && !string.IsNullOrWhiteSpace(i.list_type));
                 foreach (var item in listsSource)
                 {
-                    if (item.list_type == "black_list" && !SkipManufacturerNames.Contains(item.name))
+                    if (item.list_type == "black_list" && !BrandsBlackList.Contains(item.name))
                     {
-                        SkipManufacturerNames.Add(item.name);
+                        BrandsBlackList.Add(item.name);
                     }
-                    if (item.list_type == "white_list" && !ValidManufacturerNames.Contains(item.name))
+                    if (item.list_type == "white_list" && !BrandsWhiteList.Contains(item.name))
                     {
-                        ValidManufacturerNames.Add(item.name);
+                        BrandsWhiteList.Add(item.name);
                     }
                 }
             }

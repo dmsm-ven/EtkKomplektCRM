@@ -72,6 +72,14 @@ namespace EtkBlazorApp.BL
             AddNewPriceLines(data);
         }
 
+        /// <summary>
+        /// Главный корневой метод считывающий прайс-лист, запускается и из переодических задач и при загрузке в ручную
+        /// </summary>
+        /// <param name="templateType"></param>
+        /// <param name="stream"></param>
+        /// <param name="fileName"></param>
+        /// <param name="addFileData"></param>
+        /// <returns></returns>
         public async Task<List<PriceLine>> ReadTemplateLines(Type templateType, Stream stream, string fileName, bool addFileData = false)
         {
             if (templateType == null) { throw new ArgumentNullException(nameof(templateType)); }
@@ -88,10 +96,14 @@ namespace EtkBlazorApp.BL
                 PriceListTemplateEntity templateInfo = await GetTemplateDescription(templateType);
                 if (templateInstance is PriceListTemplateReaderBase pb)
                 {
+                    //Обязательно должно быть перед считываением, т.к. тут заполняются словари с преобразованиями
                     pb.FillTemplateInfo(templateInfo);
                 }
 
                 var list = await templateInstance.ReadPriceLines(null);
+                
+                FillLinkedStock(list, templateInfo.stock_partner_id);
+                
                 await ApplyDiscounts(list, templateInfo.discount, templateInfo.nds);
 
                 if (addFileData)
@@ -109,6 +121,17 @@ namespace EtkBlazorApp.BL
             finally
             {
                 File.Delete(filePath);
+            }
+        }
+
+        private void FillLinkedStock(List<PriceLine> list, int? stock_partner_id)
+        {
+            if(!stock_partner_id.HasValue) { return; }
+
+            StockName stock = (StockName)stock_partner_id.Value;
+            foreach (var line in list.Where(l => l.Stock == StockName.None))
+            {
+                line.Stock = stock;
             }
         }
 

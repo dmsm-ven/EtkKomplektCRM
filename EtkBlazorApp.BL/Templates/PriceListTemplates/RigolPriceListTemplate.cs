@@ -26,7 +26,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 var priceLine = new PriceLine(this)
                 {
                     Manufacturer = "Rigol",
-                    Stock = StockName.UnitServis,
+                    //Stock = StockName.UnitServis,
                     Name = name,
                     Sku = sku,
                     Model = sku,

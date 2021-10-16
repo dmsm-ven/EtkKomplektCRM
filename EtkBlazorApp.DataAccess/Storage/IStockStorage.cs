@@ -8,6 +8,8 @@ namespace EtkBlazorApp.DataAccess
     {
         Task CreateOrUpdateStock(StockPartnerEntity stock);
         Task<List<StockPartnerEntity>> GetStocks();
+        Task<StockPartnerEntity> GetStockById(int stock_partner_id);
+
         Task<List<StockCityEntity>> GetStockCities();
         Task<List<StockPartnerLinkedManufacturerInfoEntity>> GetStockManufacturers(int stock_partner_id);
         Task<List<StockPartnerManufacturerInfoEntity>> GetManufacturerStockPartners(int manufacturer_id);
@@ -33,6 +35,18 @@ namespace EtkBlazorApp.DataAccess
             var stocks = await database.GetList<StockPartnerEntity>(sql);
 
             return stocks;
+        }
+
+        public async Task<StockPartnerEntity> GetStockById(int stock_partner_id)
+        {
+            string sql = @"SELECT sp.*, sc.name as city
+                          FROM oc_stock_partner sp
+                          LEFT JOIN oc_stock_city sc ON sp.city_id = sc.city_id
+                          WHERE sp.stock_partner_id = @stock_partner_id";
+
+            var stock = await database.GetFirstOrDefault<StockPartnerEntity, dynamic>(sql, new { stock_partner_id });
+
+            return stock;
         }
 
         public async Task CreateOrUpdateStock(StockPartnerEntity stock)

@@ -19,9 +19,10 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string model = tab.GetValue<string>(row, 2);
                 var price = ParsePrice(tab.GetValue<string>(row, 3));
                 var quantity = ParseQuantity(tab.GetValue<string>(row, 5));
-                       
-                string manufacturer = ValidManufacturerNames.FirstOrDefault(vm => name.Contains(vm, StringComparison.OrdinalIgnoreCase));
-                if(manufacturer == null) { continue; }
+                
+                //Тут в прайс-листе нет столбца с наименованием бренда, берем из разрешенного списка
+                string manufacturer = BrandsWhiteList.FirstOrDefault(vm => name.Contains(vm, StringComparison.OrdinalIgnoreCase));
+                if (ManufacturerSkipCheck(manufacturer)) { continue; }
 
                 var priceLine = new PriceLine(this)
                 {
@@ -32,7 +33,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Price = price,
                     Quantity = quantity,
                     Currency = CurrencyType.RUB,
-                    Stock = StockName.MkEnergoset
+                    //Stock = StockName.MkEnergoset
                 };
                 list.Add(priceLine);
             }

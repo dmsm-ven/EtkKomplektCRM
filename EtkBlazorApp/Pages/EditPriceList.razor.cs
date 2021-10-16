@@ -14,17 +14,18 @@ namespace EtkBlazorApp.Pages
     public partial class EditPriceList : ComponentBase
     {
         [Parameter] public string TemplateGuid { get; set; } = string.Empty;
-
+       
         FtpFileSelectDialog imageSelectDialog;
         DeleteConfirmDialog deleteDialog;
 
-        PriceListTemplateItemViewModel item;
+        PriceListTemplateItemViewModel sourceTemplate;
 
         List<PriceListTemplateRemoteUriMethodEntity> remoteUriLoadMethods;
         List<string> groupNames;
         List<string> guidList;
         List<string> alreadyUsedGuids;
 
+        StockPartnerEntity linkedStock;
         SkipManufacturerListType newSkipManufacturerListType = SkipManufacturerListType.black_list;
         ManufacturerEntity newSkipManufacturerItem;
         string newManufacturerMapRecordWord;
@@ -36,7 +37,7 @@ namespace EtkBlazorApp.Pages
         bool expandedQuantityMap = false;
         bool expandedManufacturerMap = false;
         bool expandedSkipList = false;    
-        bool showEmailPatternBox => item.RemoteUrlMethodName == "EmailAttachment";
+        bool showEmailPatternBox => sourceTemplate.RemoteUrlMethodName == "EmailAttachment";
         bool addNewManufacturerMapButtonDisabled
         {
             get
@@ -51,7 +52,7 @@ namespace EtkBlazorApp.Pages
             get
             {
                 return newSkipManufacturerItem == null ||
-                    item.ManufacturerSkipList.Any(i => i.manufacturer_id == newSkipManufacturerItem.manufacturer_id || i.ListType != newSkipManufacturerListType);
+                    sourceTemplate.ManufacturerSkipList.Any(i => i.manufacturer_id == newSkipManufacturerItem.manufacturer_id || i.ListType != newSkipManufacturerListType);
             } 
         }
         string buttonActionName => string.IsNullOrWhiteSpace(TemplateGuid) ? "Создать" : "Сохранить изменения";
@@ -62,7 +63,7 @@ namespace EtkBlazorApp.Pages
             {
                 var entity = await templateStorage.GetPriceListTemplateById(TemplateGuid);
 
-                item = new PriceListTemplateItemViewModel(entity.id)
+                sourceTemplate = new PriceListTemplateItemViewModel(entity.id)
                 {
                     Title = entity.title,
                     Description = entity.description,
@@ -79,6 +80,7 @@ namespace EtkBlazorApp.Pages
                     EmailSearchCriteria_Subject = entity.email_criteria_subject,
                     Cridentials_Login = entity.credentials_login,
                     Cridentials_Password = entity.credentials_password,
+                    LinkedStockId = entity.stock_partner_id,
                     QuantityMap = entity.quantity_map.ToDictionary(i => i.text, i => i.quantity),
                     ManufacturerNameMap = entity.manufacturer_name_map.ToDictionary(i => i.text, i => i.name),
                     ManufacturerSkipList = entity.manufacturer_skip_list
@@ -94,9 +96,13 @@ namespace EtkBlazorApp.Pages
             else
             {
                 TemplateGuid = string.Empty;
-                item = new PriceListTemplateItemViewModel(TemplateGuid);
+                sourceTemplate = new PriceListTemplateItemViewModel(TemplateGuid);
                 createNew = true;
             }
+
+            linkedStock = sourceTemplate.LinkedStockId.HasValue ?
+                new StockPartnerEntity() { stock_partner_id = sourceTemplate.LinkedStockId.Value } :
+                null;
 
             remoteUriLoadMethods = await templateStorage.GetPricelistTemplateRemoteLoadMethods();
             groupNames = await templateStorage.GetPriceListTemplatGroupNames();
@@ -107,7 +113,7 @@ namespace EtkBlazorApp.Pages
                     .OfType<PriceListTemplateGuidAttribute>().FirstOrDefault())
                     .Where(a => a != null)
                     .Select(a => a.Guid)
-                    .OrderBy(g => g == item.Guid ? 0 : 1)
+                    .OrderBy(g => g == sourceTemplate.Guid ? 0 : 1)
                     .ThenBy(g => alreadyUsedGuids.Contains(g) ? 1 : 0)
                     .ThenBy(g => g)
                     .ToList();
@@ -117,8 +123,8 @@ namespace EtkBlazorApp.Pages
         {
             string id = e?.Value?.ToString();
             var method = remoteUriLoadMethods.FirstOrDefault(m => m.id.ToString().Equals(id));
-            item.RemoteUrlMethodId = method?.id;
-            item.RemoteUrlMethodName = method?.name;
+            sourceTemplate.RemoteUrlMethodId = method?.id;
+            sourceTemplate.RemoteUrlMethodName = method?.name;
             StateHasChanged();
         }
 
@@ -126,7 +132,7 @@ namespace EtkBlazorApp.Pages
         {
             if (selectedFilePath != null)
             {
-                item.Image = selectedFilePath;
+                sourceTemplate.Image = selectedFilePath;
                 await Task.Delay(TimeSpan.FromSeconds(1));
             }
         }
@@ -135,21 +141,22 @@ namespace EtkBlazorApp.Pages
         {
             var entity = new PriceListTemplateEntity()
             {
-                id = item.Guid,
-                description = item.Description,
-                title = item.Title,
-                discount = item.Discount,
-                image = item.Image,
-                nds = item.Nds,
-                group_name = item.GroupName,
-                remote_uri = item.RemoteUrl,
-                remote_uri_method_id = item.RemoteUrlMethodId,
-                credentials_login = item.Cridentials_Login,
-                credentials_password = item.Cridentials_Password,
-                email_criteria_sender = item.EmailSearchCriteria_Sender,
-                email_criteria_subject = item.EmailSearchCriteria_Subject,
-                email_criteria_file_name_pattern = item.EmailSearchCriteria_FileNamePattern,
-                email_criteria_max_age_in_days = item.EmailSearchCriteria_MaxAgeInDays
+                id = sourceTemplate.Guid,
+                description = sourceTemplate.Description,
+                title = sourceTemplate.Title,
+                discount = sourceTemplate.Discount,
+                image = sourceTemplate.Image,
+                nds = sourceTemplate.Nds,
+                group_name = sourceTemplate.GroupName,
+                remote_uri = sourceTemplate.RemoteUrl,
+                remote_uri_method_id = sourceTemplate.RemoteUrlMethodId,
+                credentials_login = sourceTemplate.Cridentials_Login,
+                credentials_password = sourceTemplate.Cridentials_Password,
+                email_criteria_sender = sourceTemplate.EmailSearchCriteria_Sender,
+                email_criteria_subject = sourceTemplate.EmailSearchCriteria_Subject,
+                email_criteria_file_name_pattern = sourceTemplate.EmailSearchCriteria_FileNamePattern,
+                email_criteria_max_age_in_days = sourceTemplate.EmailSearchCriteria_MaxAgeInDays,
+                stock_partner_id = linkedStock?.stock_partner_id
             };
 
             if (createNew)
@@ -167,13 +174,13 @@ namespace EtkBlazorApp.Pages
             try
             {
                 await templateStorage.UpdatePriceList(entity);
-                toasts.ShowInfo("Шаблон обновлен", item.Title);
-                await logger.Write(LogEntryGroupName.TemplateUpdate, "Шаблон обновлен", $"Обновление шаблона '{item.Title}' ({item.Guid})");
+                toasts.ShowInfo("Шаблон обновлен", sourceTemplate.Title);
+                await logger.Write(LogEntryGroupName.TemplateUpdate, "Шаблон обновлен", $"Обновление шаблона '{sourceTemplate.Title}' ({sourceTemplate.Guid})");
             }
             catch (Exception ex)
             {
-                toasts.ShowInfo("Ошибка обновления" + ex.Message, item.Title);
-                await logger.Write(LogEntryGroupName.TemplateUpdate, "Ошибка обновления", $"Ошибка обновления '{item.Title}' ({item.Guid}). {ex.Message}");
+                toasts.ShowInfo("Ошибка обновления" + ex.Message, sourceTemplate.Title);
+                await logger.Write(LogEntryGroupName.TemplateUpdate, "Ошибка обновления", $"Ошибка обновления '{sourceTemplate.Title}' ({sourceTemplate.Guid}). {ex.Message}");
             }
         }
 
@@ -182,14 +189,14 @@ namespace EtkBlazorApp.Pages
             try
             {
                 await templateStorage.CreatePriceList(entity);
-                toasts.ShowInfo("Шаблон добавлен", item.Title);
-                await logger.Write(LogEntryGroupName.TemplateUpdate, "Шаблон создан", $"Добавление шаблона '{item.Title}' ({item.Guid})");
+                toasts.ShowInfo("Шаблон добавлен", sourceTemplate.Title);
+                await logger.Write(LogEntryGroupName.TemplateUpdate, "Шаблон создан", $"Добавление шаблона '{sourceTemplate.Title}' ({sourceTemplate.Guid})");
                 navManager.NavigateTo("/load-price-list");
             }
             catch (Exception ex)
             {
-                toasts.ShowInfo("Ошибка создания" + ex.Message, item.Title);
-                await logger.Write(LogEntryGroupName.TemplateUpdate, "Ошибка создания", $"Ошибка добавления шаблона '{item.Title}' ({item.Guid}). {ex.Message}");
+                toasts.ShowInfo("Ошибка создания" + ex.Message, sourceTemplate.Title);
+                await logger.Write(LogEntryGroupName.TemplateUpdate, "Ошибка создания", $"Ошибка добавления шаблона '{sourceTemplate.Title}' ({sourceTemplate.Guid}). {ex.Message}");
             }
         }
 
@@ -197,61 +204,74 @@ namespace EtkBlazorApp.Pages
         {
             if (dialogResult == true)
             {
-                await templateStorage.DeletePriceList(item.Guid);
+                await templateStorage.DeletePriceList(sourceTemplate.Guid);
 
-                await logger.Write(LogEntryGroupName.TemplateUpdate, "Удаление шаблон", $"Шаблон '{item.Title}' ({item.Guid}) удален");
-                toasts.ShowInfo(item.Title, "Шаблон удален");
+                await logger.Write(LogEntryGroupName.TemplateUpdate, "Удаление шаблон", $"Шаблон '{sourceTemplate.Title}' ({sourceTemplate.Guid}) удален");
+                toasts.ShowInfo(sourceTemplate.Title, "Шаблон удален");
                 navManager.NavigateTo("/load-price-list");
             }
         }
 
         private async Task AddManufacturerMapRecord()
         {
-            await templateStorage.AddManufacturerMapRecord(item.Guid, newManufacturerMapRecordWord, newManufacturerMapRecordItem.manufacturer_id);
-            if (newManufacturerMapRecordItem != null)
-            {
-                item.ManufacturerNameMap[newManufacturerMapRecordWord] = newManufacturerMapRecordItem.name;
-                StateHasChanged();
-            }
+            await templateStorage.AddManufacturerMapRecord(sourceTemplate.Guid, newManufacturerMapRecordWord, newManufacturerMapRecordItem.manufacturer_id);
+            
+            sourceTemplate.ManufacturerNameMap[newManufacturerMapRecordWord] = newManufacturerMapRecordItem.name;
+            StateHasChanged();
+
+            await logger.Write(LogEntryGroupName.TemplateUpdate, "Добавлено", $"Преобразование названия бренда '{newManufacturerMapRecordWord}' --> '{newManufacturerMapRecordItem.name}' для шаблона {sourceTemplate.Title}");
         }
 
         private async Task RemoveManufacturerMapRecord(string word)
         {
-            await templateStorage.RemoveManufacturerMapRecord(item.Guid, word);
-            item.ManufacturerNameMap.Remove(word);
+            await templateStorage.RemoveManufacturerMapRecord(sourceTemplate.Guid, word);
+            sourceTemplate.ManufacturerNameMap.Remove(word);
             StateHasChanged();
+
+            await logger.Write(LogEntryGroupName.TemplateUpdate, "Убрано", $"Преобразование названия бренда '{word}' из шаблона {sourceTemplate.Title}");
         }
      
         private async Task AddNewQuantityMapRecord()
         {
-            await templateStorage.AddQuantityMapRecord(item.Guid, newQuantityMapRecordWord, newQuantityMapRecordValue);
-            item.QuantityMap[newQuantityMapRecordWord] = newQuantityMapRecordValue;
+            await templateStorage.AddQuantityMapRecord(sourceTemplate.Guid, newQuantityMapRecordWord, newQuantityMapRecordValue);
+            sourceTemplate.QuantityMap[newQuantityMapRecordWord] = newQuantityMapRecordValue;
             StateHasChanged();
+
+            await logger.Write(LogEntryGroupName.TemplateUpdate, "Добавлено", $"Преобразование остатков '{newQuantityMapRecordWord}' --> '{newQuantityMapRecordValue}' для шаблона {sourceTemplate.Title}");
         }
 
         private async Task RemoveQuantityMapRecord(string word)
         {
-            await templateStorage.RemoveQuantityMapRecord(item.Guid, word);
-            item.QuantityMap.Remove(word);
+            await templateStorage.RemoveQuantityMapRecord(sourceTemplate.Guid, word);
+            sourceTemplate.QuantityMap.Remove(word);
             StateHasChanged();
+
+            await logger.Write(LogEntryGroupName.TemplateUpdate, "Убрано", $"Преобразование остатков '{word}' из шаблона {sourceTemplate.Title}");
         }
 
         private async Task AddSkipManufacturerRecord()
         {
-            await templateStorage.AddSkipManufacturerRecord(item.Guid, newSkipManufacturerItem.manufacturer_id, newSkipManufacturerListType.ToString());
-            item.ManufacturerSkipList.Add(new ManufacturerSkipItemViewModel() {
+            await templateStorage.AddSkipManufacturerRecord(sourceTemplate.Guid, newSkipManufacturerItem.manufacturer_id, newSkipManufacturerListType.ToString());
+            var skipItem = new ManufacturerSkipItemViewModel()
+            {
                 manufacturer_id = newSkipManufacturerItem.manufacturer_id,
-                Name = newSkipManufacturerItem.name, 
+                Name = newSkipManufacturerItem.name,
                 ListType = newSkipManufacturerListType
-            });
+            };
+            sourceTemplate.ManufacturerSkipList.Add(skipItem);
             StateHasChanged();
+
+            await logger.Write(LogEntryGroupName.TemplateUpdate, "Добавлено", $"Исключение бренда '{newSkipManufacturerItem.name}' ({skipItem.ListTypeDescription}) для шаблона {sourceTemplate.Title}");
+
         }
 
         private async Task RemoveSkipManufacturerRecord(ManufacturerSkipItemViewModel skipInfo)
         {
-            await templateStorage.RemoveSkipManufacturerRecord(item.Guid, skipInfo.manufacturer_id, skipInfo.ListType.ToString());
-            item.ManufacturerSkipList.Remove(skipInfo);
+            await templateStorage.RemoveSkipManufacturerRecord(sourceTemplate.Guid, skipInfo.manufacturer_id, skipInfo.ListType.ToString());
+            sourceTemplate.ManufacturerSkipList.Remove(skipInfo);
             StateHasChanged();
+
+            await logger.Write(LogEntryGroupName.TemplateUpdate, "Убрано", $"Исключение бренда '{skipInfo.Name}' ({skipInfo.ListTypeDescription}) из шаблона {sourceTemplate.Title}");
         }
     }
 }

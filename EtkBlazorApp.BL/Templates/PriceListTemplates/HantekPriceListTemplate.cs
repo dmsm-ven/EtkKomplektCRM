@@ -30,7 +30,7 @@ namespace EtkBlazorApp.BL.Templates
                 {
                     Name = name,
                     Currency = CurrencyType.RUB,
-                    Stock = StockName.Hantek,
+                    //Stock = StockName.Hantek,
                     Model = model,
                     Sku = model,
                     Price = price,

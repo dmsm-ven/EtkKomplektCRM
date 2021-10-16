@@ -19,12 +19,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 var quantity = ParseQuantity(tab.GetValue<string>(row, 4));
                 var rrcPrice = ParsePrice(tab.GetValue<string>(row, 8));
                
-                string manufacturer = GetManufacturerBySkuPrefix(ref sku);
-
-                if(!ValidManufacturerNames.Contains(manufacturer))
-                {
-                    continue;
-                }
+                string manufacturer = MapManufacturerName(GetManufacturerBySkuPrefix(ref sku));
+                if(ManufacturerSkipCheck(manufacturer)) { }
 
                 var priceLine = new PriceLine(this)
                 {
@@ -34,7 +30,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Name = name,
                     Quantity = quantity,
                     Price = rrcPrice,
-                    Stock = StockName.UMP
+                    //Stock = StockName.UMP
                 };
 
                 list.Add(priceLine);

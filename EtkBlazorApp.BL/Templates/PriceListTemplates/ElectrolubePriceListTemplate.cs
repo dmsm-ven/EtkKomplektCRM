@@ -23,7 +23,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 var priceLine = new PriceLine(this)
                 {
                     Manufacturer = "Electrolube",
-                    Stock = StockName.Borel,
+                    //Stock = StockName.Borel,
                     Sku = skuNumber,
                     Model = skuNumber,
                     Quantity = quantity

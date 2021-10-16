@@ -29,7 +29,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string name = tab.GetValue<string>(row, 4);
                 var quantity = ParseQuantity(tab.GetValue<string>(row, 7));
 
-                if (string.IsNullOrWhiteSpace(skuNumber) || SkipManufacturerNames.Contains(manufacturer)) { continue; }
+                if (string.IsNullOrWhiteSpace(skuNumber) || ManufacturerSkipCheck(manufacturer)) { continue; }
 
                 var priceLine = new PriceLine(this)
                 {
@@ -37,8 +37,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Sku = skuNumber,
                     Model = skuNumber,
                     Quantity = quantity,
-                    Stock = StockName._1C,
-                    Manufacturer = manufacturer
+                    Manufacturer = manufacturer,
+//                    Stock = StockName._1C
                 };
 
                 list.Add(priceLine);
@@ -86,7 +86,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     .Select(tr => tr.SelectNodes("./td").Select(td => HttpUtility.HtmlDecode(td.InnerText.Trim())).ToArray())
                     .Where(cells => cells.Length >= 5 && cells[0] != "Итого")
                     .Select(cells => ParseRow(cells, nextDeliveryDays))
-                    .Where(pl => !string.IsNullOrWhiteSpace(pl.Sku) && !SkipManufacturerNames.Contains(pl.Manufacturer))
+                    .Where(pl => !string.IsNullOrWhiteSpace(pl.Sku) && !BrandsBlackList.Contains(pl.Manufacturer))
                     .ToList();
 
                 list.AddRange(data);
@@ -105,7 +105,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 Model = cells[1],
                 Name = cells[2],
                 Quantity = ParseQuantity(cells[4].Replace(",000", string.Empty)),
-                Stock = StockName._1C,
+//                Stock = StockName._1C,
             };
 
 

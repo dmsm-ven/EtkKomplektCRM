@@ -25,7 +25,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Model = sku,
                     Sku = sku,
                     Quantity = quantity,
-                    Stock = StockName.GedoreTools
+                    //Stock = StockName.GedoreTools
                 };
 
                 list.Add(priceLine);

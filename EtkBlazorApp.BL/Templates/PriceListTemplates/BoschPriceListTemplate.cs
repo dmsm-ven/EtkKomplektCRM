@@ -15,8 +15,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
-                string sku = tab.GetValue<string>(row, 1).ToString()
-                    .Insert(1, " ").Insert(5, " ").Insert(9, " ");
+                string sku = tab.GetValue<string>(row, 1).ToString().Insert(1, " ").Insert(5, " ").Insert(9, " ");
 
                 string stockStatusCode = tab.GetValue<string>(row, 2);
                 decimal price = tab.GetValue<decimal>(row, 3);
@@ -29,7 +28,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Price = price,
                     Quantity = QuantityMap[stockStatusCode],
                     Manufacturer = "Bosch",
-                    Stock = StockName.BoschB2B
+                    //Stock = StockName.BoschB2B
                 };
 
                 list.Add(priceLine);

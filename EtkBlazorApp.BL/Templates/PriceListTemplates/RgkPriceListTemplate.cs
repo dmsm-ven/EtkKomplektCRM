@@ -16,6 +16,9 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 string name = tab.GetValue<string>(row, 1);
                 string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 4));
+
+                if(ManufacturerSkipCheck(manufacturer)) { continue; }
+
                 string sku = tab.GetValue<string>(row, 6);
 
                 decimal? priceRrc = ParsePrice(tab.GetValue<string>(row, 8));
@@ -34,7 +37,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Sku = sku,
                     Price = price,
                     Quantity = quantity,
-                    Stock = StockName.RGK
+                    //Stock = StockName.RGK
                 };
 
                 list.Add(priceLine);

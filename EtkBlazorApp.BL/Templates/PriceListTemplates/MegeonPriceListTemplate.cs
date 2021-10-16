@@ -15,15 +15,15 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
+                string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 3));
+                if (ManufacturerSkipCheck(manufacturer)) { continue; }
+
                 string sku = tab.GetValue<string>(row, 1);
                 string name = tab.GetValue<string>(row, 2);
-                string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 3));
                 int? quantity = ParseQuantity(tab.GetValue<string>(row, 4));
                 decimal price = tab.GetValue<decimal>(row, 5);
                 CurrencyType currency = CurrencyType.RUB;
                 if(Enum.TryParse(tab.GetValue<string>(row, 7)?.Replace("руб.", "RUB"), true, out currency)) { }
-
-                if (!ValidManufacturerNames.Contains(manufacturer)) { continue; }
 
                 var match1 = Regex.Match(name, @"^(.*?) (МЕГЕОН \S+)");
                 var match2 = Regex.Match(name, @"МЕГЕОН \S+");
@@ -38,7 +38,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Price = price,
                     Quantity = quantity,
                     Name = name,
-                    Stock = StockName.Megeon
+                    //Stock = StockName.Megeon
                 };
                 list.Add(priceLine);              
             }

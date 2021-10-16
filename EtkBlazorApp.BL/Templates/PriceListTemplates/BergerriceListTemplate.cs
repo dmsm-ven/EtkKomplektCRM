@@ -24,7 +24,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 {
                     Name = name,
                     Currency = CurrencyType.RUB,
-                    Stock = StockName.Berger,
+                    //Stock = StockName.Berger,
                     Manufacturer = "Berger",
                     Model = sku,
                     Ean = sku,
