@@ -2,6 +2,7 @@
 using EtkBlazorApp.BL.Templates.PriceListTemplates;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -154,10 +155,33 @@ namespace EtkBlazorApp.BL
 
         private bool IsTimeToRun(CronTaskEntity task, TimeSpan now)
         {
-            if(now >= task.exec_time && Math.Abs((task.exec_time - now).TotalMilliseconds) <= checkTimer.Interval)
+            if (string.IsNullOrEmpty(task.additional_exec_time))
             {
-                return true;
+                if (now >= task.exec_time && Math.Abs((task.exec_time - now).TotalMilliseconds) <= checkTimer.Interval)
+                {
+                    return true;
+                }
             }
+            else
+            {
+                try
+                {
+                    //TODO: сделать как-то по другому
+                    var add_exec_times = JsonConvert.DeserializeObject<List<TimeSpan>>(task.additional_exec_time);
+                    foreach(var ts in add_exec_times)
+                    {
+                        if (now >= ts && Math.Abs((ts - now).TotalMilliseconds) <= checkTimer.Interval)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                catch
+                {
+
+                }
+            }
+            
             return false;
         }
 

@@ -46,11 +46,11 @@
                 <table class="table">
                     <thead class="thead-etk">
                         <tr>
-                            <th style="width: 40%">Задание</th>
-                            <th style="width: 10%">Запускается в</th>
-                            <th style="width: 15%">Следующий запуск</th>
-                            <th style="width: 15%">Последний запуск</th>
-                            <th style="width: 20%; text-align: right;">Примечание</th>
+                            <th style="width: 25%">Задание</th>
+                            <th style="width: 20%">Запускается в</th>
+                            <th style="width: 15%">Следующий запуск через</th>
+                            <th style="width: 15%">Последний запуск в</th>
+                            <th style="width: 25%; text-align: right;">Примечание</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -88,7 +88,9 @@
                             PriceListGuid = ct.linked_price_list_guid,
                             Title = ct.name,
                             TypeId = (CronTaskType)ct.task_type_id,
-                            TypeName = ct.task_type_name
+                            TypeName = ct.task_type_name,
+                            AdditionalExecTime = ct.additional_exec_time != null ? 
+                                JsonConvert.DeserializeObject<List<TimeSpan>>(ct.additional_exec_time) : new List<TimeSpan>()
                         })
                         .OrderBy(ct => ct.IsEnabled ? 0 : 1)
                         .ThenBy(ct => ct.ExecTime)
@@ -113,7 +115,8 @@
                     description = item.Description,
                     exec_time = item.ExecTime,
                     linked_price_list_guid = item.PriceListGuid,
-                    task_type_id = (int)item.TypeId
+                    task_type_id = (int)item.TypeId,
+                    additional_exec_time = item.AdditionalExecTime.Any() ? JsonConvert.SerializeObject(item.AdditionalExecTime) : null
                 };
 
                 await cronTaskStorage.CreateCronTask(entity);

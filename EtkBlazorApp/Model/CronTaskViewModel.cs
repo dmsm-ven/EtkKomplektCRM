@@ -1,7 +1,9 @@
 ﻿using EtkBlazorApp.BL;
 using EtkBlazorApp.DataAccess;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace EtkBlazorApp
 {
@@ -27,6 +29,8 @@ namespace EtkBlazorApp
         public DateTime? LastExec { get; set; }
         public CronTaskExecResult? LastExecResult { get; set; }
 
+        public List<TimeSpan> AdditionalExecTime { get; set; } = new List<TimeSpan>();
+
         private DateTime executionDateTime = new DateTime();
         public DateTime ExecutionDateTime
         {
@@ -38,10 +42,38 @@ namespace EtkBlazorApp
             }
         }
 
-        public TimeSpan NextExecutionLeft => ExecTime < DateTime.Now.TimeOfDay ?
-                         (DateTime.Now.AddDays(1).Date.AddTicks(ExecTime.Ticks) - DateTime.Now) :
-                         (ExecTime - DateTime.Now.TimeOfDay);
+        public TimeSpan NextExecutionLeft
+        {
+            get
+            {
+                var curTime = DateTime.Now.TimeOfDay;
+                var now = DateTime.Now;
 
-        public int NextExecutionPercentLeft => (int)Math.Round(100 - (100d * (NextExecutionLeft.TotalSeconds / TimeSpan.FromHours(24).TotalSeconds)));
+                if (AdditionalExecTime != null && AdditionalExecTime.Count > 0)
+                {
+                    var closestTime = Enumerable.Concat(new TimeSpan[] { ExecTime }, AdditionalExecTime.ToArray())
+                        .Select(t => new
+                        {
+                            diff = Math.Abs(curTime.Ticks - t.Ticks),
+                            time = t < curTime ?
+                                     (DateTime.Now.AddDays(1).Date.AddTicks(t.Ticks) - DateTime.Now) :
+                                     (t - curTime)
+                        })
+                        .OrderBy(t => t.time)
+                        .ToArray();
+
+                    return closestTime.First().time;
+                }
+                else
+                {
+                    return ExecTime < curTime ?
+                         (DateTime.Now.AddDays(1).Date.AddTicks(ExecTime.Ticks) - DateTime.Now) :
+                         (ExecTime - curTime);
+                }
+                
+            }
+        }
+
+    
     }
 }

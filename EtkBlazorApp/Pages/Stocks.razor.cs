@@ -31,7 +31,9 @@ namespace EtkBlazorApp.Pages
         {
             get
             {
-                var source = stockList.GroupBy(s => s.City ?? "Город не указан")
+                var source = stockList
+                    .Where(i => i.CityId != 0)
+                    .GroupBy(s => s.City ?? "Город не указан")
                     .OrderByDescending(i => i.Count())
                     .ThenBy(i => i.Key)
                     .ToDictionary(i => i.Key, j => j.Count());

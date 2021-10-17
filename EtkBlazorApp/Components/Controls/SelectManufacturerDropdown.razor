@@ -3,10 +3,11 @@
 
 <select class="form-control" id="dropdown-manufacturer" style="min-width: 150px;@CustomStyle"
         @onchange="OnManufacturerChanged">
+    <option value="">Выбрать</option>
     @foreach (var manufacturer in manufacturersSource)
     {
         <option value="@manufacturer.manufacturer_id"
-                selected="@(Manufacturer.manufacturer_id == manufacturer.manufacturer_id)">
+                selected="@(Manufacturer != null && Manufacturer.manufacturer_id == manufacturer.manufacturer_id)">
             @manufacturer.name
         </option>
     }
@@ -22,13 +23,19 @@
     protected override async Task OnInitializedAsync()
     {
         manufacturersSource = await manufacturerStorage.GetManufacturers();
-        Manufacturer = manufacturersSource.FirstOrDefault() ?? new ManufacturerEntity();
         await ManufacturerChanged.InvokeAsync(Manufacturer);
     }
 
-    protected void OnManufacturerChanged(ChangeEventArgs e)
+    protected async Task OnManufacturerChanged(ChangeEventArgs e)
     {
-        Manufacturer = manufacturersSource.Single(m => m.manufacturer_id == int.Parse(e.Value.ToString()));
-        ManufacturerChanged.InvokeAsync(Manufacturer);
+        if (int.TryParse(e.Value.ToString(), out var id))
+        {
+            Manufacturer = manufacturersSource.Single(m => m.manufacturer_id == int.Parse(e.Value.ToString()));
+            await ManufacturerChanged.InvokeAsync(Manufacturer);
+        }
+        else
+        {
+            await ManufacturerChanged.InvokeAsync(null);
+        }
     }
 }

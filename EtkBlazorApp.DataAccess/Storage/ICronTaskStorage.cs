@@ -1,6 +1,8 @@
 ﻿using EtkBlazorApp.DataAccess.Entity;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.DataAccess
@@ -33,8 +35,7 @@ namespace EtkBlazorApp.DataAccess
                            LEFT JOIN etk_app_cron_task_type tp ON (ta.task_type_id = tp.task_type_id)
                            WHERE archived = 0";
 
-            var data = await database.GetList<CronTaskEntity, dynamic>(sql, new { });
-
+            var data = await database.GetList<CronTaskEntity>(sql);
             return data;
         }
 
@@ -45,9 +46,8 @@ namespace EtkBlazorApp.DataAccess
                            LEFT JOIN etk_app_cron_task_type tp ON (ta.task_type_id = tp.task_type_id)
                            WHERE task_id = @id";
 
-            var data = await database.GetList<CronTaskEntity, dynamic>(sql, new { id });
-
-            return data.FirstOrDefault();
+            var task = (await database.GetList<CronTaskEntity, dynamic>(sql, new { id })).FirstOrDefault();
+            return task;
         }
 
         public async Task UpdateCronTask(CronTaskEntity task)
@@ -56,7 +56,8 @@ namespace EtkBlazorApp.DataAccess
                            SET enabled = @enabled,
                                description = @description,
                                exec_time = @exec_time,
-                               linked_price_list_guid = @linked_price_list_guid
+                               linked_price_list_guid = @linked_price_list_guid,
+                               additional_exec_time = @additional_exec_time
                            WHERE task_id = @task_id";
 
             await database.ExecuteQuery(sql, task);
@@ -80,12 +81,11 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task CreateCronTask(CronTaskEntity task)
         {
-            string sql = @"INSERT INTO etk_app_cron_task (task_type_id, linked_price_list_guid, enabled, exec_time, name, description) 
+            string sql = @"INSERT INTO etk_app_cron_task (task_type_id, linked_price_list_guid, enabled, exec_time, additional_exec_time, name, description) 
                            VALUES
-                          (@task_type_id, @linked_price_list_guid, @enabled, @exec_time, @name, @description)";
+                          (@task_type_id, @linked_price_list_guid, @enabled, @exec_time, @additional_exec_time, @name, @description)";
 
             await database.ExecuteQuery(sql, task);
-
         }
 
         public async Task<List<CronTaskTypeEntity>> GetCronTaskTypes()

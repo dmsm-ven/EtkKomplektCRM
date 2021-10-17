@@ -20,5 +20,7 @@ namespace EtkBlazorApp.DataAccess.Entity
         public DateTime? last_exec_date_time { get; set; }
         public CronTaskExecResult? last_exec_result { get; set; }
         public int? last_exec_file_size { get; set; }
+
+        public string additional_exec_time { get; set; }
     }
 }

@@ -1,6 +1,11 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+.exec_time_input {
+    width: auto;
+    min-width: 150px;
+    display: inline-block;
+}
 .price-list-template-map-control {
     width: 250px;
     display: inline-block;

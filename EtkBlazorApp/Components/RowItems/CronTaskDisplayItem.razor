@@ -9,12 +9,23 @@
         </div>
     </td>
     <td>
-        @(Item.IsEnabled ? Item.ExecTime.ToString(@"hh\:mm") : "")
+        @if (Item.IsEnabled)
+        {
+            @Item.ExecTime.ToString(@"hh\:mm")
+            if (Item.AdditionalExecTime != null)
+            {
+                foreach (var time in Item.AdditionalExecTime)
+                {
+                    <span>, @time.ToString(@"hh\:mm")</span>
+                }
+            }
+        }
     </td>
     <td>
         @if (Item.IsEnabled)
         {
-            <BootstrapProgressBar CurrentProgress="@Item.NextExecutionPercentLeft" Stripped="false" Animated="false" HideProgressLabel="true" />
+            @string.Format("{0} ч. {1} м.", Item.NextExecutionLeft.Hours.ToString().PadLeft(2, '0'), Item.NextExecutionLeft.Minutes.ToString().PadLeft(2, '0'))
+
         }
     </td>
     <td>

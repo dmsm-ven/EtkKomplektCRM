@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
     [PriceListTemplateGuid("C1412CC4-79E5-467F-A8E9-ACF18E320B92")]
-    [Obsolete]
     public class ZubrQuantityPriceListTemplate : ExcelPriceListTemplateBase
     {
         public ZubrQuantityPriceListTemplate(string fileName) : base(fileName) { }
