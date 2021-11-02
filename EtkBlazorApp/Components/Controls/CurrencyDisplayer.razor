@@ -1,0 +1,38 @@
+﻿@inject IWebsiteCurrencyService currencyService
+<div id="currency-displayer">
+    @if (currencyInfo != null)
+    {
+        <p style="margin: 4px; font-size:14px; color: darkslategray">
+            Курсы валют на сайте etk-komplekt.ru на данный момент, последнее обновление было: <strong style="color: blue;">@currencyInfo.Max(c => c.date_modified)</strong>
+            <br />
+            Цены взяты с официального сайта ЦБ РФ
+        </p>
+        @foreach (var c in currencyInfo)
+        {
+            <p style="font-size:18px; margin: 4px;">@c.code: <strong style="color: red;">@c.value_official.ToString("F2")</strong></p>
+        }
+    }
+    else
+    {
+        <LoadingSpinner />
+    }
+</div>
+
+
+@code {
+    List<WebsiteCurrencyStatusEntity> currencyInfo;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            currencyInfo = await currencyService.GetStatus();
+            var rubInfo = currencyInfo.FirstOrDefault(c => c.code == "RUB");
+            if(rubInfo != null)
+            {
+                currencyInfo.Remove(rubInfo);
+            }
+            StateHasChanged();
+        }
+    }
+}

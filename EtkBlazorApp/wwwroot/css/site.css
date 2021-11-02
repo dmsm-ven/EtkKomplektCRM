@@ -1,6 +1,7 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+
 .exec_time_input {
     width: auto;
     min-width: 150px;
@@ -511,6 +512,12 @@ input[type='radio'], input[type='checkbox'] {
     animation: blink-animation 1.5s;
     animation-timing-function: linear;
     animation-iteration-count: 3;
+}
+
+.cron-task-queue-row-changed-animation {
+    animation: blink-animation 0.5s;
+    animation-timing-function: linear;
+    animation-iteration-count: 2;
 }
 
 .new-log-item-blink {

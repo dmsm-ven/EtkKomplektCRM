@@ -76,6 +76,7 @@ namespace EtkBlazorApp
             services.AddTransient<ISettingStorage, SettingStorage>();
             services.AddTransient<ICronTaskStorage, CronTaskStorage>();
             services.AddTransient<IAuthenticationDataStorage, AuthenticationDataStorage>();
+            services.AddTransient<IWebsiteCurrencyService, WebsiteCurrencyService>();
         }
 
         private void ConfigureCorrelators(IServiceCollection services)

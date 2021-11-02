@@ -230,10 +230,10 @@ namespace EtkBlazorApp.DataAccess
 
             var sb = new StringBuilder();
 
-            sb.AppendLine("INSERT INTO oc_stock_next_delivery (stock_id, product_id, quantity, next_shipment_days) VALUES");
+            sb.AppendLine("INSERT INTO oc_stock_next_delivery (stock_id, product_id, quantity, next_shipment_date) VALUES");
             foreach(var line in source)
             {
-                sb.AppendLine($"({line.stock_id}, {line.product_id}, {line.NextStockDelivery.Quantity}, {line.NextStockDelivery.Days}),");
+                sb.AppendLine($"({line.stock_id}, {line.product_id}, {line.NextStockDelivery.Quantity}, '{line.NextStockDelivery.Date.ToString("yyyy-MM-dd")}'),");
             }
 
             string sql = sb.ToString().Trim('\r', '\n', '\t', ' ', ',') + ";";

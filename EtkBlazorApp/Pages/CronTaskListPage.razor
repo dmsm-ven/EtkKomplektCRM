@@ -1,12 +1,11 @@
 ﻿@page "/cron-task"
 @inject ICronTaskStorage cronTaskStorage
-@inject CronTaskService taskManager
 @inject UserLogger userLogger
 @inject NavigationManager navigationManager
-@inject CronTaskService cronTaskService
-    @attribute [Authorize(Roles = "Administrator, Manager")]
-    @implements IDisposable
-    @using System.Timers
+@inject CronTaskService taskManager
+@attribute [Authorize(Roles = "Administrator, Manager")]
+@implements IDisposable
+@using System.Timers
 
     <h3>Переодические задачи</h3>
     @if (cronTaskList == null)
@@ -30,17 +29,9 @@
                 <p>Время на сервере: <span style="color: Highlight">@DateTime.Now.ToShortTimeString()</span></p>
             </div>
         </div>
-        if (activeTask != null)
-        {
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-12 my-1">
-                        <h3>В данный момент выполняется задание @($"'{activeTask.name}'")</h3>
-                        <IntermediateProgressBar></IntermediateProgressBar>
-                    </div>
-                </div>
-            </div>
-        }
+        
+        <ActiveCronTaskInProgressDisplayer />
+              
         <div class="row py-2">
             <div class="table-responsive cron-task-table">
                 <table class="table">
@@ -69,10 +60,8 @@
 
     @code {
         Timer timeLeftRefresh = new Timer(TimeSpan.FromSeconds(15).TotalMilliseconds);
-        List<CronTaskViewModel> cronTaskList = null;
-        AddNewCronTaskDialog addNewDialog;
-
-        CronTaskEntity activeTask;
+        IOrderedEnumerable<CronTaskViewModel> cronTaskList = null;
+        AddNewCronTaskDialog addNewDialog;     
 
         protected override async Task OnInitializedAsync()
         {
@@ -89,20 +78,15 @@
                             Title = ct.name,
                             TypeId = (CronTaskType)ct.task_type_id,
                             TypeName = ct.task_type_name,
-                            AdditionalExecTime = ct.additional_exec_time != null ? 
+                            AdditionalExecTime = ct.additional_exec_time != null ?
                                 JsonConvert.DeserializeObject<List<TimeSpan>>(ct.additional_exec_time) : new List<TimeSpan>()
                         })
                         .OrderBy(ct => ct.IsEnabled ? 0 : 1)
-                        .ThenBy(ct => ct.ExecTime)
-                        .ThenBy(ct => ct.Title)
-                        .ToList();
+                        .ThenBy(ct => ct.NextExecutionLeft);
 
             timeLeftRefresh.Elapsed += (o, e) => InvokeAsync(() => StateHasChanged());
-            timeLeftRefresh.Start();
+            timeLeftRefresh.Start();                  
 
-            activeTask = cronTaskService.TaskInProgress;
-            cronTaskService.OnTaskExecutionStart += OnTaskManagerStart;
-            cronTaskService.OnTaskExecutionEnd += OnTaskManagerFinish;
         }
 
         private async Task NewTaskDialogStateChanged(CronTaskViewModel item)
@@ -126,22 +110,8 @@
             }
         }
 
-        private async void OnTaskManagerStart(CronTaskEntity t)
-        {
-            activeTask = t;
-            await InvokeAsync(() => StateHasChanged());
-        }
-
-        private async void OnTaskManagerFinish(CronTaskEntity t)
-        {
-            activeTask = null;
-            await InvokeAsync(() => StateHasChanged());
-        }
-
         public void Dispose()
         {
-            cronTaskService.OnTaskExecutionStart -= OnTaskManagerStart;
-            cronTaskService.OnTaskExecutionEnd -= OnTaskManagerFinish;
             timeLeftRefresh?.Stop();
             timeLeftRefresh?.Dispose();
         }

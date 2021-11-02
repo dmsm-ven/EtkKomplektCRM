@@ -24,6 +24,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
         public IRemoteTemplateFileLoader GetMethod(string remoteUri, string methodName, string guid)
         {
+            //методы перечислены в таблице 'etk_app_price_list_template_remote_method'
             switch (methodName)
             {
                 case "HttpGet":

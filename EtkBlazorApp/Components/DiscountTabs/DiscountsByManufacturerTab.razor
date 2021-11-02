@@ -77,13 +77,13 @@
 }
 
 @code {
-    List<DiscountToManufacturerEntity> discountedManufacturers;
-    DiscountToManufacturerEntity discountData;
+        List<DiscountToManufacturerEntity> discountedManufacturers;
+        DiscountToManufacturerEntity discountData;
 
-    bool addDiscountButtonDisabled
+        bool addDiscountButtonDisabled
     {
-        get => discountData.date_end <= DateTime.Now.Date || discountData.discount == 0 || discountData.manufacturer_id == 0;
-    }
+            get => discountData.date_end <= DateTime.Now.Date || discountData.discount == 0 || discountData.manufacturer_id == 0;
+        }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -97,9 +97,12 @@
 
     private void ManufacturerChanged(ManufacturerEntity manufacturer)
     {
-        discountData.manufacturer_id = manufacturer.manufacturer_id;
-        discountData.manufacturer_name = manufacturer.name;
-        discountData.discount = 0;
+        if (manufacturer != null)
+        {
+            discountData.manufacturer_id = manufacturer.manufacturer_id;
+            discountData.manufacturer_name = manufacturer.name;
+            discountData.discount = 0;
+        }
     }
 
     private async Task RemoveDiscountItem(DiscountToManufacturerEntity data)

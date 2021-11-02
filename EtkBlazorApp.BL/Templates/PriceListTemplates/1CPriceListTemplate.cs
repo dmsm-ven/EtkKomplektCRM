@@ -69,15 +69,12 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             if(table != null)
             {
-                DateTime dt = DateTime.Now.Date;
-
-                // содержит количество дней до следующей даты поставки в столбце
-                int[] nextDeliveryDays = table.SelectSingleNode(".//tr")
+                // содержит дату следующей поставки
+                DateTime[] nextDeliveryDays = table.SelectSingleNode(".//tr")
                     .SelectNodes(".//td")
                     .Skip(2)
                     .Where(cell => !string.IsNullOrWhiteSpace(cell.InnerText))
                     .Select(cell => DateTime.Parse(cell.InnerText.Replace(" г.", string.Empty), new CultureInfo("ru-RU")))
-                    .Select(date => (int)(date - dt).TotalDays)
                     .ToArray();
 
                 var data = table
@@ -96,7 +93,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             return Task.FromResult(list);
         }
 
-        private PriceLineWithNextDeliveryDate ParseRow(string[] cells, int[] headerColumnsDays)
+        private PriceLineWithNextDeliveryDate ParseRow(string[] cells, DateTime[] headerColumnsDays)
         {
             var line = new PriceLineWithNextDeliveryDate(this)
             {
@@ -117,7 +114,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 {
                     line.NextStockDelivery = new DataAccess.NextStockDelivery()
                     {
-                        Days = headerColumnsDays[i],
+                        Date = headerColumnsDays[i],
                         Quantity = nextQuantity.Value
                     };
                     break;

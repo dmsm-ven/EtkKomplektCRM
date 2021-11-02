@@ -6,12 +6,8 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12 my-1">
-            @if (inProgress || activeTask != null)
+          @if (inProgress)
             {
-                if (activeTask != null)
-                {
-                <h3>В данный момент выполняется задание @($"'{activeTask.name}'")</h3>
-                }
                 <IntermediateProgressBar></IntermediateProgressBar>
             }
             else
@@ -24,6 +20,8 @@
         </div>
     </div>
 </div>
+
+<ActiveCronTaskInProgressDisplayer />
 
 <div class="row">
     <div class="col-md-12">
@@ -39,6 +37,9 @@
         <button class="nav-link @(selectedTabName == "tab-2" ? "active" : "")" @onclick="@(e => selectedTabName = "tab-2")">
             Список игнорирования товаров
         </button>
+        <button class="nav-link @(selectedTabName == "tab-3" ? "active" : "")" @onclick="@(e => selectedTabName = "tab-3")">
+            Курсы валют
+        </button>
     </div>
 </nav>
 <div class="tab-content" id="nav-tabContent">
@@ -49,5 +50,9 @@
     <div class="tab-pane fade show @(selectedTabName == "tab-2" ? "active": "")"
          style="display: @(selectedTabName == "tab-2" ? "block" : "hidden");">
         <FixedProductsList />
+    </div>
+    <div class="tab-pane fade show @(selectedTabName == "tab-3" ? "active": "")"
+         style="display: @(selectedTabName == "tab-3" ? "block" : "hidden");">
+        <CurrencyDisplayer />
     </div>
 </div>

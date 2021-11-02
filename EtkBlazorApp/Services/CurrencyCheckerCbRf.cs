@@ -11,7 +11,9 @@ namespace EtkBlazorApp.Services
     {
         Dictionary<CurrencyType, decimal> rates;
         public DateTime LastUpdate { get; private set; }
-        readonly TimeSpan expire_time = TimeSpan.FromHours(1);
+
+        //Время после которого курс валют запрашивается заного
+        readonly TimeSpan expire_time = TimeSpan.FromMinutes(15);
 
         public async Task<decimal> GetCurrencyRate(CurrencyType type)
         {

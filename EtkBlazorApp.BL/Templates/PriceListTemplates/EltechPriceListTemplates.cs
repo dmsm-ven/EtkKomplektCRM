@@ -40,7 +40,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 {
                     productDeliveryInfo = new DataAccess.NextStockDelivery()
                     {
-                        Days = stockNextShipmentWeeks.Value * 7,
+                        Date = DateTime.Now.AddDays(stockNextShipmentWeeks.Value * 7).Date,
                         Quantity = stockNextShipmentQuantity.Value
                     };
                 }

@@ -85,16 +85,16 @@
 }
 
 @code {
-    ManufacturersCheckList manufacturersCheckList;
-    List<DiscountToStockEntity> stockDiscounts;
-    DiscountToStockEntity discountData;
+        ManufacturersCheckList manufacturersCheckList;
+        List<DiscountToStockEntity> stockDiscounts;
+        DiscountToStockEntity discountData;
 
-    int minimumQuantity = 1;
+        int minimumQuantity = 1;
 
-    bool addDiscountButtonDisabled
+        bool addDiscountButtonDisabled
     {
-        get => discountData.date_end <= DateTime.Now.Date || discountData.discount == 0 || discountData.stock_id == 0;
-    }
+            get => discountData.date_end <= DateTime.Now.Date || discountData.discount == 0 || discountData.stock_id == 0;
+        }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -108,9 +108,12 @@
 
     private void StockChanged(StockPartnerEntity stock)
     {
-        discountData.stock_id = stock.stock_partner_id;
-        discountData.stock_name = stock.name;
-        discountData.discount = 0;
+        if (stock != null)
+        {
+            discountData.stock_id = stock.stock_partner_id;
+            discountData.stock_name = stock.name;
+            discountData.discount = 0;
+        }
     }
 
     private async Task RemoveDiscountItem(DiscountToStockEntity data)

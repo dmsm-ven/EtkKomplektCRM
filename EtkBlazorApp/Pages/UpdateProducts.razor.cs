@@ -16,14 +16,11 @@ namespace EtkBlazorApp.Pages
         [Inject] public IToastService toastService { get; set; }
         [Inject] public ISettingStorage setting { get; set; }
         [Inject] public IManufacturerStorage manufacturers { get; set; }
-        [Inject] public CronTaskService cronTaskService { get; set; }
         [Inject] public PriceListManager priceListManager { get; set; }
         [Inject] public UpdateManager databaseManager { get; set; }
         [Inject] public UserLogger logger { get; set; }
 
         bool inProgress = false;
-
-        CronTaskEntity activeTask;
 
         List<string> websiteManufacturers;
         List<string> updateProgressSteps = new List<string>();
@@ -32,9 +29,6 @@ namespace EtkBlazorApp.Pages
 
         protected override void OnInitialized()
         {
-            activeTask = cronTaskService.TaskInProgress;
-            cronTaskService.OnTaskExecutionStart += OnTaskManagerStart;
-            cronTaskService.OnTaskExecutionEnd += OnTaskManagerFinish;
             priceListManager.OnPriceListLoaded += OnPriceListLoad;
         }
 
@@ -44,18 +38,6 @@ namespace EtkBlazorApp.Pages
             {
                 websiteManufacturers = (await manufacturers.GetManufacturers()).Select(m => m.name).ToList();
             }
-        }
-
-        private async void OnTaskManagerStart(CronTaskEntity t)
-        {
-            activeTask = t;
-            await InvokeAsync(() => StateHasChanged());
-        }
-
-        private async void OnTaskManagerFinish(CronTaskEntity t)
-        {
-            activeTask = null;
-            await InvokeAsync(() => StateHasChanged());
         }
 
         private async void OnPriceListLoad()
@@ -98,8 +80,6 @@ namespace EtkBlazorApp.Pages
 
         public void Dispose()
         {
-            cronTaskService.OnTaskExecutionStart -= OnTaskManagerStart;
-            cronTaskService.OnTaskExecutionEnd -= OnTaskManagerFinish;
             priceListManager.OnPriceListLoaded -= OnPriceListLoad;
         }
 

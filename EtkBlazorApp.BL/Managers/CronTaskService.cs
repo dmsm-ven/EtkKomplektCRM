@@ -47,6 +47,7 @@ namespace EtkBlazorApp.BL
             tasks = new Dictionary<CronTaskBase, CronTaskEntity>();
             inProgress = new List<CronTaskBase>();
 
+            //TODO: Убрать хардкод таймера
             checkTimer = new Timer(TimeSpan.FromSeconds(60).TotalMilliseconds);
            
             if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
@@ -155,20 +156,17 @@ namespace EtkBlazorApp.BL
 
         private bool IsTimeToRun(CronTaskEntity task, TimeSpan now)
         {
-            if (string.IsNullOrEmpty(task.additional_exec_time))
+            if (now >= task.exec_time && Math.Abs((task.exec_time - now).TotalMilliseconds) <= checkTimer.Interval)
             {
-                if (now >= task.exec_time && Math.Abs((task.exec_time - now).TotalMilliseconds) <= checkTimer.Interval)
-                {
-                    return true;
-                }
+                return true;
             }
-            else
+
+            if (!string.IsNullOrEmpty(task.additional_exec_time))
             {
                 try
                 {
-                    //TODO: сделать как-то по другому
-                    var add_exec_times = JsonConvert.DeserializeObject<List<TimeSpan>>(task.additional_exec_time);
-                    foreach(var ts in add_exec_times)
+                    var additional = JsonConvert.DeserializeObject<List<TimeSpan>>(task.additional_exec_time);
+                    foreach (var ts in additional)
                     {
                         if (now >= ts && Math.Abs((ts - now).TotalMilliseconds) <= checkTimer.Interval)
                         {
@@ -178,10 +176,10 @@ namespace EtkBlazorApp.BL
                 }
                 catch
                 {
-
+                    
                 }
             }
-            
+
             return false;
         }
 

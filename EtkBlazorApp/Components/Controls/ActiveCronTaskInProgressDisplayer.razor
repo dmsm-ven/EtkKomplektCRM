@@ -1,0 +1,41 @@
+﻿@implements IDisposable
+
+@if (activeTask != null)
+{
+<div class="row my-1">
+    <h3>В данный момент выполняется задание @($"'{activeTask.name}'")</h3>
+    <div class="w-100">
+        <IntermediateProgressBar></IntermediateProgressBar>
+    </div>
+</div>
+}
+
+@code {
+    [Inject] CronTaskService cronTaskService { get; set; }
+    CronTaskEntity activeTask;
+
+    protected override void OnInitialized()
+    {
+        activeTask = cronTaskService.TaskInProgress;
+        cronTaskService.OnTaskExecutionStart += OnTaskManagerStart;
+        cronTaskService.OnTaskExecutionEnd += OnTaskManagerFinish;
+    }
+
+    private async void OnTaskManagerStart(CronTaskEntity t)
+    {
+        activeTask = t;
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    private async void OnTaskManagerFinish(CronTaskEntity t)
+    {
+        activeTask = null;
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    public void Dispose()
+    {
+        cronTaskService.OnTaskExecutionStart -= OnTaskManagerStart;
+        cronTaskService.OnTaskExecutionEnd -= OnTaskManagerFinish;
+    }
+}

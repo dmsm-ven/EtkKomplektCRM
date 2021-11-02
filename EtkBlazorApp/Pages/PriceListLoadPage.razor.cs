@@ -17,7 +17,7 @@ namespace EtkBlazorApp.Pages
 {
     public partial class PriceListLoadPage
     {
-        const int MAX_UPLOAD_FILE_SIZE = 15_000_000; // 15 мб
+        const int MAX_UPLOAD_FILE_SIZE = 32_000_000; // 32 мб
         const int UPLOAD_BUFFER_SIZE = 64_000; // 64 кб
 
         FileLoadProgress? uploadProgress;
