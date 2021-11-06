@@ -34,5 +34,7 @@
         BoschB2B = 30,
         ForumElectro_Moscow = 31,
         ForumElectro_Spb = 32,
+        ElevelSbp_self = 35,
+        ElevelSbp_producer = 36,
     }
 }

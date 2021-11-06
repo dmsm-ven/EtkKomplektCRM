@@ -69,8 +69,8 @@ namespace EtkBlazorApp.Pages
             }
             catch (Exception ex)
             {
-                toastService.ShowError($"При обновлении данных произошла ошибка\r\n" + ex.Message, "Ошибка обновления");
-                await logger.Write(LogEntryGroupName.PriceUpdate, "Ошибка", $"Ошибка обновления цен: {ex.Message}");
+                toastService.ShowError($"При обновлении данных произошла ошибка\r\n" + ex.Message + " | " + ex.StackTrace, "Ошибка обновления");
+                await logger.Write(LogEntryGroupName.PriceUpdate, "Ошибка", $"Ошибка обновления цен: {ex.Message} | {ex.StackTrace}");
             }
             finally
             {

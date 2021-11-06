@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,7 +18,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 string manufacturer = tab.GetValue<string>(row, 1);
                 string name = tab.GetValue<string>(row, 2);
-                string sku = tab.GetValue<string>(row, 3);                
+                string sku = tab.GetValue<string>(row, 3);
 
                 var quantityMoscov = ParseQuantity(tab.GetValue<string>(row, 6));
                 var quantitySpb = ParseQuantity(tab.GetValue<string>(row, 7));

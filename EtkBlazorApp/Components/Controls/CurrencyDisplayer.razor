@@ -3,9 +3,11 @@
     @if (currencyInfo != null)
     {
         <p style="margin: 4px; font-size:14px; color: darkslategray">
-            Курсы валют на сайте etk-komplekt.ru на данный момент, последнее обновление было: <strong style="color: blue;">@currencyInfo.Max(c => c.date_modified)</strong>
+            Цены на сайте (в валюте) указаны по следующему курсу (ниже), курс последний раз был обновлен <strong style="color: blue;">@currencyInfo.Max(c => c.date_modified)</strong>
             <br />
             Цены взяты с официального сайта ЦБ РФ
+            <br/>
+            <a href="http://www.cbr.ru/scripts/XML_daily.asp" target="_blank">Источник цен</a>
         </p>
         @foreach (var c in currencyInfo)
         {

@@ -33,6 +33,7 @@ namespace EtkBlazorApp.DataAccess
             List<int> skipProducts = await GetSkipProductIds();
 
             List<ProductUpdateData> source = data
+                .OrderBy(p => p.product_id)
                 .Where(d => d.price.HasValue && skipProducts.Contains(d.product_id) == false)
                 .ToList();
 
@@ -45,8 +46,6 @@ namespace EtkBlazorApp.DataAccess
             bool onlyInRubCurrency = onlyOneCurrency && idsGroupedByCurrency.Keys.First() == "RUB";
 
             string idsArray = string.Join(",", source.Select(d => d.product_id).Distinct().OrderBy(id => id));
-
-           
 
             var sb = new StringBuilder()
                 .AppendLine("UPDATE oc_product")
@@ -82,12 +81,13 @@ namespace EtkBlazorApp.DataAccess
 
             var sql = sb.ToString();
 
-            await database.ExecuteQuery<dynamic>(sql, new { });
+            await database.ExecuteQuery(sql);
         }
 
         public async Task UpdateProductsStock(List<ProductUpdateData> data)
         {
             List<ProductUpdateData> source = data
+                .OrderBy(p => p.product_id)
                 .Where(d => d.quantity.HasValue && d.stock_id != 0)
                 .ToList();
 
@@ -116,7 +116,10 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task UpdateProductsStockPartner(List<ProductUpdateData> source, int[] affectedBrands)
         {           
-            source = source.Where(item => item.quantity.HasValue).ToList();
+            source = source
+                .OrderBy(p => p.product_id)
+                .Where(item => item.quantity.HasValue)
+                .ToList();
 
             if (source.Any())
             {

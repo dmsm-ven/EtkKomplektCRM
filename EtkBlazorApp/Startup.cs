@@ -81,7 +81,10 @@ namespace EtkBlazorApp
 
         private void ConfigureCorrelators(IServiceCollection services)
         {
-            services.AddTransient<IDatabaseProductCorrelator, FullCompareProductCorrelator>();
+            //Перестает работает для товаров Elevel где ~ 125000 товаров
+            //services.AddTransient<IDatabaseProductCorrelator, FullCompareProductCorrelator>();
+            services.AddTransient<IDatabaseProductCorrelator, DictionaryCompareProductCorrelator>();
+
             services.AddTransient<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
             services.AddTransient<IOzonProductCorrelator, SimpleOzonProductCorrelator>();
         }

@@ -97,6 +97,14 @@ namespace EtkBlazorApp.BL
 
         private void AddAdditionalAffectedBrands(List<string> affectedBrands)
         {
+            //В прайс-листе Elevel нет столбца с брендом, приходится загружать все их бренды
+            //это очень увеличивает скорость сопоставления товаров
+            if (affectedBrands.Contains("Elevel"))
+            {
+                affectedBrands.AddRange(new[] { "IEK", "ABB", "Legrand", "Schneider Electric", "DKC", "Wago"});
+            }
+
+
             // В производителе Bosch есть подбренд Dremel, но он так же считается и отдельным брендом. 
             // Хотя находится в прайс-листе Bosch и там не указан как отдельный бренд
             if (affectedBrands.Contains("Bosch"))
