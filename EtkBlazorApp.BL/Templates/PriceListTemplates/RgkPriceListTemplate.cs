@@ -24,7 +24,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 decimal? priceRrc = ParsePrice(tab.GetValue<string>(row, 8));
                 decimal? priceOpt = ParsePrice(tab.GetValue<string>(row, 9));
                 //TODO: тут игнорируется стандартный механизм добавления скидок
-                decimal price = manufacturer.Equals("Fluke") ? Math.Floor(priceOpt.Value * 1.2m) : priceRrc.Value;
+                decimal price = manufacturer.Equals("Fluke") ? Math.Floor(priceOpt.Value * 1.15m) : priceRrc.Value;
 
                 int? quantity = ParseQuantity(tab.GetValue<string>(row, 16));
 

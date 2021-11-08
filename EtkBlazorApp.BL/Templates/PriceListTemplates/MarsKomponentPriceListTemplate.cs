@@ -23,12 +23,13 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string sku = prefix + tab.GetValue<string>(row, 1);
                 string name = tab.GetValue<string>(row, 2);
                 int quantity = (int)tab.GetValue<decimal>(row, 5);
+                int? nextDeliveryQuantity = ParseQuantity(tab.GetValue<string>(row, 6));
 
                 //Проскит берем только остатки
-                decimal? price = manufacturer.Equals("Pro'sKit") ? null : tab.GetValue<decimal>(row, 7);
+                decimal? price = manufacturer.Equals("Pro'sKit") ? null : tab.GetValue<decimal>(row, 8);
                 string model = tab.GetValue<string>(row, 9);
 
-                var priceLine = new PriceLine(this)
+                var priceLine = new PriceLineWithNextDeliveryDate(this)
                 {
                     Name = name,
                     Currency = CurrencyType.RUB,
@@ -38,6 +39,12 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Price = price,
                     Quantity = quantity,
                     //Stock = StockName.MarsComponent
+                };
+
+                priceLine.NextStockDelivery = new DataAccess.NextStockDelivery()
+                {
+                    Date = DateTime.Now.Date.AddDays(7),
+                    Quantity = nextDeliveryQuantity.Value
                 };
 
                 list.Add(priceLine);
