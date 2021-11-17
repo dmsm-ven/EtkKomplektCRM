@@ -68,7 +68,14 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string ean = tab.GetValue<string>(row, 16);
                 
                 var quantity = ParseQuantity(tab.GetValue<string>(row, 11));
-                var price = ParsePrice(tab.GetValue<string>(row, 14));
+
+                var rrcPrice = ParsePrice(tab.GetValue<string>(row, 14));
+
+                if(rrcPrice == decimal.Zero)
+                {
+                    var base_price = ParsePrice(tab.GetValue<string>(row, 13));
+                    rrcPrice = (int)(base_price.Value * 1.25m);
+                }
 
                 var priceLine = new PriceLine(this)
                 {
@@ -78,7 +85,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Ean = ean,
                     Name = name,
                     Quantity = quantity,
-                    Price = price,
+                    Price = rrcPrice,
                     Currency = CurrencyType.RUB,
                     //Stock = StockName.Eridan,
                 };

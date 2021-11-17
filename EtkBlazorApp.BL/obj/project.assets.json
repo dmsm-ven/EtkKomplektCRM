@@ -116,10 +116,10 @@
           "lib/netstandard2.0/K4os.Hash.xxHash.dll": {}
         }
       },
-      "MailKit/2.13.0": {
+      "MailKit/2.15.0": {
         "type": "package",
         "dependencies": {
-          "MimeKit": "2.13.0"
+          "MimeKit": "2.15.0"
         },
         "compile": {
           "lib/net50/MailKit.dll": {}
@@ -468,7 +468,7 @@
           }
         }
       },
-      "MimeKit/2.13.0": {
+      "MimeKit/2.15.0": {
         "type": "package",
         "dependencies": {
           "Portable.BouncyCastle": "1.8.10",
@@ -2391,10 +2391,10 @@
           "lib/netstandard2.0/K4os.Hash.xxHash.dll": {}
         }
       },
-      "MailKit/2.13.0": {
+      "MailKit/2.15.0": {
         "type": "package",
         "dependencies": {
-          "MimeKit": "2.13.0"
+          "MimeKit": "2.15.0"
         },
         "compile": {
           "lib/net50/MailKit.dll": {}
@@ -2738,7 +2738,7 @@
           "lib/netstandard2.0/Microsoft.Win32.SystemEvents.dll": {}
         }
       },
-      "MimeKit/2.13.0": {
+      "MimeKit/2.15.0": {
         "type": "package",
         "dependencies": {
           "Portable.BouncyCastle": "1.8.10",
@@ -4908,10 +4908,10 @@
         "lib/netstandard2.0/K4os.Hash.xxHash.xml"
       ]
     },
-    "MailKit/2.13.0": {
-      "sha512": "h+2fxPnB/gb+8nniTwetvooM8r9nmbWVF116uXZn8d4+k6V+mf+IOA4Gqb7nwHcZooale0s/v13O7B/6StRHJA==",
+    "MailKit/2.15.0": {
+      "sha512": "9ihv6pRmjmBEAP4eXlDeo9srFQF9dVtYP1/jzj3I3BV9tBRk66NLdAF+8jkgUtauMKmns0yBvtfMFiBnNkHKDQ==",
       "type": "package",
-      "path": "mailkit/2.13.0",
+      "path": "mailkit/2.15.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -4937,7 +4937,7 @@
         "lib/netstandard2.1/MailKit.dll",
         "lib/netstandard2.1/MailKit.pdb",
         "lib/netstandard2.1/MailKit.xml",
-        "mailkit.2.13.0.nupkg.sha512",
+        "mailkit.2.15.0.nupkg.sha512",
         "mailkit.nuspec"
       ]
     },
@@ -5479,10 +5479,10 @@
         "version.txt"
       ]
     },
-    "MimeKit/2.13.0": {
-      "sha512": "wkHUQzy/sAtWCifZfNDq24DB/xshYoc+QeynSCJPSNeeA51DzZWjVaRslyix/9OEGhdSsUtvisL66dpGp0THjw==",
+    "MimeKit/2.15.0": {
+      "sha512": "146As77LbmZezdSJ5W/2ZEQsZyqVSAM8yOjDjvsy6NpLmyqG8lgzmX6ps3P/fKzUN5Ey4hxwnAtH+KLlJW0CsQ==",
       "type": "package",
-      "path": "mimekit/2.13.0",
+      "path": "mimekit/2.15.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -5508,7 +5508,7 @@
         "lib/netstandard2.1/MimeKit.dll",
         "lib/netstandard2.1/MimeKit.pdb",
         "lib/netstandard2.1/MimeKit.xml",
-        "mimekit.2.13.0.nupkg.sha512",
+        "mimekit.2.15.0.nupkg.sha512",
         "mimekit.nuspec"
       ]
     },
@@ -10766,7 +10766,7 @@
       "EtkBlazorApp.DataAccess >= 1.0.0",
       "EtkBlazorApp.Integration >= 1.0.0",
       "HtmlAgilityPack >= 1.11.33",
-      "MailKit >= 2.13.0",
+      "MailKit >= 2.15.0",
       "Microsoft.AspNetCore.StaticFiles >= 2.2.0",
       "Newtonsoft.Json >= 13.0.1",
       "SharpCompress >= 0.28.2",
@@ -10840,7 +10840,7 @@
           },
           "MailKit": {
             "target": "Package",
-            "version": "[2.13.0, )"
+            "version": "[2.15.0, )"
           },
           "Microsoft.AspNetCore.StaticFiles": {
             "target": "Package",
