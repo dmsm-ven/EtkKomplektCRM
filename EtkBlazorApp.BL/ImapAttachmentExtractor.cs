@@ -6,6 +6,9 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -37,18 +40,24 @@ namespace EtkBlazorApp.BL
 
 		public async Task<string> GetLastAttachment(ImapEmailSearchCriteria searchCriteria)
         {
-			//var imapLogger = new ProtocolLogger("imap_extactor.log");, new MailKit.Net.Imap.ImapClient(imapLogger)
+			//var imapLogger = new ProtocolLogger("imap_extactor.log");//, new MailKit.Net.Imap.ImapClient(imapLogger)
 			using (var connection = new MailKit.Net.Imap.ImapClient())
             {
-				await connection.ConnectAsync(connectionData.Host, int.Parse(connectionData.Port), useSsl: true);
-				await connection.AuthenticateAsync(new NetworkCredential(connectionData.Email, connectionData.Password));
+				connection.Timeout = (int)TimeSpan.FromMinutes(3).TotalMilliseconds;
+				connection.AuthenticationMechanisms.Remove("XOAUTH2");
+				connection.ServerCertificateValidationCallback = MySslCertificateValidationCallback;
+
+				await connection.ConnectAsync(connectionData.Host, int.Parse(connectionData.Port));
+				await connection.AuthenticateAsync(Encoding.UTF8, new NetworkCredential(connectionData.Email, connectionData.Password));
 				await connection.Inbox.OpenAsync(FolderAccess.ReadOnly);
 
-				SearchQuery searchQuery = BuildSearchQuery(searchCriteria);
+				var cap = connection.Capabilities;
 
+				SearchQuery searchQuery = BuildSearchQuery(searchCriteria);
 				var fileName = await DownloadAttachmentFileWithCriteria(searchQuery, searchCriteria.FileNamePattern, connection);
 
-				connection.Disconnect(true);
+				await connection.Inbox.CloseAsync();
+				await connection.DisconnectAsync(true);
 
 				return fileName;
 			}
@@ -60,11 +69,9 @@ namespace EtkBlazorApp.BL
         {
 			var searchQuery = SearchQuery
 					.FromContains(searchCriteria.Sender)
-					.And(SearchQuery.DeliveredAfter(DateTime.Now.AddDays(-searchCriteria.MaxOldInDays)));
-            if (!string.IsNullOrWhiteSpace(searchCriteria.Subject))
-            {
-                searchQuery = searchQuery.And(SearchQuery.SubjectContains(searchCriteria.Subject));
-            }
+					.And(SearchQuery.SubjectContains(searchCriteria.Subject))
+					.And(SearchQuery.DeliveredAfter(DateTime.Now.AddDays(-searchCriteria.MaxOldInDays).Date));
+
             return searchQuery;
 		}
 		
@@ -72,39 +79,35 @@ namespace EtkBlazorApp.BL
         {
 			var searchResult = await connection.Inbox.SearchAsync(searchQuery);
 
-			if (searchResult.Count == 0)
+			if (searchResult.Count() == 0)
 			{
 				throw new Exception("Письмо по заданным характеристикам не найдено");
 			}
+			var id = searchResult.Max();
 
-			var id = searchResult
-				.Where(item => Regex.IsMatch(connection.Inbox.GetMessage(item).Attachments.First().ContentDisposition?.FileName, fileNamePattern))
-                .OrderByDescending(item => item.Id)
-                .FirstOrDefault();
+			var email = await connection.Inbox.GetMessageAsync(id);
+			var attachment = (MimePart)email.Attachments.First();
 
-            if (id != default)
+			var tempPath = Path.Combine(Path.GetTempPath() + attachment.FileName);
+			using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write))
 			{
-				var email = await connection.Inbox.GetMessageAsync(id);
-				var attachment = (MimePart)email.Attachments.First();
-
-				var tempPath = Path.Combine(Path.GetTempPath() + attachment.FileName);
-				using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write))
-				{
-					await attachment.Content.DecodeToAsync(fs);
-				}
-
-				if (tempPath.EndsWith(".rar") || tempPath.EndsWith(".zip"))
-				{
-					var files = await extractor.UnzipAll(tempPath, deleteArchive: true);
-					return files.FirstOrDefault();
-				}
-				else
-				{
-					return tempPath;
-				}
+				await attachment.Content.DecodeToAsync(fs);
 			}
 
-			return null;
+			if (tempPath.EndsWith(".rar") || tempPath.EndsWith(".zip"))
+			{
+				var files = await extractor.UnzipAll(tempPath, deleteArchive: true);
+				return files.FirstOrDefault();
+			}
+			else
+			{
+				return tempPath;
+			}
 		}
-    }
+
+		private bool MySslCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+			return true;
+        }
+	}
 }

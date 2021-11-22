@@ -90,7 +90,7 @@
           "lib/netstandard2.0/Google.Protobuf.dll": {}
         }
       },
-      "HtmlAgilityPack/1.11.33": {
+      "HtmlAgilityPack/1.11.38": {
         "type": "package",
         "compile": {
           "lib/netstandard2.0/HtmlAgilityPack.dll": {}
@@ -870,7 +870,7 @@
           }
         }
       },
-      "SharpCompress/0.28.2": {
+      "SharpCompress/0.30.0": {
         "type": "package",
         "compile": {
           "lib/net5.0/SharpCompress.dll": {}
@@ -2354,11 +2354,11 @@
           "EPPlus": "5.6.3",
           "EtkBlazorApp.DataAccess": "1.0.0",
           "EtkBlazorApp.Integration": "1.0.0",
-          "HtmlAgilityPack": "1.11.33",
+          "HtmlAgilityPack": "1.11.38",
           "MailKit": "2.15.0",
           "Microsoft.AspNetCore.StaticFiles": "2.2.0",
           "Newtonsoft.Json": "13.0.1",
-          "SharpCompress": "0.28.2",
+          "SharpCompress": "0.30.0",
           "System.Net.Primitives": "4.3.1"
         },
         "compile": {
@@ -2540,14 +2540,14 @@
         "lib/netstandard2.0/Google.Protobuf.xml"
       ]
     },
-    "HtmlAgilityPack/1.11.33": {
-      "sha512": "ccsOdeRuObzQNy3FGLHd0MTmPvEu9nKUYDAqLham1XD3azbU+gcyRF6Hu87A68b7WqGpCdBZiLU7CwJVVmTb6A==",
+    "HtmlAgilityPack/1.11.38": {
+      "sha512": "DC1j3GzU9lBp8hSXb9eYRHiJOUS5sxjBjme/4RTYjTXlgiFCOMXkIY+rmL+BtUss1pCwCN4LaVlZ/ci/fWY+lA==",
       "type": "package",
-      "path": "htmlagilitypack/1.11.33",
+      "path": "htmlagilitypack/1.11.38",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "htmlagilitypack.1.11.33.nupkg.sha512",
+        "htmlagilitypack.1.11.38.nupkg.sha512",
         "htmlagilitypack.nuspec",
         "lib/Net35/HtmlAgilityPack.dll",
         "lib/Net35/HtmlAgilityPack.pdb",
@@ -3671,18 +3671,19 @@
         "runtimes/ubuntu.16.10-x64/native/System.Security.Cryptography.Native.OpenSsl.so"
       ]
     },
-    "SharpCompress/0.28.2": {
-      "sha512": "GKQf/FicituGIF4x0YCfzcgv1WyIz0A0ujNo65USEZq9MqkYO6KLNPWEcSXAiYKC+QQwufpsvetsy2N5hATFAw==",
+    "SharpCompress/0.30.0": {
+      "sha512": "VIFLOPm+hDSkTd4s1Ftb6BgSMveFqzwiiSvgcWq11I+7tu2qdtkn5dtyK1vr5CPnH8bNYmc4vjr6m7kkTAt9GA==",
       "type": "package",
-      "path": "sharpcompress/0.28.2",
+      "path": "sharpcompress/0.30.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
+        "lib/net461/SharpCompress.dll",
         "lib/net5.0/SharpCompress.dll",
         "lib/netcoreapp3.1/SharpCompress.dll",
         "lib/netstandard2.0/SharpCompress.dll",
         "lib/netstandard2.1/SharpCompress.dll",
-        "sharpcompress.0.28.2.nupkg.sha512",
+        "sharpcompress.0.30.0.nupkg.sha512",
         "sharpcompress.nuspec"
       ]
     },

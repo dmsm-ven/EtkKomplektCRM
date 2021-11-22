@@ -17,9 +17,9 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for(int row = 3; row < tab.Dimension.Rows; row++)
             {
-                string skuNumber = "EIN-" + tab.GetValue<string>(row, 2);
-                string name = tab.GetValue<string>(row, 3);
-                var quantity = ParseQuantity(tab.GetValue<string>(row, 4));
+                string skuNumber = "EIN-" + tab.GetValue<string>(row, 1);
+                string name = tab.GetValue<string>(row, 2);
+                var quantity = ParseQuantity(tab.GetValue<string>(row, 3));
 
                 var priceLine = new PriceLine(this)
                 {

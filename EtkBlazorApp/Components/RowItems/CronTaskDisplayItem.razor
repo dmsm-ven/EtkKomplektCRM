@@ -42,6 +42,8 @@
 @code {
 
     [Parameter] public CronTaskViewModel Item { get; set; }
+    [Inject] public ICronTaskStorage taskService { get; set; }
+
     MarkupString lastResultIconMarkup
     {
         get
@@ -77,5 +79,12 @@
             return (MarkupString)result;
 
         }
+    }
+
+    private async Task SetStatus(CronTaskExecResult result)
+    {
+        await taskService.SetTaskExecStatus(Item.Id, result);
+        Item.LastExecResult = result;
+        StateHasChanged();
     }
 }

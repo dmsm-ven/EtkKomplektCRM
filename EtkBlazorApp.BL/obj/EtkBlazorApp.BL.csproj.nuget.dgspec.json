@@ -62,7 +62,7 @@
             },
             "HtmlAgilityPack": {
               "target": "Package",
-              "version": "[1.11.33, )"
+              "version": "[1.11.38, )"
             },
             "MailKit": {
               "target": "Package",
@@ -78,7 +78,7 @@
             },
             "SharpCompress": {
               "target": "Package",
-              "version": "[0.28.2, )"
+              "version": "[0.30.0, )"
             },
             "System.Net.Primitives": {
               "target": "Package",
@@ -101,11 +101,6 @@
             }
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.101\\RuntimeIdentifierGraph.json"
-        }
-      },
-      "runtimes": {
-        "linux-x64": {
-          "#import": []
         }
       }
     },
@@ -216,11 +211,6 @@
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.101\\RuntimeIdentifierGraph.json"
         }
-      },
-      "runtimes": {
-        "linux-x64": {
-          "#import": []
-        }
       }
     },
     "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.Integration\\EtkBlazorApp.Integration.csproj": {
@@ -293,11 +283,6 @@
             }
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.101\\RuntimeIdentifierGraph.json"
-        }
-      },
-      "runtimes": {
-        "linux-x64": {
-          "#import": []
         }
       }
     }

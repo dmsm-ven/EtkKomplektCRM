@@ -17,6 +17,7 @@ namespace EtkBlazorApp.DataAccess
         public Task SaveCronTaskExecResult(CronTaskEntity task);
         public Task<List<CronTaskTypeEntity>> GetCronTaskTypes();
         public Task<List<CronTaskHistoryEntity>> GetCronTaskHistoryInfo(int month, int year);
+        public Task SetTaskExecStatus(int id, CronTaskExecResult status);
     }
 
     public class CronTaskStorage : ICronTaskStorage
@@ -108,6 +109,15 @@ namespace EtkBlazorApp.DataAccess
 
             var data = await database.GetList<CronTaskHistoryEntity, dynamic>(sql, new { month, year });
             return data;
+        }
+
+        public async Task SetTaskExecStatus(int task_id, CronTaskExecResult exec_result)
+        {
+            string sql_1 = @"UPDATE etk_app_cron_task SET last_exec_result = @exec_result WHERE task_id = @task_id";
+            await database.ExecuteQuery(sql_1, new { task_id, exec_result = (int)exec_result });
+
+            string sql_2 = @"UPDATE etk_app_cron_task_history SET last_exec_result = @exec_result WHERE task_id = @task_id";
+            await database.ExecuteQuery(sql_2, new { task_id, exec_result = (int)exec_result });
         }
     }
 }
