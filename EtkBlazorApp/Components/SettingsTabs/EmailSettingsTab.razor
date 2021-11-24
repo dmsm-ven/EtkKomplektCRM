@@ -2,7 +2,14 @@
 
 @if (selectedTab == tabData)
 {
-    <div id="email_tab">
+<div id="email_tab">
+
+    <button type="button"
+            @onclick="@(e => priceMailboxTabExpanded = !priceMailboxTabExpanded)"
+            class="btn expander-button-item @(priceMailboxTabExpanded ? "expanded" : string.Empty)">
+        Почтовый ящик с прайс-листами
+    </button>
+    <div class="expander-content" style="display: @(priceMailboxTabExpanded ? "block" : "none")">
         <form>
             <div class="form-group">
                 <label for="imap_server">Сервер</label>
@@ -10,7 +17,7 @@
             </div>
             <div class="form-group">
                 <label for="imap_port">Порт</label>
-                <select class="form-control" id="imap_port"  @bind="@imapPort">
+                <select class="form-control" id="imap_port" @bind="@imapPort">
                     <option value="143">143</option>
                     <option value="993">993</option>
                 </select>
@@ -25,6 +32,9 @@
             </div>
         </form>
     </div>
+
+    
+</div>
 }
 
 @code {
@@ -33,6 +43,7 @@
     [CascadingParameter] public SettingsTabData selectedTab { get; set; }
 
     string imapServer, imapPort, password, email;
+    bool priceMailboxTabExpanded = true;
 
     protected override async Task OnInitializedAsync()
     {

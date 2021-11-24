@@ -68,9 +68,14 @@ namespace EtkBlazorApp.BL
 		private SearchQuery BuildSearchQuery(ImapEmailSearchCriteria searchCriteria)
         {
 			var searchQuery = SearchQuery
-					.FromContains(searchCriteria.Sender)
-					.And(SearchQuery.SubjectContains(searchCriteria.Subject))
+					.FromContains(searchCriteria.Sender)					
 					.And(SearchQuery.DeliveredAfter(DateTime.Now.AddDays(-searchCriteria.MaxOldInDays).Date));
+
+            if (!string.IsNullOrWhiteSpace(searchCriteria.Subject))
+            {
+				searchQuery = searchQuery.And(SearchQuery.SubjectContains(searchCriteria.Subject));
+
+			}
 
             return searchQuery;
 		}

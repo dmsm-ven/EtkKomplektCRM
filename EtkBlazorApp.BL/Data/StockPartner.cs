@@ -36,5 +36,6 @@
         ForumElectro_Spb = 32,
         ElevelSbp_self = 35,
         ElevelSbp_producer = 36,
+        TexElektro_Kaluga = 37,
     }
 }

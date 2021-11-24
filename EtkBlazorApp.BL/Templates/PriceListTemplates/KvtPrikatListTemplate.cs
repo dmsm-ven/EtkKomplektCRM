@@ -48,4 +48,40 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             return list;
         }
     }
+
+    [PriceListTemplateGuid("040BBB29-51D7-44AD-876C-B1ECC65936AA")]
+    public class TexElektroPriceListTemplate : ExcelPriceListTemplateBase
+    {
+        public TexElektroPriceListTemplate(string fileName) : base(fileName) { }
+
+        protected override List<PriceLine> ReadDataFromExcel()
+        {
+            var list = new List<PriceLine>();
+
+            for (int row = 1; row < tab.Dimension.Rows; row++)
+            {
+                string name = tab.GetValue<string>(row, 1);
+                string sku = "KV-" + tab.GetValue<string>(row, 2);
+
+                var quantitySpb = ParseQuantity(tab.GetValue<string>(row, 3));
+                var quantityKaluga = ParseQuantity(tab.GetValue<string>(row, 4));
+
+                var priceLine = new MultistockPriceLine(this)
+                {
+                    Quantity = quantitySpb,
+                    Sku = sku,
+                    Model = sku,
+                    Name = name,
+                    Manufacturer = "КВТ",
+                    Stock = StockName.TexElektro
+                };
+
+                priceLine.AdditionalStockQuantity[StockName.TexElektro_Kaluga] = quantityKaluga.Value;
+
+                list.Add(priceLine);
+            }
+
+            return list;
+        }
+    }
 }
