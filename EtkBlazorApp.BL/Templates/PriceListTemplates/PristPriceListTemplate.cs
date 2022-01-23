@@ -13,7 +13,6 @@ namespace EtkBlazorApp.BL
     {
         public string FileName { get; private set; }
 
-        //Возможность стоить вынести такие значения тоже в базу данных (в таблицу где white_list и black_list)
         readonly string[] ONLY_QUANTITY_BRANDS = new[] { "ERSA" };
 
         public PristPriceListTemplate(string uri)
@@ -34,7 +33,10 @@ namespace EtkBlazorApp.BL
                 string manufacturer = MapManufacturerName(offer.Vendor);
                 if (ManufacturerSkipCheck(manufacturer)) { continue; }
 
-                decimal? price = ONLY_QUANTITY_BRANDS.Contains(manufacturer, StringComparer.OrdinalIgnoreCase) ? null : offer.Price;
+                decimal? price = ONLY_QUANTITY_BRANDS.Contains(manufacturer, StringComparer.OrdinalIgnoreCase) ? 
+                    null : 
+                    (offer.OldPrice == 0 ? offer.Price : offer.OldPrice);
+
 
                 var priceLine = new PriceLine(this)
                 {
@@ -80,6 +82,7 @@ namespace EtkBlazorApp.BL
                         offer.IsAvailable = Convert.ToBoolean(node.Attributes["available"].Value);
                         offer.Model = node["name"].InnerText;
                         offer.Price = decimal.Parse(node["price"].InnerText, new CultureInfo("en-EN"));
+                        offer.OldPrice = decimal.Parse(node["oldPrice"].InnerText, new CultureInfo("en-EN"));
                         offer.Name = node["description"].InnerText;
                         offer.Url = node["url"].InnerText;
                         offer.Vendor = node["vendor"].InnerText;
@@ -123,6 +126,7 @@ namespace EtkBlazorApp.BL
             public int Amount { get; set; }
             public string Url { get; set; }
             public decimal Price { get; set; }
+            public decimal OldPrice { get; set; }
             public CurrencyType Currency { get; set; }
             public string Vendor { get; set; }
             public string Model { get; set; } // поле name

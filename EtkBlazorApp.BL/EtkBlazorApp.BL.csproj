@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EtkBlazorApp.DataAccess\EtkBlazorApp.DataAccess.csproj" />
-    <ProjectReference Include="..\EtkBlazorApp.Integration\EtkBlazorApp.Integration.csproj" />
   </ItemGroup>
 
   <ItemGroup>

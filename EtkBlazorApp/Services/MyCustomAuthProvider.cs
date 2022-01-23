@@ -30,18 +30,25 @@ namespace EtkBlazorApp.Services
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            var login = await storage.GetAsync<string>("user_login");
-            var password = await storage.GetAsync<string>("user_password");
-            
-            if (login.Success && password.Success)
+            try
             {
-                var state = await AuthenticateUser(new AppUser()
-                {
-                    Login = login.Value,
-                    Password = password.Value
-                });
+                var login = await storage.GetAsync<string>("user_login");
+                var password = await storage.GetAsync<string>("user_password");
 
-                return state;           
+                if (login.Success && password.Success)
+                {
+                    var state = await AuthenticateUser(new AppUser()
+                    {
+                        Login = login.Value,
+                        Password = password.Value
+                    });
+
+                    return state;
+                }
+            }
+            catch
+            {
+
             }
 
             return GetDefaultState();            
@@ -93,11 +100,17 @@ namespace EtkBlazorApp.Services
         }
 
         public async Task LogOutUser()
-        {                      
-            await storage.DeleteAsync("user_login");
-            await storage.DeleteAsync("user_password");
+        {
+            try
+            {
+                await storage.DeleteAsync("user_login");
+                await storage.DeleteAsync("user_password");
+            }
+            catch
+            {
 
-            NotifyAuthenticationStateChanged(Task.FromResult(GetDefaultState()));            
+            }
+            NotifyAuthenticationStateChanged(Task.FromResult(GetDefaultState()));           
         }
 
         private AuthenticationState GetDefaultState()

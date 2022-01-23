@@ -6,6 +6,7 @@ using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
@@ -29,10 +30,17 @@ namespace EtkBlazorApp
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHttpsRedirection(options =>
+            {
+                options.RedirectStatusCode = (int)HttpStatusCode.TemporaryRedirect;
+                options.HttpsPort = 5001;
+            });
+
             //Blazor стандартные
             services.AddRazorPages();
             services.AddServerSideBlazor().AddCircuitOptions(options => { options.DetailedErrors = true; });           
             services.AddHttpContextAccessor();
+            services.AddScoped<ProtectedLocalStorage>();
 
             //Приложение       
             services.AddTransient<IUserInfoChecker, UserInfoChecker>();
