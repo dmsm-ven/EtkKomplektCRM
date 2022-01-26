@@ -1,6 +1,7 @@
 ﻿using EtkBlazorApp.BL;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml;
@@ -30,6 +31,8 @@ namespace EtkBlazorApp.Services
             //Инициализируем объекта типа XmlTextReader и
             //загружаем XML документ с сайта центрального банка
             var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
+
             var xmlStreamTask = httpClient.GetStreamAsync("http://www.cbr.ru/scripts/XML_daily.asp");
             var delayTask = Task.Delay(TimeSpan.FromSeconds(10));
 
@@ -39,11 +42,36 @@ namespace EtkBlazorApp.Services
                 throw new TimeoutException("Не удалось получить цены с сайта ЦБ РФ");
             }
 
-            XmlTextReader reader = new XmlTextReader(xmlStreamTask.Result);
+            string USDXml, EuroXML;
+            ReadXmlData(xmlStreamTask.Result, out USDXml, out EuroXML);
+
+            //Из выдернутых кусков XML кода создаем новые XML документы
+            XmlDocument usdXmlDocument = new XmlDocument();
+            usdXmlDocument.LoadXml(USDXml);
+            XmlDocument euroXmlDocument = new XmlDocument();
+            euroXmlDocument.LoadXml(EuroXML);
+            //Метод возвращает узел, соответствующий выражению XPath
+            XmlNode xmlNode = usdXmlDocument.SelectSingleNode("Valute/Value");
+            //Считываем значение и конвертируем в decimal. Курс валют получен
+            decimal usdValue = Convert.ToDecimal(xmlNode.InnerText);
+            xmlNode = euroXmlDocument.SelectSingleNode("Valute/Value");
+            decimal euroValue = Convert.ToDecimal(xmlNode.InnerText);
+
+            dic[CurrencyType.USD] = usdValue;
+            dic[CurrencyType.EUR] = euroValue;
+            dic[CurrencyType.RUB] = 1;
+            LastUpdate = DateTime.Now;
+
+            return dic;
+        }
+
+        private static void ReadXmlData(Stream xmlStreamTask, out string USDXml, out string EuroXML)
+        {
+            XmlTextReader reader = new XmlTextReader(xmlStreamTask);
             //В эти переменные будем сохранять куски XML
             //с определенными валютами (Euro, USD)
-            string USDXml = "";
-            string EuroXML = "";
+            USDXml = "";
+            EuroXML = "";
             //Перебираем все узлы в загруженном документе
             while (reader.Read())
             {
@@ -88,25 +116,6 @@ namespace EtkBlazorApp.Services
                         break;
                 }
             }
-
-            //Из выдернутых кусков XML кода создаем новые XML документы
-            XmlDocument usdXmlDocument = new XmlDocument();
-            usdXmlDocument.LoadXml(USDXml);
-            XmlDocument euroXmlDocument = new XmlDocument();
-            euroXmlDocument.LoadXml(EuroXML);
-            //Метод возвращает узел, соответствующий выражению XPath
-            XmlNode xmlNode = usdXmlDocument.SelectSingleNode("Valute/Value");
-            //Считываем значение и конвертируем в decimal. Курс валют получен
-            decimal usdValue = Convert.ToDecimal(xmlNode.InnerText);
-            xmlNode = euroXmlDocument.SelectSingleNode("Valute/Value");
-            decimal euroValue = Convert.ToDecimal(xmlNode.InnerText);
-
-            dic[CurrencyType.USD] = usdValue;
-            dic[CurrencyType.EUR] = euroValue;
-            dic[CurrencyType.RUB] = 1;
-            LastUpdate = DateTime.Now;
-
-            return dic;
         }
     }
 }

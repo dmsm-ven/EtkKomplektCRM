@@ -44,7 +44,7 @@
     public async Task LogOut()
     {
         await userLogger.Write(LogEntryGroupName.Auth, "Выход", $"Пользователь вышел");
-        await ((MyCustomAuthProvider)AuthenticationStateProvider).LogOutUser();
+        await ((CustomAuthProvider)AuthenticationStateProvider).LogOutUser();
     }
 }
 

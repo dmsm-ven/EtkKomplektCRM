@@ -54,9 +54,10 @@ namespace EtkBlazorApp
             services.AddSingleton<NewOrdersNotificationService>();
             services.AddSingleton<UpdateManager>();
             services.AddSingleton<PriceListManager>();
-            services.AddSingleton<CronTaskService>();          
+            services.AddSingleton<CronTaskService>();
 
-            services.AddScoped<AuthenticationStateProvider, MyCustomAuthProvider>();
+            services.AddTransient<IAuthenticationDataStorage, AuthenticationHMACSHA256DataStorage>();
+            services.AddScoped<AuthenticationStateProvider, CustomAuthProvider>();
             services.AddScoped<UserLogger>();
             services.AddScoped<ReportManager>();
             
@@ -83,7 +84,7 @@ namespace EtkBlazorApp
             services.AddTransient<ILogStorage, LogStorage>();
             services.AddTransient<ISettingStorage, SettingStorage>();
             services.AddTransient<ICronTaskStorage, CronTaskStorage>();
-            services.AddTransient<IAuthenticationDataStorage, AuthenticationDataStorage>();
+            
             services.AddTransient<IWebsiteCurrencyService, WebsiteCurrencyService>();
         }
 

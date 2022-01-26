@@ -49,7 +49,7 @@
     {
         isInvalidData = false;
 
-        await ((MyCustomAuthProvider)authenticationStateProvider).AuthenticateUser(user);
+        await ((CustomAuthProvider)authenticationStateProvider).AuthenticateUser(user);
 
         navigation.NavigateTo("/");
         await localStorage.SetAsync("user_login", user.Login);

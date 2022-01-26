@@ -10,22 +10,29 @@
 
 @code {
 
-    List<ProductViewModel> lastAddedProducts = null;
-    List<ProductViewModel> bestsellersBySum = null;
-    List<ProductViewModel> bestsellersByQuantity = null;
+        List<ProductViewModel> lastAddedProducts = null;
+        List<ProductViewModel> bestsellersBySum = null;
+        List<ProductViewModel> bestsellersByQuantity = null;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            lastAddedProducts = ConvertToViewModels(await productsStorage.GetLastAddedProducts(4));
-            StateHasChanged();
+            try
+            {
+                lastAddedProducts = ConvertToViewModels(await productsStorage.GetLastAddedProducts(4));
+                StateHasChanged();
 
-            bestsellersBySum = ConvertToViewModels(await productsStorage.GetBestsellersBySum(4, 30));
-            StateHasChanged();
+                bestsellersBySum = ConvertToViewModels(await productsStorage.GetBestsellersBySum(4, 30));
+                StateHasChanged();
 
-            bestsellersByQuantity = ConvertToViewModels(await productsStorage.GetBestsellersByQuantity(4, 30));
-            StateHasChanged();
+                bestsellersByQuantity = ConvertToViewModels(await productsStorage.GetBestsellersByQuantity(4, 30));
+                StateHasChanged();
+            }
+            catch
+            {
+
+            }
         }
     }
 

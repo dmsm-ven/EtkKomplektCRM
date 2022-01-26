@@ -6,25 +6,13 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.DataAccess
 {
-    public interface IAuthenticationDataStorage
-    {
-        Task<string> GetUserPermission(string login, string password);
-        Task UpdateUserLastLoginDate(string login);
-
-        Task<List<AppUserEntity>> GetUsers();
-        Task UpdateUser(AppUserEntity user);
-        Task AddUser(AppUserEntity user);
-        Task DeleteUser(int user_id);
-        Task<List<AppUserGroupEntity>> GetUserGroups();
-    }
-
     //TODO: поменять MD5 на HMACSHA256 + salt
     //https://docs.microsoft.com/ru-ru/aspnet/core/security/data-protection/consumer-apis/password-hashing?view=aspnetcore-6.0
-    public class AuthenticationDataStorage : IAuthenticationDataStorage
+    public class AuthenticationMD5DataStorage : IAuthenticationDataStorage
     {
         private readonly IDatabaseAccess database;
 
-        public AuthenticationDataStorage(IDatabaseAccess database)
+        public AuthenticationMD5DataStorage(IDatabaseAccess database)
         {
             this.database = database;
         }
@@ -57,6 +45,11 @@ namespace EtkBlazorApp.DataAccess
             var users = await database.GetList<AppUserEntity, dynamic>(sql, new { });
 
             return users;
+        }
+
+        public async Task<AppUserEntity> GetUser(string login, string password)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task UpdateUser(AppUserEntity user)

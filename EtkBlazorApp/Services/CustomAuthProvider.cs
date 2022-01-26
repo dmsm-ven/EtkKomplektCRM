@@ -6,6 +6,9 @@ using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using System.Security.Cryptography;
+using EtkBlazorApp.DataAccess.Entity;
 
 namespace EtkBlazorApp.Services
 {
@@ -18,7 +21,7 @@ namespace EtkBlazorApp.Services
 
         //HMACSHA256 + salt
         //https://docs.microsoft.com/ru-ru/aspnet/core/security/data-protection/consumer-apis/password-hashing?view=aspnetcore-6.0
-        public CustomSha256AuthProvider(
+        public CustomAuthProvider(
             IAuthenticationDataStorage auth,
             IUserInfoChecker userInfoChecker,
             IJSRuntime js,
@@ -60,36 +63,32 @@ namespace EtkBlazorApp.Services
         {
             await userInfoChecker.FillUserInfo(userData);
 
-            string permission = await auth.GetUserPermission(userData.Login, userData.Password);
+            var userInfo = await auth.GetUser(userData.Login, userData.Password);
 
-            if (string.IsNullOrWhiteSpace(permission))
-            {
-                await storage.DeleteAsync("user_login");
-                await storage.DeleteAsync("user_password");
-
-                return GetDefaultState();
-            }
-
-            var userInfo = (await auth.GetUsers()).Single(u => u.login == userData.Login);
-       
-            if (!string.IsNullOrWhiteSpace(userInfo.ip) && userInfo.ip != userData.UserIP)
+            //Нет доступа (не верный логин и/или пароль)
+            if (userInfo == null || string.IsNullOrWhiteSpace(userInfo.permission))
             {
                 return GetDefaultState();
             }
 
+            //Проверяем, есть ли привязка к IP 
+            if (!string.IsNullOrWhiteSpace(userInfo?.ip) && (userInfo?.ip != userData?.UserIP))
+            {
+                return GetDefaultState();
+            }
+
+            //Создаем claims и State
             var identity = new ClaimsIdentity(new[]
             {
-                new Claim(ClaimTypes.Name, userData.Login),
-                new Claim(ClaimTypes.Role, permission)
+                new Claim(ClaimTypes.Name, userInfo.login),
+                new Claim(ClaimTypes.Role, userInfo.permission)
             }, "login_form");
             var user = new ClaimsPrincipal(identity);
             var state = new AuthenticationState(user);
 
             NotifyAuthenticationStateChanged(Task.FromResult(state));
-
-            await auth.UpdateUserLastLoginDate(userData.Login);
-
-            SetUserCookie(userData.Login);
+            await auth.UpdateUserLastLoginDate(userInfo.login);
+            SetUserCookie(userInfo.login);
 
             return state;
         }
@@ -117,6 +116,9 @@ namespace EtkBlazorApp.Services
 
         private AuthenticationState GetDefaultState()
         {
+            storage.DeleteAsync("user_login");
+            storage.DeleteAsync("user_password");
+
             var identity = new ClaimsIdentity(new[]
 {
                 new Claim(ClaimTypes.Name, "Гость")
@@ -126,6 +128,6 @@ namespace EtkBlazorApp.Services
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
             var state = new AuthenticationState(user);
             return state;
-        }
+        } 
     }
 }

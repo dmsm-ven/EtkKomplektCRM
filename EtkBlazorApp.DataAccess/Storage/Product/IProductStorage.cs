@@ -149,7 +149,7 @@ namespace EtkBlazorApp.DataAccess
                 .AppendLine("JOIN oc_product_description d ON p.product_id = d.product_id")
                 .AppendLine("JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id")
                 .AppendLine("WHERE DATE(o.date_added) > DATE_ADD(NOW(), INTERVAL @maxOrderOldInDays DAY)")
-                .AppendLine("GROUP BY op.product_id")
+                .AppendLine("GROUP BY p.product_id")
                 .AppendLine($"ORDER BY SUM(op.{columnOrder}) DESC")
                 .AppendLine("LIMIT @Limit");
 
