@@ -35,7 +35,7 @@ namespace EtkBlazorApp.BL
 
                 decimal? price = ONLY_QUANTITY_BRANDS.Contains(manufacturer, StringComparer.OrdinalIgnoreCase) ? 
                     null : 
-                    (offer.OldPrice == 0 ? offer.Price : offer.OldPrice);
+                    (offer.OldPrice ?? offer.Price);
 
 
                 var priceLine = new PriceLine(this)
@@ -82,7 +82,10 @@ namespace EtkBlazorApp.BL
                         offer.IsAvailable = Convert.ToBoolean(node.Attributes["available"].Value);
                         offer.Model = node["name"].InnerText;
                         offer.Price = decimal.Parse(node["price"].InnerText, new CultureInfo("en-EN"));
-                        offer.OldPrice = decimal.Parse(node["oldPrice"].InnerText, new CultureInfo("en-EN"));
+                        if (node["oldprice"] != null)
+                        {
+                            offer.OldPrice = decimal.Parse(node["oldprice"].InnerText, new CultureInfo("en-EN"));
+                        }
                         offer.Name = node["description"].InnerText;
                         offer.Url = node["url"].InnerText;
                         offer.Vendor = node["vendor"].InnerText;
@@ -126,7 +129,7 @@ namespace EtkBlazorApp.BL
             public int Amount { get; set; }
             public string Url { get; set; }
             public decimal Price { get; set; }
-            public decimal OldPrice { get; set; }
+            public decimal? OldPrice { get; set; }
             public CurrencyType Currency { get; set; }
             public string Vendor { get; set; }
             public string Model { get; set; } // поле name

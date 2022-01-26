@@ -18,6 +18,8 @@ namespace EtkBlazorApp.DataAccess
         Task<List<AppUserGroupEntity>> GetUserGroups();
     }
 
+    //TODO: поменять MD5 на HMACSHA256 + salt
+    //https://docs.microsoft.com/ru-ru/aspnet/core/security/data-protection/consumer-apis/password-hashing?view=aspnetcore-6.0
     public class AuthenticationDataStorage : IAuthenticationDataStorage
     {
         private readonly IDatabaseAccess database;
@@ -62,6 +64,7 @@ namespace EtkBlazorApp.DataAccess
             var sb = new StringBuilder()
                 .AppendLine("UPDATE etk_app_user")
                 .AppendLine("SET user_group_id = @user_group_id,")
+                .AppendLine("salt = @salt, ")
                 .AppendLine("ip = @ip,")
                 .AppendLine("status = @status");
 
@@ -79,8 +82,8 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task AddUser(AppUserEntity user)
         {
-            string sql = @"INSERT INTO etk_app_user (login, password, ip, user_group_id, status) VALUES 
-                                                    (@login, MD5(@password), @ip, @user_group_id, '1')";
+            string sql = @"INSERT INTO etk_app_user (login, password, salt, ip, user_group_id, status) VALUES 
+                                                    (@login, MD5(@password), @salt, @ip, @user_group_id, '1')";
             await database.ExecuteQuery<dynamic>(sql, user);
 
         }

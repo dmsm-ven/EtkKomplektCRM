@@ -9,16 +9,16 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.Services
 {
-    public class MyCustomAuthProvider : AuthenticationStateProvider
+    public class CustomAuthProvider : AuthenticationStateProvider
     {
         private readonly IAuthenticationDataStorage auth;
         private readonly IUserInfoChecker userInfoChecker;
         private readonly IJSRuntime js;
         private readonly ProtectedLocalStorage storage;
 
-        //TODO: поменять MD5 на HMACSHA256 + salt
+        //HMACSHA256 + salt
         //https://docs.microsoft.com/ru-ru/aspnet/core/security/data-protection/consumer-apis/password-hashing?view=aspnetcore-6.0
-        public MyCustomAuthProvider(
+        public CustomSha256AuthProvider(
             IAuthenticationDataStorage auth,
             IUserInfoChecker userInfoChecker,
             IJSRuntime js,
