@@ -9,7 +9,6 @@ namespace EtkBlazorApp.DataAccess.Entity
         public int user_group_id { get; set; }
         public string login { get; set; }
         public string password { get; set; }
-        public string salt { get; set; }
         public DateTime creation_date { get; set; }
         public DateTime? last_login_date { get; set; }
         public string permission { get; set; }

@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "uQ6XYeuEOMxpNULNveBwyfSSIty5zipTAIlKw0QF3U0UKppMmEFcrJcxC8WOjnrtRF5A6x3lZB4ViPIxiJi+9g==",
+  "dgSpecHash": "sAw9B3RrIPNnhPFYql+8VpcZ0yQyYz3KYUTw2Kqo8WdF5ypTTPN064rVCjl1rpTUgN9SDFwcG5e++6oH1Q+Eyw==",
   "success": true,
   "projectFilePath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.BL\\EtkBlazorApp.BL.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\user\\.nuget\\packages\\bcrypt.net-next\\4.0.2\\bcrypt.net-next.4.0.2.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\bouncycastle.netcore\\1.8.3\\bouncycastle.netcore.1.8.3.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\csvhelper\\27.0.2\\csvhelper.27.0.2.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\dapper\\2.0.78\\dapper.2.0.78.nupkg.sha512",

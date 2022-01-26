@@ -14,7 +14,7 @@ namespace EtkBlazorApp.Services
 {
     public class CustomAuthProvider : AuthenticationStateProvider
     {
-        private readonly IAuthenticationDataStorage auth;
+        private readonly IUserService auth;
         private readonly IUserInfoChecker userInfoChecker;
         private readonly IJSRuntime js;
         private readonly ProtectedLocalStorage storage;
@@ -22,7 +22,7 @@ namespace EtkBlazorApp.Services
         //HMACSHA256 + salt
         //https://docs.microsoft.com/ru-ru/aspnet/core/security/data-protection/consumer-apis/password-hashing?view=aspnetcore-6.0
         public CustomAuthProvider(
-            IAuthenticationDataStorage auth,
+            IUserService auth,
             IUserInfoChecker userInfoChecker,
             IJSRuntime js,
             ProtectedLocalStorage storage)

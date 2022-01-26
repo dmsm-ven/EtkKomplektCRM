@@ -3,7 +3,7 @@
 @using System.Threading;
 @attribute [Authorize(Roles = "Administrator")]
 @inject ILogStorage database
-@inject IAuthenticationDataStorage usersService
+@inject IUserService usersService
 
 <h3>Журнал событий приложения</h3>
 @if (entries == null)

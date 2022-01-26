@@ -9,17 +9,16 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.Services
 {
+    [Obsolete(message: "Небезопасная версия с использованием MD5 заменена на криптостойкую")]
     public class MyCustomAuthProvider : AuthenticationStateProvider
     {
-        private readonly IAuthenticationDataStorage auth;
+        private readonly IUserService auth;
         private readonly IUserInfoChecker userInfoChecker;
         private readonly IJSRuntime js;
         private readonly ProtectedLocalStorage storage;
 
-        //TODO: поменять MD5 на HMACSHA256 + salt
-        //https://docs.microsoft.com/ru-ru/aspnet/core/security/data-protection/consumer-apis/password-hashing?view=aspnetcore-6.0
         public MyCustomAuthProvider(
-            IAuthenticationDataStorage auth,
+            IUserService auth,
             IUserInfoChecker userInfoChecker,
             IJSRuntime js,
             ProtectedLocalStorage storage)
@@ -60,7 +59,8 @@ namespace EtkBlazorApp.Services
         {
             await userInfoChecker.FillUserInfo(userData);
 
-            string permission = await auth.GetUserPermission(userData.Login, userData.Password);
+            string permission = null;//await auth.GetUserPermission(userData.Login, userData.Password);
+            throw new NotImplementedException();
 
             if (string.IsNullOrWhiteSpace(permission))
             {

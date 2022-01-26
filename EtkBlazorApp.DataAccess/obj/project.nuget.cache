@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "7ISC+kNYXQSp4Q6Py332PcJpj8GB2fQgB8Vq2ewNWNk8LYcGqf76UzMmeqcb/ANbfiOO9F17pR6CYkiRDcfT7g==",
+  "dgSpecHash": "86VL9Kk/vZJaZTAGOvcyQ8q4Nww0Cwc7KJer1wd8UuBLUkcMiSXiLsM30O9d52VerITfypL65pWw51E01tbqFw==",
   "success": true,
   "projectFilePath": "D:\\Programming\\CSharp\\Blazor\\EtkBlazorApp\\EtkBlazorApp.DataAccess\\EtkBlazorApp.DataAccess.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\user\\.nuget\\packages\\bcrypt.net-next\\4.0.2\\bcrypt.net-next.4.0.2.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\bouncycastle.netcore\\1.8.3\\bouncycastle.netcore.1.8.3.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\dapper\\2.0.78\\dapper.2.0.78.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\google.protobuf\\3.11.4\\google.protobuf.3.11.4.nupkg.sha512",

@@ -2,31 +2,35 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using BCryptNet = BCrypt.Net.BCrypt;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.DataAccess
 {
-    //TODO: поменять MD5 на HMACSHA256 + salt
-    //https://docs.microsoft.com/ru-ru/aspnet/core/security/data-protection/consumer-apis/password-hashing?view=aspnetcore-6.0
-    public class AuthenticationMD5DataStorage : IAuthenticationDataStorage
+    public class BCryptUserService : IUserService
     {
         private readonly IDatabaseAccess database;
 
-        public AuthenticationMD5DataStorage(IDatabaseAccess database)
+        public BCryptUserService(IDatabaseAccess database)
         {
             this.database = database;
         }
 
-        public async Task<string> GetUserPermission(string login, string password)
-        {
-            var sql = @"SELECT permission
-                        FROM etk_app_user u
-                        LEFT JOIN etk_app_user_group g ON u.user_group_id = g.user_group_id
-                        WHERE u.status = 1 AND login = @login AND password = MD5(@password)";
+        public async Task<AppUserEntity> GetUser(string login, string password)
+        {                        
+            string sql = @"SELECT u.*, g.name as group_name, g.permission
+                           FROM etk_app_user u
+                           JOIN etk_app_user_group g ON u.user_group_id = g.user_group_id
+                           WHERE login = @login";
 
-            var permission = await database.GetScalar<string, dynamic>(sql, new { login, password });
+            var dbUserData = await database.GetFirstOrDefault<AppUserEntity, dynamic>(sql, new { login, password });
 
-            return permission;
+            if (BCryptNet.Verify(password, dbUserData.password))
+            {
+                return dbUserData;
+            }
+
+            return null;
         }
 
         public async Task UpdateUserLastLoginDate(string login)
@@ -47,37 +51,49 @@ namespace EtkBlazorApp.DataAccess
             return users;
         }
 
-        public async Task<AppUserEntity> GetUser(string login, string password)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task UpdateUser(AppUserEntity user)
         {
+            string newPassword = null;
+
             var sb = new StringBuilder()
                 .AppendLine("UPDATE etk_app_user")
                 .AppendLine("SET user_group_id = @user_group_id,")
-                .AppendLine("salt = @salt, ")
                 .AppendLine("ip = @ip,")
                 .AppendLine("status = @status");
 
-            if(user.password != null)
+            if (user.password != null)
             {
-                sb.AppendLine(", password = MD5(@password)");
+                newPassword = BCryptNet.HashPassword("Pa$$w0rd");
+                sb.AppendLine(", password = @password");
             }
 
             sb.Append("WHERE user_id = @user_id");
 
             string sql = sb.ToString();
 
-            await database.ExecuteQuery<dynamic>(sql, user);
+            await database.ExecuteQuery<dynamic>(sql, new
+            {
+                user_id = user.user_id,
+                user_group_id = user.user_group_id,
+                password = newPassword,
+                ip = user.ip,
+                status = user.status
+            });
         }
 
         public async Task AddUser(AppUserEntity user)
         {
-            string sql = @"INSERT INTO etk_app_user (login, password, salt, ip, user_group_id, status) VALUES 
-                                                    (@login, MD5(@password), @salt, @ip, @user_group_id, '1')";
-            await database.ExecuteQuery<dynamic>(sql, user);
+            var password = BCryptNet.HashPassword(user.password);
+
+            string sql = @"INSERT INTO etk_app_user (login, password, ip, user_group_id, status) VALUES 
+                                                    (@login, @password, @ip, @user_group_id, '1')";
+            await database.ExecuteQuery<dynamic>(sql, new
+            {
+                login = user.login,
+                password,
+                ip = user.ip,
+                user_group_id = user.user_group_id
+            });
 
         }
 
@@ -90,6 +106,6 @@ namespace EtkBlazorApp.DataAccess
         {
             var groups = await database.GetList<AppUserGroupEntity>("SELECT * FROM etk_app_user_group");
             return groups;
-        }
+        }        
     }
 }

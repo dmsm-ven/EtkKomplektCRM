@@ -4,9 +4,8 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.DataAccess
 {
-    public interface IAuthenticationDataStorage
+    public interface IUserService
     {
-        Task<string> GetUserPermission(string login, string password);
         Task UpdateUserLastLoginDate(string login);
 
         Task<List<AppUserEntity>> GetUsers();
