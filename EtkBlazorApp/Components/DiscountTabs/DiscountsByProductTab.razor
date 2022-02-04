@@ -156,6 +156,8 @@
 }
 @code {
 
+    [Parameter]public CustomerGroup ForCustomerGroup { get; set; }
+
     List<ProductDiscountViewModel> discountedProducts;
     Dictionary<string, List<ProductDiscountViewModel>> discountedProductsByManufacturer
     {
@@ -180,7 +182,7 @@
     {
         if (firstRender)
         {
-            discountedProducts = (await productStorage.GetProductsWithDiscount())
+            discountedProducts = (await productStorage.GetProductsWithDiscount(ForCustomerGroup))
                 .Select(p => new ProductDiscountViewModel()
                 {
                     Id = p.product_id,
@@ -204,7 +206,7 @@
     private async Task RemoveDiscountItem(ProductDiscountViewModel product)
     {
         discountedProducts.Remove(product);
-        await productStorage.RemoveProductDiscount(product.Id);
+        await productStorage.RemoveProductDiscount(product.Id, ForCustomerGroup);
         await userLogger.Write(LogEntryGroupName.Discounts, "Удаление", $"Скидка для товара '{product.Name}' удалена");
         StateHasChanged();
     }
@@ -220,7 +222,7 @@
             NewPriceInCurrency = newDiscountProduct.NewPriceInCurrency,
             NewPriceInRub = newDiscountProduct.NewPriceInRub,
             base_currency_code = newDiscountProduct.BasePriceCurrency
-        });
+        }, ForCustomerGroup);
 
         if (item == null)
         {

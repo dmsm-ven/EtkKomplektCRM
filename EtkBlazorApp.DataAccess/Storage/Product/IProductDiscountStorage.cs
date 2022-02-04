@@ -9,9 +9,9 @@ namespace EtkBlazorApp.DataAccess
 {
     public interface IProductDiscountStorage
     {
-        Task<List<ProductSpecialEntity>> GetProductsWithDiscount();
-        Task AddDiscountForProduct(ProductSpecialEntity discountData);
-        Task RemoveProductDiscount(int product_id);
+        Task<List<ProductSpecialEntity>> GetProductsWithDiscount(CustomerGroup customerGroup);
+        Task AddDiscountForProduct(ProductSpecialEntity discountData, CustomerGroup customerGroup);
+        Task RemoveProductDiscount(int product_id, CustomerGroup customerGroup);
 
         Task<List<DiscountToManufacturerEntity>> GetManufacturersWithDiscount();
         Task AddDiscountForManufacturer(DiscountToManufacturerEntity discountData);
@@ -28,12 +28,12 @@ namespace EtkBlazorApp.DataAccess
 
     public class ProductDiscountStorage : IProductDiscountStorage
     {
-        readonly int SALE_CATEGORY_ID = 60396;
-        readonly int STOCK_LEVEL_PRIORITY = 4;
-        readonly int MANUFACTURER_LEVEL_PRIORITY = 3;
-        readonly int CATEGORY_LEVEL_PRIORITY = 2;
-        readonly int PRODUCT_LEVEL_PRIORITY = 1;
-        readonly int DEFAULT_CUSTOMER_GROUP_ID = 1;
+        const int SALE_CATEGORY_ID = 60396;
+        const int STOCK_LEVEL_PRIORITY = 4;
+        const int MANUFACTURER_LEVEL_PRIORITY = 3;
+        const int CATEGORY_LEVEL_PRIORITY = 2;
+        const int PRODUCT_LEVEL_PRIORITY = 1;
+        const int DEFAULT_CUSTOMER_GROUP_ID = 1;
 
         private readonly IDatabaseAccess database;
 
@@ -279,7 +279,7 @@ namespace EtkBlazorApp.DataAccess
 
         #region Product
 
-        public async Task<List<ProductSpecialEntity>> GetProductsWithDiscount()
+        public async Task<List<ProductSpecialEntity>> GetProductsWithDiscount(CustomerGroup customerGroup)
         {
             var sql = $@"SELECT p.product_id, d.name as name, m.name as manufacturer, p.base_currency_code,
                                 p.price as RegularPriceInRub, 
@@ -292,21 +292,24 @@ namespace EtkBlazorApp.DataAccess
                         JOIN oc_product_special sp ON p.product_id = sp.product_id
                         JOIN oc_product_description d ON p.product_id = d.product_id
                         JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id
-                        WHERE p.status = 1 AND priority <= {PRODUCT_LEVEL_PRIORITY} AND (NOW() BETWEEN sp.date_start AND sp.date_end)";
+                        WHERE p.status = 1 AND
+                              priority <= {PRODUCT_LEVEL_PRIORITY} AND 
+                              customer_group_id = @customerGroup AND 
+                             (NOW() BETWEEN sp.date_start AND sp.date_end)";
 
-            var products = await database.GetList<ProductSpecialEntity>(sql);
+            var products = await database.GetList<ProductSpecialEntity, dynamic>(sql, new { customerGroup  = (int)customerGroup });
 
             return products;
         }
 
-        public async Task AddDiscountForProduct(ProductSpecialEntity discountData)
+        public async Task AddDiscountForProduct(ProductSpecialEntity discountData, CustomerGroup customerGroup)
         {
             string priceRub = discountData.base_currency_code == "RUB" ? discountData.NewPriceInRub.ToString("F0") : "0";
             string priceCur = discountData.base_currency_code == "RUB" ? "0" : discountData.NewPriceInCurrency.ToString("F2").Replace(",", ".");
             string sql = @$"INSERT INTO oc_product_special 
                           (product_id, customer_group_id, priority, price, base_price, date_start, date_end) VALUES
                           (@product_id, 
-                            {DEFAULT_CUSTOMER_GROUP_ID}, 
+                            {(int)customerGroup}, 
                             {PRODUCT_LEVEL_PRIORITY},
                             {priceRub}, 
                             {priceCur}, 
@@ -316,17 +319,17 @@ namespace EtkBlazorApp.DataAccess
             await RefreshMainDiscountCategoryProducts();
         }
 
-        public async Task RemoveProductDiscount(int product_id)
+        public async Task RemoveProductDiscount(int product_id, CustomerGroup customerGroup)
         {
             string sql = $@"DELETE FROM oc_product_special
-                           WHERE product_id = @product_id AND priority = {PRODUCT_LEVEL_PRIORITY}";
+                           WHERE product_id = @product_id AND priority = {PRODUCT_LEVEL_PRIORITY} AND customer_group_id = @customerGroup";
 
-            await database.ExecuteQuery<dynamic>(sql, new { product_id });
+            await database.ExecuteQuery<dynamic>(sql, new { product_id, customerGroup = (int)customerGroup });
 
             sql = @"DELETE FROM oc_product_to_category 
-                    WHERE category_id = @SALE_CATEGORY_ID AND product_id = @product_id";
+                    WHERE category_id = @SALE_CATEGORY_ID AND product_id = @product_id AND customer_group_id = @customerGroup";
 
-            await database.ExecuteQuery<dynamic>(sql, new { SALE_CATEGORY_ID, product_id });
+            await database.ExecuteQuery<dynamic>(sql, new { SALE_CATEGORY_ID, product_id, customerGroup = (int)customerGroup });
         }
 
         #endregion

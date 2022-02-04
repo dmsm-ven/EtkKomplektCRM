@@ -16,11 +16,12 @@
 
 <div class="container">
     <h2>@selectedTab</h2>
-    <CascadingValue Value="selectedTab">
-        <DiscountsByProductTab TabName="@tabs[0]" />
+    <CascadingValue Value="selectedTab" >
+        <DiscountsByProductTab TabName="@tabs[0]" ForCustomerGroup="CustomerGroup.Default"/>
         <DiscountsByCategoryTab TabName="@tabs[1]" />
         <DiscountsByManufacturerTab TabName="@tabs[2]" />
         <DiscountsByStockTab TabName="@tabs[3]" />
+        <DiscountsByProductTab TabName="@tabs[4]" ForCustomerGroup="CustomerGroup.Registered"/>
     </CascadingValue>
 </div>
 
@@ -30,7 +31,8 @@
         "На товары", 
         "На категории", 
         "На производителей", 
-        "На склады" 
+        "На склады",
+        "Для зарегистрированных"
     };
     string selectedTab;
 
