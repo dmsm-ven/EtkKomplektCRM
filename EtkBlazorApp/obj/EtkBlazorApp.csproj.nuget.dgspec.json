@@ -270,6 +270,10 @@
               "target": "Package",
               "version": "[3.2.2, )"
             },
+            "Blazored.Typeahead": {
+              "target": "Package",
+              "version": "[4.6.0, )"
+            },
             "SSH.NET": {
               "target": "Package",
               "version": "[2020.0.1, )"

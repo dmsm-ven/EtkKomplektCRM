@@ -16,7 +16,8 @@
             </button>
         </div>
         <div class="col-md-9">
-            <SelectProductDropdown ProductChanged="@SelectedProductChanged" />
+            <!-- <SelectProductDropdown ProductChanged="@SelectedProductChanged" /> -->
+            <SelectProductBlazoredTypehead ProductChanged="@SelectedProductChanged" />
         </div>
     </div>
     @if (newDiscountProduct.Id != 0)
@@ -251,12 +252,16 @@
 
     private void SelectedProductChanged(ProductEntity product)
     {
-        newDiscountProduct.Id = product.product_id;
-        newDiscountProduct.Name = product.name;
-        newDiscountProduct.Manufacturer = product.manufacturer;
-        newDiscountProduct.BasePriceCurrency = product.base_currency_code;
-        newDiscountProduct.Price = product.price;
-        newDiscountProduct.BasePrice = product.base_price;
-        StateHasChanged();
+        if (product != null)
+        {
+            newDiscountProduct.Id = product.product_id;
+            newDiscountProduct.Name = product.name;
+            newDiscountProduct.Manufacturer = product.manufacturer;
+            newDiscountProduct.BasePriceCurrency = product.base_currency_code;
+            newDiscountProduct.Price = product.price;
+            newDiscountProduct.BasePrice = product.base_price;
+            StateHasChanged();
+        }
+
     }
 }

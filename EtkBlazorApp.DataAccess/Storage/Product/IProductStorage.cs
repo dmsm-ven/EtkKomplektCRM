@@ -188,7 +188,7 @@ namespace EtkBlazorApp.DataAccess
                         JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id
                         WHERE p.status = 1 AND d.name LIKE @pattern
                         ORDER BY d.name
-                        LIMIT 10";
+                        LIMIT 8";
 
             var findedProducts = await database.GetList<ProductEntity, dynamic>(sql, new { pattern = $"%{searchText}%" });
             findedProducts.ForEach(p => p.name = HttpUtility.HtmlDecode(p.name));
