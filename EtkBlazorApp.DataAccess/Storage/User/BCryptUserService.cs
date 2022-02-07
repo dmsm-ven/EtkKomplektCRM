@@ -17,20 +17,30 @@ namespace EtkBlazorApp.DataAccess
         }
 
         public async Task<AppUserEntity> GetUser(string login, string password)
-        {                        
-            string sql = @"SELECT u.*, g.name as group_name, g.permission
+        {
+            if (!string.IsNullOrWhiteSpace(login) && !string.IsNullOrWhiteSpace(password))
+            {
+                string sql = @"SELECT u.*, g.name as group_name, g.permission
                            FROM etk_app_user u
                            JOIN etk_app_user_group g ON u.user_group_id = g.user_group_id
                            WHERE login = @login";
 
-            var dbUserData = await database.GetFirstOrDefault<AppUserEntity, dynamic>(sql, new { login, password });
+                var dbUserData = await database.GetFirstOrDefault<AppUserEntity, dynamic>(sql, new { login });
 
-            if (BCryptNet.Verify(password, dbUserData.password))
-            {
-                return dbUserData;
+                try
+                {
+                    if (BCryptNet.Verify(password, dbUserData.password))
+                    {
+                        return dbUserData;
+                    }
+                }
+                catch
+                {
+
+                }
             }
 
-            return null;
+            return new AppUserEntity();
         }
 
         public async Task UpdateUserLastLoginDate(string login)
@@ -63,7 +73,7 @@ namespace EtkBlazorApp.DataAccess
 
             if (user.password != null)
             {
-                newPassword = BCryptNet.HashPassword("Pa$$w0rd");
+                newPassword = BCryptNet.HashPassword(user.password);
                 sb.AppendLine(", password = @password");
             }
 

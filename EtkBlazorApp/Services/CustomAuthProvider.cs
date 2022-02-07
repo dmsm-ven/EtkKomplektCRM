@@ -120,7 +120,7 @@ namespace EtkBlazorApp.Services
             storage.DeleteAsync("user_password");
 
             var identity = new ClaimsIdentity(new[]
-{
+            {
                 new Claim(ClaimTypes.Name, "Гость")
             }, authenticationType: string.Empty);
             var user = new ClaimsPrincipal(identity);
