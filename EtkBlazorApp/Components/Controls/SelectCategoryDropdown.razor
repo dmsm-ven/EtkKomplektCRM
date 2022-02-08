@@ -11,12 +11,16 @@
        @oninput="SelectedCategoryChanged"
        id="dropdown-category" />
 <datalist id="category_list">
-    @foreach (var category in categoriesSource)
+    @if (categoriesSource != null)
     {
-        <option value="@category.name"
+        @foreach (var category in categoriesSource)
+        {
+            <option value="@category.name"
                 selected="@(selectedCategory != null && category.category_id == selectedCategory.category_id)">
-            @category.name
-        </option>
+                @category.name
+            </option>
+        }
+
     }
 </datalist>
 

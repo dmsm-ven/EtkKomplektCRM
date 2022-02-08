@@ -88,8 +88,6 @@ namespace EtkBlazorApp.Pages
             isIntermediateProgress = true;
             StateHasChanged();
 
-
-
             try
             {
                 IRemoteTemplateFileLoader loader = remoteTemplateFileLoaderFactory.GetMethod(

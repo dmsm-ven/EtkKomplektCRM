@@ -4,12 +4,16 @@
 <select class="form-control" id="dropdown-manufacturer" style="min-width: 150px;@CustomStyle"
         @onchange="OnManufacturerChanged">
     <option value="">Выбрать</option>
-    @foreach (var manufacturer in manufacturersSource)
+    @if (manufacturersSource != null)
     {
-        <option value="@manufacturer.manufacturer_id"
+        @foreach (var manufacturer in manufacturersSource)
+        {
+            <option value="@manufacturer.manufacturer_id"
                 selected="@(Manufacturer != null && Manufacturer.manufacturer_id == manufacturer.manufacturer_id)">
-            @manufacturer.name
-        </option>
+                @manufacturer.name
+            </option>
+        }
+
     }
 </select>
 

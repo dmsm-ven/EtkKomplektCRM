@@ -106,11 +106,14 @@
 </div>
 
 <div class="row my-2">
-    @foreach (var template in filteredTemplates)
+    @if(filteredTemplates != null)
     {
-        <CascadingValue Value="selectedTemplate">
-            <PriceListTemplateItem Items="@template.Value" CheckedChanged="SelectedTemplateChanged" />
-        </CascadingValue>
+        @foreach (var template in filteredTemplates)
+        {
+            <CascadingValue Value="selectedTemplate">
+                <PriceListTemplateItem Items="@template.Value" CheckedChanged="SelectedTemplateChanged" />
+            </CascadingValue>
+        }
     }
 </div>
 

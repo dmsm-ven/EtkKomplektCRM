@@ -4,17 +4,20 @@
 <select class="form-control" id="dropdown-manufacturer" style="min-width: 150px;"
         @onchange="OnStockChanged">
     <option value="">Выбрать</option>
-    @foreach (var g in stocks.GroupBy(s => s.city))
+    @if (stocks != null)
     {
-    <optgroup label="@g.Key">
-        @foreach (var stock in g)
+        @foreach (var g in stocks.GroupBy(s => s.city))
         {
-        <option value="@stock.stock_partner_id"
+            <optgroup label="@g.Key">
+                @foreach (var stock in g)
+                {
+                    <option value="@stock.stock_partner_id"
                 selected="@(Stock != null && Stock.stock_partner_id == stock.stock_partner_id)">
-            @stock.name
-        </option>
+                        @stock.name
+                    </option>
+                }
+            </optgroup>
         }
-    </optgroup>
     }
 </select>
 

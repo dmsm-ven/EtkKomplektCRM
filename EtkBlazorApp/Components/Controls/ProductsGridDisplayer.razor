@@ -51,8 +51,7 @@ else
 }
 
 @code {
-
-    [Parameter] public List<ProductViewModel> Products { get; set; }
+    [Parameter] public List<ProductViewModel> Products { get; set; } = new List<ProductViewModel>();
     [Parameter] public int MaxDisplayCount { get; set; } = 4;
     [Parameter] public string Title { get; set; } = string.Empty;
 

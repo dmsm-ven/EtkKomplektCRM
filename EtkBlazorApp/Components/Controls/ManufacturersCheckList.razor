@@ -40,7 +40,7 @@ else
 </style>
 
 @code {
-    Dictionary<ManufacturerEntity, bool> checkedManufacturers = null;
+    Dictionary<ManufacturerEntity, bool> checkedManufacturers = new Dictionary<ManufacturerEntity, bool>();
     bool hideList = true;
     public bool CheckedAll => checkedManufacturers.All(kvp => kvp.Value);
 

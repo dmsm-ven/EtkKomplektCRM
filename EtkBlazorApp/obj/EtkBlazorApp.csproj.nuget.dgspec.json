@@ -46,19 +46,19 @@
           "dependencies": {
             "CsvHelper": {
               "target": "Package",
-              "version": "[27.0.2, )"
+              "version": "[27.2.1, )"
             },
             "EPPlus": {
               "target": "Package",
-              "version": "[5.6.3, )"
+              "version": "[5.8.6, )"
             },
             "HtmlAgilityPack": {
               "target": "Package",
-              "version": "[1.11.38, )"
+              "version": "[1.11.42, )"
             },
             "MailKit": {
               "target": "Package",
-              "version": "[2.15.0, )"
+              "version": "[3.1.1, )"
             },
             "Microsoft.AspNetCore.StaticFiles": {
               "target": "Package",
@@ -70,7 +70,7 @@
             },
             "SharpCompress": {
               "target": "Package",
-              "version": "[0.30.0, )"
+              "version": "[0.30.1, )"
             },
             "System.Net.Primitives": {
               "target": "Package",
@@ -138,27 +138,27 @@
             },
             "Dapper": {
               "target": "Package",
-              "version": "[2.0.78, )"
+              "version": "[2.0.123, )"
             },
             "Microsoft.AspNetCore.Cryptography.KeyDerivation": {
               "target": "Package",
-              "version": "[6.0.1, )"
+              "version": "[6.0.2, )"
             },
             "Microsoft.Extensions.Configuration": {
               "target": "Package",
-              "version": "[5.0.0, )"
+              "version": "[6.0.0, )"
             },
             "MySql.Data": {
               "target": "Package",
-              "version": "[8.0.22, )"
+              "version": "[8.0.28, )"
             },
             "Newtonsoft.Json": {
               "target": "Package",
-              "version": "[12.0.3, )"
+              "version": "[13.0.1, )"
             },
             "SSH.NET": {
               "target": "Package",
-              "version": "[2016.1.0, )"
+              "version": "[2020.0.1, )"
             },
             "System.Diagnostics.Debug": {
               "target": "Package",
@@ -178,11 +178,11 @@
             },
             "System.Net.Primitives": {
               "target": "Package",
-              "version": "[4.3.0, )"
+              "version": "[4.3.1, )"
             },
             "System.Runtime.Extensions": {
               "target": "Package",
-              "version": "[4.3.0, )"
+              "version": "[4.3.1, )"
             },
             "System.Threading": {
               "target": "Package",

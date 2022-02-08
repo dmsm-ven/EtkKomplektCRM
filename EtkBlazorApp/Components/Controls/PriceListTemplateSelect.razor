@@ -2,13 +2,17 @@
 
 <select id="price-list-template-guid" @bind="Guid" class="form-control">
     <option value="">Выбрать шаблон прайс-листа</option>
-    @foreach (var plt in priceListTemplates)
+    @if (priceListTemplates != null)
     {
-        <option selected="@(Guid.Equals(plt.id))"
+        @foreach (var plt in priceListTemplates)
+        {
+            <option selected="@(Guid.Equals(plt.id))"
                 disabled="@(DisableMethodlessTemplate && plt.remote_uri_method_name == null)"
                 value="@plt.id">
-           @GetIconMarkup(plt) &nbsp; @plt.title
-        </option>
+                @GetIconMarkup(plt) &nbsp; @plt.title
+            </option>
+        }
+
     }
 </select>
 

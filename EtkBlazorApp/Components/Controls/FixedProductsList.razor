@@ -28,18 +28,21 @@
                         <SelectProductBlazoredTypehead @bind-Product="newFixedProduct" />
                     </td>
                 </tr>
-                @foreach (var product in fixedProducts)
+                @if (fixedProducts != null)
                 {
-                    <tr>
-                        <td>
-                            <button class="btn btn-sm btn-outline-danger" @onclick="(async e => await RemoveFixedProduct(product))">
-                                <span class="oi oi-minus"></span>
-                            </button>
-                        </td>
-                        <td>
-                            @(HttpUtility.HtmlDecode(product.name))
-                        </td>
-                    </tr>
+                    @foreach (var product in fixedProducts)
+                    {
+                        <tr>
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="(async e => await RemoveFixedProduct(product))">
+                                    <span class="oi oi-minus"></span>
+                                </button>
+                            </td>
+                            <td>
+                                @(HttpUtility.HtmlDecode(product.name))
+                            </td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
@@ -48,13 +51,12 @@
 
 
 @code {
-    ProductEntity newFixedProduct;
-    List<ProductEntity> fixedProducts;
+    ProductEntity newFixedProduct = new ProductEntity();
+    List<ProductEntity> fixedProducts = new List<ProductEntity>();
 
     protected override async Task OnInitializedAsync()
     {
         fixedProducts = await productsStorage.GetFixedProducts();
-        newFixedProduct = new ProductEntity();
     }
 
     private async Task RemoveFixedProduct(ProductEntity product)
