@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.DataAccess.Entity;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -13,6 +14,7 @@ namespace EtkBlazorApp.DataAccess
         Task<List<StockCityEntity>> GetStockCities();
         Task<List<StockPartnerLinkedManufacturerInfoEntity>> GetStockManufacturers(int stock_partner_id);
         Task<List<StockPartnerManufacturerInfoEntity>> GetManufacturerStockPartners(int manufacturer_id);
+        Task<List<ManufacturerAvaibleStocksEntity>> GetManufacturersAvailableStocks();
     }
 
 
@@ -77,6 +79,21 @@ namespace EtkBlazorApp.DataAccess
             }
         }
 
+        public async Task<List<ManufacturerAvaibleStocksEntity>> GetManufacturersAvailableStocks()
+        {
+            string sql = @"SELECT m.manufacturer_id, GROUP_CONCAT(DISTINCT sp.stock_partner_id SEPARATOR ',') as stock_ids
+                            FROM oc_product_to_stock pts 
+                            JOIN oc_stock_partner sp ON (sp.stock_partner_id = pts.stock_partner_id) 
+                            JOIN oc_product p ON (p.product_id = pts.product_id)
+                            JOIN oc_manufacturer m ON (p.manufacturer_id = m.manufacturer_id)
+                            GROUP BY p.manufacturer_id
+                            ORDER BY m.name;";
+
+            var stocksInfo = await database.GetList<ManufacturerAvaibleStocksEntity>(sql);
+
+            return stocksInfo;
+
+        }
         public async Task<List<StockPartnerManufacturerInfoEntity>> GetManufacturerStockPartners(int manufacturer_id)
         {
             string sql = @"SELECT sp.stock_partner_id, sp.name, count(p.product_id) as total_products, sum(ptc.quantity) as total_quantity

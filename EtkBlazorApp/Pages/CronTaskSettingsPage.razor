@@ -8,7 +8,12 @@
 @attribute [Authorize(Roles = "Administrator, Manager")]
 
 <h3>Настройки задачи</h3>
-
+@if(item == null)
+{
+    <LoadingSpinner />
+}
+else
+{
 <div class="container">
     <div class="row">
         <div class="col-md-6 offset-3">
@@ -93,6 +98,7 @@
         </div>
     </div>
 </div>
+}
 
 <ConfirmDialog @ref="confirmDialog"
                ConfirmationChanged="ExecuteImmediatelyDialogStatusChanged"
@@ -114,10 +120,12 @@
 
     [Parameter] public int Id { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        var entity = await settings.GetCronTaskById(Id);
-        item = new CronTaskViewModel()
+        if (firstRender)
+        {
+            var entity = await settings.GetCronTaskById(Id);
+            item = new CronTaskViewModel()
         {
             Id = entity.task_id,
             PriceListGuid = entity.linked_price_list_guid,
@@ -133,10 +141,11 @@
                 JsonConvert.DeserializeObject<List<TimeSpan>>(entity.additional_exec_time) : new List<TimeSpan>()
         };
 
-        item.ExecutionDateTime += item.ExecTime;
-        additionaExecTime = (DateTime.Now.Date + item.ExecTime);
+            item.ExecutionDateTime += item.ExecTime;
+            additionaExecTime = (DateTime.Now.Date + item.ExecTime);
+            StateHasChanged();
+        }
     }
-
     private async Task ExecuteImmediatelyDialogStatusChanged(bool dialogResult)
     {
         if (dialogResult)

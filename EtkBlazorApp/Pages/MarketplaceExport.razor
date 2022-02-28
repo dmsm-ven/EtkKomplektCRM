@@ -1,0 +1,37 @@
+﻿@page "/marketplace-export"
+@attribute [Authorize(Roles = "Administrator, Manager")]
+@inject IToastService toasts
+@inject IMarketplaceExportService marketplaceExport
+@inject ISettingStorage settingStorage
+@inject UserLogger logger
+
+<div class="container">
+   <div class="row">
+       <div class="col-md-6">
+           <MarketplaceBrandsExportTable Marketplace="OzonSeller" CabinetURL="https://seller.ozon.ru/app/main">
+               <Title>Настройки выгрузки Ozon Seller</Title>
+               <FeedFileLastRequestDateTime>@ozonSellerLastReqeust</FeedFileLastRequestDateTime>
+           </MarketplaceBrandsExportTable>
+       </div>
+        <div class="col-md-6">
+            <MarketplaceBrandsExportTable Marketplace="YandexFBS" CabinetURL="https://partner.market.yandex.ru/business/892602/marketplace">
+               <Title>Настройки выгрузки Yandex Market</Title>
+               <FeedFileLastRequestDateTime>@yandexMarketLastReqeust</FeedFileLastRequestDateTime>
+           </MarketplaceBrandsExportTable>
+       </div>
+    </div>
+</div>
+
+@code {
+
+    bool showSettingsBox = false;
+    string yandexMarketLastReqeust;
+    string ozonSellerLastReqeust;
+
+    protected override async Task OnInitializedAsync()
+    {
+        yandexMarketLastReqeust = (await settingStorage.GetValue<DateTime>("yandex_fbs_last_request")).ToString("dd.MM.yyyy HH:mm");
+        ozonSellerLastReqeust = (await settingStorage.GetValue<DateTime>("ozon_seller_last_request")).ToString("dd.MM.yyyy HH:mm");
+    }
+
+}

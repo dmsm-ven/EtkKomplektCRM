@@ -1,0 +1,144 @@
+﻿@inject IStockStorage stockStorage
+@inject IMarketplaceExportService marketplaceService
+
+<div>
+<h2>@Title</h2>
+<p style="line-height: 20px;">
+    <a href="@CabinetURL" target="_blank" style="font-size: 11px;">Перейти в личный кабинет</a>
+    <span class="float-right" style="font-size: 11px; color: lightgray;">Последний запрос: @FeedFileLastRequestDateTime</span>
+</p>
+
+
+@if (exportInfo != null)
+{
+    <div class="border" style="background: #f8f9fa; border-radius: 4px;">
+        <table class="table table-borderless">
+            <thead>
+                <tr>
+                    <td>
+                        <button class="btn btn-sm btn-primary" @onclick="AddNewExportInfo">
+                            <span class="oi oi-plus"></span>
+                        </button>
+                    </td>
+                    <td colspan="3">
+                        <SelectManufacturerDropdown @bind-Manufacturer="newManufacturer" 
+                            DisabledManufacturers="@exportInfo.Select(i => new ManufacturerEntity(){ manufacturer_id = i.manufacturer_id}).ToList()" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>Бренд</th>
+                    <th>Наценка</th>
+                    <th>Выгружаемые склады</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in exportInfo)
+                {
+                    <tr>
+                        <td>
+                            @item.manufacturer_name
+                        </td>
+
+                        <td>
+                            <input style="width: 70px; font-size: 12px;" type="number" class="form-control" 
+                            value="@item.discount"
+                            @onchange="@(async e => { item.discount = int.Parse(e.Value.ToString()); await StockInfoChanged(item); })" />
+                        </td>
+                        <td>
+                            <StocksCheckListBoxNew 
+                                           StocksWithProduct="@ListStocksForManufacturerById(item.manufacturer_id)"
+                                           CheckedStocks="item.checked_stocks_list"
+                                           CheckedStocksChanging="@(e => StockInfoChanged(item))" />
+                        </td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" @onclick="@(e => RemoveExportInfo(item))">
+                                <span class="oi oi-trash"></span>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+</div>
+@code {
+    List<StockPartnerEntity> allStocks;
+    List<MarketplaceBrandExportEntity> exportInfo;
+    Dictionary<int, List<StockPartnerEntity>> stocksWithProductsForManufacturer;
+    ManufacturerEntity newManufacturer;
+
+
+    [Parameter] public string Marketplace { get; set; }
+    [Parameter] public string CabinetURL { get; set; }
+
+    [Parameter] public RenderFragment Title { get; set; }
+    [Parameter] public RenderFragment FeedFileLastRequestDateTime { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        allStocks = await stockStorage.GetStocks();
+        exportInfo = await marketplaceService.GetAllForMarketplace(Marketplace);
+
+        stocksWithProductsForManufacturer = exportInfo.ToDictionary(i => i.manufacturer_id, i => new List<StockPartnerEntity>());
+
+        foreach (var ei in exportInfo)
+        {
+            foreach (var s in ei.checked_stocks_list)
+            {
+                s.name = allStocks.FirstOrDefault(stock => stock.stock_partner_id == s.stock_partner_id)?.name ?? string.Empty;
+            }
+        }
+
+        newManufacturer = new ManufacturerEntity();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var source = await stockStorage.GetManufacturersAvailableStocks();
+            stocksWithProductsForManufacturer = source
+                .ToDictionary(
+                    i => i.manufacturer_id,
+                    j => allStocks.Where(s => j.stock_ids.Split(",").Contains(s.stock_partner_id.ToString())).ToList());
+            StateHasChanged();
+        }
+    }
+
+    private List<StockPartnerEntity> ListStocksForManufacturerById(int manufacturer_id)
+    {
+        if (stocksWithProductsForManufacturer.ContainsKey(manufacturer_id))
+        {
+            return stocksWithProductsForManufacturer[manufacturer_id];
+        }
+        return allStocks;
+    }
+
+    public async Task RemoveExportInfo(MarketplaceBrandExportEntity itemToRemove)
+    {
+        await marketplaceService.Remove(Marketplace, itemToRemove.manufacturer_id);
+        exportInfo.Remove(itemToRemove);
+    }
+
+    private async Task AddNewExportInfo()
+    {
+        var newItem = new MarketplaceBrandExportEntity()
+        {
+            manufacturer_id = newManufacturer.manufacturer_id,
+            manufacturer_name = newManufacturer.name,
+        };
+
+        await marketplaceService.AddOrUpdate(Marketplace, newItem);
+
+        exportInfo.Add(newItem);
+        newManufacturer = new ManufacturerEntity();
+        StateHasChanged();
+    }
+
+    private async Task StockInfoChanged(MarketplaceBrandExportEntity changedItem)
+    {
+        await marketplaceService.AddOrUpdate(Marketplace, changedItem);
+    }
+}

@@ -71,7 +71,7 @@ namespace EtkBlazorApp
             services.AddTransient<IDatabaseAccess, EtkDatabaseDapperAccess>();
             services.AddTransient<IPartnersInformationService, PartnersInformationService>();
             services.AddTransient<IProductDiscountStorage, ProductDiscountStorage>();
-            services.AddTransient<IOzonSellerDiscountStorage, OzonSellerDiscountStorage>();
+            services.AddTransient<IMarketplaceExportService, MarketplaceExportService>();
             services.AddTransient<IProductStorage, ProductStorage>();
             services.AddTransient<ICategoryStorage, CategoryStorage>();
             services.AddTransient<IProductUpdateService, ProductUpdateService>();
