@@ -65,6 +65,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
                 var quantitySpb = ParseQuantity(tab.GetValue<string>(row, 3));
                 var quantityKaluga = ParseQuantity(tab.GetValue<string>(row, 4));
+                var price = ParsePrice(tab.GetValue<string>(row, 5));
 
                 var priceLine = new MultistockPriceLine(this)
                 {
@@ -72,8 +73,9 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Sku = sku,
                     Model = sku,
                     Name = name,
+                    Price = price,
                     Manufacturer = "КВТ",
-                    Stock = StockName.TexElektro
+                    //Stock = StockName.TexElektro
                 };
 
                 priceLine.AdditionalStockQuantity[StockName.TexElektro_Kaluga] = quantityKaluga.Value;

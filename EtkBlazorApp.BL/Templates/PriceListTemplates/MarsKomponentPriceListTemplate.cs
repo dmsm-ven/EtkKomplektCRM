@@ -26,7 +26,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 int? nextDeliveryQuantity = ParseQuantity(tab.GetValue<string>(row, 6));
 
                 //Проскит берем только остатки
-                decimal? price = manufacturer.Equals("Pro'sKit") ? null : tab.GetValue<decimal>(row, 8);
+                decimal? price = tab.GetValue<decimal>(row, 8); //manufacturer.Equals("Pro'sKit") ? null : tab.GetValue<decimal>(row, 8);
                 string model = tab.GetValue<string>(row, 9);
 
                 var priceLine = new PriceLineWithNextDeliveryDate(this)

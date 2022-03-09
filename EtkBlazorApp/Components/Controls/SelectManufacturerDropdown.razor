@@ -9,7 +9,7 @@
         @foreach (var manufacturer in manufacturersSource)
         {
             <option value="@manufacturer.manufacturer_id"
-                disabled="@(DisabledManufacturers.FirstOrDefault(m => m.manufacturer_id == manufacturer.manufacturer_id) != null)"
+                disabled="@(DisabledManufacturers?.FirstOrDefault(m => m.manufacturer_id == manufacturer.manufacturer_id) != null)"
                 selected="@(Manufacturer != null && Manufacturer.manufacturer_id == manufacturer.manufacturer_id)">
                 @manufacturer.name
             </option>
