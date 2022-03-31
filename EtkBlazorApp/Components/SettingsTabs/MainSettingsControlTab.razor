@@ -8,6 +8,10 @@
         <input type="text" class="form-control" id="monobrand_key" @bind="monobrandKey">
     </div>
     <div class="form-group">
+        <label for="monobrand_update">Обновлять монобренд сайты (true = Да)</label>
+        <input type="text" class="form-control" id="monobrand_update" @bind="monobrandUpdate">
+    </div>
+    <div class="form-group">
         <label for="nds">НДС, %</label>
         <input type="number" min="0" max="100" class="form-control" id="nds" @bind="nds">
     </div>
@@ -20,16 +24,19 @@
     [CascadingParameter] public SettingsTabData selectedTab { get; set; }
 
     string monobrandKey;
+    string monobrandUpdate;
     int nds;
 
     protected override async Task OnInitializedAsync()
     {
         monobrandKey = await settings.GetValue("monobrand_updater_key");
         nds = await settings.GetValue<int>("nds");
+        monobrandUpdate = await settings.GetValue("update-monobrand-websites");
 
         tabData.SaveButtonClicked = new Action(async() =>
         {
             await settings.SetValue("monobrand_updater_key", monobrandKey);
+            await settings.SetValue("update-monobrand-websites", monobrandUpdate);
             await settings.SetValue<int>("nds", nds);
         });
     }

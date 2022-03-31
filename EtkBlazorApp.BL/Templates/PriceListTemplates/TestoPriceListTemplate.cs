@@ -59,7 +59,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
                     var priceLine = new PriceLine(this)
                     {
-                        Currency = CurrencyType.RUB,
+                        Currency = CurrencyType.EUR,
                         Price = price,
                         Manufacturer = "Testo",
                         Model = model,

@@ -149,7 +149,7 @@ namespace EtkBlazorApp.DataAccess
                 {
                     foreach (var kvp in group.Value)
                     {
-                        sb.AppendLine($"({group.Key}, {kvp.product_id}, {kvp.quantity.Value}),");
+                        sb.AppendLine($"({group.Key}, {kvp.product_id}, {Math.Max(kvp.quantity.Value, 0)}),");
                     }
                 }
                 var sql = sb.ToString().Trim('\r', '\n', ',') + " ON DUPLICATE KEY UPDATE quantity = VALUES(quantity)";

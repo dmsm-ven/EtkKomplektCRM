@@ -27,7 +27,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 var priceLine = new PriceLine(this)
                 {
                     Name = name,
-                    Currency = CurrencyType.RUB,
+                    Currency = CurrencyType.USD,
                     //Stock = StockName.CEM,
                     Manufacturer = "CEM",
                     Model = sku,

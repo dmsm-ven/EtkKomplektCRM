@@ -71,7 +71,10 @@ namespace EtkBlazorApp.BL
                 await (new WebClient().DownloadStringTaskAsync(CurrencyCustomUri));
             }
 
-            await UpdateMonobrands(affectedBrandsIds, progress);
+            if ((await settingStorage.GetValue("update-monobrand-websites")) == "true")
+            {
+                await UpdateMonobrands(affectedBrandsIds, progress);
+            }
             
             progress?.Report("Обновление завершено");
         }
