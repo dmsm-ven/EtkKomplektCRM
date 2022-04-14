@@ -55,7 +55,16 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 {
                     string model = tab.GetValue<string>(row, 1);
 
-                    var price = ParsePrice(tab.GetValue<string>(row, 3));
+                    decimal? price = null;
+                    try
+                    {
+                        price = ParsePrice(tab.GetValue<string>(row, 3));
+                    }
+                    catch
+                    {
+                        price = 0;
+                    }
+
 
                     var priceLine = new PriceLine(this)
                     {
