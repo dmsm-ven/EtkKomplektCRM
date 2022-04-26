@@ -58,7 +58,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     decimal? price = null;
                     try
                     {
-                        price = ParsePrice(tab.GetValue<string>(row, 3));
+                        price = ParsePrice(tab.GetValue<string>(row, 4));
                     }
                     catch
                     {
@@ -68,7 +68,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
                     var priceLine = new PriceLine(this)
                     {
-                        Currency = CurrencyType.EUR,
+                        Currency = CurrencyType.RUB,
                         Price = price,
                         Manufacturer = "Testo",
                         Model = model,
