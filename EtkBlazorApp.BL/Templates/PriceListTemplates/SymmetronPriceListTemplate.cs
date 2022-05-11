@@ -18,27 +18,66 @@ namespace EtkBlazorApp.BL
                 if (ManufacturerSkipCheck(manufacturer)) { continue; }
 
                 string sku = tab.GetValue<string>(row, 3);
-                string name = tab.GetValue<string>(row, 4);             
+                string name = tab.GetValue<string>(row, 4);
                 int quantity = tab.GetValue<int>(row, 10);
-                decimal? priceInCurrency = ParsePrice(tab.GetValue<string>(row, 11));                
+                decimal? priceInCurrency = ParsePrice(tab.GetValue<string>(row, 11));
                 decimal? priceInRub = ParsePrice(tab.GetValue<string>(row, 13));
-                
+
                 string model = tab.GetValue<string>(row, 27);
 
                 CurrencyType priceCurreny = CurrencyType.RUB;
-                if(Enum.TryParse<CurrencyType>(tab.GetValue<string>(row, 12), out var parsedCurrency))
+                if (Enum.TryParse<CurrencyType>(tab.GetValue<string>(row, 12), out var parsedCurrency))
                 {
                     priceCurreny = parsedCurrency;
                 }
-                        
+
                 var priceLine = new PriceLine(this)
                 {
                     Name = name,
                     Sku = sku,
                     Model = model,
                     Manufacturer = manufacturer,
-                    Price = (priceInCurrency.HasValue && priceCurreny != CurrencyType.RUB) ? priceInCurrency : priceInRub,                   
+                    Price = (priceInCurrency.HasValue && priceCurreny != CurrencyType.RUB) ? priceInCurrency : priceInRub,
                     Currency = priceCurreny,
+                    Quantity = quantity,
+                    //Stock = StockName.Symmetron
+                };
+
+                list.Add(priceLine);
+            }
+
+            return list;
+        }
+    }
+
+    [PriceListTemplateGuid("51188220-54E6-4973-BCE9-7DE618829C5C")]
+    public class SymmetronProskitPriceListTemplate : ExcelPriceListTemplateBase
+    {
+        public SymmetronProskitPriceListTemplate(string fileName) : base(fileName) { }
+
+        protected override List<PriceLine> ReadDataFromExcel()
+        {
+            var list = new List<PriceLine>();
+
+            for (int row = 2; row < tab.Dimension.Rows; row++)
+            {
+                string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 26));
+                if (ManufacturerSkipCheck(manufacturer)) { continue; }
+
+                string sku = tab.GetValue<string>(row, 3);
+                string name = tab.GetValue<string>(row, 4);
+                int quantity = tab.GetValue<int>(row, 10);
+                decimal? priceInUsd = ParsePrice(tab.GetValue<string>(row, 11));
+                string model = tab.GetValue<string>(row, 13);
+
+                var priceLine = new PriceLine(this)
+                {
+                    Name = name,
+                    Sku = sku,
+                    Model = model,
+                    Manufacturer = manufacturer,
+                    Price = priceInUsd,
+                    Currency = CurrencyType.USD,
                     Quantity = quantity,
                     //Stock = StockName.Symmetron
                 };

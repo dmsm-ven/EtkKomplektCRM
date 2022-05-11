@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
@@ -43,6 +47,46 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 list.Add(priceLine);              
             }
 
+            return list;
+        }
+    }
+
+    [PriceListTemplateGuid("A9BF1E82-09C6-4A28-A7BB-99BF1D6FF695")]
+    public class MegeonXmlPriceListTemplate : PriceListTemplateReaderBase, IPriceListTemplate
+    {
+        private readonly string fileName;
+
+        public MegeonXmlPriceListTemplate(string fileName)
+        {
+            this.fileName = fileName;
+        }
+
+        public string FileName => fileName;
+
+        public async Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)
+        {
+            var doc = XDocument.Load(fileName);
+            var offers = doc.Descendants("shop").Elements("offers").Elements("offer");
+
+            var list = new List<PriceLine>();
+            foreach (var offer in offers)
+            {
+                if (offer.Element("vendor").Value != "МЕГЕОН") { continue; }
+
+                int? quantity = ParseQuantity(offer.Element("outlets").Element("outlet")?.Attribute("instock").Value ?? "0");
+
+                list.Add(new PriceLine(this)
+                {
+                    Price = ParsePrice(offer.Element("price").Value),
+                    Currency = CurrencyType.RUB,
+                    Name = offer.Element("name").Value,
+                    Model = offer.Element("model").Value,
+                    Sku = offer.Attribute("id").Value,
+                    Manufacturer = "Мегеон",
+                    Quantity = quantity
+                });
+                
+            }
             return list;
         }
     }

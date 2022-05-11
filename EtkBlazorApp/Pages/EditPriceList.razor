@@ -31,15 +31,18 @@ else
                 <label for="guid-select">GUID</label>
                 <select class="form-control" @bind="sourceTemplate.Guid" required id="guid-select">
                     <option value="">Выбрать</option>
-                    @foreach (var attributeGuid in guidList)
-                    {
-                        <option selected="@(attributeGuid == sourceTemplate.Guid)"
+                        @if (guidList != null)
+                        {
+                            @foreach (var attributeGuid in guidList)
+                            {
+                                <option selected="@(attributeGuid == sourceTemplate.Guid)"
                                 disabled="@(alreadyUsedGuids.Contains(attributeGuid) && attributeGuid != sourceTemplate.Guid)"
                                 value="@attributeGuid">
-                            @(((alreadyUsedGuids.Contains(attributeGuid) && attributeGuid != sourceTemplate.Guid) ? "занят " : "") +  @attributeGuid)
-                        </option>
-                    }
-                </select>
+                                    @(((alreadyUsedGuids.Contains(attributeGuid) && attributeGuid != sourceTemplate.Guid) ? "занят " : "") +  @attributeGuid)
+                                </option>
+                            }
+                        }
+                    </select>
             </div>
 
             <div class="form-group">
@@ -51,11 +54,14 @@ else
                 <label for="group_name">Группа</label>
                 <input type="text" list="group-name" class="form-control" @bind="sourceTemplate.GroupName" required />
                 <datalist id="group-name">
-                    @foreach (var groupName in groupNames)
-                    {
-                        <option selected="@(groupName == sourceTemplate.GroupName)" value="@groupName">@groupName</option>
-                    }
-                </datalist>
+                        @if (groupNames != null)
+                        {
+                            @foreach (var groupName in groupNames)
+                            {
+                                <option selected="@(groupName == sourceTemplate.GroupName)" value="@groupName">@groupName</option>
+                            }
+                        }
+                    </datalist>
             </div>
             <div class="form-group">
                 <label for="stock_name">Связанный склад поставщика</label>
@@ -119,22 +125,25 @@ else
                             </div>
                         </div>
                     }
-                </div>
-            }
-            else
-            {
-                <div class="form-group">
-                    <label for="remote-uri-method">Метод загрузки файла</label>
-                    <select class="form-control" @onchange="LoadMethodChanged" id="remote-uri-method">
-                        <option value="">Выбрать</option>
-                        @foreach (var method in remoteUriLoadMethods)
-                        {
-                            <option selected="@(sourceTemplate.RemoteUrlMethodId.HasValue && method.id == sourceTemplate.RemoteUrlMethodId)"
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group">
+                        <label for="remote-uri-method">Метод загрузки файла</label>
+                        <select class="form-control" @onchange="LoadMethodChanged" id="remote-uri-method">
+                            <option value="">Выбрать</option>
+                            @if (remoteUriLoadMethods != null)
+                            {
+                                @foreach (var method in remoteUriLoadMethods)
+                                {
+                                    <option selected="@(sourceTemplate.RemoteUrlMethodId.HasValue && method.id == sourceTemplate.RemoteUrlMethodId)"
                                     value="@method.id">
-                                @method.name
-                            </option>
-                        }
-                    </select>
+                                        @method.name
+                                    </option>
+                                }
+                            }
+                        </select>
                 </div>
             }
 
