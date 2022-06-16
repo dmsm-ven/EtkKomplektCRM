@@ -61,9 +61,6 @@ namespace EtkBlazorApp.BL
 
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
-                string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 26));
-                if (ManufacturerSkipCheck(manufacturer)) { continue; }
-
                 string sku = tab.GetValue<string>(row, 3);
                 string name = tab.GetValue<string>(row, 4);
                 int quantity = tab.GetValue<int>(row, 10);
@@ -75,7 +72,7 @@ namespace EtkBlazorApp.BL
                     Name = name,
                     Sku = sku,
                     Model = model,
-                    Manufacturer = manufacturer,
+                    Manufacturer = "Pro'sKit",
                     Price = priceInUsd,
                     Currency = CurrencyType.USD,
                     Quantity = quantity,

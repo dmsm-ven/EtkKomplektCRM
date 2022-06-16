@@ -134,7 +134,7 @@ namespace EtkBlazorApp.BL
         {
             var monobrands = await monobrandStorage.GetMonobrands();
             var affectedMonobrands = monobrands
-                .Where(monobrand => affectedBrandsIds.Contains(monobrand.manufacturer_id))
+                .Where(monobrand => monobrand.is_update_enabled && affectedBrandsIds.Contains(monobrand.manufacturer_id))
                 .ToList();
 
             if(affectedMonobrands.Count == 0) { return; }
