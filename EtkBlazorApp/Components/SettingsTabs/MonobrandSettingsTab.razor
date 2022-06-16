@@ -30,6 +30,7 @@
                             <th></th>
                             <th>Производитель</th>
                             <th>Валюта</th>
+                            <th>Обновлять цены/остатки</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -64,6 +65,11 @@
                                             </option>
                                         }
                                     </select>
+                                </td>
+                                <td>
+                                    <div class="form-check">
+                                      <input class="form-check-input" type="checkbox" @bind="monobrand.IsUpdateEnabled">
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -135,7 +141,8 @@
             manufacturer_id = selectedMonobrand.ManufacturerId,
             manufacturer_name = selectedMonobrand.ManufacturerName,
             monobrand_id = selectedMonobrand.MonobrandId,
-            website = selectedMonobrand.WebsiteUri
+            website = selectedMonobrand.WebsiteUri,
+            is_update_enabled = selectedMonobrand.IsUpdateEnabled
         });
     }
 
@@ -148,7 +155,8 @@
                 ManufacturerName = entity.manufacturer_name ?? "Не выбрано",
                 MonobrandId = entity.monobrand_id,
                 WebsiteUri = entity.website,
-                CurrencyCode = entity.currency_code
+                CurrencyCode = entity.currency_code,
+                IsUpdateEnabled = entity.is_update_enabled
             })
             .ToList();
     }

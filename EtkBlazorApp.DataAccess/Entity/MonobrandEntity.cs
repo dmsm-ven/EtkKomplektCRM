@@ -7,7 +7,6 @@
         public string manufacturer_name { get; set; }
         public string currency_code { get; set; }
         public string website { get; set; }
-
         public bool is_update_enabled { get; set; }
     }
 }

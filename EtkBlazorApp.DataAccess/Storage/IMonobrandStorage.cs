@@ -37,7 +37,8 @@ namespace EtkBlazorApp.DataAccess
             string sql = @"UPDATE etk_app_monobrand 
                             SET manufacturer_id = @manufacturer_id,
                                 website = @website,
-                                currency_code = @currency_code
+                                currency_code = @currency_code,
+                                is_update_enabled = @is_update_enabled
                                 WHERE monobrand_id = @monobrand_id";
 
             await database.ExecuteQuery(sql, monobrand);

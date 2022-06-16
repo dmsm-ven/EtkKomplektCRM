@@ -51,7 +51,7 @@
 
     private void SaveCurrentTabSettings()
     {
-        selectedTab.SaveButtonClicked.Invoke();
+        selectedTab?.SaveButtonClicked?.Invoke();
         toasts.ShowInfo("Настройки сохранены", selectedTab.Title);
     }
 }

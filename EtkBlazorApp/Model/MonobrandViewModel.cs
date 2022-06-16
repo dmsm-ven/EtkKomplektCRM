@@ -12,5 +12,6 @@ namespace EtkBlazorApp
         public string CurrencyCode { get; set; }
         public int ManufacturerId { get; set; }
         public int MonobrandId { get; set; }
+        public bool IsUpdateEnabled { get; set; }
     }
 }
