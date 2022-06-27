@@ -74,7 +74,7 @@ namespace EtkBlazorApp.BL
                     Model = model,
                     Manufacturer = "Pro'sKit",
                     Price = priceInUsd,
-                    Currency = CurrencyType.USD,
+                    Currency = CurrencyType.RUB,
                     Quantity = quantity,
                     //Stock = StockName.Symmetron
                 };
