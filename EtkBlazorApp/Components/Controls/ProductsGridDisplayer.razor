@@ -1,0 +1,62 @@
+﻿@inject IProductStorage database
+
+@if(Products == null)
+{
+    <LoadingSpinner />
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(Title) && Products.Take(MaxDisplayCount).Any())
+    {
+        <h1>@Title</h1>
+    }
+    <div class="container product-grid">
+        <div class="row">
+            @foreach (var product in Products.Take(MaxDisplayCount))
+            {
+            <div class="col-md-3 product-item">
+                @if (ShowPrice && product.Price != decimal.Zero)
+                {
+                    <p class="product-price">@product.Price.ToString("C0")</p>
+                }
+                @if (ShowDiscountLabel && product.DiscountPercent.HasValue)
+                {
+                    <p class="product-price discount-info">-@product.DiscountPercent.Value.ToString("P0")</p>
+                }
+                @if (ShowViewCounter)
+                {
+                <p class="product-price view-counter">
+
+                    <span class="oi oi-eye"></span>
+                    @product.NumberOfViews
+                </p>
+                    
+                }
+                <a href="@product.ProductIdUri" target="_blank">
+                    <div class="product-item-inner shadow">
+                        <div class="product-item-manufacturer">
+                            <p>@product.Manufacturer</p>
+                        </div>
+                        <img src="@product.FullSizeImage" class="product-item-image" alt="@product.Name">
+
+                        <div class="product-item-info">
+                            <p class="product-name">@product.Name</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public List<ProductViewModel> Products { get; set; } = new List<ProductViewModel>();
+    [Parameter] public int MaxDisplayCount { get; set; } = 4;
+    [Parameter] public string Title { get; set; } = string.Empty;
+
+
+    [Parameter] public bool ShowPrice { get; set; } = true;
+    [Parameter] public bool ShowDiscountLabel { get; set; } = false;
+    [Parameter] public bool ShowViewCounter { get; set; } = false;
+}

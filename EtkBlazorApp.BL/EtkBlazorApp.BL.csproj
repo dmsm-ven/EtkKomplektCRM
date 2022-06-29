@@ -1,13 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>    
-    <PackageReference Include="CsvHelper" Version="21.1.0" />    
-    <PackageReference Include="EPPlus" Version="5.5.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="CsvHelper" Version="27.2.1" />    
+    <PackageReference Include="EPPlus" Version="5.8.6" />    
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.42" />    
+    <PackageReference Include="MailKit" Version="3.1.1" />    
+    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="SharpCompress" Version="0.30.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -15,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Net.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Net.Primitives" Version="4.3.1" />
   </ItemGroup>
 
 </Project>

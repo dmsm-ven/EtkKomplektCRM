@@ -1,21 +1,19 @@
-﻿using System;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using EtkBlazorApp.DataAccess;
 
-namespace EtkBlazorApp.BL.Managers
+namespace EtkBlazorApp.BL
 {
     public class ReportManager
     {        
-        public PrikatReportFormatter Prikat { get; } 
-        public OzonReportFormatter Ozon { get; } 
-        public WebsiteUpdatedDataFormatter WebsiteUpdatedData { get; } 
+        public VseInstrumentiReportGenerator Prikat { get; } 
+        public EtkKomplektReportGenerator EtkPricelist { get; }
 
-        public ReportManager()
+        public ReportManager(ICurrencyChecker currencyCheker, 
+            IPrikatTemplateStorage templateStorage,
+            IProductStorage productStorage, 
+            PriceListManager priceListManager)
         {
-            Prikat = new PrikatReportFormatter();
-            Ozon = new OzonReportFormatter();
-            WebsiteUpdatedData = new WebsiteUpdatedDataFormatter();
+            Prikat = new VseInstrumentiReportGenerator(currencyCheker, templateStorage, productStorage, priceListManager);
+            EtkPricelist = new EtkKomplektReportGenerator(productStorage);
         }
     }
 }

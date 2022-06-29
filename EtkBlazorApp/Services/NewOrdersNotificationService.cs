@@ -1,81 +1,94 @@
 ﻿using EtkBlazorApp.DataAccess;
-using EtkBlazorApp.DataAccess.Model;
-using EtkBlazorApp.ViewModel;
+using EtkBlazorApp.DataAccess.Entity;
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Timers;
 using System.Web;
 
 namespace EtkBlazorApp.Services
 {
-    public class NewOrdersNotificationService : IDisposable
+    public class NewOrdersNotificationService
     {
-        public event Action<OrderViewModel> OnNewOrderFound;
-        public TimeSpan RefreshTime
+        readonly Timer timer;
+        readonly IOrderStorage orderStorage;
+
+        private event Action<OrderEntity> onNewOrderFound;
+        public event Action<OrderEntity> OnNewOrderFound
         {
-            get => _refreshTime;
+            [MethodImpl(MethodImplOptions.Synchronized)]
+            add
+            {
+                onNewOrderFound = (Action<OrderEntity>)Delegate.Combine(onNewOrderFound, value);
+                if (!timer.Enabled && onNewOrderFound != null)
+                {
+                    timer.Start();
+                    RefreshTimer_Elapsed(null, null);
+                }
+            }
+            [MethodImpl(MethodImplOptions.Synchronized)]
+            remove
+            {
+                onNewOrderFound = (Action<OrderEntity>)Delegate.Remove(onNewOrderFound, value);
+                if(timer.Enabled && onNewOrderFound == null)
+                {
+                    timer.Stop();
+                }
+            }
+        }
+      
+        TimeSpan refreshInterval = TimeSpan.FromSeconds(30);
+        public TimeSpan RefreshInterval
+        {
+            get => refreshInterval;
             set
             {
-                if (_refreshTime != value && (value.TotalSeconds > 5))
+                if (value.TotalSeconds < 5)
                 {
-                    _refreshTime = value;
-                    _refreshTimer.Interval = value.TotalMilliseconds;
+                    throw new ArgumentOutOfRangeException("Минимальный период обновление = 5 секунд");
+                }
+                if (refreshInterval != value)
+                {
+                    refreshInterval = value;
+                    timer.Interval = value.TotalMilliseconds;
                 }
             }
         }
 
-        TimeSpan _refreshTime = TimeSpan.FromSeconds(60);
-        Timer _refreshTimer;
         OrderEntity _lastOrder = null;
         bool _isFirstCheck = true;
-        readonly IOrderStorage _database;
 
-        public NewOrdersNotificationService(IOrderStorage database)
+        public NewOrdersNotificationService(IOrderStorage orderStorage)
         {
-            _refreshTimer = new Timer();
-            _refreshTimer.Elapsed += RefreshTimer_Elapsed;
-            _refreshTimer.Interval = _refreshTime.TotalMilliseconds;
-            _refreshTimer.Start();
-            _database = database;
-            RefreshTimer_Elapsed(null, null);
+            timer = new Timer();
+            timer.Elapsed += RefreshTimer_Elapsed;
+            timer.Enabled = false;
+            this.orderStorage = orderStorage;
         }
 
         private async void RefreshTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            var newlastOrder = (await _database.GetLastOrders(1)).FirstOrDefault();
+            if(onNewOrderFound == null) 
+            { 
+                return; 
+            }
+
+            var currentLastOrder = await orderStorage.GetLastOrder();
 
             if (_isFirstCheck || _lastOrder == null)
             {
                 _isFirstCheck = false;
-                _lastOrder = newlastOrder;
+                _lastOrder = currentLastOrder;
                 return;
             }
 
-            if (_lastOrder.order_id != newlastOrder.order_id)
+            if (_lastOrder.order_id != currentLastOrder.order_id)
             {
-                _lastOrder = newlastOrder;
+                _lastOrder = currentLastOrder;
 
-                var orderVM = new OrderViewModel()
-                {
-                    City = _lastOrder.payment_city,
-                    Customer = HttpUtility.HtmlDecode(_lastOrder.payment_firstname),
-                    DateTime = _lastOrder.date_added,
-                    OrderId = _lastOrder.order_id.ToString(),
-                    TotalPrice = _lastOrder.total,
-                    OrderStatus = _lastOrder.order_status
-                };
-
-
-                OnNewOrderFound?.Invoke(orderVM);
+                onNewOrderFound?.Invoke(_lastOrder);
             }
 
-        }
-
-        public void Dispose()
-        {
-            _refreshTimer.Elapsed -= RefreshTimer_Elapsed;
-            _refreshTimer.Stop();
-            _refreshTimer.Dispose();
         }
     }
 }

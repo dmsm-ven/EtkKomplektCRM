@@ -1,0 +1,87 @@
+﻿<div class="price-list-template-outer col-xl-2 col-lg-3 col-md-4 col-sm-6 col-xs-12 @outerDivCss"
+     @onclick="BoxClicked">
+    <div class="price-list-template-inner @innerDivCss">
+        <img class="brand-template-logo" src="@GroupImage" style="margin: 4px 8px 4px 2px;" />
+        <ul class="price-list-template-group">
+            @foreach (var item in Items)
+            {
+                <li>
+                    <input type="radio" name="selected-price-list-group"
+                           id="@item.Guid"
+                           disabled="@IsTemplateAlreadyLoaded(item)"
+                           checked="@(GlobalSelectedTemplate == item)"
+                           @onchange="@(e => RadioButtonClicked(item))" />
+                    <label for="@item.Guid" class="price-list-template-title">@item.Title</label>
+                </li>
+            }
+        </ul>
+    </div>
+</div>
+
+@code {
+    [Inject] PriceListManager priceListManager { get; set; }
+    [Parameter] public List<PriceListTemplateItemViewModel> Items { get; set; }
+    [Parameter] public EventCallback<PriceListTemplateItemViewModel> CheckedChanged { get; set; }
+    [CascadingParameter] PriceListTemplateItemViewModel GlobalSelectedTemplate { get; set; }
+    PriceListTemplateItemViewModel SelectedTemplate { get; set; }
+
+    string outerDivCss => Items.Contains(GlobalSelectedTemplate) ? "active" : string.Empty;
+    string innerDivCss => Items.All(item => IsTemplateAlreadyLoaded(item)) ? "already-loaded" : string.Empty;
+
+    DateTime lastChangeDateTime;
+
+    private string GroupImage
+    {
+        get
+        {
+            return Items.OrderBy(i => i.GroupName == i.Title ? 0 : 1).FirstOrDefault().Image;
+        }
+    }
+
+    private bool IsTemplateAlreadyLoaded(PriceListTemplateItemViewModel template)
+    {
+        return priceListManager.LoadedFiles.Any(td => td?.TemplateDescription?.id == template?.Guid);
+    }
+
+    private async Task BoxClicked()
+    {
+        if (IsAlreadyChanged()) { return; }
+
+        int currentTemplateIndex = Items.IndexOf(SelectedTemplate);
+        if (currentTemplateIndex == -1 || currentTemplateIndex == Items.Count - 1)
+        {
+            if (!IsTemplateAlreadyLoaded(Items.First()))
+            {
+                SelectedTemplate = Items.First();
+            }
+        }
+        else
+        {
+            if (!IsTemplateAlreadyLoaded(Items[currentTemplateIndex + 1]))
+            {
+                SelectedTemplate = Items[currentTemplateIndex + 1];
+            }
+        }
+
+        if (!IsTemplateAlreadyLoaded(SelectedTemplate))
+        {
+            GlobalSelectedTemplate = SelectedTemplate;
+            await CheckedChanged.InvokeAsync(SelectedTemplate);
+            lastChangeDateTime = DateTime.Now;
+        }
+    }
+
+    private async Task RadioButtonClicked(PriceListTemplateItemViewModel item)
+    {
+        SelectedTemplate = item;
+        GlobalSelectedTemplate = SelectedTemplate;
+        await CheckedChanged.InvokeAsync(item);
+        lastChangeDateTime = DateTime.Now;
+    }
+
+    private bool IsAlreadyChanged()
+    {
+        return Math.Abs((DateTime.Now - lastChangeDateTime).TotalMilliseconds) <= 400;
+    }
+
+}

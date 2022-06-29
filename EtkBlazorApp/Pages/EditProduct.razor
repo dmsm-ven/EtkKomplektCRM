@@ -1,0 +1,231 @@
+﻿@page "/edit-product";
+@page "/edit-product/keyword/{Keyword}";
+
+@inject IProductStorage productStorage
+@inject IProductUpdateService productUpdateService
+@inject ISettingStorage settingStorage
+@inject ICurrencyChecker currencyChecker
+@inject IToastService toasts
+@inject UserLogger log
+@attribute [Authorize]
+
+
+<h3>Редактирование товара</h3>
+<div class="container">
+    <div class="row">
+        <div class="offset-2 col-md-8">
+
+            <div class="form-row" style="margin-bottom: 20px;">
+                <div class="form-group col-md-10">
+                    <input type="url" class="form-control" id="product-uri" @bind="enteredUri">
+                </div>
+                <div class="form-group col-md-2">
+                    <button class="btn btn-primary"
+                            style="width: 100%;"
+                            disabled="@(string.IsNullOrWhiteSpace(enteredUri))"
+                            @onclick="LoadProduct">
+                        Открыть
+                    </button>
+                </div>
+            </div>
+
+            @if(editedProduct == null)
+            {
+                <LoadingSpinner/>
+            }
+            else
+            {
+                <div class="form-group">
+                    <div class="float-left">
+                        <label for="product-name">Наименование</label>
+                    </div>
+                    <div class="float-right">
+                        <small style="color: lightgray">Последнее обновление: <span style="color: #7b7ba5;">@editedProduct.DateModified</span></small>
+                    </div>
+                    <input type="text" class="form-control" id="product-name" value="@(HttpUtility.HtmlDecode(editedProduct.Name))" readonly>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="product-model">Модель</label>
+                        <input type="text" class="form-control" id="product-model" value="@(HttpUtility.HtmlDecode(editedProduct.Model))" readonly>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="product-sku">Артикул</label>
+                        <input type="text" class="form-control" id="product-sku" value="@editedProduct.Sku" readonly>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="product-ean">EAN</label>
+                        <input type="text" class="form-control" id="product-ean" value="@editedProduct.EAN" readonly>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="product-quantity">Количество</label>
+                        <input type="number" min="0" max="99999" class="form-control" id="product-quantity" @bind="@editedProduct.Quantity">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="product-stock-status">Статус на складе</label>
+                        <select class="form-control" @bind="editedProduct.StockStatus" id="product-stock-status">
+                            @foreach (var name in stockStatusNames)
+                            {
+                                <option value="@name" selected="@(name == editedProduct.StockStatus)">@name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="product-price">Цена товара</label>
+                        <input type="number" min="0" class="form-control" id="product-price" @bind="editedProduct.BasePrice">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="product-base-currency-code">Валюта</label>
+                        <select class="form-control" id="base-currency-code" @bind="editedProduct.BasePriceCurrency">
+                            @foreach (var currency in basePriceCurrencyNames)
+                            {
+                                <option value="@currency" selected="@(currency == editedProduct.BasePriceCurrency)">@currency</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                @if (editedProduct.StockStatus == "Снято с производства")
+                {
+                    <div class="form-group">
+                        <label>Замена</label>
+                        <SelectProductBlazoredTypehead @bind-Product="replacementProduct"/>
+                    </div>
+                }
+
+                if (hasChanges)
+                {
+                    <button class="btn btn-success" style="width: 100%;" @onclick="SaveChanges">Сохранить</button>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+
+@code {
+    ProductViewModel editedProduct = null;
+    ProductEntity replacementProduct;
+
+    string[] basePriceCurrencyNames = Enum.GetNames(typeof(CurrencyType));
+    string[] stockStatusNames = null;
+    string enteredUri = null;
+
+    [Parameter] public string Keyword { get; set; }
+
+    int currentStateCode = 0;
+    bool hasChanges => currentStateCode != 0 && currentStateCode != GetCurrentStateCode();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(Keyword))
+        {
+            enteredUri = $"https://etk-komplekt.ru/{Keyword}";
+        }
+        else
+        {
+            enteredUri = await settingStorage.GetValue("edit-product-page-last-uri");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            stockStatusNames = (await productStorage.GetStockStatuses()).Select(e => e.name).ToArray();
+            if (!string.IsNullOrWhiteSpace(enteredUri))
+            {
+                await LoadProduct();
+            }
+        }
+    }
+
+    private async Task LoadProduct()
+    {
+        if (string.IsNullOrWhiteSpace(enteredUri)) { return; }
+
+        string keyword = new Uri(enteredUri).AbsolutePath.Trim('/', '?', '&');
+        var entity = await productStorage.GetProductByKeyword(keyword);
+        if (entity == null) { editedProduct = null; return; }
+
+        editedProduct = new ProductViewModel()
+        {
+            Id = entity.product_id,
+            Uri = $"https://etk-komplekt.ru/{entity.keyword}",
+            Name = entity.name,
+            Model = entity.model,
+            Manufacturer = entity.manufacturer,
+            Sku = entity.sku,
+            EAN = entity.ean,
+            Quantity = entity.quantity,
+            BasePrice = entity.base_currency_code == CurrencyType.RUB.ToString() ? entity.price : entity.base_price,
+            BasePriceCurrency = entity.base_currency_code,
+            StockStatus = entity.stock_status,
+            DateModified = entity.date_modified.HasValue ? entity.date_modified.ToString() : string.Empty,
+            ReplacementProductId = entity.replacement_id,
+        };
+
+        if (editedProduct.ReplacementProductId.HasValue)
+        {
+            replacementProduct = await productStorage.GetProductById(editedProduct.ReplacementProductId.Value);
+        }
+
+        if (entity != null)
+        {
+            await settingStorage.SetValue("edit-product-page-last-uri", editedProduct.Uri);
+        }
+
+        currentStateCode = GetCurrentStateCode();
+        StateHasChanged();
+    }
+
+    private async Task SaveChanges()
+    {
+        if (editedProduct.BasePriceCurrency != CurrencyType.RUB.ToString())
+        {
+            decimal ratio = await currencyChecker.GetCurrencyRate(Enum.Parse<CurrencyType>(editedProduct.BasePriceCurrency));
+            editedProduct.Price = Math.Round(ratio * editedProduct.BasePrice);
+        }
+        else
+        {
+            editedProduct.BasePriceCurrency = CurrencyType.RUB.ToString();
+            editedProduct.Price = editedProduct.BasePrice;
+        }
+
+        var entity = new ProductEntity()
+        {
+            product_id = editedProduct.Id,
+            price = editedProduct.Price,
+            base_price = editedProduct.BasePriceCurrency == CurrencyType.RUB.ToString() ? 0 : editedProduct.BasePrice,
+            base_currency_code = editedProduct.BasePriceCurrency,
+            quantity = editedProduct.Quantity,
+            stock_status = editedProduct.StockStatus,
+            replacement_id = (editedProduct.StockStatus == "Снято с производства" ? replacementProduct?.product_id : (int?)null)
+        };
+
+        await productUpdateService.UpdateDirectProduct(entity);
+
+        await log.Write(LogEntryGroupName.ProductUpdate, "Товар обновлен", $"{HttpUtility.HtmlDecode(editedProduct.Name)} ({editedProduct.ProductIdUri})");
+
+        currentStateCode = GetCurrentStateCode();
+    }
+
+    private int GetCurrentStateCode()
+    {
+        int code = 0;
+        if (editedProduct != null)
+        {
+            code += editedProduct.Id;
+            code += editedProduct.Price.GetHashCode();
+            code += editedProduct.BasePrice.GetHashCode();
+            code += editedProduct.Quantity.GetHashCode();
+            code += (editedProduct?.StockStatus ?? string.Empty).GetHashCode();
+            code += (editedProduct?.BasePriceCurrency ?? string.Empty).GetHashCode();
+            code += (replacementProduct?.product_id.GetHashCode() ?? 9);
+        }
+        return code;
+    }
+}

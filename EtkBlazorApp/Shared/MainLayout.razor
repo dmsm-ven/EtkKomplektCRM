@@ -1,7 +1,8 @@
 ﻿@inherits LayoutComponentBase
-@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IToastService toastService
-@inject MyDbLogger logger
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserLogger userLogger
+
 @using System.Globalization
 
 <AuthorizeView>
@@ -16,11 +17,11 @@
                     <strong>@context.User.Identity.Name</strong>
                     <small style="color: #9e9e9e;">@($"({context.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role).Value})")</small>
                     &nbsp;&nbsp;
-                    <a href="/Login" @onclick="LogOut">Выйти</a>
+                    <a href="/" @onclick="LogOut">Выйти</a>
                 </p>
             </div>
 
-            <div class="content px-4">
+            <div class="content px-4" id="main-content">
                 @Body
             </div>
         </div>
@@ -40,11 +41,10 @@
 
 @code {
 
-    decimal usd, euro;
     public async Task LogOut()
     {
-        await ((MyCustomAuthProvider)AuthenticationStateProvider).LogOutUser();
+        await userLogger.Write(LogEntryGroupName.Auth, "Выход", $"Пользователь вышел");
+        await ((CustomAuthProvider)AuthenticationStateProvider).LogOutUser();
     }
-
 }
 

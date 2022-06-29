@@ -1,26 +1,30 @@
 ﻿@inject IToastService toastService
-@inject NewOrdersNotificationService newOrderNotificationService
+@inject NewOrdersNotificationService notificationService
+@implements IDisposable
 
 @code {
-    [Parameter]
-    public EventCallback<OrderViewModel> NewOrderPushed { get; set; }
-
-    [Parameter]
-    public TimeSpan RefreshInterval { get; set; }
+    [Parameter] public EventCallback<OrderViewModel> NewOrderPushed { get; set; }
 
     protected override void OnInitialized()
     {
-        newOrderNotificationService.OnNewOrderFound += NewOrderFound;
+        notificationService.OnNewOrderFound += NewOrderFound;
     }
 
-    protected override void OnParametersSet()
+    private void NewOrderFound(OrderEntity entity)
     {
-        newOrderNotificationService.RefreshTime = RefreshInterval;
-    }
-
-    private void NewOrderFound(OrderViewModel order)
-    {
+        var order = new OrderViewModel()
+        {
+            City = entity.payment_city,
+            Customer = HttpUtility.HtmlDecode(entity.payment_firstname),
+            DateTime = entity.date_added,
+            OrderId = entity.order_id.ToString(),
+            TotalPrice = entity.total
+        };
         InvokeAsync(async () => await NewOrderPushed.InvokeAsync(order));
     }
 
+    public void Dispose()
+    {
+        notificationService.OnNewOrderFound -= NewOrderFound;
+    }
 }

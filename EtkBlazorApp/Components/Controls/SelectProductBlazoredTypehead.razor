@@ -1,0 +1,45 @@
+﻿@inject IProductStorage productStorage
+@using Blazored.Typeahead
+
+<BlazoredTypeahead SearchMethod="SearchByText" 
+                   @bind-Value="Product"
+                   Debounce="1000"
+                   MinimumLength="4">
+    <SelectedTemplate>
+        @context.name
+    </SelectedTemplate>
+    <ResultTemplate>
+        <p>
+            @if (ShowManufacturer)
+            {
+                <span data-manufacturer>@context.manufacturer | </span>
+            }
+            <span>@context.name</span>
+        </p>
+    </ResultTemplate>
+</BlazoredTypeahead>
+
+@code {
+    [Parameter] public EventCallback<ProductEntity> ProductChanged { get; set; }
+    [Parameter] public bool ShowManufacturer { get; set; } = true;
+
+    ProductEntity selectedProduct;
+    [Parameter] public ProductEntity Product
+    {
+        get => selectedProduct;
+        set
+        {
+            if(selectedProduct != value)
+            {
+                selectedProduct = value;
+                ProductChanged.InvokeAsync(selectedProduct);
+            }
+        }
+    }
+
+    private async Task<IEnumerable<ProductEntity>> SearchByText(string searchText)
+    {
+        var results = await productStorage.SearchProductsByName(searchText);
+        return results;
+    }
+}

@@ -1,0 +1,160 @@
+﻿@inject IUserService userStorage
+@inject IToastService toasts
+@attribute [Authorize(Roles = "Administrator")]
+@inject AuthenticationStateProvider stateProvider
+@inject UserLogger logger
+
+@if (selectedTab == tabData)
+{
+<div id="user_settings_tab">
+
+    <div class="row p-1">
+        <div class="btn-group">
+            <button class="btn btn-info" @onclick="@(e => addNewDialog.Show())">
+                <span class="oi oi-person"></span>
+                Добавить
+            </button>
+
+            @if (selectedUser != null)
+            {
+                <button class="btn btn-danger mx-2"
+                        disabled="@(selectedUser == null || selectedUser == loginedUser)"
+                        @onclick="@(e => deleteDialog.Show())">
+                    <span class="oi oi-trash"></span>
+                    Удалить
+                </button>
+            }
+        </div>
+    </div>
+
+    <div class="row p-1">
+        <div class="table-responsive">
+            <table class="table users-table table-hover table-borderless">
+                <thead class="thead-etk">
+                    <tr>
+                        <th>Включен</th>
+                        <th>Логин</th>
+                        <th>Группа</th>
+                        <th>Разрешенный IP</th>
+                        <th>Дата создания</th>
+                        <th>Дата последнего входа</th>
+                        <th>Пароль</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (users == null)
+                    {
+                        <LoadingSpinner />
+                    }
+                    else
+                    {
+                        foreach (var item in users)
+                        {
+                            <CascadingValue Value="@selectedUser">
+                                <AppUserDisplayItem User="@item"
+                                                    Groups="@groups"
+                                                    OnItemSelect="@(e => selectedUser = item)"
+                                                    OnSaveChanges="@(e => UpdateUser(item))">
+                                </AppUserDisplayItem>
+                            </CascadingValue>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <DeleteConfirmDialog @ref="deleteDialog"
+                         ConfirmationChanged="DeleteConfirmed"
+                         ConfirmationMessage="@(() => $"Удалить пользователя '{selectedUser.Login}' ?")" />
+
+    <AddNewUserDialog @ref="addNewDialog" ConfirmationChanged="AddNewUserConfirmed" />
+</div>
+}
+
+@code {
+
+    [Parameter] public SettingsTabData tabData { get; set; }
+    [CascadingParameter] public SettingsTabData selectedTab { get; set; }
+
+    DeleteConfirmDialog deleteDialog;
+    AddNewUserDialog addNewDialog;
+
+    List<AppUserGroupEntity> groups;
+
+    AppUser loginedUser = null;
+    List<AppUser> users = null;
+    public AppUser selectedUser { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = (await userStorage.GetUsers()).Select(u => new AppUser()
+        {
+            Login = u.login,
+            Id = u.user_id,
+            LastLoginDateTime = u.last_login_date,
+            CreatingDate = u.creation_date,
+            GroupName = u.group_name,
+            GroupId = u.user_group_id,
+            IsEnabled = u.status,
+            AllowedIp = u.ip
+        }).ToList();
+        groups = await userStorage.GetUserGroups();
+
+        string loginedUserName = (await stateProvider.GetAuthenticationStateAsync()).User.Identity.Name;
+        loginedUser = users.Single(u => u.Login == loginedUserName);
+
+    }
+
+    private async Task UpdateUser(AppUser user)
+    {
+        var updateData = new AppUserEntity()
+        {
+            user_id = user.Id,
+            status = user.IsEnabled,
+            user_group_id = user.GroupId,
+            password = user.Password,
+            ip = string.IsNullOrWhiteSpace(user.AllowedIp) ? null : user.AllowedIp
+        };
+        await userStorage.UpdateUser(updateData);
+        await logger.Write(LogEntryGroupName.Accounts, "Аккаунт обновлен", user.Login);
+
+        user.Password = null;
+        user = null;
+        toasts.ShowSuccess("Информация обновлена");
+
+        StateHasChanged();
+    }
+
+    private async Task DeleteConfirmed(bool dialogResult)
+    {
+        if (dialogResult)
+        {
+            await userStorage.DeleteUser(selectedUser.Id);
+            toasts.ShowInfo($"Пользователь удален '{selectedUser.Login}'");
+            await logger.Write(LogEntryGroupName.Accounts, "Аккаунт удален", selectedUser.Login);
+            users.Remove(selectedUser);
+            selectedUser = null;
+        }
+    }
+
+    private async Task AddNewUserConfirmed(AppUser newUser)
+    {
+        if (newUser == null) { return; }
+
+        var entity = new AppUserEntity()
+        {
+            login = newUser.Login,
+            password = newUser.Password,
+            user_group_id = newUser.GroupId,
+            ip = newUser.AllowedIp
+        };
+
+        await userStorage.AddUser(entity);
+        users.Add(newUser);
+        await logger.Write(LogEntryGroupName.Accounts, "Аккаунт добавлен", newUser.Login);
+        selectedUser = newUser;
+
+    }
+}
+

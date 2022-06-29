@@ -1,0 +1,49 @@
+﻿@inject IStockStorage stockStorage
+
+
+<select class="form-control" id="dropdown-manufacturer" style="min-width: 150px;"
+        @onchange="OnStockChanged">
+    <option value="">Выбрать</option>
+    @if (stocks != null)
+    {
+        @foreach (var g in stocks.GroupBy(s => s.city))
+        {
+            <optgroup label="@g.Key">
+                @foreach (var stock in g)
+                {
+                    <option value="@stock.stock_partner_id"
+                selected="@(Stock != null && Stock.stock_partner_id == stock.stock_partner_id)">
+                        @stock.name
+                    </option>
+                }
+            </optgroup>
+        }
+    }
+</select>
+
+@code {
+    List<StockPartnerEntity> stocks = null;
+
+    [Parameter] public EventCallback<StockPartnerEntity> StockChanged { get; set; }
+    [Parameter] public StockPartnerEntity Stock { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        stocks = await stockStorage.GetStocks();
+
+        await StockChanged.InvokeAsync(Stock);
+    }
+
+    protected async Task OnStockChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value.ToString(), out var id))
+        {
+            Stock = stocks.Single(s => s.stock_partner_id == id);
+            await StockChanged.InvokeAsync(Stock);
+        }
+        else
+        {
+            await StockChanged.InvokeAsync(null);
+        }
+    }
+}

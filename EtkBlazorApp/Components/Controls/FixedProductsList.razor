@@ -1,0 +1,83 @@
+﻿@inject IProductStorage productsStorage
+@inject IToastService toasts
+
+<h3>
+    Список товаров которые не нужно обновлять
+</h3>
+
+@*Добавить выделение верхней части и сделать виртуализацию строк таблицы*@
+<div id="fixed-products">
+    <div class="table-responsive">
+        <table width="100%">
+            <thead>
+                <tr>
+                    <td></td>
+                    <td>Товар</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="margin-bottom: 20px;">
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" 
+                                disabled="@(newFixedProduct.product_id == 0)" 
+                                @onclick="AddFixedProduct">
+                            <span class="oi oi-plus"></span>
+                        </button>
+                    </td>
+                    <td style="padding-right: 10px;">
+                        <SelectProductBlazoredTypehead @bind-Product="newFixedProduct" />
+                    </td>
+                </tr>
+                @if (fixedProducts != null)
+                {
+                    @foreach (var product in fixedProducts)
+                    {
+                        <tr>
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="(async e => await RemoveFixedProduct(product))">
+                                    <span class="oi oi-minus"></span>
+                                </button>
+                            </td>
+                            <td>
+                                @(HttpUtility.HtmlDecode(product.name))
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+@code {
+    ProductEntity newFixedProduct = new ProductEntity();
+    List<ProductEntity> fixedProducts = new List<ProductEntity>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        fixedProducts = await productsStorage.GetFixedProducts();
+    }
+
+    private async Task RemoveFixedProduct(ProductEntity product)
+    {
+        fixedProducts.Remove(product);
+        await productsStorage.RemoveFixedProduct(product.product_id);
+    }
+
+    private async Task AddFixedProduct()
+    {
+        if (fixedProducts.FirstOrDefault(p => p.product_id == newFixedProduct.product_id) == null)
+        {
+            fixedProducts.Insert(0, newFixedProduct);
+            await productsStorage.AddFixedProduct(newFixedProduct);
+            newFixedProduct = new ProductEntity();
+
+            toasts.ShowSuccess("Товар добавлен в список игнорирования", "Информация");
+        }
+        else
+        {
+            toasts.ShowInfo("Товар уже добавлен в список игнорирования", "Информация");
+        }
+    }
+}

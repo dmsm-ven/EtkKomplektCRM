@@ -1,0 +1,120 @@
+﻿@if (User == null)
+{
+    <LoadingSpinner />
+}
+else
+{
+    <tr class="@GetRowCss()" @onclick="@(e => OnItemSelect.InvokeAsync())">
+        <td>
+            <input type="checkbox" class="form-check" @bind="User.IsEnabled" />
+        </td>
+        <td>@User.Login</td>
+        <td>
+            <select class="form-control" @bind="User.GroupId" id="group">
+                @foreach (var group in Groups)
+                {
+                    <option selected="@(group.user_group_id == User.GroupId)" 
+                            value="@group.user_group_id">@group.name</option>
+                }
+            </select>
+        </td>
+        <td>
+            @if (!User.HasAllowedIp)
+            {
+                <input type="checkbox" checked="checked" class="form-check" style="display: inline;"
+                       @onchange="@(e => User.HasAllowedIp = true)" />
+                <label style="display: inline;">Все</label>
+            }
+            else
+            {
+                <input type="text" class="form-control" maxlength="15" @bind="@User.AllowedIp" />
+            }
+        </td>
+        <td>@User.CreatingDate.ToString("dd.MM.yyyy")</td>
+        <td>@lastSigninDate</td>
+        <td>
+            @if (hasChanges)
+            {
+                <button class="btn btn-success btn-sm" @onclick="SaveChanges">
+                    <span class="oi oi-check"></span>
+                </button>
+            }
+            else if (changePasswordActive && GlobalSelectedUser == User)
+            {
+                <input type="password" class="form-control" @bind="User.Password" />
+            }
+            else
+            {
+                <button class="btn btn-secondary btn-sm" @onclick="@(e => changePasswordActive = true)">
+                    <span class="oi oi-pencil"></span>
+                </button>
+            }
+        </td>
+    </tr>
+}
+
+@code {
+    [Parameter] public AppUser User { get; set; }
+    [Parameter] public List<AppUserGroupEntity> Groups { get; set; }
+    [Parameter] public EventCallback OnSaveChanges { get; set; }
+    [Parameter] public EventCallback OnItemSelect { get; set; }
+    [CascadingParameter] public AppUser GlobalSelectedUser { get; set; }
+
+    bool changePasswordActive;
+    int currentState;
+    bool hasChanges => currentState != GetCurrentState();
+    string lastSigninDate
+    {
+        get
+        {
+            if (User.LastLoginDateTime.HasValue)
+            {
+                if(User.LastLoginDateTime.Value.Date == DateTime.Now.Date)
+                {
+                    return $"Сегодня в {User.LastLoginDateTime.Value.TimeOfDay.ToString(@"hh\:mm")}";
+                }
+                return User.LastLoginDateTime.Value.ToString("g");
+            }
+            return string.Empty;
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        currentState = GetCurrentState();
+    }
+
+    private string GetRowCss()
+    {
+        var sb = new StringBuilder();
+        if (User.IsEnabled == false)
+        {
+            sb.Append("disabled-user ");
+        }
+        if (GlobalSelectedUser == User)
+        {
+            sb.Append("selected-user ");
+        }
+
+        return sb.ToString().Trim();
+    }
+
+    private async Task SaveChanges()
+    {
+        await OnSaveChanges.InvokeAsync();
+        changePasswordActive = false;
+        currentState = GetCurrentState();
+        StateHasChanged();
+    }
+
+    private int GetCurrentState()
+    {
+        int code = 0;
+        code += User.IsEnabled ? 97 : 513;
+        code += User?.Password?.GetHashCode() ?? 113;
+        code += User.GroupId * 66;
+        code += User.HasAllowedIp ? 27 : 53;
+        code += User.AllowedIp?.GetHashCode() ?? 123;
+        return code;
+    }
+} 

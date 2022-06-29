@@ -1,8 +1,9 @@
-﻿using EtkBlazorApp.DataAccess.Model;
+﻿using EtkBlazorApp.DataAccess.Entity;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,154 +12,99 @@ namespace EtkBlazorApp.DataAccess
 {
     public interface ISettingStorage
     {
-        Task SaveShopAccount(ShopAccountEntity shopAccount);
-        Task<List<ShopAccountEntity>> GetShopAccounts();
-        Task DeleteShopAccounts(int id);
+        public Task<string> GetValue(string name);
+        public Task<T> GetValue<T>(string name);
 
-        Task<Dictionary<int, int>> GetOzonDiscounts();
-        Task SetOzonDiscounts(string data);
-        Task<List<int>> GetOzonCheckedManufacturers();
-        Task SetOzonCheckedManufacturers(string data);
-
-        Task<Dictionary<int, Tuple<int, int>>> GetPrikatDiscounts();
-        Task SetPrikatDiscounts(string data);
-        Task<List<int>> GetPrikatCheckedManufacturers();
-        Task SetPrikatCheckedManufacturers(string data);
+        public Task SetValue(string name, string value);       
+        public Task SetValue<T>(string name, T value);
+        public Task SetValueToDateTimeNow(string name);
     }
 
     public class SettingStorage : ISettingStorage
     {
         private readonly IDatabaseAccess database;
-        private readonly IConfiguration configration;
-        JsonSerializerSettings jsonSettings;
 
-        public SettingStorage(IDatabaseAccess database, IConfiguration configuration)
+        public SettingStorage(IDatabaseAccess database)
         {
             this.database = database;
-            this.configration = configuration;
-
-            jsonSettings = new JsonSerializerSettings();
-            jsonSettings.Formatting = Formatting.None;
-            jsonSettings.ContractResolver = new EncryptedStringPropertyResolver(configuration.GetSection("settings_encrypt_key").Value);
         }
 
-        public async Task SaveShopAccount(ShopAccountEntity account)
+        public async Task<string> GetValue(string name)
         {
-            if (account.website_id == 0)
+            var sql = $"SELECT value FROM etk_app_setting WHERE name = @name";
+            string result = await database.GetScalar<string, dynamic>(sql, new { name }) ?? string.Empty;
+            return result;
+        }
+
+        public async Task<T> GetValue<T>(string name)
+        {
+            // TODO добавить сюда и в SetValue проверку: 
+            // если тип сложный класс то выполнять json сериализацию/десериализацию
+            try
             {
-                await database.SaveData<dynamic>("INSERT INTO etk_app_monobrand (account) VALUES ('')", new { });
-                account.website_id = await database.GetScalar<int, dynamic>($"SELECT max({nameof(account.website_id)}) FROM etk_app_monobrand", new { });
+                var converter = TypeDescriptor.GetConverter(typeof(T));
+                var stringValue = await GetValue(name);
+                var value = (T)(converter.ConvertFromInvariantString(stringValue));
+                return value;
             }
-
-            var sb = new StringBuilder()
-                .AppendLine("UPDATE etk_app_monobrand")
-                .AppendLine($"SET account = @data")
-                .AppendLine($"WHERE {nameof(ShopAccountEntity.website_id)} = @{nameof(ShopAccountEntity.website_id)}");
-
-            string jsonData = JsonConvert.SerializeObject(account, jsonSettings);
-            string sql = sb.ToString().Trim();
-            await database.SaveData(sql, new { data = jsonData, website_id = account.website_id });
-        }
-
-        public async Task<List<ShopAccountEntity>> GetShopAccounts()
-        {
-            var sql = "SELECT * FROM etk_app_monobrand";
-            var encryptedData = await database.LoadData<dynamic, dynamic>(sql, new { });
-            var decruptedData = encryptedData.Select(item => (ShopAccountEntity)JsonConvert.DeserializeObject<ShopAccountEntity>(item.account, jsonSettings)).ToList();
-            return decruptedData;
-        }
-
-        public async Task DeleteShopAccounts(int id)
-        {
-            var sql = $"DELETE FROM etk_app_monobrand WHERE {nameof(ShopAccountEntity.website_id)} = @{nameof(ShopAccountEntity.website_id)}";
-            await database.SaveData<dynamic>(sql, new { website_id = id });
-        }
-
-        public async Task<Dictionary<int,int>> GetOzonDiscounts()
-        {
-            var sql = $"SELECT value FROM etk_app_setting WHERE name = @settingsName";
-            var result = await database.GetScalar<string, dynamic>(sql, new { settingsName = "ozon_manufacturer_discounts" });
-
-            var data = result.Split(';')
-                .Select(data => data.Split('='))
-                .Select(array => new { manufacturer_id = int.Parse(array[0]), discount = int.Parse(array[1]) })
-                .ToDictionary(i => i.manufacturer_id, i => i.discount);
-
-
-            return data;
-        }
-
-        public async Task SetOzonDiscounts(string data)
-        {
-            var sql = $"UPDATE etk_app_setting SET value = @data WHERE name = @settingsName";
-            await database.SaveData<dynamic>(sql, new { data, settingsName = "ozon_manufacturer_discounts" });
-        }
-
-        public async Task<Dictionary<int, Tuple<int,int>>> GetPrikatDiscounts()
-        {
-            var sql = $"SELECT value FROM etk_app_setting WHERE name = @settingsName";
-            var result = await database.GetScalar<string, dynamic>(sql, new { settingsName = "prikat_manufacturer_discounts" });
-
-            var data = result.Split(';')
-            .Select(data => data.Split('='))
-            .Select(array => new
+            catch
             {
-                manufacturer_id = int.Parse(array[0]),
-                discount1 = int.Parse(array[1].Split('|')[0]),
-                discount2 = int.Parse(array[1].Split('|')[1])
-            })
-            .ToDictionary(i => i.manufacturer_id, i => Tuple.Create(i.discount1, i.discount2));
 
-            return data;
-        }
-
-        public async Task SetPrikatDiscounts(string data)
-        {
-            var sql = $"UPDATE etk_app_setting SET value = @data WHERE name = @settingsName";
-            await database.SaveData<dynamic>(sql, new { data, settingsName = "prikat_manufacturer_discounts" });
-        }
-
-        public async Task<List<int>> GetPrikatCheckedManufacturers()
-        {
-            var sql = $"SELECT value FROM etk_app_setting WHERE name = @settingsName";
-            var result = await database.GetScalar<string, dynamic>(sql, new { settingsName = "prikat_checked_manufacturers" });
-
-            if (!string.IsNullOrWhiteSpace(result))
-            {
-                var data = result.Split(';').Select(i => int.Parse(i)).ToList();
-
-                return data;
             }
-            return new List<int>();
+            return default;
         }
 
-        public async Task SetPrikatCheckedManufacturers(string data)
+        public async Task SetValue(string name, string value)
         {
-            string settingName = "prikat_checked_manufacturers";
-            var sql = $"UPDATE etk_app_setting SET value = @data WHERE name = @settingName";
-            await database.SaveData<dynamic>(sql, new { data, settingName });
+            string checkSql = "SELECT COUNT(*) FROM etk_app_setting WHERE name = @name";
 
-        }
+            bool recordExists = (await database.GetScalar<int, dynamic>(checkSql, new { name })) > 0;
 
-        public async Task<List<int>> GetOzonCheckedManufacturers()
-        {
-            var sql = $"SELECT value FROM etk_app_setting WHERE name = @settingsName";
-            var result = await database.GetScalar<string, dynamic>(sql, new { settingsName = "ozon_checked_manufacturers" });
+            value = value ?? string.Empty;
 
-            if (!string.IsNullOrWhiteSpace(result))
+            if (recordExists)
             {
-                var data = result.Split(';').Select(i => int.Parse(i)).ToList();
-
-                return data;
+                string updateQuery = $"UPDATE etk_app_setting SET value = @value WHERE name = @name";
+                await database.ExecuteQuery<dynamic>(updateQuery, new { name, value });
             }
-            return new List<int>();
+            else
+            {
+                var insertQuery = $"INSERT INTO etk_app_setting (name, value) VALUES (@name, @value)";
+                await database.ExecuteQuery<dynamic>(insertQuery, new { name, value });
+            }         
         }
 
-        public async Task SetOzonCheckedManufacturers(string data)
+        public async Task SetValueToDateTimeNow(string name)
         {
-            string settingName = "ozon_checked_manufacturers";
-            var sql = $"UPDATE etk_app_setting SET value = @data WHERE name = @settingName";
-            await database.SaveData<dynamic>(sql, new { data, settingName });
+            string checkSql = "SELECT COUNT(*) FROM etk_app_setting WHERE name = @name";
+
+            bool recordExists = (await database.GetScalar<int, dynamic>(checkSql, new { name })) > 0;
+
+            if (recordExists)
+            {
+                string updateQuery = $"UPDATE etk_app_setting SET value = NOW() WHERE name = @name";
+                await database.ExecuteQuery<dynamic>(updateQuery, new { name });
+            }
+            else
+            {
+                var insertQuery = $"INSERT INTO etk_app_setting (name, value) VALUES (@name, NOW())";
+                await database.ExecuteQuery<dynamic>(insertQuery, new { name });
+            }
         }
+
+        public async Task SetValue<T>(string name, T value)
+        {          
+            try
+            {
+                var converter = TypeDescriptor.GetConverter(typeof(T));
+                var typeConvertedStringValue = converter.ConvertToInvariantString(value);
+                await SetValue(name, typeConvertedStringValue);
+            }
+            catch
+            {
+                throw;
+            }
+        }    
+   
     }
 }

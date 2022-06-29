@@ -1,0 +1,80 @@
+﻿@inject IUserService authStorage
+
+@if (isVisible)
+{
+    <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog" style="background: rgba(0,0,0, 0.5)">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <EditForm Model="@newUser" OnValidSubmit="@(e => OnConfirmationChange(newUser))">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modal-title">Добавление нового пользователя</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+                                @onclick="@(e => OnConfirmationChange(null))">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="login">Логин</label>
+                            <input type="text" id="login" class="form-control" @bind="newUser.Login" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Пароль</label>
+                            <input type="password" id="password" class="form-control" @bind="newUser.Password" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="group">Группа</label>
+                            <select class="form-control" @bind="newUser.GroupId" id="group">
+                                <option value="0">Выберите группу</option>
+                                @foreach (var g in groups)
+                                {
+                                    <option value="@g.user_group_id">@g.name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                                @onclick="@(e => OnConfirmationChange(null))">
+                            Отмена
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            Добавить
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+@code {
+    [Parameter] public EventCallback<AppUser> ConfirmationChanged { get; set; }
+
+    List<AppUserGroupEntity> groups = null;
+    AppUser newUser = null;
+    bool isVisible = false;
+
+    public void Show()
+    {
+        isVisible = true;
+
+        newUser = new AppUser() { CreatingDate = DateTime.Now , IsEnabled = true};
+
+        StateHasChanged();
+    }
+
+    private async Task OnConfirmationChange(AppUser item)
+    {
+        isVisible = false;
+        await ConfirmationChanged.InvokeAsync(item);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        groups = await authStorage.GetUserGroups();
+    }
+} 

@@ -1,0 +1,120 @@
+﻿@inject PriceListManager priceListManager
+@inject NavigationManager navigationManager
+@inject IJSRuntime js
+
+<div class="loaded-price-list-displayer">
+    <h2 style="margin: 6px auto;">Загруженные прайс-листы</h2>
+
+    @if (priceListManager.LoadedFiles.Count > 1)
+    {
+    <div>
+        <span class="oi oi-trash" title="Удалить все загруженные прайс-листы" @onclick="RemoveAll"></span>
+        Удалить все загруженные прайс-листы
+    </div>
+        <hr />
+    }
+
+    @foreach (var data in priceListManager.LoadedFiles.OrderByDescending(pl => pl.DateAdded))
+    {
+<div class="display-item">
+    <div style="width: auto; display: inline-block;">
+        <span class="oi oi-trash" 
+              @onclick="@(e => priceListManager.RemovePriceList(data))" 
+              title="Удалить прайс-лист из загруженных"></span>
+    </div>
+    <div style="width: auto; display: inline-block;">
+        <img class="brand-template-list-logo" src="@(data.TemplateDescription.image)" title="@data.TemplateDescription.title" />
+    </div>
+    <div style="width: auto; display: inline-block;">
+        <p>
+            <span class="oi oi-small oi-spreadsheet" @onclick="@(e => MoveToPriceList(data))" title="Показать что загружено"></span>
+            Загруженные строки
+        </p>
+        <p>
+            <span class="oi oi-small oi-file" title="Название файла при загрузке"></span>
+            @data.FileName
+        </p>
+        <p>
+            <span class="oi oi-small oi-calendar" title="Дата загрузки"></span>
+            @data.DateAdded
+        </p>
+    </div>
+</div>
+        <hr />
+    }
+</div>
+
+<style>
+    .remove-loaded-price-list {
+        color: #3f70a0;
+        font-size: 32px;
+        margin: auto 6px;
+        cursor: pointer;
+        vertical-align: super;
+    }
+        .remove-loaded-price-list:hover {
+            color: red;
+            transition: 200ms;
+        }
+
+    .loaded-price-list-displayer display-item {
+        display: block;
+        margin: 8px 2px;
+    }
+
+    .loaded-price-list-displayer img {
+        width: 175px;
+        height: auto;
+        margin: auto 4px;
+        padding: 2px;
+        border: 1px solid #e0c7d6;
+        vertical-align: bottom;
+    }
+
+    .loaded-price-list-displayer p {
+        font-size: 14px;
+        margin: 2px 0px 4px 2px;
+    }
+
+    .loaded-price-list-displayer .oi {
+        font-size: 28px;
+        color: #3f70a0;
+        margin: 6px;
+        cursor: pointer;
+    }
+
+    .loaded-price-list-displayer .oi-small {
+        font-size: 18px;
+        margin-right: 5px;
+    }
+
+    .loaded-price-list-displayer .oi:hover {
+        color: red;
+        transition: 125ms;
+    }
+</style>
+
+@code {
+    protected override void OnInitialized()
+    {
+        priceListManager.OnPriceListLoaded += () => StateHasChanged();
+    }
+
+    private void RemoveAll()
+    {
+        priceListManager.RemovePriceListAll();
+    }
+
+    private async void MoveToPriceList(LoadedPriceListTemplateData info)
+    {
+        try
+        {
+            await js.InvokeVoidAsync("open", $"/loaded-price-list-details/{info.TemplateDescription.id}", "_blank");
+        }
+        catch
+        {
+
+        }
+    }
+
+}

@@ -1,0 +1,140 @@
+﻿@inject IProductDiscountStorage discountStorage
+@inject IToastService toasts
+@inject UserLogger userLogger 
+@inherits DiscountTabBase
+
+@if (SelectedTab == TabName)
+{
+<div id="category-discounts">
+    <div class="row py-2">
+        <div class="col-md-3">
+            <button class="btn btn-primary w-100" type="button"
+                    style="display: block; vertical-align: bottom;"
+                    disabled="@addDiscountButtonDisabled"
+                    @onclick="AddDiscountItem">
+                <span class="oi oi-plus">&nbsp; Добавить</span>
+            </button>
+        </div>
+        <div class="col-md-9">
+            <SelectCategoryDropdown CategoryChanged="@SelectedCategoryChanged" />
+        </div>
+    </div>
+    @if (discountData.category_id != 0)
+    {
+        <div class="row py-2">
+            <div class="col-md-6">
+                <label for="discount_value">Скидка, %</label>
+                <input type="number" pattern="\d*" min="0" max="99" id="discount_value" class="form-control"
+                       @bind="discountData.discount" />
+            </div>
+            <div class="col-md-6">
+                <label for="dateEnd">Дата окончания скидки</label>
+                <input type="date" class="form-control" id="dateEnd" 
+                       placeholder="yyyy-mm-dd"
+                       @bind="@discountData.date_end" />
+            </div>
+        </div>
+    }
+
+    <table class="table">
+        <thead style="margin-bottom: 12px;">
+            <tr>
+                <th></th>
+                <th>Категория</th>
+                <th>Скидка</th>
+                <th>Дата, с</th>
+                <th>Дата, по</th>
+                <th>(осталось дней)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var categoryDiscountInfo in discountedCategories)
+            {
+                <tr>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger"
+                                @onclick="(async e => await RemoveDiscountItem(categoryDiscountInfo))">
+                            <span class="oi oi-minus"></span>
+                        </button>
+                    </td>
+                    <td>
+                        @(HttpUtility.HtmlDecode(categoryDiscountInfo.category_name))
+                    </td>
+                    <td class="discount-percent">
+                        @(categoryDiscountInfo.discount.ToString(".##") + " %")
+                    </td>
+                    <td>@categoryDiscountInfo.date_start.ToShortDateString()</td>
+                    <td>@categoryDiscountInfo.date_end.ToShortDateString()</td>
+                    <td>
+                        @(categoryDiscountInfo.date_end > DateTime.Now.Date ? Math.Ceiling((categoryDiscountInfo.date_end - DateTime.Now).TotalDays) : 0)
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+}
+
+@code {
+    List<DiscountToCategoryEntity> discountedCategories;
+    DiscountToCategoryEntity discountData;
+
+    bool addDiscountButtonDisabled
+    {
+        get => discountData.date_end <= DateTime.Now.Date || discountData.discount == 0 || discountData.category_id == 0;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            discountedCategories = await discountStorage.GetCategoriesWithDiscount();
+            discountData = new DiscountToCategoryEntity();
+            StateHasChanged();
+        }
+    }
+
+    private void SelectedCategoryChanged(CategoryEntity category)
+    {
+        discountData.category_id = category.category_id;
+        discountData.category_name = category.name;
+        discountData.discount = 0;
+    }
+
+    private async Task RemoveDiscountItem(DiscountToCategoryEntity data)
+    {
+        discountedCategories.Remove(data);
+        await discountStorage.RemoveCategoryDiscount(data.category_id);
+
+        toasts.ShowInfo("Скидка удаление", data.category_name);
+        await userLogger.Write(LogEntryGroupName.Discounts, "Удаление", $"Скидка для категории '{data.category_name}' удалена");
+    }
+
+    private async Task AddDiscountItem()
+    {
+        await discountStorage.AddDiscountForCategory(discountData);
+
+        var item = discountedCategories.FirstOrDefault(di => di.category_id == discountData.category_id);
+
+        if (item == null)
+        {
+            discountedCategories.Insert(0, discountData);
+            await userLogger.Write(LogEntryGroupName.Discounts, "Добавлена", $"Добавлена скидка {discountData.discount}% для категории '{discountData.category_name}'");
+        }
+        else
+        {
+            item.category_id = discountData.category_id;
+            item.category_name = discountData.category_name;
+            item.discount = discountData.discount;
+            item.date_start = discountData.date_start;
+            item.date_end = discountData.date_end;
+            await userLogger.Write(LogEntryGroupName.Discounts, "Обновление", $"Скидка для категории '{discountData.category_name}' изменена на {discountData.discount}%");
+        }
+
+        discountData = new DiscountToCategoryEntity();
+
+        toasts.ShowSuccess("Скидка добавлена", discountData.category_name);
+
+    }
+
+}

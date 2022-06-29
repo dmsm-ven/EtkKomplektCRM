@@ -1,0 +1,199 @@
+﻿@page "/cron-task/edit/{Id:int}"
+
+@inject ICronTaskStorage settings
+@inject IToastService toasts
+@inject CronTaskService taskManager
+@inject UserLogger userLogger
+@inject NavigationManager navigationManager
+@attribute [Authorize(Roles = "Administrator, Manager")]
+
+<h3>Настройки задачи</h3>
+@if(item == null)
+{
+    <LoadingSpinner />
+}
+else
+{
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 offset-3">
+            <div class="form-group">
+                <input type="checkbox" class="form-check-input" @bind="item.IsEnabled" />
+                <span>@(item.IsEnabled ? "Включено" : "Выключено")</span>
+            </div>
+            <div class="form-group">
+                <button type="button" disabled class="btn btn-primary">
+                    <span class="oi oi-clock"></span>
+                </button>
+                <input type="time" @bind="item.ExecutionDateTime" class="form-control exec_time_input" />
+            </div>
+            @if (item.AdditionalExecTime != null && item.AdditionalExecTime.Any())
+            {
+                @foreach (var ts in item.AdditionalExecTime.ToArray())
+                {
+                    <div class="form-group">
+                        <button type="button" class="btn btn-danger" @onclick="@(e => item.AdditionalExecTime.Remove(ts))">
+                            <span class="oi oi-minus"></span>
+                        </button>
+                        <input type="time" value="@ts" class="form-control exec_time_input" readonly />
+                    </div>
+                }
+            }
+            <div class="form-group">
+                <button type="button" class="btn btn-success" 
+                        disabled="@(additionaExecTime.TimeOfDay == item.ExecTime || item.AdditionalExecTime.Any(i => i == additionaExecTime.TimeOfDay))"
+                        @onclick="@(e => item.AdditionalExecTime.Add(additionaExecTime.TimeOfDay))">
+                    <span class="oi oi-plus"></span>
+                </button>
+                <input type="time" @bind="additionaExecTime" class="form-control exec_time_input" />
+            </div>
+
+            @if (item.TypeId == CronTaskType.RemotePriceList)
+            {
+            <div class="form-group">
+                <label for="price-list-template-guid mx-2">Закрепленный прайс-лист</label>
+                <PriceListTemplateSelect @bind-Guid="@item.PriceListGuid" DisableMethodlessTemplate="true" />
+            </div>
+            <div class="form-group">
+                @if (!string.IsNullOrWhiteSpace(item.PriceListGuid) && item.PriceListGuid != Guid.Empty.ToString())
+                {
+                <a class="btn btn-outline-primary mx-1"
+                   title="Перейти к настройкам прайс-листа"
+                   href="@($"/price-list/edit/{item.PriceListGuid}")">
+                    <span class="oi oi-cog"></span>
+                    Настроить прайс-лист
+                </a>
+                }
+            </div>
+            }
+            <div class="btn-group" role="group" style="width: 100%">
+
+                <button class="btn btn-outline-dark btn-lg"
+                        disabled="@isProgressBarVisible"
+                        @onclick="@(e => confirmDialog.Show())">
+                    Выполнить сейчас
+                </button>
+                <button style="width: auto;" class="btn btn-danger"
+                        disabled="@isProgressBarVisible"
+                        @onclick="@(e => deleteDialog.Show())">
+                    Удалить это задание
+                </button>
+                <button style="width: auto;" class="btn btn-primary"
+                        disabled="@isProgressBarVisible"
+                        @onclick="SaveSettings">
+                    Сохранить
+                </button>
+            </div>
+            <div class="form-group my-4">
+                <label for="task-description">Примечание к заданию</label>
+                <textarea @bind="item.Description" class="form-control" style="height: 80px;"></textarea>
+            </div>
+
+            <div class="w-100">
+                @if (isProgressBarVisible)
+                {
+                    <IntermediateProgressBar></IntermediateProgressBar>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+}
+
+<ConfirmDialog @ref="confirmDialog"
+               ConfirmationChanged="ExecuteImmediatelyDialogStatusChanged"
+               ConfirmationMessage="@(() => $"Выполнить задание '{item.Title}' ?")"
+               ConfirmationTitle="Подтверждение" />
+
+<DeleteConfirmDialog @ref="deleteDialog"
+                     ConfirmationTitle="Подтверждение удаления"
+                     ConfirmationMessage="@(() => $"Удалить задание '{item.Title}' ?")"
+                     ConfirmationChanged="TaskDeleteStatusChanged"/>
+@code {
+
+    DateTime additionaExecTime;
+
+    private bool isProgressBarVisible;
+    private CronTaskViewModel item;
+    private ConfirmDialogBase confirmDialog;
+    private DeleteConfirmDialog deleteDialog;
+
+    [Parameter] public int Id { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var entity = await settings.GetCronTaskById(Id);
+            item = new CronTaskViewModel()
+        {
+            Id = entity.task_id,
+            PriceListGuid = entity.linked_price_list_guid,
+            TypeName = entity.task_type_name,
+            TypeId = (CronTaskType)entity.task_type_id,
+            Description = entity.description,
+            Title = entity.name,
+            IsEnabled = entity.enabled,
+            LastExec = entity.last_exec_date_time,
+            LastExecResult = entity.last_exec_result,
+            ExecTime = entity.exec_time,
+            AdditionalExecTime = entity.additional_exec_time != null ?
+                JsonConvert.DeserializeObject<List<TimeSpan>>(entity.additional_exec_time) : new List<TimeSpan>()
+        };
+
+            item.ExecutionDateTime += item.ExecTime;
+            additionaExecTime = (DateTime.Now.Date + item.ExecTime);
+            StateHasChanged();
+        }
+    }
+    private async Task ExecuteImmediatelyDialogStatusChanged(bool dialogResult)
+    {
+        if (dialogResult)
+        {
+            isProgressBarVisible = true;
+            StateHasChanged();
+
+            await Task.Delay(TimeSpan.FromSeconds(1));
+
+            await InvokeAsync(() => taskManager.ExecuteForced(item.Id));
+
+            isProgressBarVisible = false;
+
+            await userLogger.Write(LogEntryGroupName.CronTask, "Задание выполнено (forced)", $"Задание '{item.Title}' выполнено");
+        }
+    }
+
+    private async Task TaskDeleteStatusChanged(bool dialogResult)
+    {
+        if (dialogResult)
+        {
+            await settings.DeleteCronTask(item.Id);
+            await taskManager.RefreshTaskList(force: true);
+
+            string msg = $"Задание {item.Title} удалено";
+            toasts.ShowInfo(msg);
+            await userLogger.Write(LogEntryGroupName.CronTask, "Удаление задания", msg);
+            navigationManager.NavigateTo("/cron-task");
+        }
+    }
+
+    private async Task SaveSettings()
+    {
+        var entity = new CronTaskEntity()
+        {
+            task_id = item.Id,
+            description = item.Description,
+            enabled = item.IsEnabled,
+            exec_time = item.ExecutionDateTime.TimeOfDay,
+            linked_price_list_guid = item.PriceListGuid,
+            additional_exec_time = item.AdditionalExecTime.Any() ? Newtonsoft.Json.JsonConvert.SerializeObject(item.AdditionalExecTime) : null
+        };
+
+        await settings.UpdateCronTask(entity);
+        await taskManager.RefreshTaskList(force: true);
+
+        string msg = $"Настройки задания '{item.Title}' обновлены";
+        toasts.ShowSuccess(msg);
+        await userLogger.Write(LogEntryGroupName.CronTask, "Редактирование задания", msg);
+    }
+}

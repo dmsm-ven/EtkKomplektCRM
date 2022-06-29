@@ -1,0 +1,49 @@
+﻿@inject IProductStorage productsStorage
+@page "/"
+
+<ProductsGridDisplayer Products="@lastAddedProducts" Title ="Последние добавленные товары"/>
+
+<ProductsGridDisplayer Products="@bestsellersBySum" Title="Наиболее продаваемые (Сумма)" />
+
+<ProductsGridDisplayer Products="@bestsellersByQuantity" Title="Наиболее продаваемые (Количество)" />
+
+
+@code {
+
+        List<ProductViewModel> lastAddedProducts = null;
+        List<ProductViewModel> bestsellersBySum = null;
+        List<ProductViewModel> bestsellersByQuantity = null;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            lastAddedProducts = ConvertToViewModels(await productsStorage.GetLastAddedProducts(4));
+            StateHasChanged();
+
+            bestsellersBySum = ConvertToViewModels(await productsStorage.GetBestsellersBySum(4, 30));
+            StateHasChanged();
+
+            bestsellersByQuantity = ConvertToViewModels(await productsStorage.GetBestsellersByQuantity(4, 30));
+            StateHasChanged();
+        }
+    }
+
+    private List<ProductViewModel> ConvertToViewModels(IEnumerable<ProductEntity> dbEntities)
+    {
+        var viewItems = dbEntities
+        .Select(entity => new ProductViewModel()
+        {
+            Image = entity.image,
+            Name = HttpUtility.HtmlDecode(entity.name) ?? string.Empty,
+            Manufacturer = entity.manufacturer,
+            Price = entity.price,
+            Id = entity.product_id,
+            NumberOfViews = entity.viewed,
+            DiscountedPrice = entity.discount_price
+        }).ToList();
+
+        return viewItems;
+    }
+
+}

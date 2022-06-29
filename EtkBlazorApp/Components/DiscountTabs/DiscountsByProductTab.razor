@@ -1,0 +1,269 @@
+﻿@inject IProductDiscountStorage productStorage
+@inject IToastService toasts
+@inject UserLogger userLogger
+@inherits DiscountTabBase
+
+@if (SelectedTab == TabName && discountedProducts != null)
+{
+    <div id="product-discounts">
+        <div class="row py-2">
+            <div class="col-md-3">
+                <button class="btn btn-primary w-100" type="button"
+                    style="display: block; vertical-align: bottom;"
+                    disabled="@(newDiscountProduct.IsValidDiscount == false)"
+                    @onclick="(e => AddDiscountItem())">
+                    <span class="oi oi-plus">&nbsp; Добавить</span>
+                </button>
+            </div>
+            <div class="col-md-9">
+            <SelectProductBlazoredTypehead ProductChanged="@SelectedProductChanged" />
+            </div>
+        </div>
+        @if (newDiscountProduct.Id != 0)
+        {
+            <div class="row py-2">
+                <div class="col-md-3">
+                    @if (newDiscountProduct.BasePriceCurrency == "RUB")
+                    {
+                        <label>Обычная цена (руб.)</label>
+                        <p><s>@newDiscountProduct.Price.ToString(".##")</s></p>
+                    }
+                    else
+                    {
+                        <label>Обычная цена (@newDiscountProduct.BasePriceCurrency)</label>
+                        <p><s>@newDiscountProduct.BasePrice.ToString(".##")</s></p>
+                    }
+                </div>
+                <div class="col-md-3">
+                    @if (newDiscountProduct.BasePriceCurrency == "RUB")
+                    {
+                        <label for="new_price">Новая цена (руб.)</label>
+                        <input type="number" class="form-control" id="new_price"
+                   min="0"
+                   max="@newDiscountProduct.Price.ToString(".##").Replace(",", ".")"
+                   value="@newDiscountProduct.NewPriceInRub.ToString(".##")"
+                   step="1" pattern="\d*"
+                   @onchange="@(e => newDiscountProduct.NewPriceInRub = int.Parse(e.Value.ToString()))" />
+                    }
+                    else
+                    {
+                        <label for="new_price">Новая цена (@newDiscountProduct.BasePriceCurrency)</label>
+                        <input type="number" class="form-control" id="new_price"
+                   min="0"
+                   max="@newDiscountProduct.BasePrice.ToString(".##").Replace(",", ".")"
+                   value="@newDiscountProduct.NewPriceInCurrency.ToString(".##")"
+                   step="1" pattern="\d*"
+                   @onchange="@(e => newDiscountProduct.NewPriceInCurrency = decimal.Parse(e.Value.ToString()))" />
+                    }
+                </div>
+                <div class="col-md-3">
+                    <label for="discount_percent">Скидка, %</label>
+                    <input type="number" min="0" max="99" id="discount_percent" class="form-control"
+                   value="@newDiscountProduct.DiscountPercent"
+                   @onchange="@(e => newDiscountProduct.DiscountPercent = int.Parse(e.Value.ToString()))" />
+                </div>
+                <div class="col-md-3">
+                    <label for="date_end">Дата окончания скидки</label>
+                    <input type="date" id="date_end" class="form-control"
+                   placeholder="yyyy-mm-dd"
+                   @bind="@newDiscountProduct.DiscountEndDate" />
+                </div>
+            </div>
+        }
+
+        <div class="row py-2">
+            <div class="col-md-3">
+                <ul class="list-group" style="cursor: pointer;">
+                    @if (discountedProducts != null)
+                    {
+                        @foreach (var kvp in discountedProductsByManufacturer)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center @(selectedManufacturer == kvp.Key ? "active" : string.Empty)"
+                    @onclick="@(e => selectedManufacturer = kvp.Key)">
+                                @kvp.Key
+                                <span class="badge badge-pill @(selectedManufacturer == kvp.Key ? "badge-light" : "badge-primary")">@kvp.Value.Count</span>
+                            </li>
+                        }
+                    }
+                </ul>
+            </div>
+
+            <div class="col-md-9">
+                <table class="table">
+                    <thead style="margin-bottom: 12px;">
+                        <tr>
+                            <th></th>
+                            <th width="50%">Товар</th>
+                            <th>Валюта</th>
+                            <th>Обычная</th>
+                            <th>По акции</th>
+                            <th>Скидка</th>
+                            <th>Дата, с</th>
+                            <th>Дата, по</th>
+                            <th>Дней осталось</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!string.IsNullOrWhiteSpace(selectedManufacturer) && discountedProductsByManufacturer.ContainsKey(selectedManufacturer))
+                        {
+                            foreach (var item in discountedProductsByManufacturer[selectedManufacturer])
+                            {
+                                <tr class="@(item.IsExpired ? "expired" : "active")">
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-danger"
+                                    @onclick="(e => RemoveDiscountItem(item))">
+                                            <span class="oi oi-minus"></span>
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <a href="@item.ProductIdUri" target="_blank">@HttpUtility.HtmlDecode(item.Name)</a>
+                                    </td>
+                                    <td>
+                                        @item.BasePriceCurrency
+                                    </td>
+                                    <td>
+                                        @if (item.BasePriceCurrency == "RUB")
+                                        {
+                                            @item.Price.ToString(".##")
+                                        }
+                                        else
+                                        {
+                                            @item.BasePrice.ToString(".##")
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (item.BasePriceCurrency == "RUB")
+                                        {
+                                            @item.NewPriceInRub.ToString(".##")
+                                        }
+                                        else
+                                        {
+                                            @item.NewPriceInCurrency.ToString(".##")
+                                        }
+                                    </td>
+                                    <td class="discount-percent">
+                                        @(item.DiscountPercent.ToString() + " %")
+                                    </td>
+                                    <td>@item.DiscountStartDate.ToShortDateString()</td>
+                                    <td>@item.DiscountEndDate.ToShortDateString()</td>
+                                    <td>@item.DaysLeft</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+}
+@code {
+
+    [Parameter] public CustomerGroup ForCustomerGroup { get; set; }
+
+    List<ProductDiscountViewModel> discountedProducts;
+    Dictionary<string, List<ProductDiscountViewModel>> discountedProductsByManufacturer
+    {
+        get
+        {
+            return discountedProducts
+                .GroupBy(p => p.Manufacturer)
+                .ToDictionary(i => i.Key, j => j.OrderByDescending(d => d.DiscountPercent).ToList());
+        }
+    }
+    ProductDiscountViewModel newDiscountProduct;
+    string selectedManufacturer = string.Empty;
+
+
+    protected override void OnInitialized()
+    {
+        newDiscountProduct = new ProductDiscountViewModel();
+        newDiscountProduct.PropertyChanged += (o, e) => InvokeAsync(() => StateHasChanged());
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            discountedProducts = (await productStorage.GetProductsWithDiscount(ForCustomerGroup))
+                .Select(p => new ProductDiscountViewModel()
+                    {
+                        Id = p.product_id,
+                        Name = p.name,
+                        Manufacturer = p.manufacturer,
+                        BasePriceCurrency = p.base_currency_code,
+                        Price = p.RegularPriceInRub,
+                        BasePrice = p.RegularPriceInCurrency,
+                        NewPriceInRub = p.NewPriceInRub,
+                        NewPriceInCurrency = p.NewPriceInCurrency,
+                        DiscountStartDate = p.date_start,
+                        DiscountEndDate = p.date_end
+                    })
+                .ToList();
+            discountedProducts.ForEach(p => p.RefreshDiscountPercent());
+            selectedManufacturer = discountedProductsByManufacturer?.FirstOrDefault().Key;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RemoveDiscountItem(ProductDiscountViewModel product)
+    {
+        discountedProducts.Remove(product);
+        await productStorage.RemoveProductDiscount(product.Id, ForCustomerGroup);
+        await userLogger.Write(LogEntryGroupName.Discounts, "Удаление", $"Скидка для товара '{product.Name}' удалена");
+        StateHasChanged();
+    }
+
+    private async Task AddDiscountItem()
+    {
+        var item = discountedProducts.FirstOrDefault(di => di.Id == newDiscountProduct.Id);
+        await productStorage.AddDiscountForProduct(new ProductSpecialEntity()
+            {
+                product_id = newDiscountProduct.Id,
+                date_start = newDiscountProduct.DiscountStartDate,
+                date_end = newDiscountProduct.DiscountEndDate,
+                NewPriceInCurrency = newDiscountProduct.NewPriceInCurrency,
+                NewPriceInRub = newDiscountProduct.NewPriceInRub,
+                base_currency_code = newDiscountProduct.BasePriceCurrency
+            }, ForCustomerGroup);
+
+        if (item == null)
+        {
+            discountedProducts.Insert(0, newDiscountProduct);
+            await userLogger.Write(LogEntryGroupName.Discounts, "Добавлена", $"Добавлена скидка {newDiscountProduct.DiscountPercent}% для товара '{newDiscountProduct.Name}'");
+        }
+        else
+        {
+            item.Id = newDiscountProduct.Id;
+            item.Name = newDiscountProduct.Name;
+            item.NewPriceInRub = newDiscountProduct.NewPriceInRub;
+            item.NewPriceInCurrency = newDiscountProduct.NewPriceInCurrency;
+            item.DiscountStartDate = newDiscountProduct.DiscountStartDate;
+            item.DiscountEndDate = newDiscountProduct.DiscountEndDate;
+            await userLogger.Write(LogEntryGroupName.Discounts, "Обновление", $"Скидка для товара '{newDiscountProduct.Name}' изменена на {newDiscountProduct.DiscountPercent}%");
+        }
+
+        toasts.ShowSuccess("Скидка добавлена", newDiscountProduct.Name);
+
+        newDiscountProduct = new ProductDiscountViewModel();
+        newDiscountProduct.PropertyChanged += (o, e) => InvokeAsync(() => StateHasChanged());
+
+        selectedManufacturer = discountedProducts.LastOrDefault()?.Manufacturer ?? string.Empty;
+        StateHasChanged();
+    }
+
+    private void SelectedProductChanged(ProductEntity product)
+    {
+        if (product != null)
+        {
+            newDiscountProduct.Id = product.product_id;
+            newDiscountProduct.Name = product.name;
+            newDiscountProduct.Manufacturer = product.manufacturer;
+            newDiscountProduct.BasePriceCurrency = product.base_currency_code;
+            newDiscountProduct.Price = product.price;
+            newDiscountProduct.BasePrice = product.base_price;
+            StateHasChanged();
+        }
+
+    }
+}

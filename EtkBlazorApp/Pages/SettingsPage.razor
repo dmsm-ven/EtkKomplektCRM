@@ -1,0 +1,57 @@
+﻿@page "/settings"
+@inject IToastService toasts
+@attribute [Authorize(Roles = "Administrator")]
+
+
+<div class="btn-group">
+    @foreach(var tab in tabData)
+    {
+        <button class="btn btn-outline-primary @(selectedTab == tab ? "active" : "")"
+                @onclick="@(e => selectedTab = tab)">
+            @tab.Icon &nbsp; @tab.Title
+        </button>
+    }
+</div>
+
+
+<button class="btn btn-success float-right"
+        @onclick="SaveCurrentTabSettings">
+    <span class="oi oi-check"></span>
+    Сохранить настройки
+</button>
+
+<div class="settings-tab-content container">
+    <h2>@selectedTab.Title</h2>
+    <CascadingValue Value="selectedTab">
+        <UserSettingsTab tabData="@tabData[0]" />
+        <MainSettingsControlTab tabData="@tabData[1]" />
+        <EmailSettingsTab tabData="@tabData[2]" />
+        <YandexFbsSettingsTab tabData="@tabData[3]" />
+        <VISettingsTab tabData="@tabData[4]" />
+        <MonobrandSettingsTab tabData="@tabData[5]" />
+    </CascadingValue>
+</div>
+
+@code {
+    public SettingsTabData selectedTab { get; set; }
+
+    List<SettingsTabData> tabData = new List<SettingsTabData>()
+    {
+        new SettingsTabData() { Title = "Пользователи" },    
+        new SettingsTabData() { Title = "Общие настройки" },
+        new SettingsTabData() { Title = "Почтовые ящики", Icon = new MarkupString("&#9993;")  },
+        new SettingsTabData() { Title = "Yandex FBS" },
+        new SettingsTabData() { Title = "ВсеИнструменты" },
+        new SettingsTabData() { Title = "Монобренды" , Icon = new MarkupString("&#127760;") }
+    };
+    protected override void OnInitialized()
+    {
+        selectedTab = tabData.First();
+    }
+
+    private void SaveCurrentTabSettings()
+    {
+        selectedTab?.SaveButtonClicked?.Invoke();
+        toasts.ShowInfo("Настройки сохранены", selectedTab.Title);
+    }
+}

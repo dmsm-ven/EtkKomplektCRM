@@ -1,0 +1,12 @@
+﻿<div id="update-status">
+    @foreach (var step in List)
+    {
+        <div class="alert alert-etk" role="alert">
+            @step
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<string> List { get; set; } = new List<string>();
+}

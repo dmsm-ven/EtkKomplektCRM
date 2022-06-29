@@ -1,0 +1,233 @@
+﻿@page "/partners"
+@attribute [Authorize(Roles = "Administrator, Manager")]
+@inject IToastService toasts
+@inject IJSRuntime js
+@inject IManufacturerStorage manufacturerStorage
+@inject ISettingStorage settingsStorage
+@inject IPartnersInformationService partnerService
+@inject UserLogger logger
+@implements IDisposable
+
+@if (partners == null)
+{
+    <LoadingSpinner />
+}
+else
+{
+<div class="row">
+    @if (selectedPartner != null)
+    {
+    <div class="col-md-8" style="border: 2px solid lightblue; border-radius: 8px;">
+        <h1>@selectedPartner.Name</h1>
+        <div class="" style="font-size: 12px; text-align: right; margin; 0px auto;">
+            <p style="margin: 1px;"><small>Создан: <span style="color: #2937e2;">@selectedPartner.Created.ToString("g")</span></small></p>
+            <p style="margin: 1px;"><small>Изменен: <span style="color: #2937e2;">@selectedPartner.Updated.ToString("g")</span></small></p>
+            <p style="margin: 1px;"><StarRating @bind-Rating="selectedPartner.Priority" /></p>
+        </div>
+
+        <EditForm Model="@selectedPartner" OnValidSubmit="@(e => OnPartnerChangeSubmitted())">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label for="name">Название партнера</label>
+                <input type="text" id="name" class="form-control" @bind="selectedPartner.Name" required />
+            </div>
+
+            <div class="form-group">
+                <label for="address">
+                    Адрес
+                    <button class="btn btn-outline-primary btn-sm"
+                            type="button"
+                            disabled="@(string.IsNullOrWhiteSpace(selectedPartner.Address))"
+                            @onclick="@(async e => await js.OpenAddressAsYandexMapLocation(selectedPartner.Address))">
+                        <span class="oi oi-map-marker"></span>
+                    </button>
+                </label>
+                <input type="text" id="address" class="form-control" @bind="selectedPartner.Address" />
+            </div>
+
+            <div class="form-group">
+                <label for="website">
+                    Вебсайт
+                    <button class="btn btn-outline-primary btn-sm"
+                            type="button"
+                            disabled="@(string.IsNullOrWhiteSpace(selectedPartner.Website))"
+                            @onclick="@(async e => await js.OpenUrlInNewTab(selectedPartner.Website))">
+                        <span class="oi oi-globe"></span>
+                    </button>
+                </label>
+                <input type="text" id="website" class="form-control" @bind="selectedPartner.Website" />
+            </div>
+           
+            <div class="form-group">
+                <label for="description">Примечание</label>
+                <textarea type="text" id="description" class="form-control" @bind="selectedPartner.Description" style="height: 60px;" />
+            </div>
+
+
+            <h3>Контактное лицо</h3>
+
+            <div class="form-group">
+                <label for="contact_person">ФИО</label>
+                <input type="text" id="contact_person" class="form-control" @bind="selectedPartner.ContactPerson" />
+            </div>
+
+            <div class="form-group">
+                <label for="phone_number">Телефон</label>
+                <input type="text" id="phone_number" class="form-control" @bind="selectedPartner.PhoneNumber" />
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="text" id="email" class="form-control" @bind="selectedPartner.Email" />
+            </div>
+
+            <hr />
+
+            <h3>Прайс-лист</h3>
+
+            <div class="form-group">
+                <label for="discount">Скидка</label>
+                <input type="number" id="discount" class="form-control" @bind="selectedPartner.Discount" />
+            </div>
+
+            <div class="form-group">
+                <label for="partner_guid">ID клиента</label>
+                <input type="text" id="partner_guid" class="form-control" @bind="selectedPartner.Id" readonly />
+            </div>
+
+            <div class="form-group">
+                <label for="password">
+                    Пароль на прайс-лист
+                </label>
+                <button class="btn btn-outline-primary btn-sm"
+                        title="Обновить пароль для партнера"
+                        type="button"
+                        @onclick="@(e => changePasswordDialog.Show())">
+                    <span class="oi oi-reload"></span>
+                </button>
+                <input type="text" id="password" class="form-control" @bind="selectedPartner.Password" readonly />
+            </div>
+
+            <div class="form-group">
+                <label for="partner_price_list_uri">Ссылка на прайс-лист для "@selectedPartner.Name"</label>
+                <input type="text" id="partner_price_list_uri" class="form-control" value="@selectedPartner.PriceListUri" readonly />
+                @if (selectedPartner.PriceListLastAccessDateTime.HasValue)
+                {
+                <p class="my-1" style="font-size: 12px;">
+                    Последний запрос от партнера: 
+                    <span class="@(blinkLastAccessLabel ? "partner-last-access-date-time-changed-blink" : "")" style="color: #2937e2;">
+                        @selectedPartner.PriceListLastAccessDateTime.Value.ToString("g")
+                    </span>
+                    <span class="oi oi-spreadsheet px-1" style="color: blue;" @onclick="ShowHistoryDialog"></span>
+                </p>
+                }
+            </div>
+
+            <div class="form-group my-2">
+                <label class="my-2">Какие бренды выгружать для данного партнера</label>
+                <hr />
+                <div>
+                    @foreach (var brand_info in ManufacturerButtonsSource)
+                    {
+                        if (selectedPartner.HasItem(brand_info))
+                        {
+                            <button type="button" class="btn btn-primary mx-1 my-2">
+                                <span class="oi oi-trash partner-brand-label" 
+                                      @onclick="(e => RemoveBrandDiscount(brand_info))">
+                                </span>
+
+                                @brand_info.ManufacturerName
+
+                                @if (editingDiscount?.ManufacturerId == brand_info.ManufacturerId)
+                                {
+                                    <span class="oi oi-minus partner-brand-label" @onclick="@(e => ChangeSelectedBrandDiscount(-1))"></span>
+                                    <span @onclick="@(e => AddAndSaveBrandDiscount(brand_info))"> @($"{(brand_info?.Discount ?? selectedPartner.Discount).ToString("F0")}%")</span>
+                                    <span class="oi oi-plus partner-brand-label" @onclick="@(e => ChangeSelectedBrandDiscount(+1))"></span>
+                                }
+                                else if (selectedPartner.HasItem(brand_info))
+                                {
+                                    <span class="partner-brand-label"
+                                          @onclick="(e => BrandDiscountLabelClicked(brand_info))">
+                                       @($"{(brand_info?.Discount ?? selectedPartner.Discount).ToString("F0")}%")
+                                    </span>
+                                }
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" 
+                                    @onclick="@(e => AddAndSaveBrandDiscount(brand_info))"
+                                    class="btn btn-sm btn-outline-primary mx-1 my-2">
+                                @brand_info.ManufacturerName
+                            </button>
+                        }
+                    }
+                </div>
+                <p class="text-muted"><small>* у всех брендов скидка равна скидке по умолчанию для партнера, если только скидка не определена в ручную</small></p>
+                <hr />
+            </div>
+
+            <div class="form-group">
+                @if (selectedPartner.Id != Guid.Empty)
+                {
+                <button class="btn btn-danger mx-1" style="font-size: 18px; padding: 8px 16px;"
+                        type="button" @onclick="@(e => deleteDialog.Show())">
+                    <span class="oi oi-trash"></span>
+                    &nbsp;Удалить партнера
+                </button>
+                }
+                <button class="btn btn-success mx-1 float-right" type="submit" style="padding: 8px; font-size: 18px;">
+                    <span class="oi oi-check"></span>
+                    &nbsp;Сохранить изменения
+                </button>
+            </div>
+        </EditForm>
+        
+    </div>
+    }
+    <div class="col-md-4">
+        <button class="btn btn-primary m-2" @onclick="AddNewPartner">
+            <span class="oi oi-plus"></span>
+            &nbsp;Добавить
+        </button>
+        <ul class="list-group m-2 p-1">
+            @foreach (var partner in partners)
+            {
+            <li class="list-group-item list-group-item-action partner-list-item @(partner == selectedPartner ? "active" : "")"
+                style="color: @(partner==selectedPartner ? "white" : "#007bff")"
+                @onclick="@(async e => await OnPartnerChanged(partner))">
+                <span>@partner.Name</span>
+            </li>
+            }
+        </ul>
+    </div>
+</div>
+}
+
+<ConfirmDialog @ref="deleteDialog"
+               ConfirmationChanged="ConfirmStatusChanged"
+               ConfirmationTitle="Подтверждение"
+               ConfirmationMessage="@(() => $"Подтвердите удаление партнера '{selectedPartner.Name}' из системы")" />
+
+<ConfirmDialog @ref="changePasswordDialog"
+               ConfirmationChanged="PasswordDialogStatusChanged"
+               ConfirmationTitle="Подтверждение"
+               ConfirmationMessage="@(() => $"Подтвердите смену пароля для партнера '{selectedPartner.Name}'. После смены пароля он сможет получать прайс-лист только по новой ссылке")" />
+
+<CustomDataDialog @ref="historyRequestDialog" 
+                  ConfirmationTitle="Последние запросы прайс-листа">
+    <DialogBody>
+        <div class="table-responsive">
+            <table class="table table-condensed table-bordered" style="text-align: center; color: indigo;">
+                @foreach (var dt in selectedPartner.RequestHistory)
+                {
+                    <tr>
+                        <td>@dt.ToString("g")</td>
+                    </tr>
+                }
+            </table>
+        </div>
+    </DialogBody>
+</CustomDataDialog>

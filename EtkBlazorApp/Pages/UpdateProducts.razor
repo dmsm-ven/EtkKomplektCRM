@@ -3,130 +3,56 @@
 
 <h3>Обновление цен и остатков</h3>
 
-@if (accounts == null)
-{
-    <LoadingSpinner />
-}
-else
-{
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-2">
-                <button class="btn btn-success btn-lg" @onclick="UpdateSelectedAccountProducts" disabled="@IsUpdateButtonDisabled">Обновить</button>
-            </div>
-            <div class="col-md-2">
-                <span><input type="checkbox" @bind-value="@clearStockBeforeUpdate" /> &nbsp;&nbsp;Обнулять остатки</span>
-            </div>
-
-            <AuthorizeView Roles="Administrator">
-                <Authorized>
-                    <div class="col-md-2 offset-6" style="text-align: right;">
-                        <a href="/shop-account/new" class="btn btn-sm btn-success">Добавить новый</a>
-                    </div>
-                </Authorized>
-            </AuthorizeView>
-        </div>
-        <div class="row">
-            @if (priceListManager.LoadedFiles != null && priceListManager.LoadedFiles.Any())
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12 my-1">
+          @if (inProgress)
             {
-                <h3>Загруженные прайс-листы <a href="/price-list-loaded-data" target="_blank"><i class="oi oi-eye" /></a></h3>
-                <ul style="list-style-type: none;">
-                    @foreach (var data in priceListManager.LoadedFiles)
-                    {
-                        <li style="margin: 4px 8px;color: red;">
-                            <button class="btn btn-sm btn-danger" @onclick="@(e => priceListManager.RemovePriceList(data))">
-                                &times;
-                            </button>
-                            <strong style="color:black">@data.TemplateName</strong> @data.FileName<span style="color: navy"> (@data.RecordsInFile записей считано)</span>
-                        </li>
-                    }
-                </ul>
-                <hr />
+                <IntermediateProgressBar></IntermediateProgressBar>
+            }
+            else
+            {
+                <button class="btn btn-success btn-lg mx-2"
+                        @onclick="UpdateProductsPriceAndStock" disabled="@(priceListManager.PriceLines.Count == 0)">
+                    Обновить
+                </button>
             }
         </div>
     </div>
+</div>
 
-    <hr style="margin: 10px 5px;" />
+<ActiveCronTaskInProgressDisplayer />
 
-    <div class="container-fluid">
-        @foreach (var account in accounts)
-        {
-            <ShopAccountComponent ShopAccount="@account"
-                                  OnChecked="@(() => StateHasChanged())"
-                                  OnAccountDeleted="@(() => accounts.Remove(account))" />
-        }
+<div class="row">
+    <div class="col-md-12">
+        <ProductsUpdateStatusDisplayer List="@updateProgressSteps" />
     </div>
+</div>
 
-}
-
-@code {
-    bool clearStockBeforeUpdate;
-
-    List<ShopAccountViewModel> accounts = null;
-    ShopAccountViewModel accountToDelete = null;
-
-    [Inject] PriceListManager priceListManager { get; set; }
-    [Inject] DatabaseManager databaseManager { get; set; }
-    [Inject] ReportManager reportManager { get; set; }
-    [Inject] IDatabaseProductCorrelator correlator { get; set; }
-    [Inject] IToastService toastService { get; set; }
-
-    public bool IsUpdateButtonDisabled
-    {
-        get
-        {
-            bool hasSelectedItemAndUploadedPriceList = accounts.Any(ac => ac.IsSelected) && priceListManager.PriceLines.Any();
-            return (accounts == null || priceListManager.PriceLines.Count == 0) ? true : !hasSelectedItemAndUploadedPriceList;
-        }
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        accounts = (await databaseManager.GetMonobrandAccountConnections()).Select(account => new ShopAccountViewModel()
-        {
-            Title = account.title,
-            Id = account.website_id,
-            Uri = account.uri,
-            DB_Host = account.db_host,
-            DB_Login = account.db_login,
-            DB_Password = account.db_password,
-            FTP_Host = account.ftp_host,
-            FTP_Login = account.ftp_login,
-            FTP_Password = account.ftp_password
-        }).ToList();
-    }
-
-    private async Task UpdateSelectedAccountProducts()
-    {
-        var checkedAccounts = accounts.Where(ac => ac.IsSelected).ToList();
-
-        foreach (var account in checkedAccounts)
-        {
-            await UpdateAccountProducts(account);
-        }
-    }
-
-    private async Task UpdateAccountProducts(ShopAccountViewModel account)
-    {
-        account.ActivateProgressBar();
-
-        try
-        {
-            var products = await databaseManager.ReadProducts(account.Id);
-            var updateData = await correlator.GetCorrelationData(products, priceListManager.PriceLines);
-            reportManager.WebsiteUpdatedData.Info[account.Id] = updateData;
-
-            await databaseManager.UpdatePriceAndStock(account.Id, updateData, clearStockBeforeUpdate);
-
-            toastService.ShowError($"Сайт [{account.Uri}] обновлен ({updateData.Count}) товара(ов)", "Информация");
-        }
-        catch (Exception ex)
-        {
-            toastService.ShowError($"При обновлении данных [{account.Uri}] произошла ошибка", "Ошибка обновления");
-        }
-        finally
-        {
-            account.DeactivateProgressBar();
-        }
-    }
-}
+<nav>
+    <div class="nav nav-tabs" id="tab-control" role="tablist">
+        <button class="nav-link @(selectedTabName == "tab-1" ? "active" : "")" @onclick="@(e => selectedTabName = "tab-1")">
+            Загруженные прайс-листы
+        </button>
+        <button class="nav-link @(selectedTabName == "tab-2" ? "active" : "")" @onclick="@(e => selectedTabName = "tab-2")">
+            Список игнорирования товаров
+        </button>
+        <button class="nav-link @(selectedTabName == "tab-3" ? "active" : "")" @onclick="@(e => selectedTabName = "tab-3")">
+            Курсы валют
+        </button>
+    </div>
+</nav>
+<div class="tab-content" id="nav-tabContent">
+    <div class="tab-pane fade show @(selectedTabName == "tab-1" ? "active": "")"
+         style="display: @(selectedTabName == "tab-1" ? "block" : "hidden");">
+        <LoadedPriceListDisplayer />
+    </div>
+    <div class="tab-pane fade show @(selectedTabName == "tab-2" ? "active": "")"
+         style="display: @(selectedTabName == "tab-2" ? "block" : "hidden");">
+        <FixedProductsList />
+    </div>
+    <div class="tab-pane fade show @(selectedTabName == "tab-3" ? "active": "")"
+         style="display: @(selectedTabName == "tab-3" ? "block" : "hidden");">
+        <CurrencyDisplayer />
+    </div>
+</div>

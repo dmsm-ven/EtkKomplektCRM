@@ -1,0 +1,118 @@
+﻿@page "/cron-task"
+@inject ICronTaskStorage cronTaskStorage
+@inject UserLogger userLogger
+@inject NavigationManager navigationManager
+@inject CronTaskService taskManager
+@attribute [Authorize(Roles = "Administrator, Manager")]
+@implements IDisposable
+@using System.Timers
+
+    <h3>Переодические задачи</h3>
+    @if (cronTaskList == null)
+    {
+        <LoadingSpinner />
+    }
+    else
+    {
+        <div class="row py-2">
+            <div class="btn-group">
+                <button class="btn btn-info" @onclick="@(e => addNewDialog.Show())">
+                    <span class="oi oi-timer"></span>
+                    Создать новое задание
+                </button>
+                <a class="btn btn-info mx-2" href="/cron-task-history">
+                    <span class="oi oi-book"></span>
+                    Журнал выполнения
+                </a>
+            </div>
+            <div class="float-right" style="margin-left: auto;">
+                <p>Время на сервере: <span style="color: Highlight">@DateTime.Now.ToShortTimeString()</span></p>
+            </div>
+        </div>
+        
+        <ActiveCronTaskInProgressDisplayer />
+              
+        <div class="row py-2">
+            <div class="table-responsive cron-task-table">
+                <table class="table">
+                    <thead class="thead-etk">
+                        <tr>
+                            <th style="width: 25%">Задание</th>
+                            <th style="width: 20%">Запускается в</th>
+                            <th style="width: 15%">Следующий запуск через</th>
+                            <th style="width: 15%">Последний запуск в</th>
+                            <th style="width: 25%; text-align: right;">Примечание</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var task in cronTaskList)
+                        {
+                            <CronTaskDisplayItem Item="@task"></CronTaskDisplayItem>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <AddNewCronTaskDialog @ref="addNewDialog" ConfirmationChanged="NewTaskDialogStateChanged" />
+
+
+    @code {
+        Timer timeLeftRefresh = new Timer(TimeSpan.FromSeconds(15).TotalMilliseconds);
+        IOrderedEnumerable<CronTaskViewModel> cronTaskList = null;
+        AddNewCronTaskDialog addNewDialog;     
+
+        protected override async Task OnInitializedAsync()
+        {
+            cronTaskList = (await cronTaskStorage.GetCronTasks())
+                        .Select(ct => new CronTaskViewModel()
+                        {
+                            Id = ct.task_id,
+                            Description = ct.description,
+                            ExecTime = ct.exec_time,
+                            IsEnabled = ct.enabled,
+                            LastExec = ct.last_exec_date_time,
+                            LastExecResult = ct.last_exec_result,
+                            PriceListGuid = ct.linked_price_list_guid,
+                            Title = ct.name,
+                            TypeId = (CronTaskType)ct.task_type_id,
+                            TypeName = ct.task_type_name,
+                            AdditionalExecTime = ct.additional_exec_time != null ?
+                                JsonConvert.DeserializeObject<List<TimeSpan>>(ct.additional_exec_time) : new List<TimeSpan>()
+                        })
+                        .OrderBy(ct => ct.IsEnabled ? 0 : 1)
+                        .ThenBy(ct => ct.NextExecutionLeft);
+
+            timeLeftRefresh.Elapsed += (o, e) => InvokeAsync(() => StateHasChanged());
+            timeLeftRefresh.Start();                  
+
+        }
+
+        private async Task NewTaskDialogStateChanged(CronTaskViewModel item)
+        {
+            if (item != null)
+            {
+                var entity = new CronTaskEntity()
+                {
+                    name = item.Title,
+                    description = item.Description,
+                    exec_time = item.ExecTime,
+                    linked_price_list_guid = item.PriceListGuid,
+                    task_type_id = (int)item.TypeId,
+                    additional_exec_time = item.AdditionalExecTime.Any() ? JsonConvert.SerializeObject(item.AdditionalExecTime) : null
+                };
+
+                await cronTaskStorage.CreateCronTask(entity);
+                navigationManager.NavigateTo("/cron-task", true);
+                await taskManager.RefreshTaskList(force: true);
+                await userLogger.Write(LogEntryGroupName.CronTask, "Задание добавлено", $"Добавлено новое задание '{item.Title}'");
+            }
+        }
+
+        public void Dispose()
+        {
+            timeLeftRefresh?.Stop();
+            timeLeftRefresh?.Dispose();
+        }
+    }

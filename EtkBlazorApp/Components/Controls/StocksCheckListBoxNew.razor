@@ -1,0 +1,77 @@
+﻿@inject IStockStorage stockStorage
+
+@if(IsEditMode)
+{
+    <button class="btn btn-sm btn-outline d-inline" @onclick="@(e => IsEditMode = !IsEditMode)">
+        <span class="oi oi-box"></span>
+    </button>
+    <div class="w-100" style="max-height: 200px; overflow: auto;">
+        @foreach (var stock in StocksWithProduct)
+        {
+            <div class="form-check mx-2">
+                <input class="form-check-input" checked="@IsStockChecked(stock)"
+                       type="checkbox" id="stock-partner-@stock.stock_partner_id"
+                       @onchange="(e => StockStatusChanged(stock))" />
+                <label class="form-check-label"
+                       data-toggle="tooltip"
+                       style="border-bottom: 1px dashed gray;"
+                       title="@($"{stock.description} - срок поставки {stock.shipment_period} дн.")"
+                       for="stock-partner-@stock.stock_partner_id">@stock.name</label>
+            </div>
+        }
+    </div>
+
+}
+else
+{
+    
+    <div class="w-100">
+        <button class="btn btn-sm btn-outline-success d-inline" @onclick="@(e => IsEditMode = !IsEditMode)">
+            <span class="oi oi-box"></span>
+        </button>
+        <span style="margin: 2px 6px; font-size: 12px;">@Title()</span>        
+    </div>
+}
+
+@code {
+
+
+    public bool IsEditMode { get; private set; }
+
+    [Parameter] public List<StockPartnerEntity> CheckedStocks { get; set; }
+    [Parameter] public List<StockPartnerEntity> StocksWithProduct { get; set; }
+    [Parameter] public EventCallback CheckedStocksChanging { get; set; }
+
+    private string Title()  
+    {
+        if (CheckedStocks.Any())
+        {
+            var result =  string.Join(", ", CheckedStocks.Select(s => s.name));
+            if(result.Length <= 24)
+            {
+                return result;
+            }
+            return $"Выбрано {CheckedStocks.Count} складов ...";
+        }
+        return "-";
+    }
+
+    private bool IsStockChecked(StockPartnerEntity stock)
+    {
+        return CheckedStocks?.FirstOrDefault(s => s.stock_partner_id == stock.stock_partner_id) != null;
+    }
+
+    private void StockStatusChanged(StockPartnerEntity stock)
+    {
+        bool currentStatus = IsStockChecked(stock);
+        if (currentStatus)
+        {
+            CheckedStocks.RemoveAll(s => s.stock_partner_id == stock.stock_partner_id);
+        }
+        else
+        {
+            CheckedStocks.Add(stock);
+        }
+        CheckedStocksChanging.InvokeAsync();
+    }
+}

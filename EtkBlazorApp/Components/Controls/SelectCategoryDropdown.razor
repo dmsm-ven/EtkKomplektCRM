@@ -1,0 +1,88 @@
+﻿@inject ICategoryStorage categoryStorage
+
+
+<input type="text" class="form-control"
+       list="category_list"
+       placeholder="Поиск категории ..."
+       autoComplete="on"
+       style="min-width: 150px;"
+       value="@searchText"
+       @onkeypress="CategoriesSourceChanged"
+       @oninput="SelectedCategoryChanged"
+       id="dropdown-category" />
+<datalist id="category_list">
+    @if (categoriesSource != null)
+    {
+        @foreach (var category in categoriesSource)
+        {
+            <option value="@category.name"
+                selected="@(selectedCategory != null && category.category_id == selectedCategory.category_id)">
+                @category.name
+            </option>
+        }
+
+    }
+</datalist>
+
+@code {
+    List<CategoryEntity> categoriesSource = null;
+    CategoryEntity selectedCategory = null;
+    string searchText = string.Empty;
+
+    [Parameter] public EventCallback<CategoryEntity> CategoryChanged { get; set; }
+
+    [Parameter]
+    public CategoryEntity Category
+    {
+        get => selectedCategory;
+        set
+        {
+            selectedCategory = value;
+
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        categoriesSource = new List<CategoryEntity>();
+        selectedCategory = new CategoryEntity();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(selectedCategory?.name))
+        {
+            searchText = selectedCategory?.name;
+        }
+        if (searchText.Length >= 3)
+        {
+            var data = await categoryStorage.SearchCategoriesByName(searchText);
+            categoriesSource.AddRange(data.OrderBy(p => p.name));
+        }
+    }
+
+    private async Task CategoriesSourceChanged(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || searchText.Length < 3) { return; }
+
+        categoriesSource.Clear();
+
+        var data = await categoryStorage.SearchCategoriesByName(searchText);
+        categoriesSource.AddRange(data.OrderBy(p => p.name));
+
+        if (data.Count == 1)
+        {
+            await CategoryChanged.InvokeAsync(data.First());
+        }
+    }
+
+    private async Task SelectedCategoryChanged(ChangeEventArgs e)
+    {
+        searchText = e.Value?.ToString() ?? string.Empty;
+        selectedCategory = categoriesSource.FirstOrDefault(p => p.name.Equals(searchText));
+        if (selectedCategory != null || string.IsNullOrWhiteSpace(searchText))
+        {
+            await CategoryChanged.InvokeAsync(selectedCategory ?? new CategoryEntity());
+        }
+    }
+}

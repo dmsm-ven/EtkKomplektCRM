@@ -1,0 +1,157 @@
+﻿@page "/stocks"
+
+@using EtkBlazorApp.DataAccess
+@inject IManufacturerStorage manufacturerStorage
+@inject IStockStorage stockStorage
+@inject IToastService toasts
+@inject IJSRuntime js 
+@inject UserLogger logger
+@attribute [Authorize]
+
+@if (manufacturersByFirstLetter == null || stockList == null)
+{
+    <LoadingSpinner />
+}
+else
+{
+    <div class="row py-2">
+        <div class="col-md-12 col-sm-12">
+            <h1>Склады</h1>
+            <div class="my-2">
+                <button type="button"
+                        class="btn btn-sm @(string.IsNullOrWhiteSpace(cityFilter) ? "btn-primary" : "btn-outline-primary") mx-1 my-2"
+                        @onclick="@(e => cityFilter = string.Empty)">
+                    Все склады <span class="badge badge-pill badge-primary">@stockList.Count</span>
+                </button>
+
+                @foreach (var kvp in stockCities)
+                {
+                    <button type="button"
+                            class="btn btn-sm @(cityFilter == kvp.Key ? "btn-primary" : "btn-outline-primary") mx-1 my-2"
+                            @onclick="@(e => cityFilter = kvp.Key)">
+                        @kvp.Key <span class="badge badge-pill badge-primary">@kvp.Value</span>
+                    </button>
+                }
+            </div>
+            <table class="table table-hover manufacturers-shipment-period-table w-100">
+                <thead class="thead-etk" style="height: 40px;">
+                    <tr>
+                        <th width="15%">Склад</th>
+                        <th width="5%">Изменить</th>
+                        <th width="20%">Город</th>
+                        <th width="10%">Дней</th>
+                        <th width="10%">След. поставка</th>
+                        <th class="button-cell-header">Бренды</th>
+                        <th class="button-cell-header">Адрес</th>
+                        <th class="button-cell-header">Телефон</th>
+                        <th class="button-cell-header">Email</th>
+                        <th class="button-cell-header">Сайт</th>
+                        <th width="40%">Описание</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in filteredStockList)
+                    {
+                    <tr>
+                        <td>@item.Name</td>
+                        <td>
+                            <button class="btn-secondary btn-sm" @onclick="@(e => newStockDialog.Show(item))">
+                                <span class="oi oi-pencil"></span>
+                            </button>
+                        </td>
+                        <td>@item.City</td>
+                        <td>@item.ShipmentPeriodInDays</td>
+                        <td>@item.NextShipmentDate.ToShortDateString()</td>
+                        <td>
+                            <button class="btn btn-secondary btn-sm"
+                                    @onclick="@(e => ShowStockLinkedManufacturers(item))">
+                                <span class="oi oi-layers"></span>
+                            </button>
+                        </td>
+                        <td>
+                            <button class="btn btn-secondary btn-sm"
+                                    disabled="@(string.IsNullOrWhiteSpace(item.Address))"
+                                    @onclick="@(e => ShowStockAddress(item))">
+                                <span class="oi oi-map-marker"></span>
+                            </button>
+                        </td>
+                        <td>
+                            <button class="btn btn-secondary btn-sm"
+                                    disabled="@(string.IsNullOrWhiteSpace(item.PhoneNumber))"
+                                    @onclick="@(e => ShowStockField(item, nameof(StockPartnerViewModel.PhoneNumber)))">
+                                <span class="oi oi-phone"></span>
+                            </button>
+                        </td>
+                        <td>
+                            <button class="btn btn-secondary btn-sm"
+                                    disabled="@(string.IsNullOrWhiteSpace(item.Email))"
+                                    @onclick="@(e => ShowStockField(item, nameof(StockPartnerViewModel.Email)))">
+                                <span class="oi oi-envelope-open"></span>
+                            </button>
+                        </td>
+                        <td>
+                            <button class="btn btn-secondary btn-sm"
+                                    disabled="@(string.IsNullOrWhiteSpace(item.Website))"
+                                    @onclick="@(async e => await js.OpenUrlInNewTab(item.Website))">
+                                <span class="oi oi-globe"></span>
+                            </button>
+                        </td>
+                        <td style="white-space: nowrap; overflow-x: auto; max-width: 200px;">@item.Description</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+            <hr />
+            <AuthorizeView Roles="Administrator">
+                <button class="btn btn-primary float-right" @onclick="@(e => newStockDialog.Show())">
+                    <span class="oi oi-plus"></span>
+                    Добавить новый
+                </button>
+            </AuthorizeView>
+        </div>   
+    </div>
+    <div class="row py-2">
+        <div class="col-md-12 col-sm-12">
+            <h1>Производители</h1>
+
+            @{ 
+                hasAlphabetSeparator = false;
+                @foreach (var kvp in manufacturersByFirstLetter)
+                {
+                    if (!hasAlphabetSeparator && Regex.IsMatch(kvp.Key.ToString(), "[А-Яа-я]"))
+                    {
+                        hasAlphabetSeparator = true;
+                        <span class="brand-letter-filter"> | </span>
+                    }
+                    <a class="brand-letter-filter" href="stocks#brand_letter_anchor_@kvp.Key" target="_top">@kvp.Key</a>
+                }
+            }
+            <hr />
+            @foreach (var kvp in manufacturersByFirstLetter)
+            {
+                <p><strong class="brand-letter-filter" id="brand_letter_anchor_@kvp.Key">@kvp.Key</strong></p>
+                foreach (var manufacturer in kvp.Value)
+                {
+                    <button class="btn btn-sm btn-secondary m-1 p-1"
+                            @onclick="@(e => ShowLinkedStocksForBrand(manufacturer))">
+                        @manufacturer.name
+                        <span class="oi oi-layers"></span>
+                    </button>
+                }
+                <hr>
+            }
+
+        </div>
+    </div>
+}
+
+<style>
+    .brand-letter-filter {
+        font-size: 24px; 
+        color: darkcyan;
+        margin: 2px 4px;
+    }
+</style>
+
+<AddNewStockDialog @ref="newStockDialog" 
+                   ConfirmationChanged="NewStockDialogStatusChanged" />

@@ -1,0 +1,47 @@
+﻿@inject IManufacturerStorage manufacturerStorage
+
+
+<select class="form-control" id="dropdown-manufacturer" style="min-width: 150px;@CustomStyle"
+        @onchange="OnManufacturerChanged">
+    <option value="">Выбрать</option>
+    @if (manufacturersSource != null)
+    {
+        @foreach (var manufacturer in manufacturersSource)
+        {
+            <option value="@manufacturer.manufacturer_id"
+                disabled="@(DisabledManufacturers?.FirstOrDefault(m => m.manufacturer_id == manufacturer.manufacturer_id) != null)"
+                selected="@(Manufacturer != null && Manufacturer.manufacturer_id == manufacturer.manufacturer_id)">
+                @manufacturer.name
+            </option>
+        }
+
+    }
+</select>
+
+@code {
+    List<ManufacturerEntity> manufacturersSource = null;
+
+    [Parameter] public EventCallback<ManufacturerEntity> ManufacturerChanged { get; set; }
+    [Parameter] public ManufacturerEntity Manufacturer { get; set; }
+    [Parameter] public List<ManufacturerEntity> DisabledManufacturers { get; set; }
+    [Parameter] public string CustomStyle { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        manufacturersSource = await manufacturerStorage.GetManufacturers();
+        await ManufacturerChanged.InvokeAsync(Manufacturer);
+    }
+
+    protected async Task OnManufacturerChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value.ToString(), out var id))
+        {
+            Manufacturer = manufacturersSource.Single(m => m.manufacturer_id == int.Parse(e.Value.ToString()));
+            await ManufacturerChanged.InvokeAsync(Manufacturer);
+        }
+        else
+        {
+            await ManufacturerChanged.InvokeAsync(null);
+        }
+    }
+}

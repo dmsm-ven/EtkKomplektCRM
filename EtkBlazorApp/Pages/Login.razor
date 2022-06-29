@@ -1,32 +1,41 @@
 ﻿@page "/login"
+@inject ILogStorage log
 @inject AuthenticationStateProvider authenticationStateProvider
 @inject NavigationManager navigation
 @inject ProtectedLocalStorage localStorage
-@inject IToastService toastService
+@inject UserLogger userLogger
 
 <center style="background: linear-gradient(to right, #4bddc4 0%, #466085); padding: 20px 0px;">
-    <div class="col-12 row">
-        <div class="col-4">
-            <img src="./image/logotips/etk-logo.png" width="250" height="250" />
-        </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 col-sm-12">
+                <img src="./image/logotips/etk-logo.png" style="width: 100%; height: auto;" />
+            </div>
 
-        <div class="col-4">
-            <EditForm Model="@user" OnValidSubmit="@ValidateUser">
-                <DataAnnotationsValidator />
-                <ValidationSummary />
-                <div>
-                    <h3 style="color: white;">Авторизация</h3>
-                </div>
-                <div class="col-12 row" style="margin: 10px 20px">
-                    <input class="form-control col-12" @bind="user.Login" placeholder="Логин" />
-                </div>
-                <div class="col-12 row" style="margin: 10px 20px">
-                    <input type="password" class="form-control col-12" @bind="user.Password" placeholder="Пароль" />
-                </div>
-                <div class="col-12 row" style="margin: 10px 20px">
-                    <input type="submit" class="form-control col-12 btn btn-success" value="Войти" />
-                </div>
-            </EditForm>
+            <div class="col-md-8 col-sm-12">
+                <form>
+                    <div>
+                        <h3 style="color: white;">Авторизация</h3>
+                    </div>
+                    <div class="col-md-12" style="margin: 10px 20px">
+                        <input class="form-control col-12" @bind="user.Login" placeholder="Логин" />
+                    </div>
+                    <div class="col-md-12" style="margin: 10px 20px">
+                        <input type="password" class="form-control col-12" @bind="user.Password" placeholder="Пароль" />
+                    </div>
+                    <div class="col-md-12" style="margin: 10px 20px">
+                        <button type="button" @onclick="Enter" class="form-control col-12 btn btn-success" value="Войти">
+                            Войти
+                        </button>
+                        @if (isInvalidData)
+                        {
+                        <p style="margin-top: 4px; background: rgba(0,0,0,0.25);">
+                            <strong style="color: red; font-size: 14px;">Неверный логин или пароль!</strong>
+                        </p>
+                        }
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </center>
@@ -34,17 +43,35 @@
 @code {
 
     private AppUser user = new AppUser();
+    bool isInvalidData = false;
 
-    private async Task<bool> ValidateUser()
+    private async Task Enter()
     {
-        await ((MyCustomAuthProvider)authenticationStateProvider).AuthenticateUser(user);
+        isInvalidData = false;
+
+        await ((CustomAuthProvider)authenticationStateProvider).AuthenticateUser(user);
 
         navigation.NavigateTo("/");
-
         await localStorage.SetAsync("user_login", user.Login);
-        await localStorage.SetAsync("user_password", user.Password);     
+        await localStorage.SetAsync("user_password", user.Password);
 
-        return await Task.FromResult(true);
+        var state = await authenticationStateProvider.GetAuthenticationStateAsync();
+        if (state.User.Identity.IsAuthenticated)
+        {
+            await userLogger.Write(LogEntryGroupName.Auth, "Вход", $"Пользователь вошел. IP {user.UserIP}");
+        }
+        else
+        {
+            await log.Write(new LogEntryEntity()
+            {
+                group_name = LogEntryGroupName.Auth.GetDescriptionAttribute(),
+                title = "Ошибка входа",
+                message = $"Логин ({user.Login}) Пароль ({user.Password}) IP ({user.UserIP}) город ({user.UserCity})",
+                user = "Не авторизован",
+                date_time = DateTime.Now
+            });
+            isInvalidData = true;
+        }
     }
 
 }

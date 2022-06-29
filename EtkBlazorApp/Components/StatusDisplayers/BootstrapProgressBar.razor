@@ -1,0 +1,41 @@
+﻿@using System.Text
+
+<div class="progress">
+    <div class="progress-bar bg-info @cssStyle" role="progressbar" style="width: @(CurrentProgress)%;" aria-valuenow="@CurrentProgress" aria-valuemin="0" aria-valuemax="100">
+    </div>
+    @if (LabelText == null && HideProgressLabel == false)
+    {
+        @($"{CurrentProgress}%")
+    }
+    else if (LabelText != null)
+    {
+        @LabelText
+    }
+</div>
+
+@code {
+    [Parameter] public bool HideProgressLabel { get; set; } = false;
+    [Parameter] public bool Animated { get; set; } = true;
+    [Parameter] public bool Stripped { get; set; } = true;
+    [Parameter] public int CurrentProgress { get; set; }
+    [Parameter] public RenderFragment LabelText { get; set; }
+
+    string cssStyle
+    {
+        get
+        {
+            var sb = new StringBuilder();
+
+            if (Animated)
+            {
+                sb.Append("progress-bar-animated ");
+            }
+            if (Stripped)
+            {
+                sb.Append("progress-bar-striped ");
+            }
+
+            return sb.ToString().Trim();
+        }
+    }
+}

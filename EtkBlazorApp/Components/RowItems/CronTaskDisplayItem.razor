@@ -1,0 +1,90 @@
+﻿<tr>
+    <td>
+        <div class="task-tool-items-box">
+            <input type="checkbox" style="margin-right: 12px;" checked="@Item.IsEnabled" onclick="return false;" />
+            <a href="@("/cron-task/edit/" + @Item.Id)">
+                <span class="oi oi-cog cog-icon" style="font-size: 1.2em;" aria-hidden="true"></span>
+            </a>
+            <span>@Item.Title</span>
+        </div>
+    </td>
+    <td>
+        @if (Item.IsEnabled)
+        {
+            @Item.ExecTime.ToString(@"hh\:mm")
+            if (Item.AdditionalExecTime != null)
+            {
+                foreach (var time in Item.AdditionalExecTime)
+                {
+                    <span>, @time.ToString(@"hh\:mm")</span>
+                }
+            }
+        }
+    </td>
+    <td>
+        @if (Item.IsEnabled)
+        {
+            @string.Format("{0} ч. {1} м.", Item.NextExecutionLeft.Hours.ToString().PadLeft(2, '0'), Item.NextExecutionLeft.Minutes.ToString().PadLeft(2, '0'))
+
+        }
+    </td>
+    <td>
+        @if (Item.LastExec.HasValue)
+        {
+            @lastResultIconMarkup
+            @Item.LastExec.Value.ToString("dd.MM.yyyy HH:mm")
+        }
+    </td>
+    <td style="text-align: right;">
+        @Item.Description
+    </td>
+</tr>
+@code {
+
+    [Parameter] public CronTaskViewModel Item { get; set; }
+    [Inject] public ICronTaskStorage taskService { get; set; }
+
+    MarkupString lastResultIconMarkup
+    {
+        get
+        {
+            string color = "gray";
+            string iconClass = "oi-question-mark";
+            string tooltipText = "Информация отсутствует";
+
+            if (Item.LastExecResult.HasValue)
+            {
+                switch (Item.LastExecResult.Value)
+                {
+                    case CronTaskExecResult.Failed:
+                        color = "darkred";
+                        iconClass = "oi-x";
+                        tooltipText = "Ошибка выполнения задания";
+                        break;
+                    case CronTaskExecResult.Success:
+                        color = "#50C878";
+                        iconClass = "oi-check";
+                        tooltipText = "Задание успешно выполнено";
+                        break;
+                    case CronTaskExecResult.Skipped:
+                        color = "#50C878";
+                        iconClass = "oi-arrow-thick-right";
+                        tooltipText = "Выполнение задания пропущено - файл загружен но в нем нет новых данных";
+                        break;
+                }
+            }
+
+
+            string result = $"<span class=\"oi {iconClass}\" style=\"color: {color}; font-size: 24px; padding-right: 8px; \" title=\"{tooltipText}\"></span>";
+            return (MarkupString)result;
+
+        }
+    }
+
+    private async Task SetStatus(CronTaskExecResult result)
+    {
+        await taskService.SetTaskExecStatus(Item.Id, result);
+        Item.LastExecResult = result;
+        StateHasChanged();
+    }
+}

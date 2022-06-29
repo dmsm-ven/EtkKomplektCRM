@@ -1,0 +1,143 @@
+﻿@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment appEnvironment
+@inject IJSRuntime js
+
+@if (showDialog)
+{
+    <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog" style="background:rgba(0,0,0, 0.5)">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-title">@Title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+                            @onclick="() => FileSelected(null)">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="files">Файлы</label>
+                            <select class="form-control" id="files" @bind="selectedFileName">
+                                @foreach (var file in files.Select(f => f.Replace(appEnvironment.WebRootPath, string.Empty)))
+                                {
+                                    <option selected="@(selectedFileName == file)"
+                                            value="@file">
+                                        @file
+                                        </option>
+                                    }
+                            </select>
+                        </div>
+                        <hr />
+                        <div class="form-group">
+                            <label for="upload-file">Загрузить файл</label>
+                            <InputFile accept=".png, .jpg, .jpeg"
+                                       id="file-upload"
+                                       @ref="inputFile"
+                                       OnChange="UploadFileStateChanged"
+                                       disabled="@isUploadingInProgress" />
+
+                            @if (isUploadingInProgress)
+                            {
+                                <div class="my-2">
+                                    <IntermediateProgressBar />
+                                </div>
+                            }
+                        </div>
+                    </form>
+                </div>
+
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-info" data-dismiss="modal"
+                            @onclick="() => FileSelected(null)">
+                        Отмена
+                    </button>
+                    <button type="button" class="btn btn-primary"
+                            @onclick="() => FileSelected(selectedFileName)">
+                        Выбрать файл
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    const int MAX_ALLOWED_FILE_SIZE_IN_BYTES = 2 * (1_000_000); // 2 мб
+
+    InputFile inputFile;
+
+    bool showDialog;
+    bool isUploadingInProgress;
+    string selectedFileName;
+    List<string> files = new List<string>();
+
+    [Parameter] public EventCallback<string> OnChange { get; set; }
+    [Parameter] public string Title { get; set; }
+    [Parameter] public string InitialFolder { get; set; }
+    [Parameter] public string InitialFileName { get; set; }
+
+
+    private string initialFolderFullPath;
+
+    private void RefreshFilesList()
+    {
+        if (Directory.Exists(initialFolderFullPath))
+        {
+            files = Directory.GetFiles(initialFolderFullPath)
+                .Select(file => Path.GetFileName(file))
+                .OrderBy(file => file)
+                .ToList();
+        }
+    }
+
+    public void Show()
+    {
+        initialFolderFullPath = appEnvironment.WebRootPath + InitialFolder;
+        if (!string.IsNullOrWhiteSpace(InitialFileName))
+        {
+            initialFolderFullPath = appEnvironment.WebRootPath + Path.GetDirectoryName(InitialFileName);
+        }
+
+        RefreshFilesList();
+        selectedFileName = files.FirstOrDefault(f => f.Equals(Path.GetFileName(InitialFileName))) ?? files.FirstOrDefault();
+
+        showDialog = true;
+        StateHasChanged();
+    }
+
+    protected async Task FileSelected(string value)
+    {
+        showDialog = false;
+        if (value != null)
+        {
+            var relativePath = $"{InitialFolder}/{value}";
+            await OnChange.InvokeAsync(relativePath);
+        }
+    }
+
+    protected async Task UploadFileStateChanged(InputFileChangeEventArgs e)
+    {
+        var relativePath = $"{InitialFolder}/{e.File.Name}";
+        var fullPath = appEnvironment.WebRootPath + relativePath;
+
+        isUploadingInProgress = true;
+
+        using (Stream stream = e.File.OpenReadStream(MAX_ALLOWED_FILE_SIZE_IN_BYTES))
+        {
+            using (FileStream fs = File.Create(fullPath))
+            {
+                await stream.CopyToAsync(fs);
+            }
+        }
+
+        RefreshFilesList();
+
+        selectedFileName = e.File.Name;
+        isUploadingInProgress = false;
+        StateHasChanged();
+    }
+}
+

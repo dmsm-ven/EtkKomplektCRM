@@ -1,7 +1,9 @@
 ﻿@page "/log"
+
+@using System.Threading;
 @attribute [Authorize(Roles = "Administrator")]
 @inject ILogStorage database
-
+@inject IUserService usersService
 
 <h3>Журнал событий приложения</h3>
 @if (entries == null)
@@ -59,22 +61,10 @@ else
                     <option value="">Все</option>
                     @foreach (var group in (LogEntryGroupName[])Enum.GetValues(typeof(LogEntryGroupName)))
                     {
-                        <option value="@group">@group.GetDescriptionAttribute()</option>
+                        <option selected="@(selectedGroup == group)" value="@group">@group.GetDescriptionAttribute()</option>
                     }
                 </select>
             </div>
-
-            <div class="col-md-3">
-                <label for="filter-user">Заголовок</label>
-                <select name="filter-user" class="form-control" @onchange="@(e => selectedTitle = e.Value.ToString())">
-                    <option value="">Все</option>
-                    @foreach (var title in titles)
-                    {
-                        <option value="@title" selected="@(selectedTitle == title)">@title</option>
-                    }
-                </select>
-            </div>
-
         </div>
 
         <table class="table table-striped log-table">
@@ -88,67 +78,43 @@ else
                 </tr>
             </thead>
             <tbody>
-                <Virtualize Items="entries" ItemSize="14" TItem="LogEntryEntity">
-                    <ItemContent>
-                        <tr @key="context.GetHashCode()">
-                            <td>@context.date_time.ToString("G")</td>
-                            <td>@context.user</td>
-                            <td>@context.group_name.GetDescriptionAttribute()</td>
-                            <td>@context.title</td>
-                            <td>@context.message</td>
-                        </tr>
-                    </ItemContent>
-                    <Placeholder>
-                        <tr colspan="4">
-                            <LoadingSpinner></LoadingSpinner>
-                        </tr>
-                    </Placeholder>
-                </Virtualize>
+                @foreach (var item in entries)
+                {
+                    <tr>
+                        <td>@item.date_time.ToString("G")</td>
+                        <td>@item.user</td>
+                        <td>@item.group_name</td>
+                        <td>@item.title</td>
+                        <td>@item.message</td>
+                    </tr>
+                }
             </tbody>
         </table>
     </div>
 }
 
 @code {
-    const int MAX_ITEMS = 1000;
+    const int MAX_ITEMS = 100;
 
+    int filterMaxDays = 0;
+    string selectedUser = null;
+    LogEntryGroupName? selectedGroup = null;
     List<LogEntryEntity> entries = null;
     List<string> users = new List<string>();
-    List<string> titles = new List<string>();
-
-    string selectedUser;
-    string selectedTitle;
-    LogEntryGroupName? selectedGroup;
-    int filterMaxDays = 0;
 
     protected override async Task OnInitializedAsync()
     {
+        var usersList = (await usersService.GetUsers()).Select(u => u.login).ToList();
+        usersList.Insert(0, "System");
+        users = usersList;
         await ApplyFilter();
     }
 
     private async Task ApplyFilter()
     {
         entries = null;
-
-        IEnumerable<LogEntryEntity> data = await database.GetLogItems(MAX_ITEMS, filterMaxDays);
-        users = data.Select(item => item.user).OrderBy(u => u).Distinct().ToList();
-        titles = data.Select(item => item.title).OrderBy(t => t).Distinct().ToList();
-
-        if (!string.IsNullOrWhiteSpace(selectedUser))
-        {
-            data = data.Where(entry => entry.user.Equals(selectedUser, StringComparison.OrdinalIgnoreCase));
-        }
-        if (!string.IsNullOrWhiteSpace(selectedTitle))
-        {
-            data = data.Where(entry => entry.title.Equals(selectedTitle, StringComparison.OrdinalIgnoreCase));
-        }
-        if (selectedGroup != null)
-        {
-            data = data.Where(entry => entry.group_name == selectedGroup.Value);
-        }
-
-        entries = data.ToList();
-
+        StateHasChanged();
+        entries = await database.GetLogItems(MAX_ITEMS, filterMaxDays, selectedUser, selectedGroup?.GetDescriptionAttribute());
         StateHasChanged();
     }
 
@@ -160,7 +126,7 @@ else
         }
         else
         {
-            selectedGroup = (LogEntryGroupName)Enum.Parse<LogEntryGroupName>(e.Value.ToString());
+            selectedGroup = Enum.Parse<LogEntryGroupName>(e.Value.ToString());
         }
     }
 }

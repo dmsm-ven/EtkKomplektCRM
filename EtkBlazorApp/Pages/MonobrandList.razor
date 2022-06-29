@@ -1,0 +1,150 @@
+﻿@page "/monobrands"
+@inject IManufacturerStorage manufacturerStorage
+@inject IMonobrandStorage monobrandStorage
+@inject NavigationManager navigationManager
+@inject UserLogger logger
+
+@if(monobrands != null)
+{
+    <h3>Монобренды</h3>
+
+    <div class="row">
+        <div class="btn-group">
+            <button class="btn btn-primary p-2 m-1" @onclick="AddMonobrand">
+                Добавить новый
+                <span class="oi oi-plus"></span>
+            </button>
+            <button class="btn btn-danger p-2 m-1" disabled="@(selectedMonobrand == null)" @onclick="@(e => confirmDialog.Show())">
+                Удалить
+                <span class="oi oi-delete"></span>
+            </button>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Вебсайт</th>
+                        <th></th>
+                        <th>Производитель</th>
+                        <th>Валюта</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var monobrand in monobrands)
+                    {
+                        <tr class="@((selectedMonobrand == monobrand ? "selected-monobrand" : ""))"
+                            @onclick="(e => selectedMonobrand = monobrand)">
+                            <td><input type="url" class="form-control" @bind="monobrand.WebsiteUri"/></td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary" target="_blank" href="@monobrand.WebsiteUri">
+                                    <span class="oi oi-external-link"></span>
+                                </a>
+                            </td>
+                            <td>
+                                <select class="form-control" @onchange="ManufacturerChanged" >
+                                    @foreach (var brandInfo in manufacturers)
+                                    {
+                                        <option value="@brandInfo.name"
+                                                selected="@(brandInfo.name.Equals(monobrand.ManufacturerName))">
+                                            @brandInfo.name
+                                            </option>
+                                        }
+                                </select>
+                            </td>
+                            <td>
+                                <select class="form-control" @onchange="CurrencyCodeChanged">
+                                    @foreach (var currencyCode in currencyCodeList)
+                                    {
+                                        <option value="@currencyCode" 
+                                                selected="@(currencyCode.Equals(monobrand.CurrencyCode))">@currencyCode</option>
+                                    }
+                                </select>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<DeleteConfirmDialog @ref="confirmDialog" 
+                     ConfirmationChanged="DialogStatusChanged" 
+                     ConfirmationMessage="@(() => $"Удалить монобренд {selectedMonobrand.WebsiteUri} из списка на обновления цен и остатков?")"></DeleteConfirmDialog>
+
+@code {
+    DeleteConfirmDialog confirmDialog;
+
+    List<MonobrandViewModel> monobrands = null;
+    MonobrandViewModel selectedMonobrand = null;
+
+    List<ManufacturerEntity> manufacturers = null;
+    List<string> currencyCodeList = new List<string>(Enum.GetNames(typeof(CurrencyType)));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshMonobrandList();
+        manufacturers = await manufacturerStorage.GetManufacturers();
+    }
+
+    private async Task ManufacturerChanged(ChangeEventArgs e)
+    {
+        var brandInfo = manufacturers.Single(m => m.name.Equals((string)e.Value));
+        selectedMonobrand.ManufacturerName = brandInfo.name;
+        selectedMonobrand.ManufacturerId = brandInfo.manufacturer_id;
+        await SaveChanges();
+    }
+
+    private async Task CurrencyCodeChanged(ChangeEventArgs e)
+    {
+        selectedMonobrand.CurrencyCode = (string)e.Value;
+        await SaveChanges();
+    }
+
+    private async Task AddMonobrand()
+    {
+        await monobrandStorage.AddMonobrand();
+        await RefreshMonobrandList();
+    }
+
+    private async Task DialogStatusChanged(bool status)
+    {
+        if (status)
+        {
+            await monobrandStorage.DeleteMonobrand(selectedMonobrand.MonobrandId);
+            await logger.Write(LogEntryGroupName.ManufacturerUpdate, "Монобренд удален", $"Из списка удален монобренд: '{selectedMonobrand.WebsiteUri}'");
+            monobrands.Remove(selectedMonobrand);
+            selectedMonobrand = null;
+        }
+    }
+
+    private async Task SaveChanges()
+    {
+        if(selectedMonobrand == null) { return; }
+        await monobrandStorage.UpdateMonobrand(new MonobrandEntity()
+        {
+            currency_code = selectedMonobrand.CurrencyCode,
+            manufacturer_id = selectedMonobrand.ManufacturerId,
+            manufacturer_name = selectedMonobrand.ManufacturerName,
+            monobrand_id = selectedMonobrand.MonobrandId,
+            website = selectedMonobrand.WebsiteUri
+        });
+    }
+
+    private async Task RefreshMonobrandList()
+    {
+        monobrands = (await monobrandStorage.GetMonobrands())
+            .Select(entity => new MonobrandViewModel()
+            {
+                ManufacturerId = entity.manufacturer_id,
+                ManufacturerName = entity.manufacturer_name ?? "Не выбрано",
+                MonobrandId = entity.monobrand_id,
+                WebsiteUri = entity.website,
+                CurrencyCode = entity.currency_code
+            })
+            .ToList();
+    }
+}

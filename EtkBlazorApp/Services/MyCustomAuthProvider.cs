@@ -1,42 +1,55 @@
-﻿using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.DataAccess;
-using EtkBlazorApp.DataAccess.Model;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
-using Microsoft.AspNetCore.Http;
+using Microsoft.JSInterop;
+using System;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.Services
 {
+    [Obsolete(message: "Небезопасная версия с использованием MD5 заменена на криптостойкую")]
     public class MyCustomAuthProvider : AuthenticationStateProvider
     {
-        private readonly IDatabaseAccess db;
-        private readonly IAuthStateProcessor auth;
-        private readonly MyDbLogger logger;
+        private readonly IUserService auth;
+        private readonly IUserInfoChecker userInfoChecker;
+        private readonly IJSRuntime js;
         private readonly ProtectedLocalStorage storage;
 
-        const int PASSWORD_MAX_ENTER_TRY = 5;
-
-        public MyCustomAuthProvider(IAuthStateProcessor auth, MyDbLogger logger, ProtectedLocalStorage storage)
+        public MyCustomAuthProvider(
+            IUserService auth,
+            IUserInfoChecker userInfoChecker,
+            IJSRuntime js,
+            ProtectedLocalStorage storage)
         {
             this.storage = storage;
-            this.logger = logger;
             this.auth = auth;
+            this.userInfoChecker = userInfoChecker;
+            this.js = js;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            var login = await storage.GetAsync<string>("user_login");
-            var password = await storage.GetAsync<string>("user_password");
-            if (login.Success && password.Success)
+            try
             {
-                var state = await AuthenticateUser(new AppUser() 
-                { 
-                    Login = login.Value, 
-                    Password = password.Value 
-                });                
-                return state;           
+                var login = await storage.GetAsync<string>("user_login");
+                var password = await storage.GetAsync<string>("user_password");
+
+                if (login.Success && password.Success)
+                {
+                    var state = await AuthenticateUser(new AppUser()
+                    {
+                        Login = login.Value,
+                        Password = password.Value
+                    });
+
+                    return state;
+                }
+            }
+            catch
+            {
+
             }
 
             return GetDefaultState();            
@@ -44,22 +57,25 @@ namespace EtkBlazorApp.Services
 
         public async Task<AuthenticationState> AuthenticateUser(AppUser userData)
         {
-            userData.InvalidPasswordCounter = await auth.GetUserBadPasswordTryCounter(userData.Login);
-            
-            if(userData.InvalidPasswordCounter >= PASSWORD_MAX_ENTER_TRY)
-            {
-                await logger.Write(LogEntryGroupName.Auth, userData.Login, "Неудача", $"Превышено количество попыток входа пользователя {userData.Login}");
-                return GetDefaultState();
-            }
+            await userInfoChecker.FillUserInfo(userData);
 
-            string permission = await auth.GetUserPermission(userData.Login, userData.Password);
+            string permission = null;//await auth.GetUserPermission(userData.Login, userData.Password);
+            throw new NotImplementedException();
 
             if (string.IsNullOrWhiteSpace(permission))
             {
-                await logger.Write(LogEntryGroupName.Auth, userData.Login, "Неудача", $"Неудачная попытка входа {userData.Login}");
-                await auth.SetUserBadPasswordTryCounter(userData.Login, userData.InvalidPasswordCounter + 1);
+                await storage.DeleteAsync("user_login");
+                await storage.DeleteAsync("user_password");
+
                 return GetDefaultState();
-            }        
+            }
+
+            var userInfo = (await auth.GetUsers()).Single(u => u.login == userData.Login);
+       
+            if (!string.IsNullOrWhiteSpace(userInfo.ip) && userInfo.ip != userData.UserIP)
+            {
+                return GetDefaultState();
+            }
 
             var identity = new ClaimsIdentity(new[]
             {
@@ -71,22 +87,32 @@ namespace EtkBlazorApp.Services
 
             NotifyAuthenticationStateChanged(Task.FromResult(state));
 
-            await logger.Write(LogEntryGroupName.Auth, userData.Login, "Вход", $"Пользователь Вошел");
+            await auth.UpdateUserLastLoginDate(userData.Login);
 
-            await auth.SetUserBadPasswordTryCounter(userData.Login, 0);
+            SetUserCookie(userData.Login);
+
             return state;
-        }  
-        
+        }
+       
+        private void SetUserCookie(string name)
+        {
+            //cookie для того, если user активен в ЛК то отображать склады на странице товара
+            string cookieString = $"lk_user={name}; expires=9999-12-31T23:59:59.000Z;path=/;domain=etk-komplekt.ru";
+            js.InvokeVoidAsync("CookieFunction.acceptMessage", cookieString);
+        }
+
         public async Task LogOutUser()
-        {            
-            string userName = (await storage.GetAsync<string>("user_login")).Value ?? string.Empty;
-          
-            await storage.DeleteAsync("user_login");
-            await storage.DeleteAsync("user_password");
+        {
+            try
+            {
+                await storage.DeleteAsync("user_login");
+                await storage.DeleteAsync("user_password");
+            }
+            catch
+            {
 
-            await logger.Write(LogEntryGroupName.Auth, userName, "Выход", $"Пользователь вышел");
-
-            NotifyAuthenticationStateChanged(Task.FromResult(GetDefaultState()));            
+            }
+            NotifyAuthenticationStateChanged(Task.FromResult(GetDefaultState()));           
         }
 
         private AuthenticationState GetDefaultState()
