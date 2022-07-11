@@ -28,7 +28,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             switch (methodName)
             {
                 case "HttpGet":
-                    return new HttpGetRemoteTemplateFileLoader(remoteUri);
+                    return new HttpClientGetRemoteTemplateFileLoader(remoteUri);
                 case "HttpGetWithCredentials":
                     return new HttpGetWithCredentialsRemoteTemplateFileLoader(templateStorage, guid);
                 case "YandexDisk":

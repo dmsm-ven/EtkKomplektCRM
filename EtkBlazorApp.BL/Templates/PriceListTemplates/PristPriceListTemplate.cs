@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -61,8 +63,7 @@ namespace EtkBlazorApp.BL
             public async Task<List<PristOffer>> LoadPristProducts(string fileUri)
             {
                 var file = new XmlDocument();
-
-                await Task.Run(() => file.Load(fileUri));
+                file.Load(fileUri);
 
                 var list = new List<PristOffer>();
 
