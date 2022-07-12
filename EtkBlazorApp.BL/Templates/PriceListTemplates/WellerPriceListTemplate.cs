@@ -15,14 +15,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             for (int i = 18; i < tab.Dimension.Rows; i++)
             {
                 string skuNumber = tab.GetValue<string>(i, 1);
-                if (Regex.IsMatch(skuNumber, @"^(\d){6,}N$"))
-                {
-                    skuNumber = skuNumber.TrimEnd('N');
-                }
-
                 string partNumber = tab.GetValue<string>(i, 2);
-
-                string name = tab.GetValue<string>(i, 3);
+                string name = tab.GetValue<string>(i, 4);
                 decimal? priceInEuro = ParsePrice(tab.GetValue<string>(i, 7));
 
                 var priceLine = new PriceLine(this)
