@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
@@ -41,6 +42,46 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 };
 
                 list.Add(priceLine);
+            }
+
+            return list;
+        }
+    }
+
+    [PriceListTemplateGuid("3DC6BA41-0B2A-45B2-8C50-6B0166060191")]
+    public class RgkKIPPriceListTemplate : ExcelPriceListTemplateBase
+    {
+        public RgkKIPPriceListTemplate(string fileName) : base(fileName) { }
+
+        protected override List<PriceLine> ReadDataFromExcel()
+        {
+            var list = new List<PriceLine>();
+
+            const string brand = "HIKMICRO";
+
+            var hikmicroTab = this.Excel.Workbook.Worksheets.FirstOrDefault(t => t.Name.Contains(brand));
+
+            if (hikmicroTab != null)
+            {
+                for (int row = 2; row < hikmicroTab.Dimension.Rows; row++)
+                {
+                    var sku = hikmicroTab.GetValue<string>(row, 3);
+                    var model = hikmicroTab.GetValue<string>(row, 4);
+                    var name = hikmicroTab.GetValue<string>(row, 5);
+                    var rrcPrice = ParsePrice(hikmicroTab.GetValue<string>(row, 6));
+
+                    var line = new PriceLine(this)
+                    {
+                        Manufacturer = brand,
+                        Currency = CurrencyType.RUB,
+                        Model = model,
+                        Sku = sku,
+                        Name = name,
+                        Price = rrcPrice
+                    };
+
+                    list.Add(line);
+                }
             }
 
             return list;

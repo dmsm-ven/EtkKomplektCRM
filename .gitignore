@@ -16,6 +16,8 @@
 */obj/*
 *\bin\*
 *\obj\*
+*.cache
+*nuget*
 
 # Build results
 [Dd]ebug/

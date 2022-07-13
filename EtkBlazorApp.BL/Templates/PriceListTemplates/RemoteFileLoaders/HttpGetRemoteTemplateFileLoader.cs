@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -56,7 +57,7 @@ namespace EtkBlazorApp.BL
         {
             try
             {
-                string fileName = Path.GetFileName(remoteUri);
+                string fileName = GetValidFileNameFromUri(remoteUri);
                 var response = await httpClient.GetAsync(remoteUri);
                 var bytes = await response.Content.ReadAsByteArrayAsync();
 
@@ -66,6 +67,19 @@ namespace EtkBlazorApp.BL
             {
                 httpClient.Dispose();
             }           
+        }
+
+        private string GetValidFileNameFromUri(string remoteUri)
+        {
+            var fileName = Path.GetFileName(remoteUri);
+            if(fileName.ToCharArray().Intersect(Path.GetInvalidFileNameChars()).Count() > 0)
+            {
+                foreach(var invalidChar in Path.GetInvalidFileNameChars())
+                {
+                    fileName = fileName.Replace(invalidChar, '_');
+                }
+            }
+            return fileName;
         }
     }
 
