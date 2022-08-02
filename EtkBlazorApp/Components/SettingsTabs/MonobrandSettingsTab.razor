@@ -68,7 +68,8 @@
                                 </td>
                                 <td>
                                     <div class="form-check">
-                                      <input class="form-check-input" type="checkbox" @bind="monobrand.IsUpdateEnabled">
+                                      <input class="form-check-input" type="checkbox" checked="@monobrand.IsUpdateEnabled" 
+                                        @onchange="MonobrandStatusChanged">
                                     </div>
                                 </td>
                             </tr>
@@ -101,6 +102,11 @@
         manufacturers = await manufacturerStorage.GetManufacturers();
     }
 
+    private async Task MonobrandStatusChanged(ChangeEventArgs e)
+    {
+        selectedMonobrand.IsUpdateEnabled = !selectedMonobrand.IsUpdateEnabled;
+        await SaveChanges();
+    }
     private async Task ManufacturerChanged(ChangeEventArgs e)
     {
         var brandInfo = manufacturers.Single(m => m.name.Equals((string)e.Value));
