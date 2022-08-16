@@ -435,7 +435,7 @@ input[type='radio'], input[type='checkbox'] {
 
 .product-item-image {
     position: absolute;
-    height: 100%;
+    max-height: 100%;
     width: auto;
     max-width: 100%;
     margin: auto;

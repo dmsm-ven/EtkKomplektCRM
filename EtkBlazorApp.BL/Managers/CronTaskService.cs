@@ -75,7 +75,7 @@ namespace EtkBlazorApp.BL
 
             TimeSpan currentTime = DateTime.Now.TimeOfDay;
 
-            foreach(var kvp in tasks)
+            foreach(var kvp in tasks.Where(t => t.Value.enabled))
             {
                 if(IsTimeToRun(kvp.Value, currentTime) && !inProgress.Contains(kvp.Key))
                 {
@@ -86,7 +86,7 @@ namespace EtkBlazorApp.BL
 
         public async Task RefreshTaskList(bool force = false)
         {
-            if (force == true || tasks.Count == 0)
+            if (force || tasks.Count == 0)
             {
                 tasks.Clear();
                 inProgress.Clear();

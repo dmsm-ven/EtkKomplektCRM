@@ -15,8 +15,6 @@ namespace EtkBlazorApp.BL
     {
         public string FileName { get; private set; }
 
-        readonly string[] ONLY_QUANTITY_BRANDS = new[] { "ERSA" };
-
         public PristPriceListTemplate(string uri)
         {
             FileName = uri;
@@ -35,10 +33,7 @@ namespace EtkBlazorApp.BL
                 string manufacturer = MapManufacturerName(offer.Vendor);
                 if (ManufacturerSkipCheck(manufacturer)) { continue; }
 
-                decimal? price = ONLY_QUANTITY_BRANDS.Contains(manufacturer, StringComparer.OrdinalIgnoreCase) ? 
-                    null : 
-                    (offer.OldPrice ?? offer.Price);
-
+                decimal? price = offer.OldPrice ?? offer.Price;
 
                 var priceLine = new PriceLine(this)
                 {

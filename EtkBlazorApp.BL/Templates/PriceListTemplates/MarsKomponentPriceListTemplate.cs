@@ -19,14 +19,12 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 
                 if (ManufacturerSkipCheck(manufacturer)) { continue; }           
 
-                string prefix = $"{manufacturer} ";
-                string sku = prefix + tab.GetValue<string>(row, 1);
+                //string prefix = $"{manufacturer} ";
+                //string sku = prefix + tab.GetValue<string>(row, 1);
                 string name = tab.GetValue<string>(row, 2);
                 int quantity = (int)tab.GetValue<decimal>(row, 5);
                 int? nextDeliveryQuantity = ParseQuantity(tab.GetValue<string>(row, 6));
-
-                //Проскит берем только остатки
-                decimal? price = tab.GetValue<decimal>(row, 8); //manufacturer.Equals("Pro'sKit") ? null : tab.GetValue<decimal>(row, 8);
+                decimal? price = tab.GetValue<decimal>(row, 8); 
                 string model = tab.GetValue<string>(row, 9);
 
                 var priceLine = new PriceLineWithNextDeliveryDate(this)
@@ -35,10 +33,9 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Currency = CurrencyType.RUB,
                     Manufacturer = manufacturer,
                     Model = model,
-                    Sku = sku,
+                    //Sku = sku,
                     Price = price,
                     Quantity = quantity,
-                    //Stock = StockName.MarsComponent
                 };
 
                 priceLine.NextStockDelivery = new DataAccess.NextStockDelivery()
