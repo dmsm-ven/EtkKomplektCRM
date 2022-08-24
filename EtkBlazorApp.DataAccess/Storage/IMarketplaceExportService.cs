@@ -8,6 +8,7 @@ namespace EtkBlazorApp.DataAccess
     public interface IMarketplaceExportService
     {
         Task<List<MarketplaceBrandExportEntity>> GetAllForMarketplace(string marketplace);
+        Task<List<string>> GetAllMarketplaces();
         Task AddOrUpdate(string marketplace, MarketplaceBrandExportEntity data);
         Task Remove(string marketplace, int manufacturer_id);
     }
@@ -48,6 +49,7 @@ namespace EtkBlazorApp.DataAccess
             string sql = "DELETE FROM etk_app_marketplace_brand_export WHERE marketplace = @marketplace AND manufacturer_id = @manufacturer_id";
             await database.ExecuteQuery<dynamic>(sql, new { marketplace, manufacturer_id });
         }
+        
         public async Task AddOrUpdate(string marketplace, MarketplaceBrandExportEntity data)
         {
             var sql = @"INSERT INTO etk_app_marketplace_brand_export
@@ -69,5 +71,13 @@ namespace EtkBlazorApp.DataAccess
             });
         }
 
+        public async Task<List<string>> GetAllMarketplaces()
+        {
+            string sql = "SELECT DISTINCT marketplace FROM etk_app_marketplace_brand_export";
+
+            var data = await database.GetList<string>(sql);
+
+            return data;
+        }
     }
 }

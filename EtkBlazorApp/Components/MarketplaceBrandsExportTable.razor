@@ -1,11 +1,12 @@
 ﻿@inject IStockStorage stockStorage
+@inject ISettingStorage settingStorage
 @inject IMarketplaceExportService marketplaceService
 
 <div>
 <h2>@Title</h2>
 <p style="line-height: 20px;">
-    <a href="@CabinetURL" target="_blank" style="font-size: 11px;">Перейти в личный кабинет</a>
-    <span class="float-right" style="font-size: 11px; color: lightgray;">Последний запрос: @FeedFileLastRequestDateTime</span>
+    <a href="@CabinetURL" target="_blank" style="font-size: 11px;">Перейти в личный кабинет маркетплейса</a>
+    <span class="float-right" style="font-size: 11px; color: lightgray;">Последний запрос: @feedFileLastRequestDateTime</span>
 </p>
 
 
@@ -52,32 +53,46 @@
                                            CheckedStocksChanging="@(e => StockInfoChanged(item))" />
                         </td>
                         <td>
-                            <button class="btn btn-danger btn-sm" @onclick="@(e => RemoveExportInfo(item))">
-                                <span class="oi oi-trash"></span>
-                            </button>
+                            <div class="dropdown">
+                                  <button class="btn btn-outline">
+                                      <span class="dots-style">...</span>
+                                    </button>
+                                  <div class="dropdown-content" style="cursor: pointer;">
+                                    <a @onclick=@(e => RemoveExportInfo(item))>
+                                        @($"Удалить '{item.manufacturer_name}' из выгрузки в '{Marketplace}'")
+                                    </a>
+                                  </div>
+                                </div>                           
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
+    <p><a href="@FeedURL" class="marketplace-feed-uri-small">@FeedURL</a></p>
 }
 </div>
+
 @code {
     List<StockPartnerEntity> allStocks;
     List<MarketplaceBrandExportEntity> exportInfo;
     Dictionary<int, List<StockPartnerEntity>> stocksWithProductsForManufacturer;
     ManufacturerEntity newManufacturer;
-
+    string feedFileLastRequestDateTime;
 
     [Parameter] public string Marketplace { get; set; }
     [Parameter] public string CabinetURL { get; set; }
-
-    [Parameter] public RenderFragment Title { get; set; }
-    [Parameter] public RenderFragment FeedFileLastRequestDateTime { get; set; }
+    [Parameter] public string FeedURL { get; set; }
+    [Parameter] public string Title { get; set; }
+    
 
     protected override async Task OnInitializedAsync()
     {
+        string settings_key = Regex.Replace(Marketplace, "([A-Z])", "_$1").ToLower().TrimStart('_') + "_last_request";
+        //будет вида ozon_seller_last_request
+
+        feedFileLastRequestDateTime = (await settingStorage.GetValue<DateTime>(settings_key)).ToString("dd.MM.yyyy HH:mm");
+
         allStocks = await stockStorage.GetStocks();
         exportInfo = await marketplaceService.GetAllForMarketplace(Marketplace);
 

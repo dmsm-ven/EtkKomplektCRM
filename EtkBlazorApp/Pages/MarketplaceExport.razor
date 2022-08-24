@@ -7,31 +7,55 @@
 
 <div class="container">
    <div class="row">
-       <div class="col-md-6">
-           <MarketplaceBrandsExportTable Marketplace="OzonSeller" CabinetURL="https://seller.ozon.ru/app/main">
-               <Title>Настройки выгрузки Ozon Seller</Title>
-               <FeedFileLastRequestDateTime>@ozonSellerLastReqeust</FeedFileLastRequestDateTime>
-           </MarketplaceBrandsExportTable>
-       </div>
-        <div class="col-md-6">
-            <MarketplaceBrandsExportTable Marketplace="YandexFBS" CabinetURL="https://partner.market.yandex.ru/business/892602/marketplace">
-               <Title>Настройки выгрузки Yandex Market</Title>
-               <FeedFileLastRequestDateTime>@yandexMarketLastReqeust</FeedFileLastRequestDateTime>
-           </MarketplaceBrandsExportTable>
-       </div>
+       <div class="col-md-12">
+           <div class="row">
+                @foreach(var tab in tabs)
+                {
+                    <div class="col-md-3 marketplace-tab-item @(SelectedTab == tab ? "active" : "")" 
+                            @onclick="@(e => SelectedTab = tab)">
+                        @tab
+                    </div>
+                }
+            </div>     
+        </div>
+        <div id="marketplace-tab-content" class="col-md-8 offset-2">
+            @if(SelectedTab == "OzonSeller")
+            {
+                <MarketplaceBrandsExportTable Marketplace="OzonSeller"   
+                                              Title="Настройки выгрузки Ozon Seller"
+                                              CabinetURL="https://seller.ozon.ru/app/main"
+                                              FeedURL="https://etk-komplekt.ru/index.php?route=feed/ozon_seller">
+                </MarketplaceBrandsExportTable>
+            }
+            else if(SelectedTab == "YandexMarket")
+            {
+                <MarketplaceBrandsExportTable Marketplace="YandexFBS" 
+                                              Title="Настройки выгрузки Yandex Market"
+                                              CabinetURL="https://partner.market.yandex.ru/business/892602/marketplace"
+                                              FeedURL="https://etk-komplekt.ru/index.php?route=feed/yandex_yml&token=DA000001A17164D2">
+                </MarketplaceBrandsExportTable>
+            }
+            else if(SelectedTab == "Sbermegamarket")
+            {
+                <MarketplaceBrandsExportTable Marketplace="Sbermegamarket" 
+                                              Title="Настройки выгрузки Sbermegamarket"
+                                              CabinetURL="https://partner.sbermegamarket.ru/home"
+                                              FeedURL="https://etk-komplekt.ru/index.php?route=feed/sbermegamarket_yml&token=D7C6CD2F-94B4-447E-B358-44D2B51787F4">                   
+                </MarketplaceBrandsExportTable>
+            }
+        </div>
+        <div class="col-md-12">
+            @if(SelectedTab == "Сводная таблица")
+            {
+                <MarketplacePivotTable />
+            }
+        </div>
     </div>
 </div>
 
 @code {
+    static string[] tabs = new[] { "OzonSeller", "YandexMarket", "Sbermegamarket", "Сводная таблица" };
 
-    bool showSettingsBox = false;
-    string yandexMarketLastReqeust;
-    string ozonSellerLastReqeust;
-
-    protected override async Task OnInitializedAsync()
-    {
-        yandexMarketLastReqeust = (await settingStorage.GetValue<DateTime>("yandex_fbs_last_request")).ToString("dd.MM.yyyy HH:mm");
-        ozonSellerLastReqeust = (await settingStorage.GetValue<DateTime>("ozon_seller_last_request")).ToString("dd.MM.yyyy HH:mm");
-    }
+    public string SelectedTab { get; set; } = tabs[0];
 
 }

@@ -1,0 +1,75 @@
+﻿@inject IMarketplaceExportService marketplaceExport
+
+@if (pivotTableData != null)
+{
+    <h2>Сводная таблица наценок</h2>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="thead-etk">
+                <tr>
+                    <th style="width: @columnWidth%">Бренд | Маркетплейc</th>
+                    @foreach (var mp in pivotTableData.Keys)
+                    {
+                        <th style="width: @columnWidth%">@mp</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var brand in pivotTableUniqueBrands)
+                {
+                    <tr>
+                        <td>@brand</td>
+                        @foreach (var mp in pivotTableData.Keys)
+                        {
+                            if (pivotTableData[mp].ContainsKey(brand))
+                            {
+                                <td>@pivotTableData[mp][brand].ToString("F0") %</td>
+                            }
+                            else
+                            {
+                                <td><span class="oi oi-minus"></span></td>
+                            }
+                        }
+                    </tr>
+                }
+            </tbody>
+    </table>
+    </div>
+}
+else
+{
+    <LoadingSpinner />
+}
+
+@code {
+    Dictionary<string, Dictionary<string, decimal>> pivotTableData;
+    string[] pivotTableUniqueBrands;
+    double columnWidth;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) { return; }
+
+        var marketplaces = await marketplaceExport.GetAllMarketplaces();
+         pivotTableData = new Dictionary<string, Dictionary<string, decimal>>();
+       
+        foreach (var mp in marketplaces)
+        {
+            var discountInfo = await marketplaceExport.GetAllForMarketplace(mp);
+
+            pivotTableData[mp] = discountInfo.ToDictionary(i => i?.manufacturer_name ?? "<Ошибка>", i => (decimal)i?.discount);
+        }
+
+        pivotTableUniqueBrands = pivotTableData
+            .Values
+            .SelectMany(i => i.Keys)
+            .Distinct()
+            .OrderBy(i => i)
+            .ToArray();
+
+        columnWidth = 100.00 / (1 + marketplaces.Count);
+
+        await Task.Delay(TimeSpan.FromSeconds(0.75));
+        StateHasChanged();
+    }
+}
