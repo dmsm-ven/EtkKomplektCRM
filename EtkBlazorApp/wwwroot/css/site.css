@@ -11,6 +11,7 @@
     cursor: pointer;
     font-size: 22px;
     text-align: center;
+    min-width: 200px;
 
     margin: 4px auto;
     border-bottom: 4px solid #fdf8f8;

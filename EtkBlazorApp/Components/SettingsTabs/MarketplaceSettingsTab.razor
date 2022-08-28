@@ -3,14 +3,14 @@
 @if (selectedTab == tabData)
 {
 <div id="main_tab">
-    <h3>YandexMarket FBS</h3>
+    <h3>YandexMarket</h3>
     <div class="form-group">
-        <label for="yandex_fbs_min_export_price">Минимальная цена выгрузки</label>
-        <input type="number" min="0" class="form-control" id="yandex_fbs_min_export_price" @bind="yandex_fbs_minimumPrice">
+        <label for="yandex_market_min_export_price">Минимальная цена выгрузки</label>
+        <input type="number" min="0" class="form-control" id="yandex_market_min_export_price" @bind="yandex_market_minimumPrice">
     </div>
     <div class="form-group">
-        <label for="yandex_fbs_under_min_price_ratio">Множитель для товаров с ценой меньше минимальной (1 = без множителя)</label>
-        <input type="number" min="1" class="form-control" id="yandex_fbs_under_min_price_ratio" @bind="yandex_fbs_underRatio">
+        <label for="yandex_market_under_min_price_ratio">Множитель для товаров с ценой меньше минимальной (1 = без множителя)</label>
+        <input type="number" min="1" class="form-control" id="yandex_market_under_min_price_ratio" @bind="yandex_market_underRatio">
     </div>
 
     <h3>Seller Ozon</h3>
@@ -33,24 +33,24 @@
     [Parameter] public SettingsTabData tabData { get; set; }
     
     decimal ozon_seller_minimumPrice;
-    decimal yandex_fbs_minimumPrice;
+    decimal yandex_market_minimumPrice;
     decimal sbermegamarket_minimumPrice;
-    decimal yandex_fbs_underRatio;
+    decimal yandex_market_underRatio;
 
     protected override async Task OnInitializedAsync()
     {
         ozon_seller_minimumPrice = await settings.GetValue<decimal>("ozon_seller_export_minimum_price");
         sbermegamarket_minimumPrice = await settings.GetValue<decimal>("sbermegamarket_export_minimum_price");
-        yandex_fbs_minimumPrice = await settings.GetValue<decimal>("yandex_fbs_export_minimum_price");
-        yandex_fbs_underRatio = await settings.GetValue<decimal>("yandex_fbs_export_under_minimum_ratio");
+        yandex_market_minimumPrice = await settings.GetValue<decimal>("yandex_market_export_minimum_price");
+        yandex_market_underRatio = await settings.GetValue<decimal>("yandex_market_export_under_minimum_ratio");
         
 
         tabData.SaveButtonClicked = new Action(async() =>
         {
             await settings.SetValue("ozon_seller_export_minimum_price", ozon_seller_minimumPrice);
             await settings.SetValue("sbermegamarket_export_minimum_price", sbermegamarket_minimumPrice);
-            await settings.SetValue("yandex_fbs_export_minimum_price", yandex_fbs_minimumPrice);
-            await settings.SetValue("yandex_fbs_export_under_minimum_ratio", yandex_fbs_underRatio);
+            await settings.SetValue("yandex_market_export_minimum_price", yandex_market_minimumPrice);
+            await settings.SetValue("yandex_market_export_under_minimum_ratio", yandex_market_underRatio);
         });
     }
 }

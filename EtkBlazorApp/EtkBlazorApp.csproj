@@ -41,4 +41,16 @@
     <ProjectReference Include="..\EtkBlazorApp.DataAccess\EtkBlazorApp.DataAccess.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\image\logotips\marketplaces\OzonSeller-logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\image\logotips\marketplaces\Sbermegamarket-logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\image\logotips\marketplaces\YandexMarket-logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

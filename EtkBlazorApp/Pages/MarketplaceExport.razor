@@ -10,10 +10,16 @@
        <div class="col-md-12">
            <div class="row">
                 @foreach(var tab in tabs)
-                {
-                    <div class="col-md-3 marketplace-tab-item @(SelectedTab == tab ? "active" : "")" 
-                            @onclick="@(e => SelectedTab = tab)">
-                        @tab
+                {                 
+                    <div class="col-md-3 col-sm-6 marketplace-tab-item @(SelectedTab == tab ? "active" : "")" @onclick="@(e => SelectedTab = tab)">
+                        @if(tab != tabs.Last())
+                        {
+                            <img src="/image/logotips/marketplaces/@tab-logo.png" style="width: 200px; height: 100px;" />
+                        }
+                        else
+                        {
+                            <span style="display: block;bottom: 32px;position: absolute;">@tab</span>
+                        }
                     </div>
                 }
             </div>     
@@ -29,7 +35,7 @@
             }
             else if(SelectedTab == "YandexMarket")
             {
-                <MarketplaceBrandsExportTable Marketplace="YandexFBS" 
+                <MarketplaceBrandsExportTable Marketplace="YandexMarket" 
                                               Title="Настройки выгрузки Yandex Market"
                                               CabinetURL="https://partner.market.yandex.ru/business/892602/marketplace"
                                               FeedURL="https://etk-komplekt.ru/index.php?route=feed/yandex_yml&token=DA000001A17164D2">
