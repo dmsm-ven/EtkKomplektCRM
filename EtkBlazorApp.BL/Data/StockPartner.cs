@@ -25,8 +25,7 @@
         Einhell = 19,
         Borel = 20,
         UnitServis = 21,
-        Sfbel = 22,
-        CEM = 23,
+        Sfbel = 22,       
         FIT = 24,
         Knipex = 25,
         Aktakom = 26,
@@ -37,5 +36,7 @@
         ElevelSbp_self = 35,
         ElevelSbp_producer = 36,
         TexElektro_Kaluga = 37,
+        CEM_Spb = 40,
+        CEM_Msk = 23,
     }
 }

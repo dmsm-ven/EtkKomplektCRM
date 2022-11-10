@@ -12,6 +12,7 @@ using System.Timers;
 
 namespace EtkBlazorApp.BL
 {
+    //TODO: нужно подумать, - возможно стоит передалать на Hangfire библиотеке (есть UI активных задач и много другого)
     public class CronTaskService
     {
         public event Action<CronTaskEntity> OnTaskExecutionStart;

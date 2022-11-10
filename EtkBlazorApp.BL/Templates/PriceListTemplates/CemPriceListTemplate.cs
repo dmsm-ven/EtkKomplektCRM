@@ -7,7 +7,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     public class CemPriceListTemplate : ExcelPriceListTemplateBase
     {
         readonly string SKU_PREFIX = "CEM-";
-        readonly decimal RUB_FOR_USD = 84;
 
         public CemPriceListTemplate(string fileName) : base(fileName) { }
 
@@ -22,21 +21,25 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string name = tab.GetValue<string>(row, 2);
                 string ean = tab.GetValue<string>(row, 3);
                 string sku = SKU_PREFIX + tab.GetValue<string>(row, 4);
-                decimal price = RUB_FOR_USD * tab.GetValue<decimal>(row, 10);
-                int quantity = tab.GetValue<int>(row, 11);
+                decimal price =  tab.GetValue<decimal>(row, 7);
 
-                var priceLine = new PriceLine(this)
+                var quantityMsk = ParseQuantity(tab.GetValue<string>(row, 8));
+                var quantitySpb = ParseQuantity(tab.GetValue<string>(row, 11));
+
+                var priceLine = new MultistockPriceLine(this)
                 {
                     Name = name,
                     Currency = CurrencyType.RUB,
-                    //Stock = StockName.CEM,
+                    Quantity = quantitySpb,
+                    Stock = StockName.CEM_Spb,
                     Manufacturer = "CEM",
                     Model = sku,
                     Ean = ean,
                     Sku = sku,
-                    Price = price,
-                    Quantity = quantity
+                    Price = price
                 };
+
+                priceLine.AdditionalStockQuantity[StockName.CEM_Msk] = quantityMsk.Value;
 
                 list.Add(priceLine);
             }

@@ -48,6 +48,7 @@ namespace EtkBlazorApp
             ConfigureCorrelators(services);
             ConfigureDatabaseServices(services);
 
+            services.AddMemoryCache();
             services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
             services.AddSingleton<RemoteTemplateFileLoaderFactory>();        
             services.AddSingleton<SystemEventsLogger>();
