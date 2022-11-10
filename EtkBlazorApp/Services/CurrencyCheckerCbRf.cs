@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.BL;
+using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,17 +13,24 @@ namespace EtkBlazorApp.Services
     {
         Dictionary<CurrencyType, decimal> rates;
         public DateTime LastUpdate { get; private set; }
+        private readonly IMemoryCache cache;
 
-        //Время после которого курс валют запрашивается заного
-        readonly TimeSpan expire_time = TimeSpan.FromMinutes(15);
+        public CurrencyCheckerCbRf(IMemoryCache cache)
+        {
+            this.cache = cache;
+        }
 
         public async Task<decimal> GetCurrencyRate(CurrencyType type)
         {
-            if (rates == null || (LastUpdate + expire_time) < DateTime.Now)
+            if (!cache.TryGetValue(nameof(rates), out rates))
             {
                 rates = await ReadCurrenciesFromCbRf();
+                LastUpdate = DateTime.Now;
+                
+                cache.Set(nameof(rates), rates, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(30)));
             }
-            return rates.ContainsKey(type) ? rates[type] : 0;
+
+            return (rates != null && rates.ContainsKey(type)) ? rates[type] : 0;
         }
 
         private async Task<Dictionary<CurrencyType, decimal>> ReadCurrenciesFromCbRf()
@@ -60,7 +68,7 @@ namespace EtkBlazorApp.Services
             dic[CurrencyType.USD] = usdValue;
             dic[CurrencyType.EUR] = euroValue;
             dic[CurrencyType.RUB] = 1;
-            LastUpdate = DateTime.Now;
+            
 
             return dic;
         }
