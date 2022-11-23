@@ -71,6 +71,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 var priceLine = new MultistockPriceLine(this)
                 {
                     Quantity = quantitySpb,
+                    Stock = StockName.TexElektro,
                     Sku = sku,
                     Model = sku,
                     Name = name,

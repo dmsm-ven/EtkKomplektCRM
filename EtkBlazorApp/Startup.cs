@@ -1,6 +1,5 @@
 using Blazored.Toast;
 using EtkBlazorApp.BL;
-using EtkBlazorApp.BL.CronTask;
 using EtkBlazorApp.BL.Templates.PriceListTemplates;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.Services;
@@ -8,25 +7,55 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Globalization;
 using System.Net;
-using System.Net.Security;
 
 namespace EtkBlazorApp
 {
     public class Startup
     {
+        public IConfiguration Configuration { get; }
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
 
-        public IConfiguration Configuration { get; }
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+            else
+            {
+                app.UseExceptionHandler("/Error");
+                app.UseHsts();
+            }
+
+            app.UseHttpsRedirection();
+            app.UseStaticFiles();
+
+            app.UseRouting();
+
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapBlazorHub();
+                endpoints.MapFallbackToPage("/_Host");
+            });
+
+            app.ApplicationServices.GetService<CronTaskService>();
+            app.ApplicationServices.GetService<NewOrdersNotificationService>().RefreshInterval = TimeSpan.FromSeconds(5);
+
+            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("ru-RU");
+        }
 
         public void ConfigureServices(IServiceCollection services)
         {
@@ -97,38 +126,6 @@ namespace EtkBlazorApp
 
             services.AddTransient<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
             services.AddTransient<IOzonProductCorrelator, SimpleOzonProductCorrelator>();
-        }
-
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Error");
-                app.UseHsts();
-            }
-
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
-
-            app.UseRouting();
-
-            app.UseAuthentication();
-            app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapBlazorHub();
-                endpoints.MapFallbackToPage("/_Host");
-            });
-
-            app.ApplicationServices.GetService<CronTaskService>();
-            app.ApplicationServices.GetService<NewOrdersNotificationService>().RefreshInterval = TimeSpan.FromSeconds(5);
-
-            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("ru-RU");
-        }
+        }       
     }
 }

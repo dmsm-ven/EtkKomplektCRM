@@ -8,6 +8,9 @@ using System.Web;
 
 namespace EtkBlazorApp.Services
 {
+    /// <summary>
+    /// Сервис оповещения UI о новых заказаз, проваерка по таймеру
+    /// </summary>
     public class NewOrdersNotificationService
     {
         readonly Timer timer;
@@ -63,7 +66,7 @@ namespace EtkBlazorApp.Services
             timer = new Timer();
             timer.Elapsed += RefreshTimer_Elapsed;
             timer.Enabled = false;
-            this.orderStorage = orderStorage;
+            this.orderStorage = orderStorage ?? throw new ArgumentNullException(nameof(orderStorage));
         }
 
         private async void RefreshTimer_Elapsed(object sender, ElapsedEventArgs e)

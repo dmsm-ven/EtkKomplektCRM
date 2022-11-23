@@ -12,13 +12,21 @@ using System.Timers;
 
 namespace EtkBlazorApp.BL
 {
-    //TODO: нужно подумать, - возможно стоит передалать на Hangfire библиотеке (есть UI активных задач и много другого)
+    //TODO: Переделать - заместо ручного выполнения по таймеру на библиотеку Hangfire
+    
+    /// <summary>
+    /// Выполняет переодический опрос удаленных поставщиков для загрузки их прайс-листов
+    /// </summary>
     public class CronTaskService
     {
+        // event'ы для привязки на страницах, что бы можно было в любом месте приложения получить уведомление, например через Toasts
+        // TODO: переделать из event в какой-то другой вариант
+
         public event Action<CronTaskEntity> OnTaskExecutionStart;
         public event Action<CronTaskEntity> OnTaskExecutionEnd;
         public event Action<CronTaskEntity> OnTaskExecutionSuccess;
         public event Action<CronTaskEntity> OnTaskExecutionError;
+
         public CronTaskEntity TaskInProgress { get; private set; }
 
         private readonly ICronTaskStorage cronTaskStorage;
@@ -58,10 +66,17 @@ namespace EtkBlazorApp.BL
             }
         }
 
+
+        /// <summary>
+        /// Ручной запуск задачи вне таймера
+        /// </summary>
+        /// <param name="task_id"></param>
+        /// <returns></returns>
         public async Task ExecuteForced(int task_id)
         {            
             await RefreshTaskList(force: true);
             var kvp = tasks.FirstOrDefault(t => t.Key.TaskId == task_id);
+
             if (kvp.Equals(default(KeyValuePair<CronTaskBase, CronTaskEntity>))) { return; }
 
             if (!inProgress.Contains(kvp.Key))
@@ -85,6 +100,11 @@ namespace EtkBlazorApp.BL
             }
         }
 
+        /// <summary>
+        /// Обновляем список задач для корректной отработки после добавления новой задачи или при запуске программы
+        /// </summary>
+        /// <param name="force"></param>
+        /// <returns></returns>
         public async Task RefreshTaskList(bool force = false)
         {
             if (force || tasks.Count == 0)
@@ -101,6 +121,14 @@ namespace EtkBlazorApp.BL
             }
         }
 
+        //TODO: разбить метод на более мелкие части
+        /// <summary>
+        /// Запускаем задачу
+        /// </summary>
+        /// <param name="task"></param>
+        /// <param name="taskInfo"></param>
+        /// <param name="forced"></param>
+        /// <returns></returns>
         private async Task ExecuteTask(CronTaskBase task, CronTaskEntity taskInfo, bool forced = false)
         {
             inProgress.Add(task);
@@ -155,6 +183,12 @@ namespace EtkBlazorApp.BL
             }         
         }
 
+        /// <summary>
+        /// Проверка задачи, следует ли ее сейчас запускать
+        /// </summary>
+        /// <param name="task"></param>
+        /// <param name="now"></param>
+        /// <returns></returns>
         private bool IsTimeToRun(CronTaskEntity task, TimeSpan now)
         {
             if (now >= task.exec_time && Math.Abs((task.exec_time - now).TotalMilliseconds) <= checkTimer.Interval)
@@ -184,6 +218,15 @@ namespace EtkBlazorApp.BL
             return false;
         }
 
+        //TODO: возможно стоит добавить добавить кроме загрузки из удаленного источника, например парсинг сайтов - отдельный тип задачи
+        /// <summary>
+        /// Фабрика задач
+        /// </summary>
+        /// <param name="taskType"></param>
+        /// <param name="parameter"></param>
+        /// <param name="taskId"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
         private CronTaskBase CreateTask(CronTaskType taskType, string parameter, int taskId)
         {
             Type linkedPriceListType = parameter != null ? PriceListManager.GetPriceListTypeByGuid(parameter) : null;

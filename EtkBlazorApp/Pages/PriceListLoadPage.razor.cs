@@ -15,10 +15,11 @@ using static EtkBlazorApp.BL.EtkKomplektReportGenerator;
 
 namespace EtkBlazorApp.Pages
 {
+    //TODO: разбить класс на мелкие фрагменты, получился слишком сложным 
     public partial class PriceListLoadPage
     {
-        const int MAX_UPLOAD_FILE_SIZE = 32_000_000; // 32 мб
-        const int UPLOAD_BUFFER_SIZE = 64_000; // 64 кб
+        const int MAX_UPLOAD_FILE_SIZE = 32_000_000; // 32 мб размер максимально допустимого файла
+        const int UPLOAD_BUFFER_SIZE = 64_000; // Порциями по 64кб загружаем файл с отображением прогресса
 
         FileLoadProgress? uploadProgress;
         CustomDataDialog exportPriceDialog;
@@ -29,15 +30,17 @@ namespace EtkBlazorApp.Pages
         PriceListTemplateItemViewModel selectedTemplate = null;
         PriceListTemplateItemViewModel editingTemplate = null;
 
+        string searchPhrase = String.Empty;
         bool filterHasUri = false;
         bool filterFromEmail = false;
         bool etkPriceListDownloadInProgress = false;
         bool isIntermediateProgress = false;
         bool isFileUploading = false;
+        
         bool isBusy => isIntermediateProgress || isFileUploading;
         bool selectedTemplateHasEmailSource => !string.IsNullOrWhiteSpace(selectedTemplate?.EmailSearchCriteria_Sender);
         bool selectedTemplateHasRemoteUri => (selectedTemplate?.RemoteUrlMethodName != null) && !selectedTemplateHasEmailSource;
-        string searchPhrase;
+        
 
         protected override async Task OnInitializedAsync()
         {          

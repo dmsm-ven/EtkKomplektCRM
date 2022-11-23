@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL.CronTask
 {
+    /// <summary>
+    /// Тип задачи - Загрузка прайс-листа из его удаленного источника (email, URL, FTP или др. как он настроен)
+    /// </summary>
     public class LoadRemotePriceListCronTask : CronTaskBase
     {
         private readonly Type templateType;
