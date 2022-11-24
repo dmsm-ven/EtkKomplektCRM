@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.DataAccess
 {
+    //TODO: разбить на мелкие интерфейсы
     public interface IPriceListTemplateStorage
     {
         Task CreatePriceList(PriceListTemplateEntity data);

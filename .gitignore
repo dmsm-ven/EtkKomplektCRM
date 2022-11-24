@@ -21,6 +21,7 @@ appsettings.json
 *.cache
 *nuget*
 
+EtkBlazorApp.Integration/
 .config/
 obj/
 # Build results

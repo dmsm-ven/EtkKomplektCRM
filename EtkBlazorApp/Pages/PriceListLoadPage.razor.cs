@@ -15,6 +15,7 @@ using static EtkBlazorApp.BL.EtkKomplektReportGenerator;
 
 namespace EtkBlazorApp.Pages
 {
+    //TODO: есть ошибка, - при смене у прайс-листа типа его загрузки (email | URL и т.д.), из таблиц не удаляется email_search_critera, соответсвенно не правильн отрабаывают Enable статус кнопок
     //TODO: разбить класс на мелкие фрагменты, получился слишком сложным 
     public partial class PriceListLoadPage
     {
