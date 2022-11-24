@@ -21,6 +21,8 @@ appsettings.json
 *.cache
 *nuget*
 
+.config/
+obj/
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/

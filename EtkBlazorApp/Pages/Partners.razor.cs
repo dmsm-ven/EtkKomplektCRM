@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.Pages
 {
+    //TODO: разбиться класс на более простые блоки, стоит подключить Mapper вместо ручного создания сущ.
     public partial class Partners
     {
         ConfirmDialog deleteDialog;
