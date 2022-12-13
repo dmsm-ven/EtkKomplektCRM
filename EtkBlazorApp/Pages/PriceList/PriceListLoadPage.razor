@@ -1,5 +1,6 @@
 ﻿@page "/load-price-list"
 @attribute [Authorize(Roles = "Administrator, Manager")]
+
 @inject PriceListManager priceListManager
 @inject UserLogger logger
 @inject NavigationManager navManager
@@ -97,8 +98,8 @@
         else
         {
             <button class="btn btn-outline-primary mx-1"
-                    title="Скачать прайс-лист с товарами ЕТК-Комплект"
-                    @onclick="@(e => { exportPriceDialog.Show(); })">
+                title="Скачать прайс-лист с товарами ЕТК-Комплект"
+                @onclick="@(e => { exportPriceDialog.Show(); })">
                 <span class="oi oi-spreadsheet"></span>
             </button>
         }
@@ -106,7 +107,7 @@
 </div>
 
 <div class="row my-2">
-    @if(filteredTemplates != null)
+    @if (filteredTemplates != null)
     {
         @foreach (var template in filteredTemplates)
         {

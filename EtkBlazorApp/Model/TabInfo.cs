@@ -1,5 +1,4 @@
-﻿using EtkBlazorApp.Components.SettingsTabs;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using System;
 
 namespace EtkBlazorApp

@@ -1,6 +1,6 @@
 ﻿@page "/discounts"
 
-@using EtkBlazorApp.Components.DiscountTabs
+@using EtkBlazorApp.Pages.Product.DiscountTabs
 
 <h3>Скидки</h3>
 
@@ -8,7 +8,7 @@
     @foreach (var tabName in tabs)
     {
         <button class="btn btn-outline-primary @(selectedTab == tabName ? "active" : "")"
-                @onclick="@(e => selectedTab = tabName)">
+            @onclick="@(e => selectedTab = tabName)">
             @tabName
         </button>
     }
@@ -16,24 +16,24 @@
 
 <div class="container">
     <h2>@selectedTab</h2>
-    <CascadingValue Value="selectedTab" >
-        <DiscountsByProductTab TabName="@tabs[0]" ForCustomerGroup="CustomerGroup.Default"/>
+    <CascadingValue Value="selectedTab">
+        <DiscountsByProductTab TabName="@tabs[0]" ForCustomerGroup="CustomerGroup.Default" />
         <DiscountsByCategoryTab TabName="@tabs[1]" />
         <DiscountsByManufacturerTab TabName="@tabs[2]" />
         <DiscountsByStockTab TabName="@tabs[3]" />
-        <DiscountsByProductTab TabName="@tabs[4]" ForCustomerGroup="CustomerGroup.Registered"/>
+        <DiscountsByProductTab TabName="@tabs[4]" ForCustomerGroup="CustomerGroup.Registered" />
     </CascadingValue>
 </div>
 
 @code {
-    string [] tabs = new string[] 
-    { 
-        "На товары", 
-        "На категории", 
-        "На производителей", 
+    string[] tabs = new string[]
+                                            {
+        "На товары",
+        "На категории",
+        "На производителей",
         "На склады",
         "Для зарегистрированных"
-    };
+                                            };
     string selectedTab;
 
     protected override void OnInitialized()

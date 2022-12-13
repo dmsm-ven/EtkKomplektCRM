@@ -1,13 +1,13 @@
 ﻿@page "/settings"
 @inject IToastService toasts
 @attribute [Authorize(Roles = "Administrator")]
-
+@using Pages.Settings.SettingsTabs;
 
 <div class="btn-group">
-    @foreach(var tab in tabData)
+    @foreach (var tab in tabData)
     {
         <button class="btn btn-outline-primary @(selectedTab == tab ? "active" : "")"
-                @onclick="@(e => selectedTab = tab)">
+            @onclick="@(e => selectedTab = tab)">
             @tab.Icon &nbsp; @tab.Title
         </button>
     }
@@ -37,7 +37,7 @@
 
     List<SettingsTabData> tabData = new List<SettingsTabData>()
     {
-        new SettingsTabData() { Title = "Пользователи" },    
+        new SettingsTabData() { Title = "Пользователи" },
         new SettingsTabData() { Title = "Общие настройки" },
         new SettingsTabData() { Title = "Почтовые ящики", Icon = new MarkupString("&#9993;")  },
         new SettingsTabData() { Title = "Маркетплейсы" },
