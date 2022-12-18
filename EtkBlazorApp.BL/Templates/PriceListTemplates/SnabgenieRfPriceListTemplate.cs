@@ -60,7 +60,7 @@ namespace EtkBlazorApp.BL
                 string skuNumber = tab.GetValue<string>(row, 1);
                 string manufacturer = tab.GetValue<string>(row, 2);
 
-                if(ManufacturerSkipCheck(manufacturer)) { continue; }
+                if(SkipThisBrand(manufacturer)) { continue; }
 
                 string name = tab.GetValue<string>(row, 3);
                 int? quantity = ParseQuantity(tab.GetValue<string>(row, 5));

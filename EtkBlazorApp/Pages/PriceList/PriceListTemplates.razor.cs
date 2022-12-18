@@ -18,7 +18,7 @@ namespace EtkBlazorApp.Pages.PriceList;
 
 //TODO: есть ошибка, - при смене у прайс-листа типа его загрузки (email | URL и т.д.), из таблиц не удаляется email_search_critera, соответсвенно не правильн отрабаывают Enable статус кнопок
 //TODO: разбить класс на мелкие фрагменты, получился слишком сложным 
-public partial class PriceListLoadPage
+public partial class PriceListTemplates
 {
     const int MAX_UPLOAD_FILE_SIZE = 32_000_000; // 32 мб размер максимально допустимого файла
     const int UPLOAD_BUFFER_SIZE = 64_000; // Порциями по 64кб загружаем файл с отображением прогресса

@@ -22,7 +22,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 
                 //Тут в прайс-листе нет столбца с наименованием бренда, берем из разрешенного списка
                 string manufacturer = BrandsWhiteList.FirstOrDefault(vm => name.Contains(vm, StringComparison.OrdinalIgnoreCase));
-                if (ManufacturerSkipCheck(manufacturer)) { continue; }
+                if (SkipThisBrand(manufacturer)) { continue; }
 
                 var priceLine = new PriceLine(this)
                 {

@@ -4,15 +4,15 @@
 
 
 
-#marketplace-tab-content{
+#marketplace-tab-content {
     padding: 30px 15px;
 }
+
 .marketplace-tab-item {
     cursor: pointer;
     font-size: 22px;
     text-align: center;
     min-width: 200px;
-
     margin: 4px auto;
     border-bottom: 4px solid #fdf8f8;
     transition: 100ms;
@@ -25,15 +25,16 @@
     font-family: monospace;
 }
 
-    .marketplace-tab-item.active {
-        border-bottom: 4px solid #5dc791;
-        transition: 250ms;
-    }
+.marketplace-tab-item.active {
+    border-bottom: 4px solid #5dc791;
+    transition: 250ms;
+}
 
 .marketplace-feed-uri-small {
     font-size: 11px;
     color: #9aa3af;
 }
+
 .exec_time_input {
     width: auto;
     min-width: 150px;
@@ -146,7 +147,7 @@
 
 .file-input-zone {
     position: relative;
-    width: 225px;
+    width: 250px;
     height: 38px;
 }
 

@@ -16,8 +16,8 @@ namespace EtkBlazorApp.BL
 
         public PriceListTemplateReaderBase()
         {
-            ManufacturerNameMap = new Dictionary<string, string>();
-            QuantityMap = new Dictionary<string, int>();
+            ManufacturerNameMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            QuantityMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             BrandsWhiteList = new List<string>();
             BrandsBlackList = new List<string>();
         }
@@ -59,7 +59,7 @@ namespace EtkBlazorApp.BL
                 {
                     quantity = Math.Max((int)parsedQuantity, 0);
                 }
-                else if(QuantityMap.ContainsKey(str))
+                else if (QuantityMap.ContainsKey(str))
                 {
                     quantity = QuantityMap[str];
                 }
@@ -69,11 +69,11 @@ namespace EtkBlazorApp.BL
         }
 
         /// <summary>
-        /// Проверка на пропуск из загрузки прайс-листа. Скорее всего нужно перенести эту проверки на момент после загрузки прайс-листа, там можно будет убрать проверку из каждого шаблона и оставить только в одном месте
+        /// Проверка на пропуск из загрузки прайс-листа 
         /// </summary>
         /// <param name="manufacturer"></param>
         /// <returns></returns>
-        protected bool ManufacturerSkipCheck(string manufacturer)
+        protected bool SkipThisBrand(string manufacturer)
         {
             bool blackListCondition = BrandsBlackList.Any() && BrandsBlackList.Contains(manufacturer, StringComparer.OrdinalIgnoreCase);
             bool whiteListCondition = BrandsWhiteList.Any() && (BrandsWhiteList.Contains(manufacturer, StringComparer.OrdinalIgnoreCase) == false);
@@ -99,7 +99,9 @@ namespace EtkBlazorApp.BL
             }
             if (templateInfo.manufacturer_skip_list != null)
             {
-                var listsSource = templateInfo.manufacturer_skip_list.Where(i => !string.IsNullOrWhiteSpace(i.name) && !string.IsNullOrWhiteSpace(i.list_type));
+                var listsSource = templateInfo.manufacturer_skip_list
+                    .Where(i => !string.IsNullOrWhiteSpace(i.name) && !string.IsNullOrWhiteSpace(i.list_type));
+
                 foreach (var item in listsSource)
                 {
                     if (item.list_type == "black_list" && !BrandsBlackList.Contains(item.name))

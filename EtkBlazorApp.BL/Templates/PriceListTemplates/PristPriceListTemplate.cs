@@ -31,7 +31,7 @@ namespace EtkBlazorApp.BL
             foreach (var offer in offers)
             {
                 string manufacturer = MapManufacturerName(offer.Vendor);
-                if (ManufacturerSkipCheck(manufacturer)) { continue; }
+                if (SkipThisBrand(manufacturer)) { continue; }
 
                 decimal? price = offer.OldPrice ?? offer.Price;
 

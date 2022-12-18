@@ -13,19 +13,30 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     public class MeanWellSilverPriceListTemplate : ExcelPriceListTemplateBase
     {
         public MeanWellSilverPriceListTemplate(string fileName) : base(fileName) { }
+        const int START_ROW = 3;
 
         protected override List<PriceLine> ReadDataFromExcel()
         {
             var list = new List<PriceLine>();
 
-            for (int row = 3; row < tab.Dimension.Rows; row++)
+            PriceLine previousPriceLine = null;
+            for (int row = START_ROW; row < tab.Dimension.Rows; row++)
             {
                 string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 1));
                 string skuNumber = tab.GetValue<string>(row, 2);
 
-                if (string.IsNullOrWhiteSpace(skuNumber) || ManufacturerSkipCheck(manufacturer)) { continue; }
-       
+                if (string.IsNullOrWhiteSpace(skuNumber) || SkipThisBrand(manufacturer))
+                {
+                    continue;
+                }
+
                 int quantityString = tab.GetValue<int>(row, 6);
+
+                if (previousPriceLine != null && previousPriceLine.Sku == skuNumber && previousPriceLine.Manufacturer == manufacturer)
+                {
+                    previousPriceLine.Quantity += quantityString;
+                    continue;
+                }
 
                 decimal regularPriceString = tab.GetValue<decimal>(row, 7);
                 decimal discountPriceString = tab.GetValue<decimal>(row, 8);
@@ -59,6 +70,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
 
                 list.Add(priceLine);
+                previousPriceLine = priceLine;
             }
 
             return list;
@@ -69,7 +81,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     {
         private readonly string manufacturer;
 
-        public EltechPartnersPriceListTemplate(string fileName, string manufacturer) : base(fileName) 
+        public EltechPartnersPriceListTemplate(string fileName, string manufacturer) : base(fileName)
         {
             this.manufacturer = manufacturer;
         }

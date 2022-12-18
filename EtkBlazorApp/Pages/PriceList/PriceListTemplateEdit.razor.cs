@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.Pages.PriceList;
 
-public partial class EditPriceList : ComponentBase
+public partial class PriceListTemplateEdit : ComponentBase
 {
     [Parameter] public string TemplateGuid { get; set; } = string.Empty;
 

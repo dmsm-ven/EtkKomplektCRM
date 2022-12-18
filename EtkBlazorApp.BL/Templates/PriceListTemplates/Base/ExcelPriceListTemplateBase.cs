@@ -47,7 +47,7 @@ namespace EtkBlazorApp.BL
                     {
                         File.Delete(convertedFilePath);
                     }
-                }               
+                }
             }
             return lines;
         }
@@ -56,11 +56,12 @@ namespace EtkBlazorApp.BL
         {
             using (Excel = new ExcelPackage(new FileInfo(fileName)))
             {
-                if(Excel.Workbook.Worksheets.Count == 0)
+                if (Excel.Workbook.Worksheets.Count == 0)
                 {
                     throw new FormatException("Прайс-лист не содержит вкладок");
                 }
                 var readedLines = await Task.Run(() => ReadDataFromExcel());
+
                 return readedLines;
             }
         }
@@ -85,7 +86,7 @@ namespace EtkBlazorApp.BL
 
             using (var process = Process.Start(command))
             {
-                await process.WaitForExitAsync();              
+                await process.WaitForExitAsync();
             }
             await Task.Delay(TimeSpan.FromSeconds(2));
             return inputFilePath + "x";

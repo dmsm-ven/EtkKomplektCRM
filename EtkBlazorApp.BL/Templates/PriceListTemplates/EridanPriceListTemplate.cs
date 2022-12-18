@@ -19,7 +19,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 string manufacturer = tab.GetValue<string>(row, 4).Trim();
                 
-                if (ManufacturerSkipCheck(manufacturer)) { continue; }
+                if (SkipThisBrand(manufacturer)) { continue; }
 
                 string sku = tab.GetValue<string>(row, 1);
                 string model = tab.GetValue<string>(row, 2);                           
@@ -61,7 +61,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 string manufacturer = tab.GetValue<string>(row, 6).Trim();
 
-                if (ManufacturerSkipCheck(manufacturer)) { continue; }
+                if (SkipThisBrand(manufacturer)) { continue; }
 
                 string sku = tab.GetValue<string>(row, 4);
                 string name = tab.GetValue<string>(row, 5);

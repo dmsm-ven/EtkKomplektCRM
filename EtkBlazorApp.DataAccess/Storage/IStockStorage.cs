@@ -94,6 +94,7 @@ namespace EtkBlazorApp.DataAccess
             return stocksInfo;
 
         }
+
         public async Task<List<StockPartnerManufacturerInfoEntity>> GetManufacturerStockPartners(int manufacturer_id)
         {
             string sql = @"SELECT sp.stock_partner_id, sp.name, count(p.product_id) as total_products, sum(ptc.quantity) as total_quantity

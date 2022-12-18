@@ -20,7 +20,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 var rrcPrice = ParsePrice(tab.GetValue<string>(row, 8));
                
                 string manufacturer = MapManufacturerName(GetManufacturerBySkuPrefix(ref sku));
-                if(ManufacturerSkipCheck(manufacturer)) { }
+                if(SkipThisBrand(manufacturer)) { }
 
                 var priceLine = new PriceLine(this)
                 {

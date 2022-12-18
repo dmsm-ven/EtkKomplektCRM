@@ -15,7 +15,7 @@ namespace EtkBlazorApp.BL
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
                 string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 26));
-                if (ManufacturerSkipCheck(manufacturer)) { continue; }
+                if (SkipThisBrand(manufacturer)) { continue; }
 
                 string sku = tab.GetValue<string>(row, 3);
                 string name = tab.GetValue<string>(row, 4);
@@ -65,14 +65,20 @@ namespace EtkBlazorApp.BL
                 string name = tab.GetValue<string>(row, 4);
                 int quantity = tab.GetValue<int>(row, 10);
                 decimal? priceInUsd = ParsePrice(tab.GetValue<string>(row, 11));
+                string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 12));
                 string model = tab.GetValue<string>(row, 13);
+
+                if (SkipThisBrand(manufacturer))
+                {
+                    continue;
+                }
 
                 var priceLine = new PriceLine(this)
                 {
                     Name = name,
                     Sku = sku,
                     Model = model,
-                    Manufacturer = "Pro'sKit",
+                    Manufacturer = manufacturer,
                     Price = priceInUsd,
                     Currency = CurrencyType.RUB,
                     Quantity = quantity,

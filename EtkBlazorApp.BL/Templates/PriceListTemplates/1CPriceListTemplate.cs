@@ -29,7 +29,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string name = tab.GetValue<string>(row, 4);
                 var quantity = ParseQuantity(tab.GetValue<string>(row, 7));
 
-                if (string.IsNullOrWhiteSpace(skuNumber) || ManufacturerSkipCheck(manufacturer)) { continue; }
+                if (string.IsNullOrWhiteSpace(skuNumber) || SkipThisBrand(manufacturer)) { continue; }
 
                 var priceLine = new PriceLine(this)
                 {

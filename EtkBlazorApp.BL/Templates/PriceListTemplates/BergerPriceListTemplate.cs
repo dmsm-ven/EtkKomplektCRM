@@ -34,7 +34,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string name = tab.GetValue<string>(row, 3);
                 var rrcPrice = ParsePrice(tab.GetValue<string>(row, 5));
 
-                if (string.IsNullOrWhiteSpace(sku) || ManufacturerSkipCheck(manufacturer)) { continue; }
+                if (string.IsNullOrWhiteSpace(sku) || SkipThisBrand(manufacturer)) { continue; }
 
                 var priceLine = new PriceLine(this)
                 {

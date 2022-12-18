@@ -1,7 +1,7 @@
 ﻿@page "/settings"
 @inject IToastService toasts
 @attribute [Authorize(Roles = "Administrator")]
-@using Pages.Settings.SettingsTabs;
+@using EtkBlazorApp.Pages.Settings.SettingsTabs;
 
 <div class="btn-group">
     @foreach (var tab in tabData)

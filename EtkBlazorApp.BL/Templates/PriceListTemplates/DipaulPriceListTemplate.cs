@@ -21,7 +21,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 3));
 
-                if(ManufacturerSkipCheck(manufacturer)) { continue; }
+                if(SkipThisBrand(manufacturer)) { continue; }
 
                 string skuNumber = tab.GetValue<string>(row, 1);
                 string productName = tab.GetValue<string>(row, 2);

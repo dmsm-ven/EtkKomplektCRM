@@ -24,7 +24,7 @@ namespace EtkBlazorApp.BL
                 
                 int quantity = QuantityMap[quantityString];
 
-                if (string.IsNullOrEmpty(skuNumber) || ManufacturerSkipCheck(manufacturer)) { continue; }
+                if (string.IsNullOrEmpty(skuNumber) || SkipThisBrand(manufacturer)) { continue; }
 
                 var priceLine = new PriceLine(this)
                 {

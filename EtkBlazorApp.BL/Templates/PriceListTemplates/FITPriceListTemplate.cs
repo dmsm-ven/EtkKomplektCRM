@@ -18,7 +18,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
                 string manufacturer = tab.GetValue<string>(row, 3);
-                if (ManufacturerSkipCheck(manufacturer)) { continue; }
+                if (SkipThisBrand(manufacturer)) { continue; }
 
                 string skuNumber = "FIT-" + tab.GetValue<string>(row, 1);
                 string name = tab.GetValue<string>(row, 2);
