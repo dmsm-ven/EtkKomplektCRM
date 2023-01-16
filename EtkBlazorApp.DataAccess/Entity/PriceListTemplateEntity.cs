@@ -12,7 +12,7 @@ namespace EtkBlazorApp.DataAccess.Entity
         public string title { get; set; }
         public string group_name { get; set; }
         public string description { get; set; }
-        public string image { get; set; }     
+        public string image { get; set; }
         public decimal discount { get; set; }
         public bool nds { get; set; }
 
@@ -32,6 +32,7 @@ namespace EtkBlazorApp.DataAccess.Entity
 
         public List<QuantityMapRecordEntity> quantity_map { get; set; }
         public List<ManufacturerMapRecordEntity> manufacturer_name_map { get; set; }
+        public List<ManufacturerDiscountMapEntity> manufacturer_discount_map { get; set; }
         public List<ManufacturerSkipRecordEntity> manufacturer_skip_list { get; set; }
     }
 }

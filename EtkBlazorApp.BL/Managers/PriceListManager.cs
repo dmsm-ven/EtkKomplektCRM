@@ -101,10 +101,10 @@ namespace EtkBlazorApp.BL
                 }
 
                 var list = await templateInstance.ReadPriceLines(null);
-                
+
                 FillLinkedStock(list, templateInfo.stock_partner_id);
-                
-                await ApplyDiscounts(list, templateInfo.discount, templateInfo.nds);
+
+                await ApplyDiscounts(list, templateInfo);
 
                 if (addFileData)
                 {
@@ -126,7 +126,7 @@ namespace EtkBlazorApp.BL
 
         private void FillLinkedStock(List<PriceLine> list, int? stock_partner_id)
         {
-            if(!stock_partner_id.HasValue) { return; }
+            if (!stock_partner_id.HasValue) { return; }
 
             StockName stock = (StockName)stock_partner_id.Value;
             foreach (var line in list.Where(l => l.Stock == StockName.None))
@@ -141,26 +141,49 @@ namespace EtkBlazorApp.BL
         /// <param name="list"></param>
         /// <param name="discount"></param>
         /// <param name="addNds"></param>
-        private async Task ApplyDiscounts(List<PriceLine> list, decimal discount, bool addNds)
+        private async Task ApplyDiscounts(IEnumerable<PriceLine> list, PriceListTemplateEntity templateInfo)
         {
             var source = list.Where(line => line.Price.HasValue);
-            bool emptyDiscount = (discount == decimal.Zero && addNds == false);
 
-            if (emptyDiscount || source.Count() == 0) { return; }
+            bool emptyDiscountGeneralDiscount = templateInfo.discount == decimal.Zero;
+            bool emptyDiscountMap = templateInfo.manufacturer_discount_map.Count == 0;
 
+            // берем цену из прайс-листа как есть. Т.к. нет ни наценки, ни НДС
+            if (emptyDiscountGeneralDiscount && emptyDiscountMap && !templateInfo.nds)
+            {
+                return;
+            }
+
+            // словарь Бренд/Скидка
+            Dictionary<string, decimal> discountsByBrand = templateInfo
+                .manufacturer_discount_map
+                .ToDictionary(i => i.name, i => i.discount);
+
+            //Загружаем НДС
             NDS = (100m + (await settings.GetValue<int>("nds"))) / 100;
 
             foreach (var line in source)
             {
-                if (addNds)
+                //Сначала добавляет к цене NDS, если нужно
+                if (templateInfo.nds)
                 {
                     line.Price = AddNds(line.Price.Value, line.Currency);
                 }
-                if (discount != decimal.Zero)
+
+                decimal discountValue = emptyDiscountGeneralDiscount ? 0m : templateInfo.discount;
+                // Если бренд есть в словаре, то берем скидку для него в первую очередь (заменяя стандартную от прайс-листа)
+                if (!emptyDiscountMap && discountsByBrand.ContainsKey(line.Manufacturer))
                 {
-                    line.Price = Math.Round(line.Price.Value * (1m + (discount / 100m)), line.Currency == CurrencyType.RUB ? 0 : 2);
+                    discountValue = discountsByBrand[line.Manufacturer];
                 }
 
+                //Высчитываем множитель
+                decimal discountRatio = 1m + (discountValue / 100m);
+
+                if (discountRatio != 1)
+                {
+                    line.Price = Math.Round(line.Price.Value * discountRatio, line.Currency == CurrencyType.RUB ? 0 : 2);
+                }
             }
         }
 
@@ -172,7 +195,7 @@ namespace EtkBlazorApp.BL
         /// <returns></returns>
         private decimal AddNds(decimal price, CurrencyType currencyType)
         {
-            
+
             if (currencyType == CurrencyType.RUB)
             {
                 return Math.Floor(price * NDS);
@@ -222,6 +245,6 @@ namespace EtkBlazorApp.BL
 
                 PriceLines.Add(line);
             }
-        }     
+        }
     }
 }

@@ -26,7 +26,7 @@ namespace EtkBlazorApp.BL
             IProductUpdateService productUpdateService,
             ISettingStorage settingStorage,
             IManufacturerStorage manufacturerStorage,
-            IMonobrandStorage monobrandStorage, 
+            IMonobrandStorage monobrandStorage,
             IDatabaseProductCorrelator correlator)
         {
             this.productsStorage = productsStorage;
@@ -38,11 +38,11 @@ namespace EtkBlazorApp.BL
         }
 
         public async Task UpdatePriceAndStock(
-            IEnumerable<PriceLine> priceLines, 
+            IEnumerable<PriceLine> priceLines,
             IProgress<string> progress = null)
         {
             progress?.Report("Подготовка списка производителей для обновления");
-            int [] affectedBrandsIds = await GetAffectedBrandIds(priceLines);
+            int[] affectedBrandsIds = await GetAffectedBrandIds(priceLines);
 
             progress?.Report("Загрузка товаров");
             var products = await productsStorage.ReadProducts(affectedBrandsIds);
@@ -52,7 +52,7 @@ namespace EtkBlazorApp.BL
 
             progress?.Report("Обновление цен etk-komplekt.ru");
             await productUpdateService.UpdateProductsPrice(data);
-           
+
             progress?.Report("Обновление остатков на складах etk-komplekt.ru");
             await productUpdateService.UpdateProductsStockPartner(data, affectedBrandsIds);
 
@@ -75,7 +75,7 @@ namespace EtkBlazorApp.BL
             {
                 await UpdateMonobrands(affectedBrandsIds, progress);
             }
-            
+
             progress?.Report("Обновление завершено");
         }
 
@@ -98,13 +98,18 @@ namespace EtkBlazorApp.BL
             return affectedBrandsIds.ToArray();
         }
 
+
+        /// <summary>
+        /// Дополнительное добавление брендов для нахождения сопоставления. Если в прайс-листе поставщика нет отдельного поля с брендом - то что бы он корректно загрузился, нужно добавить его в дополнительную загруку
+        /// </summary>
+        /// <param name="affectedBrands"></param>
         private void AddAdditionalAffectedBrands(List<string> affectedBrands)
         {
             //В прайс-листе Elevel нет столбца с брендом, приходится загружать все их бренды
             //это очень увеличивает скорость сопоставления товаров
             if (affectedBrands.Contains("Elevel"))
             {
-                affectedBrands.AddRange(new[] { "IEK", "ABB", "Legrand", "Schneider Electric", "DKC", "Wago"});
+                affectedBrands.AddRange(new[] { "IEK", "ABB", "Legrand", "Schneider Electric", "DKC", "Wago" });
             }
 
 
@@ -119,6 +124,12 @@ namespace EtkBlazorApp.BL
             if (affectedBrands.Contains("Weller"))
             {
                 affectedBrands.Add("Erem");
+            }
+
+            //Для корректной загрузки остатков бренда Guide в прайс-листе Testo
+            if (affectedBrands.Contains("Testo"))
+            {
+                affectedBrands.Add("Guide");
             }
 
             // Если есть какой-либо бренд из списка то добавляем всех, т.к. у них есть товары которые по факту один и тот же
@@ -137,7 +148,7 @@ namespace EtkBlazorApp.BL
                 .Where(monobrand => monobrand.is_update_enabled && affectedBrandsIds.Contains(monobrand.manufacturer_id))
                 .ToList();
 
-            if(affectedMonobrands.Count == 0) { return; }
+            if (affectedMonobrands.Count == 0) { return; }
 
             progress?.Report("Обновление монобренд сайтов");
             string key = await settingStorage.GetValue("monobrand_updater_key");
@@ -147,13 +158,13 @@ namespace EtkBlazorApp.BL
                 {
                     string uriQuery = $"client_name=monobrand&key={key}&manufacturer={monobrand.manufacturer_name}&currency_code={monobrand.currency_code}";
                     string apiUri = $"{monobrand.website}/?route=api/monobrand_updater/update&{uriQuery}";
-              
+
                     progress?.Report($"Обновление сайта {monobrand.website}");
                     await Task.Delay(TimeSpan.FromSeconds(1));
 
                     await (new WebClient().DownloadStringTaskAsync(apiUri));
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     progress?.Report($"Ошибка обновления сайта {monobrand.website}. " + ex.Message);
                 }

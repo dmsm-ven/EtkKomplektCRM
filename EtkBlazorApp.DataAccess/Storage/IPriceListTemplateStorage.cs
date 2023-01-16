@@ -18,18 +18,26 @@ namespace EtkBlazorApp.DataAccess
         Task<PriceListTemplateEntity> GetPriceListTemplateById(string guid);
         Task<List<PriceListTemplateRemoteUriMethodEntity>> GetPricelistTemplateRemoteLoadMethods();
         Task<List<string>> GetPriceListTemplatGroupNames();
-        
+
+        //quantity map
         Task AddQuantityMapRecord(string guid, string newQuantityMapRecordWord, int newQuantityMapRecordValue);
         Task RemoveQuantityMapRecord(string guid, string word);
         Task<List<QuantityMapRecordEntity>> GetQuantityMapRecordsForTemplate(string guid);
 
+        //manufacturer_name map
         Task<List<ManufacturerMapRecordEntity>> GetManufacturerNameMapRecordsForTemplate(string guid);
         Task AddManufacturerMapRecord(string guid, string newManufacturerMapRecordWord, int manufacturer_id);
         Task RemoveManufacturerMapRecord(string guid, string word);
 
+        //manufacturer white/black list map
         Task<List<ManufacturerSkipRecordEntity>> GetManufacturerSkipRecordsForTemplate(string guid);
         Task RemoveSkipManufacturerRecord(string guid, int manufacturer_id, string listType);
         Task AddSkipManufacturerRecord(string guid, int manufacturer_id, string newSkipManufacturerListType);
+
+        //manufacturer discount map
+        Task<List<ManufacturerDiscountMapEntity>> GetDiscountMapRecordsForTemplate(string guid);
+        Task RemoveDiscountMapRecord(string guid, int manufacturer_id);
+        Task AddDiscountMapRecord(string guid, int manufacturer_id, decimal discount);
     }
 
     public class PriceListTemplateStorage : IPriceListTemplateStorage
@@ -79,7 +87,7 @@ namespace EtkBlazorApp.DataAccess
         public async Task ChangePriceListTemplateDiscount(string id, decimal discount)
         {
             string sql = "UPDATE etk_app_price_list_template SET discount = @discount WHERE id = @id";
-            await database.ExecuteQuery(sql, new { id, discount});
+            await database.ExecuteQuery(sql, new { id, discount });
         }
 
         public async Task<List<PriceListTemplateRemoteUriMethodEntity>> GetPricelistTemplateRemoteLoadMethods()
@@ -118,7 +126,7 @@ namespace EtkBlazorApp.DataAccess
                 await InsertOrUpdatePriceListCredentials(data);
             }
             if (data.email_criteria_sender != null)
-            {              
+            {
                 await InsertOrUpdatePriceListEmailSearchCriteria(data);
             }
         }
@@ -136,7 +144,7 @@ namespace EtkBlazorApp.DataAccess
 
             await database.ExecuteQuery(sql, data);
         }
-        
+
         private async Task InsertOrUpdatePriceListCredentials(PriceListTemplateEntity data)
         {
             string sql = @"INSERT INTO etk_app_price_list_template_credentials (template_guid, login, password) VALUES
@@ -148,7 +156,7 @@ namespace EtkBlazorApp.DataAccess
         }
 
         public async Task CreatePriceList(PriceListTemplateEntity data)
-        {          
+        {
             string sql = @"INSERT INTO etk_app_price_list_template
                         (id, stock_partner_id, title, description, group_name, remote_uri, remote_uri_method_id, nds, discount, image) VALUES
                         (@id, @stock_partner_id, @title, @description, @group_name, @remote_uri, @remote_uri_method_id, @nds, @discount, @image)";
@@ -174,6 +182,7 @@ namespace EtkBlazorApp.DataAccess
             await database.ExecuteQuery("DELETE FROM etk_app_price_list_manufacturer_list WHERE price_list_guid = @guid", new { guid });
             await database.ExecuteQuery("DELETE FROM etk_app_price_list_manufacturer_map WHERE price_list_guid = @guid", new { guid });
             await database.ExecuteQuery("DELETE FROM etk_app_price_list_quantity_map WHERE price_list_guid = @guid", new { guid });
+            await database.ExecuteQuery("DELETE FROM etk_app_price_list_discount_map WHERE price_list_guid = @guid", new { guid });
         }
 
         public async Task<List<QuantityMapRecordEntity>> GetQuantityMapRecordsForTemplate(string guid)
@@ -261,6 +270,36 @@ namespace EtkBlazorApp.DataAccess
                             list_type = @list_type";
 
             await database.ExecuteQuery(sql, new { guid, manufacturer_id, list_type });
+        }
+
+        public async Task<List<ManufacturerDiscountMapEntity>> GetDiscountMapRecordsForTemplate(string guid)
+        {
+            string sql = @"SELECT t.*, m.name
+                           FROM etk_app_price_list_template_discount_map t
+                           LEFT JOIN oc_manufacturer m ON (t.manufacturer_id = m.manufacturer_id)
+                           WHERE price_list_guid = @guid";
+            var data = await database.GetList<ManufacturerDiscountMapEntity, dynamic>(sql, new { guid });
+            return data;
+        }
+
+        public async Task RemoveDiscountMapRecord(string guid, int manufacturer_id)
+        {
+            string sql = @"DELETE FROM etk_app_price_list_template_discount_map
+                           WHERE price_list_guid = @guid AND manufacturer_id = @manufacturer_id";
+            await database.ExecuteQuery(sql, new { guid, manufacturer_id });
+        }
+
+        public async Task AddDiscountMapRecord(string guid, int manufacturer_id, decimal discount)
+        {
+            string sql = @"INSERT INTO etk_app_price_list_template_discount_map
+                            (price_list_guid, manufacturer_id, discount) VALUES
+                            (@guid, @manufacturer_id, @discount)
+                          ON DUPLICATE KEY UPDATE
+                            price_list_guid = @guid,                            
+                            manufacturer_id = @manufacturer_id, 
+                            discount = @discount";
+
+            await database.ExecuteQuery(sql, new { guid, manufacturer_id, discount });
         }
     }
 }

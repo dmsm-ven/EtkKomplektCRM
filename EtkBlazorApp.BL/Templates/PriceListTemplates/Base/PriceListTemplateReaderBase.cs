@@ -11,6 +11,7 @@ namespace EtkBlazorApp.BL
         //TODO: Тут стоит поменят словари и списки на ReadOnly версии
         protected Dictionary<string, string> ManufacturerNameMap { get; private set; }
         protected Dictionary<string, int> QuantityMap { get; private set; }
+        protected Dictionary<string, decimal> ManufacturerDiscountMap { get; private set; }
         protected List<string> BrandsWhiteList { get; private set; }
         protected List<string> BrandsBlackList { get; private set; }
 
@@ -18,6 +19,7 @@ namespace EtkBlazorApp.BL
         {
             ManufacturerNameMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             QuantityMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            ManufacturerDiscountMap = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
             BrandsWhiteList = new List<string>();
             BrandsBlackList = new List<string>();
         }
@@ -95,6 +97,13 @@ namespace EtkBlazorApp.BL
                 foreach (var kvp in templateInfo.manufacturer_name_map)
                 {
                     ManufacturerNameMap[kvp.text] = kvp.name;
+                }
+            }
+            if (templateInfo.manufacturer_discount_map != null)
+            {
+                foreach (var kvp in templateInfo.manufacturer_discount_map)
+                {
+                    ManufacturerDiscountMap[kvp.name] = kvp.discount;
                 }
             }
             if (templateInfo.manufacturer_skip_list != null)

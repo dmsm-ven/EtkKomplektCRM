@@ -1,7 +1,9 @@
-﻿using EtkBlazorApp.BL;
+﻿using Blazored.Toast.Services;
+using EtkBlazorApp.BL;
 using EtkBlazorApp.Components.Dialogs;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
+using EtkBlazorApp.Services;
 using Microsoft.AspNetCore.Components;
 using System;
 using System.Collections.Generic;
@@ -12,11 +14,17 @@ namespace EtkBlazorApp.Pages.PriceList;
 
 public partial class PriceListTemplateEdit : ComponentBase
 {
+    [Inject] public IPriceListTemplateStorage templateStorage { get; set; }
+    [Inject] public IStockStorage stockStorage { get; set; }
+    [Inject] public ISettingStorage settings { get; set; }
+    [Inject] public IToastService toasts { get; set; }
+    [Inject] public UserLogger logger { get; set; }
+    [Inject] public NavigationManager navManager { get; set; }
+
     [Parameter] public string TemplateGuid { get; set; } = string.Empty;
 
     FtpFileSelectDialog imageSelectDialog;
     DeleteConfirmDialog deleteDialog;
-
     PriceListTemplateItemViewModel sourceTemplate;
 
     List<PriceListTemplateRemoteUriMethodEntity> remoteUriLoadMethods;
@@ -27,16 +35,24 @@ public partial class PriceListTemplateEdit : ComponentBase
     StockPartnerEntity linkedStock;
     SkipManufacturerListType newSkipManufacturerListType = SkipManufacturerListType.black_list;
     ManufacturerEntity newSkipManufacturerItem;
-    string newManufacturerMapRecordWord;
     ManufacturerEntity newManufacturerMapRecordItem;
+    ManufacturerEntity newDiscountMapRecordItem;
+
+    string newManufacturerMapRecordWord;
     string newQuantityMapRecordWord;
+    decimal newDiscountMapValue;
     int newQuantityMapRecordValue;
 
     bool createNew = false;
     bool expandedQuantityMap = false;
     bool expandedManufacturerMap = false;
+    bool expandedDiscountMap = false;
     bool expandedSkipList = false;
-    bool showEmailPatternBox => sourceTemplate.RemoteUrlMethodName == "EmailAttachment";
+
+    bool showEmailPatternBox
+    {
+        get => sourceTemplate.RemoteUrlMethodName == "EmailAttachment";
+    }
     bool addNewManufacturerMapButtonDisabled
     {
         get
@@ -54,7 +70,10 @@ public partial class PriceListTemplateEdit : ComponentBase
                 sourceTemplate.ManufacturerSkipList.Any(i => i.manufacturer_id == newSkipManufacturerItem.manufacturer_id || i.ListType != newSkipManufacturerListType);
         }
     }
-    string buttonActionName => string.IsNullOrWhiteSpace(TemplateGuid) ? "Создать" : "Сохранить изменения";
+    string buttonActionName
+    {
+        get => string.IsNullOrWhiteSpace(TemplateGuid) ? "Создать" : "Сохранить изменения";
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -82,14 +101,21 @@ public partial class PriceListTemplateEdit : ComponentBase
                 LinkedStockId = entity.stock_partner_id,
                 QuantityMap = entity.quantity_map.ToDictionary(i => i.text, i => i.quantity),
                 ManufacturerNameMap = entity.manufacturer_name_map.ToDictionary(i => i.text, i => i.name),
+                ManufacturerDiscountMap = entity.manufacturer_discount_map
+                    .Select(i => new ManufacturerDiscountItemViewModel()
+                    {
+                        manufacturer_id = i.manufacturer_id,
+                        manufacturer_name = i.name,
+                        discount = i.discount
+                    }).ToList()
+                ,
                 ManufacturerSkipList = entity.manufacturer_skip_list
                     .Select(e => new ManufacturerSkipItemViewModel()
                     {
                         ListType = Enum.Parse<SkipManufacturerListType>(e.list_type),
                         manufacturer_id = e.manufacturer_id,
                         Name = e.name
-                    })
-                    .ToList()
+                    }).ToList()
             };
         }
         else
@@ -211,6 +237,31 @@ public partial class PriceListTemplateEdit : ComponentBase
         }
     }
 
+    #region Дополнительные настройки шаблона
+    private async Task AddDiscountMapRecord()
+    {
+        await templateStorage.AddDiscountMapRecord(sourceTemplate.Guid, newDiscountMapRecordItem.manufacturer_id, newDiscountMapValue);
+
+        sourceTemplate.ManufacturerDiscountMap.Add(new ManufacturerDiscountItemViewModel()
+        {
+            manufacturer_id = newDiscountMapRecordItem.manufacturer_id,
+            manufacturer_name = newDiscountMapRecordItem.name,
+            discount = newDiscountMapValue
+        });
+        StateHasChanged();
+
+        await logger.Write(LogEntryGroupName.TemplateUpdate, "Добавлено", $"Скидка у бренда в прайс-листе'{newDiscountMapRecordItem.name}' --> '{newDiscountMapValue}' для шаблона {sourceTemplate.Title}");
+    }
+
+    private async Task RemoveDiscountMapRecord(ManufacturerDiscountItemViewModel data)
+    {
+        await templateStorage.RemoveDiscountMapRecord(sourceTemplate.Guid, data.manufacturer_id);
+        sourceTemplate.ManufacturerDiscountMap.Remove(data);
+        StateHasChanged();
+
+        await logger.Write(LogEntryGroupName.TemplateUpdate, "Убрано", $"Наценка для '{data.manufacturer_name}' из шаблона {sourceTemplate.Title}");
+    }
+
     private async Task AddManufacturerMapRecord()
     {
         await templateStorage.AddManufacturerMapRecord(sourceTemplate.Guid, newManufacturerMapRecordWord, newManufacturerMapRecordItem.manufacturer_id);
@@ -272,5 +323,6 @@ public partial class PriceListTemplateEdit : ComponentBase
 
         await logger.Write(LogEntryGroupName.TemplateUpdate, "Убрано", $"Исключение бренда '{skipInfo.Name}' ({skipInfo.ListTypeDescription}) из шаблона {sourceTemplate.Title}");
     }
+    #endregion
 }
 

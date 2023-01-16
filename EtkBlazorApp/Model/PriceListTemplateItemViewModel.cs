@@ -25,13 +25,13 @@ namespace EtkBlazorApp
         [Required]
         public string GroupName { get; set; }
 
-        public decimal Discount { get; set; }       
+        public decimal Discount { get; set; }
         public bool Nds { get; set; }
 
         public string RemoteUrl { get; set; }
         public int? RemoteUrlMethodId { get; set; }
         public string RemoteUrlMethodName { get; set; }
-        
+
         public int? LinkedStockId { get; set; }
 
         public string EmailSearchCriteria_Subject { get; set; }
@@ -42,9 +42,10 @@ namespace EtkBlazorApp
         public string Cridentials_Login { get; set; }
         public string Cridentials_Password { get; set; }
 
-        public Dictionary<string, int> QuantityMap { get; set; } = new Dictionary<string, int>();
-        public Dictionary<string, string> ManufacturerNameMap { get; set; } = new Dictionary<string, string>();
-        public List<ManufacturerSkipItemViewModel> ManufacturerSkipList { get; set; } = new List<ManufacturerSkipItemViewModel>();
+        public Dictionary<string, int> QuantityMap { get; set; } = new();
+        public Dictionary<string, string> ManufacturerNameMap { get; set; } = new();
+        public List<ManufacturerDiscountItemViewModel> ManufacturerDiscountMap { get; set; } = new();
+        public List<ManufacturerSkipItemViewModel> ManufacturerSkipList { get; set; } = new();
 
         public PriceListTemplateItemViewModel(string guid)
         {
@@ -57,12 +58,19 @@ namespace EtkBlazorApp
         }
     }
 
+    public class ManufacturerDiscountItemViewModel
+    {
+        public int manufacturer_id { get; set; }
+        public string manufacturer_name { get; set; }
+        public decimal discount { get; set; }
+    }
+
     public class ManufacturerSkipItemViewModel
     {
         public int manufacturer_id { get; set; }
         public string Name { get; set; }
         public SkipManufacturerListType ListType { get; set; }
-        public string ListTypeDescription => (ListType == SkipManufacturerListType.black_list ? "Черный список" : "Белый список");        
+        public string ListTypeDescription => (ListType == SkipManufacturerListType.black_list ? "Черный список" : "Белый список");
     }
 
     public enum SkipManufacturerListType { black_list, white_list }
