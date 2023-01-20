@@ -90,7 +90,7 @@ namespace EtkBlazorApp.Pages
                 case nameof(StockPartnerViewModel.PhoneNumber): message = stock.PhoneNumber; break;
                 case nameof(StockPartnerViewModel.Website): message = stock.Website; break;
             }
-            toasts.ShowInfo(message, stock.Name);
+            toasts.ShowInfo($"{stock.Name}: {message}");
         }
 
         private async Task NewStockDialogStatusChanged(StockPartnerViewModel data)
@@ -119,13 +119,13 @@ namespace EtkBlazorApp.Pages
                     stockList.Add(data);
 
                     await logger.Write(LogEntryGroupName.ManufacturerUpdate, "Добавление", $"Склад «{stockEntity.name}» добавлен");
-                    toasts.ShowSuccess(data.Name, "Склад добавлен");
+                    toasts.ShowSuccess($"Склад добавлен: {data.Name}");
                 }
                 else
                 {
                     await stockStorage.CreateOrUpdateStock(stockEntity);
                     await logger.Write(LogEntryGroupName.ManufacturerUpdate, "Обновление", $"Данные склада «{stockEntity.name}» обновлены");
-                    toasts.ShowSuccess(data.Name, "Склад обновлен");
+                    toasts.ShowSuccess($"Склад обновлен: {data.Name}");
                 }
                 StateHasChanged();
             }
@@ -133,7 +133,7 @@ namespace EtkBlazorApp.Pages
 
         private async void ShowStockAddress(StockPartnerViewModel stock)
         {
-            toasts.ShowInfo(stock.Address ?? "Адрес не заполнен", stock.Name);
+            toasts.ShowInfo($"{stock.Name}: {stock.Address ?? "Адрес не заполнен"}");
             await js.OpenAddressAsYandexMapLocation(stock.Address);
         }
 
@@ -149,11 +149,11 @@ namespace EtkBlazorApp.Pages
                     builder.AddContent(1, new MarkupString($"<ul>{li}</ul>"));
                 };
 
-                toasts.ShowInfo(messageFragment(), manufacturer.name);
+                toasts.ShowInfo($"{manufacturer.name}: {messageFragment()}");
             }
             else
             {
-                toasts.ShowInfo("Нет данных по количеству товаров для данного производителя", manufacturer.name);
+                toasts.ShowInfo($"{manufacturer.name}: Нет данных по количеству товаров");
             }
         }
 
@@ -169,11 +169,11 @@ namespace EtkBlazorApp.Pages
                     builder.AddContent(1, new MarkupString($"<ul>{li}</ul>"));
                 };
 
-                toasts.ShowInfo(messageFragment(), stock.Name);
+                toasts.ShowInfo($"{stock.Name}: {messageFragment()}");
             }
             else
             {
-                toasts.ShowInfo("Нет данных по брендам для данного склада", stock.Name);
+                toasts.ShowInfo($"{stock.Name}: Нет данных по брендам для данного склада");
             }
         }
 

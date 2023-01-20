@@ -2,7 +2,6 @@
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
-    // Хардкод пересчет USD в рубли по курсу 84 руб., дата изменния 12.06.2022
     [PriceListTemplateGuid("C594AA8D-6D76-42E2-A35C-B19AB4B0E780")]
     public class CemPriceListTemplate : ExcelPriceListTemplateBase
     {
@@ -21,7 +20,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string name = tab.GetValue<string>(row, 2);
                 string ean = tab.GetValue<string>(row, 3);
                 string sku = SKU_PREFIX + tab.GetValue<string>(row, 4);
-                decimal price =  tab.GetValue<decimal>(row, 7);
+                decimal price = tab.GetValue<decimal>(row, 7);
 
                 var quantityMsk = ParseQuantity(tab.GetValue<string>(row, 8));
                 var quantitySpb = ParseQuantity(tab.GetValue<string>(row, 11));
@@ -47,4 +46,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             return list;
         }
     }
+
+
 }

@@ -136,6 +136,17 @@
                 <button class="btn btn-outline-success" @onclick="SaveTemplateDiscount">
                     <span class="oi oi-circle-check" style="font-size: 16px;"></span>
                 </button>
+                @if (editingTemplate.ManufacturerDiscountMap.Any())
+                {
+                    <p>
+                        Отдельные наценки для:
+                        @foreach (var kvp in editingTemplate.ManufacturerDiscountMap)
+                        {
+                            <span>@kvp.manufacturer_name (@kvp.discount.ToString("F0")%)</span>
+                        }
+                    </p>
+
+                }
             }
             else
             {

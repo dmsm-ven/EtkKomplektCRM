@@ -199,12 +199,12 @@ public partial class PriceListTemplateEdit : ComponentBase
         try
         {
             await templateStorage.UpdatePriceList(entity);
-            toasts.ShowInfo("Шаблон обновлен", sourceTemplate.Title);
+            toasts.ShowInfo($"Шаблон обновлен: {sourceTemplate.Title}");
             await logger.Write(LogEntryGroupName.TemplateUpdate, "Шаблон обновлен", $"Обновление шаблона '{sourceTemplate.Title}' ({sourceTemplate.Guid})");
         }
         catch (Exception ex)
         {
-            toasts.ShowInfo("Ошибка обновления" + ex.Message, sourceTemplate.Title);
+            toasts.ShowInfo($"{sourceTemplate.Title} - Ошибка обновления: {ex.Message}");
             await logger.Write(LogEntryGroupName.TemplateUpdate, "Ошибка обновления", $"Ошибка обновления '{sourceTemplate.Title}' ({sourceTemplate.Guid}). {ex.Message}");
         }
     }
@@ -214,13 +214,13 @@ public partial class PriceListTemplateEdit : ComponentBase
         try
         {
             await templateStorage.CreatePriceList(entity);
-            toasts.ShowInfo("Шаблон добавлен", sourceTemplate.Title);
+            toasts.ShowInfo($"Шаблон добавлен: {sourceTemplate.Title}");
             await logger.Write(LogEntryGroupName.TemplateUpdate, "Шаблон создан", $"Добавление шаблона '{sourceTemplate.Title}' ({sourceTemplate.Guid})");
             navManager.NavigateTo("/load-price-list");
         }
         catch (Exception ex)
         {
-            toasts.ShowInfo("Ошибка создания" + ex.Message, sourceTemplate.Title);
+            toasts.ShowInfo($"{sourceTemplate.Title} - Ошибка создания: {ex.Message}");
             await logger.Write(LogEntryGroupName.TemplateUpdate, "Ошибка создания", $"Ошибка добавления шаблона '{sourceTemplate.Title}' ({sourceTemplate.Guid}). {ex.Message}");
         }
     }
@@ -232,7 +232,7 @@ public partial class PriceListTemplateEdit : ComponentBase
             await templateStorage.DeletePriceList(sourceTemplate.Guid);
 
             await logger.Write(LogEntryGroupName.TemplateUpdate, "Удаление шаблон", $"Шаблон '{sourceTemplate.Title}' ({sourceTemplate.Guid}) удален");
-            toasts.ShowInfo(sourceTemplate.Title, "Шаблон удален");
+            toasts.ShowInfo($"Шаблон удален: {sourceTemplate.Title}");
             navManager.NavigateTo("/load-price-list");
         }
     }

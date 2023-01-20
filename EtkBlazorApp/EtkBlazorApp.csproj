@@ -29,10 +29,10 @@
     <!--<PackageReference Include="System.Net.Primitives" Version="4.3.1" PrivateAssets="all" />-->
     <!-- ............................................................. -->
     
-    <PackageReference Include="Blazored.Toast" Version="3.2.2" />
+    <PackageReference Include="Blazored.Toast" Version="4.0.0" />
     
-    <PackageReference Include="Blazored.Typeahead" Version="4.6.0" />
-    <PackageReference Include="SSH.NET" Version="2020.0.1" />
+    <PackageReference Include="Blazored.Typeahead" Version="4.7.0" />
+    <PackageReference Include="SSH.NET" Version="2020.0.2" />
     
   </ItemGroup>
 

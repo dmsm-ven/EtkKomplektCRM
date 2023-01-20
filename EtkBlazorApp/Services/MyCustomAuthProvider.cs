@@ -52,7 +52,7 @@ namespace EtkBlazorApp.Services
 
             }
 
-            return GetDefaultState();            
+            return GetDefaultState();
         }
 
         public async Task<AuthenticationState> AuthenticateUser(AppUser userData)
@@ -60,8 +60,9 @@ namespace EtkBlazorApp.Services
             await userInfoChecker.FillUserInfo(userData);
 
             string permission = null;//await auth.GetUserPermission(userData.Login, userData.Password);
-            throw new NotImplementedException();
 
+            throw new NotImplementedException();
+            /*
             if (string.IsNullOrWhiteSpace(permission))
             {
                 await storage.DeleteAsync("user_login");
@@ -92,8 +93,9 @@ namespace EtkBlazorApp.Services
             SetUserCookie(userData.Login);
 
             return state;
+            */
         }
-       
+
         private void SetUserCookie(string name)
         {
             //cookie для того, если user активен в ЛК то отображать склады на странице товара
@@ -112,7 +114,7 @@ namespace EtkBlazorApp.Services
             {
 
             }
-            NotifyAuthenticationStateChanged(Task.FromResult(GetDefaultState()));           
+            NotifyAuthenticationStateChanged(Task.FromResult(GetDefaultState()));
         }
 
         private AuthenticationState GetDefaultState()

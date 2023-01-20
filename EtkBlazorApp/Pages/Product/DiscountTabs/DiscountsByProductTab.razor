@@ -16,7 +16,7 @@
                 </button>
             </div>
             <div class="col-md-9">
-            <SelectProductBlazoredTypehead ProductChanged="@SelectedProductChanged" />
+                <SelectProductBlazoredTypehead ProductChanged="@SelectedProductChanged" />
             </div>
         </div>
         @if (newDiscountProduct.Id != 0)
@@ -243,7 +243,7 @@
             await userLogger.Write(LogEntryGroupName.Discounts, "Обновление", $"Скидка для товара '{newDiscountProduct.Name}' изменена на {newDiscountProduct.DiscountPercent}%");
         }
 
-        toasts.ShowSuccess("Скидка добавлена", newDiscountProduct.Name);
+        toasts.ShowSuccess($"{newDiscountProduct.Name}. Скидка добавлена");
 
         newDiscountProduct = new ProductDiscountViewModel();
         newDiscountProduct.PropertyChanged += (o, e) => InvokeAsync(() => StateHasChanged());

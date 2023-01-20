@@ -65,11 +65,11 @@ public partial class UpdateProducts : ComponentBase, IDisposable
             await databaseManager.UpdatePriceAndStock(priceListManager.PriceLines, progress);
 
             await logger.Write(LogEntryGroupName.PriceUpdate, "Выполнено", "Обновление цен выполнено");
-            toastService.ShowSuccess($"Остатки и цены на сайте etk-komplekt.ru обновлены", "Информация");
+            toastService.ShowSuccess($"Информация - Остатки и цены на сайте etk-komplekt.ru обновлены");
         }
         catch (Exception ex)
         {
-            toastService.ShowError($"При обновлении данных произошла ошибка\r\n" + ex.Message + " | " + ex.StackTrace, "Ошибка обновления");
+            toastService.ShowError($"Ошибка обновления .\r\n" + ex.Message + " | " + ex.StackTrace);
             await logger.Write(LogEntryGroupName.PriceUpdate, "Ошибка", $"Ошибка обновления цен: {ex.Message} | {ex.StackTrace}");
         }
         finally

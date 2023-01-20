@@ -108,11 +108,11 @@ public partial class PriceListTemplates
         }
         catch (WebException webEx) when (webEx.Status == WebExceptionStatus.ProtocolError)
         {
-            toast.ShowError("Файл недоступен", selectedTemplate.Title);
+            toast.ShowError($"{selectedTemplate.Title} Файл недоступен");
         }
         catch (Exception ex)
         {
-            toast.ShowError("Не удалось загрузить файл: " + selectedTemplate.RemoteUrl + ". Ошибка: " + ex.Message, selectedTemplate.Title);
+            toast.ShowError($"{selectedTemplate.Title} Не удалось загрузить файл: {selectedTemplate.RemoteUrl + ". Ошибка: " + ex.Message}");
         }
         finally
         {
@@ -132,17 +132,17 @@ public partial class PriceListTemplates
             int readedLines = priceListManager.LoadedFiles.Last().ReadedPriceLines.Count;
 
             await logger.Write(LogEntryGroupName.PriceListTemplateLoad, "Файл загружен", $"Загружен прайс-лист '{selectedTemplate.Title} ({readedLines} строк)'");
-            toast.ShowSuccess($"Файл считан ({readedLines} строк)", selectedTemplate.Title);
+            toast.ShowSuccess($"{selectedTemplate.Title} Файл считан ({readedLines} строк)");
         }
         catch (NotFoundedPriceListTemplateException)
         {
             await logger.Write(LogEntryGroupName.PriceListTemplateLoad, "Ошибка загрузки", $"Шаблон для '{selectedTemplate.Title}' не реализован'");
-            toast.ShowError($"Шаблон не реализован!", selectedTemplate.Title);
+            toast.ShowError($"{selectedTemplate.Title} Шаблон не реализован!");
         }
         catch (Exception ex)
         {
             await logger.Write(LogEntryGroupName.PriceListTemplateLoad, "Ошибка загрузки", $"Ошибка загрузки файла с шаблоном {selectedTemplate.Title}. Ошибка: {ex.Message}");
-            toast.ShowError(ex.Message, selectedTemplate.Title);
+            toast.ShowError($"{selectedTemplate.Title} ошибка: {ex.Message}");
         }
         finally
         {
@@ -225,7 +225,7 @@ public partial class PriceListTemplates
             string maxSizeString = ((double)MAX_UPLOAD_FILE_SIZE / 1E6).ToString("F2") + " МБ";
             string currentSizeString = ((double)fileSize / 1E6).ToString("F2") + " МБ";
 
-            toast.ShowError($"Размер файла слишком большой - Максимальный: {maxSizeString} - Текущий: {currentSizeString}", "Ошибка"); ;
+            toast.ShowError($"Ошибка. Размер файла слишком большой - Максимальный: {maxSizeString} - Текущий: {currentSizeString}");
             return false;
         }
         return true;

@@ -25,7 +25,7 @@ namespace EtkBlazorApp.Pages
         PartnerManufacturerDiscountItemViewModel editingDiscount = null;
 
         bool isNewPartner => selectedPartner.Id == Guid.Empty;
- 
+
         protected override void OnInitialized()
         {
             lastAccessRefreshTimer = new Timer(UpdateLastAccessLabel, null, 0, 5000);
@@ -70,8 +70,8 @@ namespace EtkBlazorApp.Pages
         }
 
         private async Task OnPartnerChanged(PartnerViewModel newPartner)
-        {        
-            if(newPartner?.Id.ToString() == null) { return; }
+        {
+            if (newPartner?.Id.ToString() == null) { return; }
 
             await settingsStorage.SetValue("last_viewed_partner_id", newPartner.Id.ToString());
 
@@ -114,13 +114,13 @@ namespace EtkBlazorApp.Pages
         }
 
         private async Task AddAndSaveBrandDiscount(PartnerManufacturerDiscountItemViewModel item)
-        {       
+        {
             if (!selectedPartner.HasItem(item))
             {
                 selectedPartner.DiscountBrandsInfo.Add(item);
             }
 
-            if(item?.Discount != null && item.Discount.Value == selectedPartner.Discount)
+            if (item?.Discount != null && item.Discount.Value == selectedPartner.Discount)
             {
                 item.Discount = null;
             }
@@ -140,9 +140,9 @@ namespace EtkBlazorApp.Pages
             if (status)
             {
                 partners.Remove(selectedPartner);
-                await partnerService.DeletePartner(selectedPartner.Id.ToString());               
+                await partnerService.DeletePartner(selectedPartner.Id.ToString());
                 await logger.Write(LogEntryGroupName.Partners, "Удаление", $"Партнер '{selectedPartner.Name}' удален из системы");
-                toasts.ShowInfo(selectedPartner.Name, "Партнер удален");
+                toasts.ShowInfo($"Партнер удален: {selectedPartner.Name}");
                 selectedPartner = null;
             }
         }
@@ -157,9 +157,10 @@ namespace EtkBlazorApp.Pages
 
         private async Task AddNewPartner()
         {
-            selectedPartner = new PartnerViewModel() { 
-                Priority = 1, 
-                Name = "Новый партнер", 
+            selectedPartner = new PartnerViewModel()
+            {
+                Priority = 1,
+                Name = "Новый партнер",
                 Id = Guid.NewGuid(),
                 Created = DateTime.Now,
                 Updated = DateTime.Now
@@ -195,20 +196,20 @@ namespace EtkBlazorApp.Pages
             if (isNewPartner)
             {
                 await logger.Write(LogEntryGroupName.Partners, "Добавление", $"Партнер '{selectedPartner.Name}' добавлен");
-                toasts.ShowSuccess(selectedPartner.Name, "Партнер добавлен");
+                toasts.ShowSuccess($"Партнер добавлен: {selectedPartner.Name}");
                 selectedPartner.Id = Guid.Parse(entity.id);
             }
             else
             {
                 await logger.Write(LogEntryGroupName.Partners, "Обновление", $"Информация о '{selectedPartner.Name}' обновлена");
-                toasts.ShowSuccess(selectedPartner.Name, "Обновлено");
+                toasts.ShowSuccess($"Обновлено: {selectedPartner.Name}");
             }
             selectedPartner.Updated = dt;
         }
 
         private void BrandDiscountLabelClicked(PartnerManufacturerDiscountItemViewModel item)
         {
-            if (editingDiscount?.ManufacturerId == item.ManufacturerId) 
+            if (editingDiscount?.ManufacturerId == item.ManufacturerId)
             {
                 editingDiscount = null;
             }

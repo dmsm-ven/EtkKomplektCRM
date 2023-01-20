@@ -18,8 +18,8 @@
             <tbody>
                 <tr style="margin-bottom: 20px;">
                     <td>
-                        <button class="btn btn-sm btn-outline-danger" 
-                                disabled="@(newFixedProduct.product_id == 0)" 
+                        <button class="btn btn-sm btn-outline-danger"
+                                disabled="@(newFixedProduct.product_id == 0)"
                                 @onclick="AddFixedProduct">
                             <span class="oi oi-plus"></span>
                         </button>
@@ -73,11 +73,11 @@
             await productsStorage.AddFixedProduct(newFixedProduct);
             newFixedProduct = new ProductEntity();
 
-            toasts.ShowSuccess("Товар добавлен в список игнорирования", "Информация");
+            toasts.ShowSuccess("Товар добавлен в список игнорирования");
         }
         else
         {
-            toasts.ShowInfo("Товар уже добавлен в список игнорирования", "Информация");
+            toasts.ShowInfo("Товар уже добавлен в список игнорирования");
         }
     }
 }

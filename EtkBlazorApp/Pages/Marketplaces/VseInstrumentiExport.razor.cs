@@ -84,7 +84,7 @@ public partial class VseInstrumentiExport : ComponentBase
         catch (Exception ex)
         {
             await logger.Write(LogEntryGroupName.Prikat, "Ошибка", $"Ошибка создания выгрузки для ВсеИнструменты: {ex.Message}. {ex.StackTrace}");
-            toasts.ShowError("Ошибка создания отчета" + ex.Message, "ВсеИнструменты");
+            toasts.ShowError($"Ошибка создания отчета: {ex.Message}");
         }
         finally
         {
