@@ -18,8 +18,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int column = 1; column <= tab.Dimension.Columns; column++)
             {
-                if(tab.GetValue<string>(1, column).Equals("Санкт-Петербург")) { stock_spb_self_index = column; }
-                if(tab.GetValue<string>(1, column).Equals("Производитель СПБ")) { stock_spb_producer_index = column; }
+                if (tab.GetValue<string>(1, column).Equals("Санкт-Петербург")) { stock_spb_self_index = column; }
+                if (tab.GetValue<string>(1, column).Equals("Производитель СПБ")) { stock_spb_producer_index = column; }
             }
 
             for (int row = 3; row < tab.Dimension.Rows; row++)
