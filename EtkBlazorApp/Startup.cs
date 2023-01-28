@@ -59,6 +59,8 @@ namespace EtkBlazorApp
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddAutoMapper(this.GetType().Assembly);
+
             services.AddHttpsRedirection(options =>
             {
                 options.RedirectStatusCode = (int)HttpStatusCode.TemporaryRedirect;
@@ -67,19 +69,21 @@ namespace EtkBlazorApp
 
             //Blazor стандартные
             services.AddRazorPages();
-            services.AddServerSideBlazor().AddCircuitOptions(options => { options.DetailedErrors = true; });           
+            services.AddServerSideBlazor().AddCircuitOptions(options => { options.DetailedErrors = true; });
             services.AddHttpContextAccessor();
             services.AddScoped<ProtectedLocalStorage>();
 
             //Приложение       
             services.AddTransient<IUserInfoChecker, UserInfoChecker>();
             services.AddTransient<ICompressedFileExtractor, SharpCompressFileExtractor>();
+
+
             ConfigureCorrelators(services);
             ConfigureDatabaseServices(services);
 
             services.AddMemoryCache();
             services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
-            services.AddSingleton<RemoteTemplateFileLoaderFactory>();        
+            services.AddSingleton<RemoteTemplateFileLoaderFactory>();
             services.AddSingleton<SystemEventsLogger>();
             services.AddSingleton<NewOrdersNotificationService>();
             services.AddSingleton<UpdateManager>();
@@ -90,7 +94,7 @@ namespace EtkBlazorApp
             services.AddScoped<AuthenticationStateProvider, CustomAuthProvider>();
             services.AddScoped<UserLogger>();
             services.AddScoped<ReportManager>();
-            
+
 
             //Сторонние
             services.AddBlazoredToast();
@@ -114,7 +118,7 @@ namespace EtkBlazorApp
             services.AddTransient<ILogStorage, LogStorage>();
             services.AddTransient<ISettingStorage, SettingStorage>();
             services.AddTransient<ICronTaskStorage, CronTaskStorage>();
-            
+
             services.AddTransient<IWebsiteCurrencyService, WebsiteCurrencyService>();
         }
 
@@ -126,6 +130,6 @@ namespace EtkBlazorApp
 
             services.AddTransient<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
             services.AddTransient<IOzonProductCorrelator, SimpleOzonProductCorrelator>();
-        }       
+        }
     }
 }

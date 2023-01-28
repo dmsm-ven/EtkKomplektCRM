@@ -12,6 +12,7 @@ namespace EtkBlazorApp.DataAccess.Entity
         public string payment_firstname { get; set; }
         public decimal total { get; set; }
         public string order_status { get; set; }
+        public int order_status_id { get; set; }
 
         public string firstname { get; set; }
         public string lastname { get; set; }

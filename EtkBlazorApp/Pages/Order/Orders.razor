@@ -1,17 +1,8 @@
 ﻿@page "/orders"
+@using EtkBlazorApp.Components.Controls.Orders
 @attribute [Authorize(Roles = "Administrator, Manager")]
-@inject IOrderStorage _database
 
 <h3>Заказы</h3>
-<AuthorizeView Roles="Administrator">
-    <div class="row">
-        <div class="btn-group">
-            <a class="btn btn-outline-primary" href="/orders-statistic">
-                Статистика по заказам
-            </a>
-        </div>
-    </div>
-</AuthorizeView>
 
 <div class="row">
     <div class="form-inline">
@@ -28,59 +19,47 @@
     </div>
     <button class="btn btn-primary py-2 px-2 mx-2 my-2" @onclick="@(() => LoadOrders())">Найти</button>
 </div>
-
-
-    <div class="row">
-        <table class="table table-hover orders-table" style="width: 100%">
-            <thead class="thead-etk">
-                <tr>
-                    <th>№ заказа</th>
-                    <th>Дата | Время</th>
-                    <th>Заказчик</th>
-                    <th>Город</th>
-                    <th>Сумма</th>
-                    <th>Детали</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (orders == null)
+<div class="row">
+    <table class="table table-hover orders-table" style="width: 100%">
+        <thead class="thead-etk">
+            <tr>
+                <th>№ заказа</th>
+                <th>Дата | Время</th>
+                <th>Заказчик</th>
+                <th>Город</th>
+                <th>Сумма</th>
+                <th>Тэги</th>
+                <th>Детали</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (orders == null)
+            {
+                @for(int i = 0; i < 100; i++)
                 {
-                    <tr colspan="6"><LoadingSpinner /></tr>
+                    <tr colspan="7"><LoadingSpinner /></tr>
                 }
-                else
+            }
+            else
+            {
+                @foreach (var order in orders)
                 {
-                    @foreach (var order in orders)
-                    {
-                        <tr class="@(order == newOrder ? "new-order-row" : string.Empty)">
-                            <td>@order.OrderId</td>
-                            <td>@order.DateTime.ToString("dd.MM.yyyy | HH:mm")</td>
-                            <td>@order.Customer</td>
-                            <td>@order.City</td>
-                            <td>@order.TotalPrice.ToString("C0")</td>
-                            <td><a href="/order/@order.OrderId" target="_blank" class="btn btn-info btn-sm"><i class="oi oi-eye"></i></a></td>
-                        </tr>
-                    }
+                    <OrderInfoRowItem OrderData="@order" />
                 }
-            </tbody>
-        </table>
-    </div>
-
-<EtkBlazorApp.Components.NewOrdersNotificator NewOrderPushed="@ShowNewOrder" />
+            }
+        </tbody>
+    </table>
+</div>
 
 @code {
+    [Inject] public IOrderStorage OrdersStorage { get; set; }
+    [Inject] public IMapper Mapper { get; set; }
+
     List<OrderViewModel> orders = null;
-    OrderViewModel newOrder = null;
 
     string numberFilter = null;
     string cityFilter = null;
     string cutomerFilter = null;
-
-    private void ShowNewOrder(OrderViewModel order)
-    {
-        orders.Insert(0, order);
-        newOrder = order;
-        StateHasChanged();
-    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -95,17 +74,11 @@
         orders = null;
         StateHasChanged();
 
-        orders = (await _database.GetLastOrders(100, numberFilter, cityFilter, cutomerFilter))
-            .Select(model => new OrderViewModel()
-            {
-                City = model.payment_city,
-                Customer = HttpUtility.HtmlDecode(model.payment_firstname),
-                DateTime = model.date_added,
-                OrderId = model.order_id.ToString(),
-                TotalPrice = model.total,
-                OrderStatus = model.order_status
-            })
-            .ToList();
+        await Task.Delay(TimeSpan.FromMilliseconds(500));
+
+        var ordersData = await OrdersStorage.GetLastOrders(100, numberFilter, cityFilter, cutomerFilter);
+        orders = Mapper.Map<List<OrderViewModel>>(ordersData);
+
         StateHasChanged();
     }
 }

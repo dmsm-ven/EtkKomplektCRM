@@ -27,7 +27,11 @@ namespace EtkBlazorApp.DataAccess
             this.database = database;
         }
 
-        public async Task<List<OrderEntity>> GetLastOrders(int takeCount, string order_id = null, string payment_city = null, string shipping_firstname = null)
+        //TODO: вынести параметры поиска в отдельный класс фильтра
+        public async Task<List<OrderEntity>> GetLastOrders(int takeCount,
+            string order_id = null,
+            string payment_city = null,
+            string shipping_firstname = null)
         {
             if (takeCount <= 0 || takeCount >= 500)
             {
@@ -49,21 +53,27 @@ namespace EtkBlazorApp.DataAccess
             if (filter.Any(kvp => kvp.Value != null))
             {
                 sb.Append($"WHERE ");
-                foreach(var kvp in filter.Where(kvp => kvp.Value != null))
+                foreach (var kvp in filter.Where(kvp => kvp.Value != null))
                 {
                     sb.Append($"o.{kvp.Key} LIKE @{kvp.Key} AND ");
                 }
                 sb.Remove(sb.Length - 5, 5);
                 sb.AppendLine();
             }
-            
+
             sb
                 .AppendLine("ORDER BY o.order_id DESC")
                 .AppendLine("LIMIT @takeCount");
 
             string sql = sb.ToString().Trim();
 
-            dynamic parameter = new { takeCount, order_id = $"%{order_id}%", payment_city = $"%{payment_city}%", shipping_firstname = $"%{shipping_firstname}%" };
+            dynamic parameter = new
+            {
+                takeCount,
+                order_id = $"%{order_id}%",
+                payment_city = $"%{payment_city}%",
+                shipping_firstname = $"%{shipping_firstname}%"
+            };
             var orders = await database.GetList<OrderEntity, dynamic>(sql, parameter);
 
             return orders;
