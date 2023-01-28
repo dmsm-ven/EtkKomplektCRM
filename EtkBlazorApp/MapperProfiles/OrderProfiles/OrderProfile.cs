@@ -3,7 +3,7 @@ using EtkBlazorApp.DataAccess.Entity;
 using EtkBlazorApp.Model.Order;
 using System.Web;
 
-namespace EtkBlazorApp.Model.MapperProfiles;
+namespace EtkBlazorApp.MapperProfiles;
 
 public class OrderProfile : Profile
 {

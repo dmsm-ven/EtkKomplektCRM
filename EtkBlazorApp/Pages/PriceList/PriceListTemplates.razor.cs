@@ -1,6 +1,10 @@
-﻿using EtkBlazorApp.BL;
+﻿using Blazored.Toast.Services;
+using EtkBlazorApp.BL;
+using EtkBlazorApp.BL.Templates.PriceListTemplates;
 using EtkBlazorApp.Components.Controls;
 using EtkBlazorApp.Components.Dialogs;
+using EtkBlazorApp.DataAccess;
+using EtkBlazorApp.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
@@ -23,15 +27,22 @@ public partial class PriceListTemplates
     const int MAX_UPLOAD_FILE_SIZE = 32_000_000; // 32 мб размер максимально допустимого файла
     const int UPLOAD_BUFFER_SIZE = 64_000; // Порциями по 64кб загружаем файл с отображением прогресса
 
+    [Inject] public PriceListManager priceListManager { get; set; }
+    [Inject] public UserLogger logger { get; set; }
+    [Inject] public NavigationManager navManager { get; set; }
+    [Inject] public RemoteTemplateFileLoaderFactory remoteTemplateFileLoaderFactory { get; set; }
+    [Inject] public ReportManager reportManager { get; set; }
+    [Inject] public IPriceListTemplateStorage templateStorage { get; set; }
+    [Inject] public IJSRuntime js { get; set; }
+    [Inject] public IToastService toast { get; set; }
+
     FileLoadProgress? uploadProgress;
     CustomDataDialog exportPriceDialog;
     ManufacturersCheckList exportPriceManufacturerList;
-
     Dictionary<string, List<PriceListTemplateItemViewModel>> templates = null;
     Dictionary<string, List<PriceListTemplateItemViewModel>> filteredTemplates;
     PriceListTemplateItemViewModel selectedTemplate = null;
     PriceListTemplateItemViewModel editingTemplate = null;
-
     string searchPhrase = String.Empty;
     bool filterHasUri = false;
     bool filterFromEmail = false;
@@ -42,7 +53,6 @@ public partial class PriceListTemplates
     bool isBusy => isIntermediateProgress || isFileUploading;
     bool selectedTemplateHasEmailSource => !string.IsNullOrWhiteSpace(selectedTemplate?.EmailSearchCriteria_Sender);
     bool selectedTemplateHasRemoteUri => (selectedTemplate?.RemoteUrlMethodName != null) && !selectedTemplateHasEmailSource;
-
 
     protected override async Task OnInitializedAsync()
     {

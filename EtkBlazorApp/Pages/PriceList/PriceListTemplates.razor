@@ -1,15 +1,6 @@
 ﻿@page "/load-price-list"
 @attribute [Authorize(Roles = "Administrator, Manager")]
 
-@inject PriceListManager priceListManager
-@inject UserLogger logger
-@inject NavigationManager navManager
-@inject RemoteTemplateFileLoaderFactory remoteTemplateFileLoaderFactory
-@inject ReportManager reportManager
-@inject IPriceListTemplateStorage templateStorage
-@inject IJSRuntime js
-@inject IToastService toast
-
 <div class="my-2" style="margin-left: -15px; margin-right: -15px;">
     @if (isFileUploading)
     {

@@ -59,6 +59,9 @@ namespace EtkBlazorApp
 
         public void ConfigureServices(IServiceCollection services)
         {
+            //Сторонние
+            services.AddBlazoredToast();
+
             services.AddAutoMapper(this.GetType().Assembly);
 
             services.AddHttpsRedirection(options =>
@@ -96,8 +99,7 @@ namespace EtkBlazorApp
             services.AddScoped<ReportManager>();
 
 
-            //Сторонние
-            services.AddBlazoredToast();
+
         }
 
         private void ConfigureDatabaseServices(IServiceCollection services)

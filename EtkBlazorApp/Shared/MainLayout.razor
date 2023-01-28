@@ -1,9 +1,7 @@
 ﻿@inherits LayoutComponentBase
-@inject IToastService toastService
-@inject AuthenticationStateProvider AuthenticationStateProvider
-@inject UserLogger userLogger
-
 @using System.Globalization
+@using Blazored.Toast
+@using Blazored.Toast.Configuration
 
 <AuthorizeView>
     <Authorized>
@@ -26,8 +24,14 @@
             </div>
         </div>
 
-        <Blazored.Toast.BlazoredToasts Position="Blazored.Toast.Configuration.ToastPosition.TopRight"
-                                       Timeout="12" />
+        <BlazoredToasts Position="ToastPosition.TopRight"
+                        IconType="IconType.Blazored"
+                        ShowCloseButton=false
+                        RemoveToastsOnNavigation=true
+                        MaxToastCount="3"
+                        Timeout="8">
+        </BlazoredToasts>
+
     </Authorized>
     <NotAuthorized>
         <div class="main">
@@ -40,9 +44,12 @@
 
 @code {
 
+    [Inject] public AuthenticationStateProvider AuthenticationStateProvider { get; set; }
+    [Inject] public UserLogger UserLogger { get; set; }
+
     public async Task LogOut()
     {
-        await userLogger.Write(LogEntryGroupName.Auth, "Выход", $"Пользователь вышел");
+        await UserLogger.Write(LogEntryGroupName.Auth, "Выход", $"Пользователь вышел");
         await ((CustomAuthProvider)AuthenticationStateProvider).LogOutUser();
     }
 }
