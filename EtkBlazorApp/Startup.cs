@@ -61,7 +61,6 @@ namespace EtkBlazorApp
         {
             //Сторонние
             services.AddBlazoredToast();
-
             services.AddAutoMapper(this.GetType().Assembly);
 
             services.AddHttpsRedirection(options =>
@@ -97,9 +96,6 @@ namespace EtkBlazorApp
             services.AddScoped<AuthenticationStateProvider, CustomAuthProvider>();
             services.AddScoped<UserLogger>();
             services.AddScoped<ReportManager>();
-
-
-
         }
 
         private void ConfigureDatabaseServices(IServiceCollection services)
@@ -120,16 +116,12 @@ namespace EtkBlazorApp
             services.AddTransient<ILogStorage, LogStorage>();
             services.AddTransient<ISettingStorage, SettingStorage>();
             services.AddTransient<ICronTaskStorage, CronTaskStorage>();
-
             services.AddTransient<IWebsiteCurrencyService, WebsiteCurrencyService>();
         }
 
         private void ConfigureCorrelators(IServiceCollection services)
         {
-            //Перестает работает для товаров Elevel где ~ 125000 товаров
-            //services.AddTransient<IDatabaseProductCorrelator, FullCompareProductCorrelator>();
             services.AddTransient<IDatabaseProductCorrelator, DictionaryCompareProductCorrelator>();
-
             services.AddTransient<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
             services.AddTransient<IOzonProductCorrelator, SimpleOzonProductCorrelator>();
         }

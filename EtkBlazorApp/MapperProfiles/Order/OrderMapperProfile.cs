@@ -5,9 +5,9 @@ using System.Web;
 
 namespace EtkBlazorApp.MapperProfiles;
 
-public class OrderProfile : Profile
+public class OrderMapperProfile : Profile
 {
-    public OrderProfile()
+    public OrderMapperProfile()
     {
         CreateMap<OrderStatusEntity, OrderStatusViewModel>()
             .ForMember(o => o.Type, o => o.MapFrom(x => (OrderStatusType)x.order_status_id))

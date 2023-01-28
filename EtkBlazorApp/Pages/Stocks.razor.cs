@@ -90,18 +90,6 @@ public partial class Stocks
         }
     }
 
-    private void ShowStockField(StockPartnerViewModel stock, string propertyName)
-    {
-        string message = string.Empty;
-        switch (propertyName)
-        {
-            case nameof(StockPartnerViewModel.Email): message = stock.Email; break;
-            case nameof(StockPartnerViewModel.PhoneNumber): message = stock.PhoneNumber; break;
-            case nameof(StockPartnerViewModel.Website): message = stock.Website; break;
-        }
-        toasts.ShowInfo($"{stock.Name}: {message}");
-    }
-
     private async Task NewStockDialogStatusChanged(StockPartnerViewModel data)
     {
         if (data == null) { return; }
@@ -152,12 +140,10 @@ public partial class Stocks
         if (data != null && data.Any())
         {
             string li = string.Join("\r\n", data.Select(i => $"<li>{i.name} - {i.total_products} товаров ({i.total_quantity} шт.)</li>"));
-            RenderFragment messageFragment() => builder =>
-            {
-                builder.AddContent(1, new MarkupString($"<ul>{li}</ul>"));
-            };
 
-            toasts.ShowInfo($"{manufacturer.name}: {messageFragment()}");
+            RenderFragment messageFragment() => builder => builder.AddContent(1, new MarkupString($"<p>{manufacturer.name}</p><ul>{li}</ul>"));
+
+            toasts.ShowInfo(messageFragment());
         }
         else
         {
@@ -173,10 +159,7 @@ public partial class Stocks
         {
             string li = string.Join("\r\n", data.Select(i => $"<li>{i.name} - {i.total_products} товаров ({i.total_quantity} шт.)</li>"));
 
-            RenderFragment messageFragment() => builder =>
-            {
-                builder.AddContent(1, new MarkupString($"<p>{stock.Name}</p><ul>{li}</ul>"));
-            };
+            RenderFragment messageFragment() => builder => builder.AddContent(1, new MarkupString($"<p>{stock.Name}</p><ul>{li}</ul>"));
 
             toasts.ShowInfo(messageFragment());
         }
