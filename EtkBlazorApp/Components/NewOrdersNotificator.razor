@@ -12,14 +12,16 @@
 
     private void NewOrderFound(OrderEntity entity)
     {
+        throw new NotImplementedException();
+
         var order = new OrderViewModel()
-        {
-            City = entity.payment_city,
-            Customer = HttpUtility.HtmlDecode(entity.payment_firstname),
-            DateTime = entity.date_added,
-            OrderId = entity.order_id.ToString(),
-            TotalPrice = entity.total
-        };
+            {
+                City = entity.payment_city,
+                Customer = HttpUtility.HtmlDecode(entity.payment_firstname),
+                DateTime = entity.date_added,
+                OrderId = entity.order_id.ToString(),
+                TotalPrice = entity.total
+            };
         InvokeAsync(async () => await NewOrderPushed.InvokeAsync(order));
     }
 

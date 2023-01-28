@@ -19,14 +19,16 @@ namespace EtkBlazorApp
         public string ShippingMethod { get; set; }
         public string PaymentMethod { get; set; }
         public string OrderStatusName { get; set; }
-        public OrderStatusType OrderStatusType { get; set; }
 
-        // проверить, возможно есть какие-то скрытые.
+
+        //TODO: проверить, возможно есть какие-то другие скрытые суммы при расчете
         public decimal ShipmentCost => TotalPrice - OrderDetails.Sum(od => od.Sum);
         public int ProductsTotalQuantity => OrderDetails.Sum(od => od.Quantity);
         public decimal ProductsTotalCost => OrderDetails.Sum(od => od.Sum);
 
+        public OrderStatusViewModel Status { get; set; }
         public List<OrderDetailsViewModel> OrderDetails { get; set; }
+        public List<OrderTagViewModel> Tags { get; set; }
     }
 
     public class OrderDetailsViewModel

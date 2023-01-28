@@ -9,7 +9,10 @@
         <td>@OrderData.City</td>
         <td>@OrderData.TotalPrice.ToString("C0")</td>
         <td>
-            <OrderTagControl TagName="OrderTagType.ShippingTimeExceed" />
+            @foreach (var tag in OrderData.Tags)
+            {
+                <OrderTagControl Data="tag" />
+            }
         </td>
         <td>
             <OrderStatusDropdown Order="OrderData" CanChangeStatus="false" />

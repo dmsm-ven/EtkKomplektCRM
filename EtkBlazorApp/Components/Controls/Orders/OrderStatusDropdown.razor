@@ -7,7 +7,7 @@
             aria-expanded="false"
             class=@cssClass>
         <span>@statusIcon</span>
-        <span>@Order.OrderStatusName</span>
+        <span>@Order.Status.Name</span>
     </button>
     @if (CanChangeStatus)
     {
@@ -31,7 +31,7 @@
     {
         get
         {
-            if (cssMap.TryGetValue(Order.OrderStatusType, out var kvp))
+            if (cssMap.TryGetValue(Order.Status.Type, out var kvp))
             {
                 return $"dropdown-toggle btn btn-sm w-100 btn-{kvp.Item2}";
             }
@@ -43,7 +43,7 @@
     {
         get
         {
-            if (cssMap.TryGetValue(Order.OrderStatusType, out var kvp))
+            if (cssMap.TryGetValue(Order.Status.Type, out var kvp))
             {
                 return kvp.Item1;
             }

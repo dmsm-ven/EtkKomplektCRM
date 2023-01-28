@@ -103,6 +103,17 @@ namespace EtkBlazorApp.DataAccess
             return details;
         }
 
+        public async Task<OrderEntity> GetOrderById(int orderId)
+        {
+            var sql = "SELECT * FROM oc_order WHERE order_id = @orderId";
+
+            var order = await database.GetFirstOrDefault<OrderEntity, dynamic>(sql, new { orderId });
+
+            order.details = await GetOrderDetails(orderId);
+
+            return order;
+        }
+
         public async Task<List<OrderDetailsEntity>> GetOrderDetails(int orderId)
         {
             string sql = @"SELECT op.*, p.sku as sku, m.name as manufacturer 
@@ -114,15 +125,6 @@ namespace EtkBlazorApp.DataAccess
             var details = await database.GetList<OrderDetailsEntity, dynamic>(sql, new { orderId });
 
             return details;
-        }
-
-        public async Task<OrderEntity> GetOrderById(int orderId)
-        {
-            var sql = "SELECT * FROM oc_order WHERE order_id = @orderId";
-
-            var order = (await database.GetList<OrderEntity, dynamic>(sql, new { orderId })).FirstOrDefault();
-
-            return order;
         }
 
         public async Task<List<OrderEntity>> GetLinkedOrders(OrderEntity order)

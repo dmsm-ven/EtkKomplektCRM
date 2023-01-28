@@ -1,7 +1,4 @@
 ﻿@page "/order/{id:int}"
-@inject IOrderStorage database
-@inject IJSRuntime js
-@inject NavigationManager navigationManager
 @attribute [Authorize(Roles = "Administrator, Manager")]
 
 @if (order == null)
@@ -10,8 +7,9 @@
 }
 else
 {
-    <h1>Детали заказа <button class="btn btn-sm btn-secondary" @onclick="GoToPrintPage"><span class="oi oi-print"></span></button></h1>
-    
+    <h1>
+        Детали заказа <button class="btn btn-sm btn-secondary" @onclick="GoToPrintPage"><span class="oi oi-print"></span></button>
+    </h1>
 
     <div class="container-fluid" style="padding-bottom: 30px;">
 
@@ -51,9 +49,9 @@ else
 
         <h3>Доставка</h3>
         <div class="row order-details-row">
-            <div class="col-md-6">   
+            <div class="col-md-6">
                 <p>Адрес доставки</p>
-                <input type="text" readonly value="@order.ShippingAddress" class="form-control" />          
+                <input type="text" readonly value="@order.ShippingAddress" class="form-control" />
             </div>
             <div class="col-md-6">
                 <p>Метод доставки</p>
@@ -69,9 +67,9 @@ else
                 <select multiple class="form-control" style="height: 100%; overflow-y: auto;">
                     @foreach (var linkedOrder in linkedOrders)
                     {
-                        <option value="@linkedOrder.order_id" 
-                                style="@(linkedOrder.order_id.ToString().Equals(order.OrderId) ? currentOrderCss : "")"
-                                @ondblclick="(e => OnLinkedOrderMouseDoubleClick(linkedOrder))">
+                        <option value="@linkedOrder.order_id"
+                        style="@(linkedOrder.order_id.ToString().Equals(order.OrderId) ? "font-weight: bold; color: red;" : "")"
+                        @ondblclick="(e => OnLinkedOrderMouseDoubleClick(linkedOrder))">
                             @($"{linkedOrder.order_id} от {linkedOrder.date_added.ToShortDateString()}")
                         </option>
                     }
@@ -98,7 +96,7 @@ else
                                     <td>@detail.Manufacturer</td>
                                     <td>
                                         <a href="https://etk-komplekt.ru/index.php?route=product/product&product_id=@detail.ProductId"
-                                           target="_blank">
+                                   target="_blank">
                                             @(HttpUtility.HtmlDecode(detail.ProductName))
                                         </a>
                                     </td>
@@ -111,11 +109,11 @@ else
                             }
                             @if (order.OrderDetails.Count > 1)
                             {
-                            <tr>
-                                <td colspan="5"></td>
-                                <td style="color: red; font-weight: bold;">@order.ProductsTotalQuantity</td>
-                                <td style="color: red; font-weight: bold;">@order.ProductsTotalCost.ToString("C0")</td>
-                            </tr>
+                                <tr>
+                                    <td colspan="5"></td>
+                                    <td style="color: red; font-weight: bold;">@order.ProductsTotalQuantity</td>
+                                    <td style="color: red; font-weight: bold;">@order.ProductsTotalCost.ToString("C0")</td>
+                                </tr>
                             }
                             <tr>
                                 <td colspan="5"></td>
@@ -143,60 +141,34 @@ else
 
 @code {
 
-    [Parameter]
-    public int Id { get; set; }
+    [Parameter] public int Id { get; set; }
+    [Inject] public IOrderStorage OrderStorage { get; set; }
+    [Inject] public IJSRuntime Js { get; set; }
+    [Inject] public IMapper Mapper { get; set; }
+    [Inject] public NavigationManager NavManager { get; set; }
 
     OrderViewModel order = null;
-
     List<OrderEntity> linkedOrders = null;
     bool hasLinkedOrders => linkedOrders.Count > 1;
-    string currentOrderCss => "font-weight: bold; color: red;";
 
     protected override async Task OnInitializedAsync()
     {
-        var oe = await database.GetOrderById(Id);
-        var detailsEntity = await database.GetOrderDetails(Id);
+        var orderData = await OrderStorage.GetOrderById(Id);
+        order = Mapper.Map<OrderViewModel>(orderData);
 
-        var orderData = new OrderViewModel()
-        {
-            OrderId = oe.order_id.ToString(),
-            City = oe.payment_city,
-            Customer = oe.payment_firstname,
-            DateTime = oe.date_added,
-            OrderStatus = oe.order_status,
-            TotalPrice = oe.total,
-            Comment = oe.comment,
-            CustomerEmail = oe.email,
-            CustomerPhoneNumber = oe.telephone,
-            ShippingAddress = oe.shipping_address_1,
-            PaymentMethod = oe.payment_method,
-            ShippingMethod = oe.shipping_method,
-            OrderDetails = detailsEntity.Select(ode => new OrderDetailsViewModel()
-            {
-                ProductName = ode.name,
-                Model = ode.model,
-                Sku = ode.sku,
-                Price = ode.price,
-                ProductId = ode.product_id,
-                Quantity = ode.quantity,
-                Manufacturer = ode.manufacturer
-            }).ToList()
-        };
-        order = orderData;
-
-        linkedOrders = await database.GetLinkedOrders(oe);
+        linkedOrders = await OrderStorage.GetLinkedOrders(orderData);
     }
 
     private async Task GoToPrintPage()
     {
-        string printPage = navigationManager.Uri + "/print";
-        await js.InvokeAsync<object>("open", printPage, "_blank");
+        string printPage = NavManager.Uri + "/print";
+        await Js.InvokeAsync<object>("open", printPage, "_blank");
     }
 
     private async Task OnLinkedOrderMouseDoubleClick(OrderEntity clickedOrder)
     {
-        string linkedOrderPage = navigationManager.Uri.Replace("/" + Id, "/" + clickedOrder.order_id);
-        await js.InvokeAsync<object>("open", linkedOrderPage, "_blank");
+        string linkedOrderPage = NavManager.Uri.Replace("/" + Id, "/" + clickedOrder.order_id);
+        await Js.InvokeAsync<object>("open", linkedOrderPage, "_blank");
     }
 }
 

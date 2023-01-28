@@ -1,104 +1,78 @@
 ﻿@page "/order/{id:int}/print"
-@inject IOrderStorage orders
 @layout PrintBlankLayout
 @using System.Web
 
 @if (order != null)
 {
-<h1>Заказ @Id от @order.DateTime</h1>
-<div class="order-general-info">
-    <p style="font-size: 18px;"><strong>Заказчик: </strong>@(HttpUtility.HtmlDecode(order.Customer))</p>
-    <p><strong>Телефон: </strong>@order.CustomerPhoneNumber</p>
-    <p><strong>Email: </strong>@order.CustomerEmail</p>
-    <p><strong>Метод оплаты: </strong>@order.PaymentMethod</p>
-    <p><strong>Адрес доставки: </strong>@order.ShippingAddress</p>
-    <p><strong>Метод доставки: </strong>@(HttpUtility.HtmlDecode(order.ShippingMethod))</p>
-    <p><strong>Город: </strong> @order.City</p>
-    <p><strong>Примечание к заказу: </strong> @order.Comment</p>
-</div>
+    <h1>Заказ @Id от @order.DateTime</h1>
+    <div class="order-general-info">
+        <p style="font-size: 18px;"><strong>Заказчик: </strong>@(HttpUtility.HtmlDecode(order.Customer))</p>
+        <p><strong>Телефон: </strong>@order.CustomerPhoneNumber</p>
+        <p><strong>Email: </strong>@order.CustomerEmail</p>
+        <p><strong>Метод оплаты: </strong>@order.PaymentMethod</p>
+        <p><strong>Адрес доставки: </strong>@order.ShippingAddress</p>
+        <p><strong>Метод доставки: </strong>@(HttpUtility.HtmlDecode(order.ShippingMethod))</p>
+        <p><strong>Город: </strong> @order.City</p>
+        <p><strong>Примечание к заказу: </strong> @order.Comment</p>
+    </div>
 
-<h2>Заказ</h2>
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Производитель</th>
-            <th>Товар</th>
-            <th>Модель</th>
-            <th>Артикул</th>
-            <th>Цена</th>
-            <th>Количество</th>
-            <th>Сумма</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in order.OrderDetails)
-        {
+    <h2>Заказ</h2>
+    <table class="table table-bordered">
+        <thead>
             <tr>
-                <td>@item.Manufacturer</td>
-                <td>@(HttpUtility.HtmlDecode(item.ProductName))</td>
-                <td>@(HttpUtility.HtmlDecode(item.Model))</td>
-                <td>@item.Sku</td>
-                <td>@item.Price.ToString("C0")</td>
-                <td>@item.Quantity</td>
-                <td>@item.Sum.ToString("C0")</td>
+                <th>Производитель</th>
+                <th>Товар</th>
+                <th>Модель</th>
+                <th>Артикул</th>
+                <th>Цена</th>
+                <th>Количество</th>
+                <th>Сумма</th>
             </tr>
-        }
-        <tr>
-            <td colspan="7" style="text-align: right; font-size: 16px; font-weight: bold">Доставка: @order.ShipmentCost.ToString("C0")</td>
-        </tr>
-        <tr>
-            <td style="text-align: right; font-size: 20px; font-weight: bold">ИТОГО: @order.TotalPrice.ToString("C0")</td>
-        </tr>
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var item in order.OrderDetails)
+            {
+                <tr>
+                    <td>@item.Manufacturer</td>
+                    <td>@(HttpUtility.HtmlDecode(item.ProductName))</td>
+                    <td>@(HttpUtility.HtmlDecode(item.Model))</td>
+                    <td>@item.Sku</td>
+                    <td>@item.Price.ToString("C0")</td>
+                    <td>@item.Quantity</td>
+                    <td>@item.Sum.ToString("C0")</td>
+                </tr>
+            }
+            <tr>
+                <td colspan="7" style="text-align: right; font-size: 16px; font-weight: bold">Доставка: @order.ShipmentCost.ToString("C0")</td>
+            </tr>
+            <tr>
+                <td style="text-align: right; font-size: 20px; font-weight: bold">ИТОГО: @order.TotalPrice.ToString("C0")</td>
+            </tr>
+        </tbody>
+    </table>
 }
 
 <style>
     .order-general-info {
         padding: 8px 0px;
     }
-    .order-general-info p {
-        margin: 10px 0px;
-    }
+
+        .order-general-info p {
+            margin: 10px 0px;
+        }
 </style>
 
 @code {
-    [Parameter]
-    public int Id { get; set; }
+    [Parameter] public int Id { get; set; }
+    [Inject] public IOrderStorage OrdersStorage { get; set; }
+    [Inject] public IMapper Mapper { get; set; }
 
     OrderViewModel order = null;
 
     protected override async Task OnInitializedAsync()
     {
-        var oe = await orders.GetOrderById(Id);
-        var detailsEntity = await orders.GetOrderDetails(Id);
+        var orderData = await OrdersStorage.GetOrderById(Id);
 
-        var orderData = new OrderViewModel()
-        {
-            OrderId = oe.order_id.ToString(),
-            City = oe.payment_city,
-            Customer = oe.payment_firstname,
-            DateTime = oe.date_added,
-            OrderStatus = oe.order_status,
-            TotalPrice = oe.total,
-            Comment = oe.comment,
-            CustomerEmail = oe.email,
-            CustomerPhoneNumber = oe.telephone,
-            ShippingAddress = oe.shipping_address_1,
-            PaymentMethod = oe.payment_method,
-            ShippingMethod = oe.shipping_method,
-            OrderDetails = detailsEntity.Select(ode => new OrderDetailsViewModel()
-            {
-                ProductName = ode.name,
-                Model = ode.model,
-                Sku = ode.sku,
-                Price = ode.price,
-                ProductId = ode.product_id,
-                Quantity = ode.quantity,
-                Manufacturer = ode.manufacturer
-            }).ToList()
-        };
-
-        order = orderData;
+        order = Mapper.Map<OrderViewModel>(orderData);
     }
 }

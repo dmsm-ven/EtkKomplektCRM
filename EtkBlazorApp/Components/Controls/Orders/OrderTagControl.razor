@@ -1,6 +1,6 @@
 ﻿@using EtkBlazorApp.Model.Order
 
-@if (TagName != OrderTagType.None)
+@if (Tag.Type != OrderTagType.None)
 {
     <button class="btn btn-sm btn-@background">
         <span class="oi oi-@icon"></span>
@@ -8,10 +8,10 @@
 }
 
 @code {
-    [Parameter] public OrderTagType TagName { get; set; }
+    [Parameter] public OrderTagViewModel Tag { get; set; }
 
-    private string icon => cssMap[TagName].Item2;
-    private string background => cssMap[TagName].Item1;
+    private string icon => cssMap[Tag.Type].Item2;
+    private string background => cssMap[Tag.Type].Item1;
 
     private readonly Dictionary<OrderTagType, Tuple<string, string>> cssMap = new()
         {
