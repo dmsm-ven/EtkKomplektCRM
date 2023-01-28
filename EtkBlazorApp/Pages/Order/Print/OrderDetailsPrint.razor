@@ -1,6 +1,5 @@
 ﻿@page "/order/{id:int}/print"
 @layout PrintBlankLayout
-@using System.Web
 
 @if (order != null)
 {
@@ -34,8 +33,8 @@
             {
                 <tr>
                     <td>@item.Manufacturer</td>
-                    <td>@(HttpUtility.HtmlDecode(item.ProductName))</td>
-                    <td>@(HttpUtility.HtmlDecode(item.Model))</td>
+                    <td>@item.ProductName)</td>
+                    <td>@item.Model</td>
                     <td>@item.Sku</td>
                     <td>@item.Price.ToString("C0")</td>
                     <td>@item.Quantity</td>

@@ -20,13 +20,13 @@ public class OrderProfile : Profile
             .ForMember(o => o.Description, o => o.MapFrom(x => x.description));
 
         CreateMap<OrderDetailsEntity, OrderDetailsViewModel>()
-            .ForMember(o => o.ProductName, o => o.MapFrom(x => x.name))
-            .ForMember(o => o.Model, o => o.MapFrom(x => x.model))
-            .ForMember(o => o.Sku, o => o.MapFrom(x => x.sku))
+            .ForMember(o => o.ProductName, o => o.MapFrom(x => HttpUtility.HtmlDecode(x.name)))
+            .ForMember(o => o.Model, o => o.MapFrom(x => HttpUtility.HtmlDecode(x.model)))
+            .ForMember(o => o.Sku, o => o.MapFrom(x => HttpUtility.HtmlDecode(x.sku)))
             .ForMember(o => o.Price, o => o.MapFrom(x => x.price))
             .ForMember(o => o.ProductId, o => o.MapFrom(x => x.product_id))
             .ForMember(o => o.Quantity, o => o.MapFrom(x => x.quantity))
-            .ForMember(o => o.Manufacturer, o => o.MapFrom(x => x.manufacturer));
+            .ForMember(o => o.Manufacturer, o => o.MapFrom(x => HttpUtility.HtmlDecode(x.manufacturer)));
 
         CreateMap<OrderEntity, OrderViewModel>()
             .ForMember(o => o.OrderId, o => o.MapFrom(x => x.order_id.ToString()))
