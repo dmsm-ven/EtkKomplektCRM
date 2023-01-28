@@ -15,6 +15,6 @@ public class OrderProfile : Profile
             .ForMember(o => o.DateTime, o => o.MapFrom(x => x.date_added))
             .ForMember(o => o.TotalPrice, o => o.MapFrom(x => x.total))
             .ForMember(o => o.OrderStatusName, o => o.MapFrom(x => x.order_status))
-            .ForMember(o => o.OrderStatusId, o => o.MapFrom(x => x.order_status_id));
+            .ForMember(o => o.OrderStatusType, o => o.MapFrom(x => x.order_status_id));
     }
 }

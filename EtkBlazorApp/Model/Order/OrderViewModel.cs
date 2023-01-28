@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtkBlazorApp.Model.Order;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -18,7 +19,7 @@ namespace EtkBlazorApp
         public string ShippingMethod { get; set; }
         public string PaymentMethod { get; set; }
         public string OrderStatusName { get; set; }
-        public int OrderStatusId { get; set; }
+        public OrderStatusType OrderStatusType { get; set; }
 
         // проверить, возможно есть какие-то скрытые.
         public decimal ShipmentCost => TotalPrice - OrderDetails.Sum(od => od.Sum);

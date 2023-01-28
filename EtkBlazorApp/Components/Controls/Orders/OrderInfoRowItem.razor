@@ -1,17 +1,25 @@
-﻿@if (OrderData != null)
+﻿@using EtkBlazorApp.Model.Order
+
+@if (OrderData != null)
 {
-        <tr>
-            <td>@OrderData.OrderId</td>
-            <td>@OrderData.DateTime.ToString("dd.MM.yyyy | HH:mm")</td>
-            <td>@OrderData.Customer</td>
-            <td>@OrderData.City</td>
-            <td>@OrderData.TotalPrice.ToString("C0")</td>
-            <td><a href="/order/@OrderData.OrderId" target="_blank" class="btn btn-info btn-sm"><i class="oi oi-eye"></i></a></td>
-        </tr>
+    <tr>
+        <td>@OrderData.OrderId</td>
+        <td>@OrderData.DateTime.ToString("dd.MM.yyyy | HH:mm")</td>
+        <td>@OrderData.Customer</td>
+        <td>@OrderData.City</td>
+        <td>@OrderData.TotalPrice.ToString("C0")</td>
+        <td>
+            <OrderTagControl TagName="OrderTagType.ShippingTimeExceed" />
+        </td>
+        <td>
+            <OrderStatusDropdown Order="OrderData" CanChangeStatus="false" />
+        </td>
+        <td>
+            <a href="/order/@OrderData.OrderId" target="_blank" class="btn btn-info btn-sm"><i class="oi oi-eye"></i></a>
+        </td>
+    </tr>
 }
 
 @code {
-
     [Parameter] public OrderViewModel OrderData { get; set; }
-
 }

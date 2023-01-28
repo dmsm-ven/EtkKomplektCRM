@@ -1,0 +1,20 @@
+﻿@using EtkBlazorApp.Model.Order
+
+@if (TagName != OrderTagType.None)
+{
+    <button class="btn btn-sm btn-@background">
+        <span class="oi oi-@icon"></span>
+    </button>
+}
+
+@code {
+    [Parameter] public OrderTagType TagName { get; set; }
+
+    private string icon => cssMap[TagName].Item2;
+    private string background => cssMap[TagName].Item1;
+
+    private readonly Dictionary<OrderTagType, Tuple<string, string>> cssMap = new()
+        {
+            [OrderTagType.ShippingTimeExceed] = Tuple.Create("danger", "fire")
+        };
+}

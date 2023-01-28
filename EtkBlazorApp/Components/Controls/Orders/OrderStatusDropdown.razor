@@ -1,7 +1,63 @@
-﻿<button class="btn btn-outline-success p-1">
-    Статус заказа
-</button>
+﻿@using EtkBlazorApp.Model.Order
+
+<div class="dropdown show">
+    <button type="button"
+            data-bs-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="false"
+            class=@cssClass>
+        <span>@statusIcon</span>
+        <span>@Order.OrderStatusName</span>
+    </button>
+    @if (CanChangeStatus)
+    {
+        @*<div class="dropdown-menu dropdown" aria-labelledby=@($"dropdownMenuButton_{Order.OrderId}")>
+            <a :key="orderId + '_' + s.id"
+            v-for="s in orderStatusesSource"
+            href="#"
+            @click.prevent="toggleOrderStatus(s.name)"
+            class="dropdown-item">
+            {{ s.name }}
+            </a>
+            </div>*@
+    }
+</div>
 
 @code {
-    [Parameter] public bool IsReadOnly { get; set; }
+    [Parameter] public OrderViewModel Order { get; set; }
+    [Parameter] public bool CanChangeStatus { get; set; }
+
+    private string cssClass
+    {
+        get
+        {
+            if (cssMap.TryGetValue(Order.OrderStatusType, out var kvp))
+            {
+                return $"dropdown-toggle btn btn-sm w-100 btn-{kvp.Item2}";
+            }
+            return "dropdown-toggle btn btn-sm w-100";
+        }
+    }
+
+    private string statusIcon
+    {
+        get
+        {
+            if (cssMap.TryGetValue(Order.OrderStatusType, out var kvp))
+            {
+                return kvp.Item1;
+            }
+            return "???";
+        }
+    }
+
+    private readonly Dictionary<OrderStatusType, Tuple<string, string>> cssMap = new()
+        {
+            [OrderStatusType.Created] = Tuple.Create("🔄", "warning"),
+            [OrderStatusType.Complectation] = Tuple.Create("📦", "info"),
+            [OrderStatusType.Delivery] = Tuple.Create("🚙", "info"),
+            [OrderStatusType.Completed] = Tuple.Create("✔️", "success"),
+            [OrderStatusType.WaitingToPickup] = Tuple.Create("🕘", "light"),
+            [OrderStatusType.Canceled] = Tuple.Create("🛑", "dark"),
+        };
 }
