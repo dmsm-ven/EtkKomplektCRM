@@ -19,8 +19,8 @@ namespace EtkBlazorApp
         public decimal Discount { get; set; }
 
         [StringLength(16, MinimumLength = 6)]
-        public string Password { get; set; }       
-        
+        public string Password { get; set; }
+
         [Range(1, 5)]
         public int Priority { get; set; }
 
@@ -30,9 +30,9 @@ namespace EtkBlazorApp
 
         public string PriceListUri
         {
-            get 
+            get
             {
-                if(DiscountBrandsInfo.Count == 0)
+                if (DiscountBrandsInfo.Count == 0)
                 {
                     return "Необходимо выбрать хотя бы одного производителя";
                 }
@@ -49,7 +49,7 @@ namespace EtkBlazorApp
         public List<DateTime> RequestHistory { get; set; } = new List<DateTime>();
 
         public List<PartnerManufacturerDiscountItemViewModel> DiscountBrandsInfo { get; set; } = new List<PartnerManufacturerDiscountItemViewModel>();
-    
+
         public bool HasItem(PartnerManufacturerDiscountItemViewModel item)
         {
             return DiscountBrandsInfo.FirstOrDefault(i => i.ManufacturerId == item.ManufacturerId) != null;
@@ -58,18 +58,10 @@ namespace EtkBlazorApp
         public void RemoveItem(PartnerManufacturerDiscountItemViewModel item)
         {
             var itemToRemove = DiscountBrandsInfo.FirstOrDefault(i => i.ManufacturerId == item.ManufacturerId);
-            if(itemToRemove != null)
+            if (itemToRemove != null)
             {
                 DiscountBrandsInfo.Remove(itemToRemove);
             }
         }
-    }
-
-    public class PartnerManufacturerDiscountItemViewModel
-    {
-        public string ManufacturerName { get; set; }
-        public Guid PartnerGuid { get; set; }
-        public int ManufacturerId { get; set; }
-        public decimal? Discount { get; set; }
     }
 }

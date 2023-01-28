@@ -58,21 +58,4 @@ namespace EtkBlazorApp
         }
     }
 
-    public class ManufacturerDiscountItemViewModel
-    {
-        public int manufacturer_id { get; set; }
-        public string manufacturer_name { get; set; }
-        public decimal discount { get; set; }
-    }
-
-    public class ManufacturerSkipItemViewModel
-    {
-        public int manufacturer_id { get; set; }
-        public string Name { get; set; }
-        public SkipManufacturerListType ListType { get; set; }
-        public string ListTypeDescription => (ListType == SkipManufacturerListType.black_list ? "Черный список" : "Белый список");
-    }
-
-    public enum SkipManufacturerListType { black_list, white_list }
-
 }
