@@ -49,11 +49,11 @@ namespace EtkBlazorApp
         {
             get
             {
-                if(BasePriceCurrency == "RUB" && NewPriceInRub != 0 && Price != 0)
+                if (BasePriceCurrency == "RUB" && NewPriceInRub != 0 && Price != 0)
                 {
                     return NewPriceInRub - Price;
                 }
-                else if(NewPriceInCurrency != 0 && BasePrice != 0)
+                else if (NewPriceInCurrency != 0 && BasePrice != 0)
                 {
                     return NewPriceInCurrency - BasePrice;
                 }
@@ -66,7 +66,7 @@ namespace EtkBlazorApp
         {
             get
             {
-                if(DiscountEndDate > DateTime.Now.Date)
+                if (DiscountEndDate > DateTime.Now.Date)
                 {
                     return (int)Math.Ceiling((DiscountEndDate - DateTime.Now.Date).TotalDays);
                 }
@@ -145,13 +145,13 @@ namespace EtkBlazorApp
 
         private int CalculateDiscountPercent(string currencyCode)
         {
-            if(currencyCode == "RUB" && Price != 0)
+            if (currencyCode == "RUB" && Price != 0)
             {
-                return  (int)((1m - (NewPriceInRub / (decimal)Price)) * 100);
+                return (int)((1m - (NewPriceInRub / (decimal)Price)) * 100);
             }
-            else if(BasePrice != 0)
+            else if (BasePrice != 0)
             {
-                return  (int)((1m - (NewPriceInCurrency / (decimal)BasePrice)) * 100);
+                return (int)((1m - (NewPriceInCurrency / (decimal)BasePrice)) * 100);
             }
             return 0;
         }
