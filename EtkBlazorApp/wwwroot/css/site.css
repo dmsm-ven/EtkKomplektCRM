@@ -1,9 +1,29 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+.product-grid {
+    display: flex;
+    justify-content: start;
+    gap: 12px;
+}
+
+    .product-grid .product-item {
+        flex: 1 0 25%;
+    }
+
+.orders-filter-row {
+    display: flex;
+    justify-content: center;
+}
+
+
+.order-status-dropdown-container {
+    display: inline-grid;
+    width: 100%;
+}
 
 .order-status-dropdown-button {
-    min-width: 160px;
+    width: 100%;
     display: flex;
     justify-content: space-between;
 }

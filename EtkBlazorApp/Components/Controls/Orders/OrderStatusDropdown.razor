@@ -1,6 +1,6 @@
 ﻿@using EtkBlazorApp.Model.Order
 
-<div class="dropdown show">
+<div class="dropdown show order-status-dropdown-container">
     <button href="#"
             type="button"
             id=@($"dropdownOrderStatusLink_{Order.OrderId}")
@@ -41,7 +41,7 @@
     private readonly Dictionary<OrderStatusType, EtkBlazorApp.Model.Order.OrderStatusDisplayData> cssMap = new()
         {
             [OrderStatusType.None] = new("❓", "dark"),
-            [OrderStatusType.Created] = new("🔄", "danger"),
+            [OrderStatusType.Created] = new("🔄", "dark"),
             [OrderStatusType.Complectation] = new("📦", "primary"),
             [OrderStatusType.Delivery] = new("🚙", "info"),
             [OrderStatusType.Completed] = new("✔️", "success"),
@@ -96,7 +96,7 @@
 
     private async Task ChangeOrderStatus(OrderStatusViewModel status)
     {
-        int oldStatus = (int)Order.Status.Type;
+        int oldStatus = (int)(Order?.Status?.Type ?? OrderStatusType.None);
         int newStatus = (int)status.Type;
         Order.Status = status;
         isOpened = false;

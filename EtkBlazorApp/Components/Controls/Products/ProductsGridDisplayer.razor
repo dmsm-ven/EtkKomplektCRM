@@ -1,6 +1,6 @@
 ﻿@inject IProductStorage database
 
-@if(Products == null)
+@if (Products == null)
 {
     <LoadingSpinner />
 }
@@ -11,10 +11,9 @@ else
         <h1>@Title</h1>
     }
     <div class="container product-grid">
-        <div class="row">
-            @foreach (var product in Products.Take(MaxDisplayCount))
-            {
-            <div class="col-md-3 product-item">
+        @foreach (var product in Products.Take(MaxDisplayCount))
+        {
+            <div class="product-item">
                 @if (ShowPrice && product.Price != decimal.Zero)
                 {
                     <p class="product-price">@product.Price.ToString("C0")</p>
@@ -25,12 +24,12 @@ else
                 }
                 @if (ShowViewCounter)
                 {
-                <p class="product-price view-counter">
+                    <p class="product-price view-counter">
 
-                    <span class="oi oi-eye"></span>
-                    @product.NumberOfViews
-                </p>
-                    
+                        <span class="oi oi-eye"></span>
+                        @product.NumberOfViews
+                    </p>
+
                 }
                 <a href="@product.ProductIdUri" target="_blank">
                     <div class="product-item-inner shadow">
@@ -45,14 +44,13 @@ else
                     </div>
                 </a>
             </div>
-            }
-        </div>
+        }
     </div>
 }
 
 @code {
     [Parameter] public List<ProductViewModel> Products { get; set; } = new List<ProductViewModel>();
-    [Parameter] public int MaxDisplayCount { get; set; } = 4;
+    [Parameter] public int MaxDisplayCount { get; set; } = 12;
     [Parameter] public string Title { get; set; } = string.Empty;
 
 

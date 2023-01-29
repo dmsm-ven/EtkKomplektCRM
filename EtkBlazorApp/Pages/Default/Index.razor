@@ -1,49 +1,23 @@
-﻿@inject IProductStorage productsStorage
+﻿@using EtkBlazorApp.Components.Controls.Products
 @page "/"
 
-<ProductsGridDisplayer Products="@lastAddedProducts" Title ="Последние добавленные товары"/>
-
-<ProductsGridDisplayer Products="@bestsellersBySum" Title="Наиболее продаваемые (Сумма)" />
-
-<ProductsGridDisplayer Products="@bestsellersByQuantity" Title="Наиболее продаваемые (Количество)" />
-
+<ProductsGridDisplayer Products="@lastAddedProducts" Title="Последние добавленные товары" MaxDisplayCount=4 />
+<ProductsGridDisplayer Products="@bestsellerProducts" Title="Наиболее продаваемые товары" MaxDisplayCount=4 />
 
 @code {
 
-        List<ProductViewModel> lastAddedProducts = null;
-        List<ProductViewModel> bestsellersBySum = null;
-        List<ProductViewModel> bestsellersByQuantity = null;
+    List<ProductViewModel> lastAddedProducts = null;
+    List<ProductViewModel> bestsellerProducts = null;
+    [Inject] public IMapper Mapper { get; set; }
+    [Inject] public IProductStorage ProductStorage { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            lastAddedProducts = ConvertToViewModels(await productsStorage.GetLastAddedProducts(4));
-            StateHasChanged();
-
-            bestsellersBySum = ConvertToViewModels(await productsStorage.GetBestsellersBySum(4, 30));
-            StateHasChanged();
-
-            bestsellersByQuantity = ConvertToViewModels(await productsStorage.GetBestsellersByQuantity(4, 30));
+            lastAddedProducts = Mapper.Map<List<ProductViewModel>>(await ProductStorage.GetLastAddedProducts(4));
+            bestsellerProducts = Mapper.Map<List<ProductViewModel>>(await ProductStorage.GetBestsellersBySum(4, 31));
             StateHasChanged();
         }
     }
-
-    private List<ProductViewModel> ConvertToViewModels(IEnumerable<ProductEntity> dbEntities)
-    {
-        var viewItems = dbEntities
-        .Select(entity => new ProductViewModel()
-        {
-            Image = entity.image,
-            Name = HttpUtility.HtmlDecode(entity.name) ?? string.Empty,
-            Manufacturer = entity.manufacturer,
-            Price = entity.price,
-            Id = entity.product_id,
-            NumberOfViews = entity.viewed,
-            DiscountedPrice = entity.discount_price
-        }).ToList();
-
-        return viewItems;
-    }
-
 }
