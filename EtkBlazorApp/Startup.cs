@@ -4,6 +4,7 @@ using EtkBlazorApp.BL.Templates.PriceListTemplates;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.Services;
+using EtkBlazorAppi.DadataApi;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
@@ -83,6 +84,7 @@ namespace EtkBlazorApp
 
             ConfigureCorrelators(services);
             ConfigureDatabaseServices(services);
+            ConfigureExteralApiClients(services);
 
             services.AddMemoryCache();
             services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
@@ -97,6 +99,11 @@ namespace EtkBlazorApp
             services.AddScoped<AuthenticationStateProvider, CustomAuthProvider>();
             services.AddScoped<UserLogger>();
             services.AddScoped<ReportManager>();
+        }
+
+        private void ConfigureExteralApiClients(IServiceCollection services)
+        {
+            services.AddSingleton<ICompanyInfoChecker>(x => new DadataApiClient(Configuration.GetValue<string>("DADATA_API_KEY")));
         }
 
         private void ConfigureDatabaseServices(IServiceCollection services)

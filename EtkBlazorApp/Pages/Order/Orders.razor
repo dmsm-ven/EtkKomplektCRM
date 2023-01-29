@@ -34,18 +34,28 @@
             </tr>
         </thead>
         <tbody>
-            @if (orders == null)
-            {
-                @for (int i = 0; i < 100; i++)
-                {
-                    <tr colspan="8"><LoadingSpinner /></tr>
-                }
-            }
-            else
+            @if (orders is not null)
             {
                 @foreach (var order in orders)
                 {
                     <OrderInfoRowItem OrderData="@order" />
+                }
+
+            }
+            else
+            {
+                @for (int i = 0; i < 100; i++)
+                {
+                    <tr colspan="">
+                        <td>0000000</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td> <LoadingSpinner /></td>
+                        <td> <LoadingSpinner /></td>
+                    </tr>
                 }
             }
         </tbody>

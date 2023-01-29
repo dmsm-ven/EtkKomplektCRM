@@ -1,5 +1,6 @@
 ﻿@page "/order/{id:int}"
 @using EtkBlazorApp.Components.Controls.Orders;
+@using EtkBlazorAppi.DadataApi
 @attribute [Authorize(Roles = "Administrator, Manager")]
 
 @if (order == null)
@@ -9,7 +10,7 @@
 else
 {
     <h1>
-        Детали заказа <button class="btn btn-sm btn-secondary" @onclick="GoToPrintPage"><span class="oi oi-print"></span></button>
+        Детали заказа <button class="btn btn-sm btn-warning" @onclick="GoToPrintPage"><span class="oi oi-print"></span></button>
     </h1>
 
     <div class="container-fluid" style="padding-bottom: 30px;">
@@ -150,7 +151,10 @@ else
     [Inject] public IOrderStorage OrderStorage { get; set; }
     [Inject] public IJSRuntime Js { get; set; }
     [Inject] public IMapper Mapper { get; set; }
+    [Inject] public ICompanyInfoChecker CompanyInfoChecker { get; set; }
+    [Inject] public ISettingStorage SettingStorage { get; set; }
     [Inject] public NavigationManager NavManager { get; set; }
+
 
     OrderViewModel order = null;
     List<OrderEntity> linkedOrders = null;
@@ -162,11 +166,20 @@ else
         order = Mapper.Map<OrderViewModel>(orderData);
 
         linkedOrders = await OrderStorage.GetLinkedOrders(orderData);
+
+        var info = await CompanyInfoChecker.GetInfoByInn("7811658788");
     }
 
     private async Task GoToPrintPage()
     {
-        string printPage = NavManager.Uri + "/print";
+        //Версия на страницу в личном кабинете
+        //string printPage = NavManager.Uri + "/print";
+
+        //Версия на страницу из заказа, код генерируется в модуле cash_plusplus
+
+        string code = await GetPdfCode();
+        string printPage = $"https://etk-komplekt.ru/index.php?route=account/cash_plusplus/view&code={code}&order={order.OrderId}";
+
         await Js.InvokeAsync<object>("open", printPage, "_blank");
     }
 
@@ -174,6 +187,15 @@ else
     {
         string linkedOrderPage = NavManager.Uri.Replace("/" + Id, "/" + clickedOrder.order_id);
         await Js.InvokeAsync<object>("open", linkedOrderPage, "_blank");
+    }
+
+    private async Task<string> GetPdfCode()
+    {
+        string phrase = await SettingStorage.GetValue("shop_config_encyption_phrase");
+        string cash_plusplus_hash = EtkBlazorApp.Extensions.StringHelper.GetMD5(order.OrderId + phrase)
+        .Substring(0, 12)
+        .ToLower();
+        return cash_plusplus_hash;
     }
 }
 

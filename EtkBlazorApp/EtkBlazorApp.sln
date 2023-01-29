@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtkBlazorApp.CdekApi", "..\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtkBlazorApp.Core", "..\EtkBlazorApp.Interfaces\EtkBlazorApp.Core.csproj", "{1D8630F6-11B5-4822-9E92-C06245BF2F2B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ExternalApi", "ExternalApi", "{F4ED17F6-25DE-40FE-96F5-DA5CCE5B81B4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtkBlazorAppi.DadataApi", "..\EtkBlazorAppi.DadataApi\EtkBlazorAppi.DadataApi.csproj", "{BC490AD7-1B62-442B-99FA-978119C670D0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,9 +43,17 @@ Global
 		{1D8630F6-11B5-4822-9E92-C06245BF2F2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1D8630F6-11B5-4822-9E92-C06245BF2F2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1D8630F6-11B5-4822-9E92-C06245BF2F2B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC490AD7-1B62-442B-99FA-978119C670D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC490AD7-1B62-442B-99FA-978119C670D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC490AD7-1B62-442B-99FA-978119C670D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC490AD7-1B62-442B-99FA-978119C670D0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0F40A8B2-DC45-430C-8DEE-F1CEED09F155} = {F4ED17F6-25DE-40FE-96F5-DA5CCE5B81B4}
+		{BC490AD7-1B62-442B-99FA-978119C670D0} = {F4ED17F6-25DE-40FE-96F5-DA5CCE5B81B4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AC89A115-2F62-4E4D-9351-559FC4BE2606}

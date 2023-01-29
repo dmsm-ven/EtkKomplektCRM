@@ -30,9 +30,9 @@
                 </div>
             </div>
 
-            @if(editedProduct == null)
+            @if (editedProduct == null)
             {
-                <LoadingSpinner/>
+                <LoadingSpinner />
             }
             else
             {
@@ -93,7 +93,7 @@
                 {
                     <div class="form-group">
                         <label>Замена</label>
-                        <SelectProductBlazoredTypehead @bind-Product="replacementProduct"/>
+                        <SelectProductBlazoredTypehead @bind-Product="replacementProduct" />
                     </div>
                 }
 
@@ -153,21 +153,21 @@
         if (entity == null) { editedProduct = null; return; }
 
         editedProduct = new ProductViewModel()
-        {
-            Id = entity.product_id,
-            Uri = $"https://etk-komplekt.ru/{entity.keyword}",
-            Name = entity.name,
-            Model = entity.model,
-            Manufacturer = entity.manufacturer,
-            Sku = entity.sku,
-            EAN = entity.ean,
-            Quantity = entity.quantity,
-            BasePrice = entity.base_currency_code == CurrencyType.RUB.ToString() ? entity.price : entity.base_price,
-            BasePriceCurrency = entity.base_currency_code,
-            StockStatus = entity.stock_status,
-            DateModified = entity.date_modified.HasValue ? entity.date_modified.ToString() : string.Empty,
-            ReplacementProductId = entity.replacement_id,
-        };
+            {
+                Id = entity.product_id,
+                Uri = $"https://etk-komplekt.ru/{entity.keyword}",
+                Name = entity.name,
+                Model = entity.model,
+                Manufacturer = entity.manufacturer,
+                Sku = entity.sku,
+                EAN = entity.ean,
+                Quantity = entity.quantity,
+                BasePrice = entity.base_currency_code == CurrencyType.RUB.ToString() ? entity.price : entity.base_price,
+                BasePriceCurrency = entity.base_currency_code,
+                StockStatus = entity.stock_status,
+                DateModified = entity.date_modified.HasValue ? entity.date_modified.ToString() : string.Empty,
+                ReplacementProductId = entity.replacement_id,
+            };
 
         if (editedProduct.ReplacementProductId.HasValue)
         {
@@ -197,15 +197,15 @@
         }
 
         var entity = new ProductEntity()
-        {
-            product_id = editedProduct.Id,
-            price = editedProduct.Price,
-            base_price = editedProduct.BasePriceCurrency == CurrencyType.RUB.ToString() ? 0 : editedProduct.BasePrice,
-            base_currency_code = editedProduct.BasePriceCurrency,
-            quantity = editedProduct.Quantity,
-            stock_status = editedProduct.StockStatus,
-            replacement_id = (editedProduct.StockStatus == "Снято с производства" ? replacementProduct?.product_id : (int?)null)
-        };
+            {
+                product_id = editedProduct.Id,
+                price = editedProduct.Price,
+                base_price = editedProduct.BasePriceCurrency == CurrencyType.RUB.ToString() ? 0 : editedProduct.BasePrice,
+                base_currency_code = editedProduct.BasePriceCurrency,
+                quantity = editedProduct.Quantity,
+                stock_status = editedProduct.StockStatus,
+                replacement_id = (editedProduct.StockStatus == "Снято с производства" ? replacementProduct?.product_id : (int?)null)
+            };
 
         await productUpdateService.UpdateDirectProduct(entity);
 
