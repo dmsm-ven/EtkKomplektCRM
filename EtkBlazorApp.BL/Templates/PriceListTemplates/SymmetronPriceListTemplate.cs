@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtkBlazorApp.Core.Data;
+using System;
 using System.Collections.Generic;
 
 namespace EtkBlazorApp.BL

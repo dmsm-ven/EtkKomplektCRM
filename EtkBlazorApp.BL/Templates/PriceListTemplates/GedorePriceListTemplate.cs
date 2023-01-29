@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtkBlazorApp.Core.Data;
+using System;
 using System.Collections.Generic;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
@@ -46,8 +47,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
-                
-                if(tab.GetValue<string>(row, 5) != "GED") { continue; }
+
+                if (tab.GetValue<string>(row, 5) != "GED") { continue; }
 
                 string sku = "GE-" + tab.GetValue<string>(row, 1);
                 string name = tab.GetValue<string>(row, 4);

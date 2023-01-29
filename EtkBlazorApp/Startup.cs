@@ -1,6 +1,7 @@
 using Blazored.Toast;
 using EtkBlazorApp.BL;
 using EtkBlazorApp.BL.Templates.PriceListTemplates;
+using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.Services;
 using Microsoft.AspNetCore.Builder;

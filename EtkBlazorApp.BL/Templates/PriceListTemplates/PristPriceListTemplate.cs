@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtkBlazorApp.Core.Data;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -90,7 +91,7 @@ namespace EtkBlazorApp.BL
                         {
                             offer.Amount = (int)decimal.Parse(node.SelectSingleNode("./param[@name='Доступные остатки']").InnerText, new CultureInfo("en-EN"));
                         }
-                     
+
                         if (!string.IsNullOrEmpty(currentString))
                         {
                             offer.Currency = (CurrencyType)Enum.Parse(typeof(CurrencyType), currentString);

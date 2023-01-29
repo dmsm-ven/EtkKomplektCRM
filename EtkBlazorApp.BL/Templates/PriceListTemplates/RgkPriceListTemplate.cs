@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtkBlazorApp.Core.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -18,7 +19,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string name = tab.GetValue<string>(row, 1);
                 string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 4));
 
-                if(SkipThisBrand(manufacturer)) { continue; }
+                if (SkipThisBrand(manufacturer)) { continue; }
 
                 string sku = tab.GetValue<string>(row, 6);
 

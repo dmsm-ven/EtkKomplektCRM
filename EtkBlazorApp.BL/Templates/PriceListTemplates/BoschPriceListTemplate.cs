@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtkBlazorApp.Core.Data;
+using System;
 using System.Collections.Generic;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
@@ -6,7 +7,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("5785C822-A57D-4DD2-9B68-E0301DDF135B")]
     public class BoschPriceListTemplate : ExcelPriceListTemplateBase
     {
-        public BoschPriceListTemplate(string fileName): base(fileName) { }
+        public BoschPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {

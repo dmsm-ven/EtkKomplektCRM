@@ -1,0 +1,27 @@
+﻿<div class="row">
+    <div class="btn-group">
+        @foreach (var tab in tabData)
+        {
+            <button class="btn btn-outline-primary @(selectedTab == tab ? "active" : "")"
+                @onclick="@(e => selectedTab = tab)">
+                @tab
+            </button>
+        }
+    </div>
+</div>
+
+<div class="row">
+    <div class="order-details-tabs">
+        @if (selectedTab != "")
+        {
+            <h2>@selectedTab</h2>
+        }
+    </div>
+</div>
+
+@code {
+    string selectedTab = "";
+    string[] tabData = new string[] { "Статус СДЭК", "Информация по ИНН" };
+
+    [Parameter] public OrderViewModel Order { get; set; }
+}

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtkBlazorApp.Core.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,7 +29,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Price = price,
                     Currency = CurrencyType.EUR,
                     Sku = sku,
-                    Model = model,        
+                    Model = model,
                     Name = name
                 };
 

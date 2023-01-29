@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtkBlazorApp.Core.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,13 +19,13 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
                 string manufacturer = tab.GetValue<string>(row, 4).Trim();
-                
+
                 if (SkipThisBrand(manufacturer)) { continue; }
 
                 string sku = tab.GetValue<string>(row, 1);
-                string model = tab.GetValue<string>(row, 2);                           
+                string model = tab.GetValue<string>(row, 2);
                 string name = tab.GetValue<string>(row, 5);
-                
+
                 var quantity = ParseQuantity(tab.GetValue<string>(row, 6));
                 var price = ParsePrice(tab.GetValue<string>(row, 8));
 
@@ -66,12 +67,12 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string sku = tab.GetValue<string>(row, 4);
                 string name = tab.GetValue<string>(row, 5);
                 string ean = tab.GetValue<string>(row, 16);
-                
+
                 var quantity = ParseQuantity(tab.GetValue<string>(row, 11));
 
                 var rrcPrice = ParsePrice(tab.GetValue<string>(row, 14));
 
-                if(rrcPrice == decimal.Zero)
+                if (rrcPrice == decimal.Zero)
                 {
                     var base_price = ParsePrice(tab.GetValue<string>(row, 13));
                     rrcPrice = (int)(base_price.Value * 1.25m);

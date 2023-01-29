@@ -5,9 +5,10 @@
             data-bs-toggle="dropdown"
             aria-haspopup="true"
             aria-expanded="false"
-            class=@cssClass>
+            class=@cssClass
+            style="width: 160px;">
         <span>@statusIcon</span>
-        <span>@Order.Status.Name</span>
+        <span>@(Order?.Status?.Name ?? "Неизвестно")</span>
     </button>
     @if (CanChangeStatus)
     {
@@ -31,11 +32,19 @@
     {
         get
         {
-            if (cssMap.TryGetValue(Order.Status.Type, out var kvp))
+            string css = "btn btn-sm";
+
+            if (Order?.Status != null && cssMap.TryGetValue(Order.Status.Type, out var kvp))
             {
-                return $"dropdown-toggle btn btn-sm w-100 btn-{kvp.Item2}";
+                css += $" btn-{kvp.Item2}";
             }
-            return "dropdown-toggle btn btn-sm w-100";
+
+            if (CanChangeStatus)
+            {
+                css += " dropdown-toggle";
+            }
+
+            return css;
         }
     }
 
@@ -43,16 +52,17 @@
     {
         get
         {
-            if (cssMap.TryGetValue(Order.Status.Type, out var kvp))
+            if (Order?.Status != null && cssMap.TryGetValue(Order.Status.Type, out var kvp))
             {
                 return kvp.Item1;
             }
-            return "???";
+            return cssMap[OrderStatusType.None].Item1;
         }
     }
 
     private readonly Dictionary<OrderStatusType, Tuple<string, string>> cssMap = new()
         {
+            [OrderStatusType.None] = Tuple.Create("❓", "warning"),
             [OrderStatusType.Created] = Tuple.Create("🔄", "warning"),
             [OrderStatusType.Complectation] = Tuple.Create("📦", "info"),
             [OrderStatusType.Delivery] = Tuple.Create("🚙", "info"),

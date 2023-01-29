@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
+using EtkBlazorApp.Core.Data;
 
 namespace EtkBlazorApp.BL.Templates
 {
@@ -19,7 +20,7 @@ namespace EtkBlazorApp.BL.Templates
 
             foreach (var row in lines.Skip(1))
             {
-                if(row.Length != 5) { continue; }
+                if (row.Length != 5) { continue; }
 
                 string model = row[0].Trim();
                 string name = row[1].Trim();
@@ -30,7 +31,6 @@ namespace EtkBlazorApp.BL.Templates
                 {
                     Name = name,
                     Currency = CurrencyType.RUB,
-                    //Stock = StockName.Hantek,
                     Model = model,
                     Sku = model,
                     Price = price,

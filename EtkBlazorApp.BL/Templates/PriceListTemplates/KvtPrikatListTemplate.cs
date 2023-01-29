@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtkBlazorApp.Core.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,12 +22,12 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string name = tab.GetValue<string>(row, 1);
                 string sku = "KV-" + tab.GetValue<string>(row, 2);
                 string model = "KVT-" + tab.GetValue<string>(row, 2);
-                string ean =  tab.GetValue<string>(row, 3);
+                string ean = tab.GetValue<string>(row, 3);
 
                 var quantityKaluga = ParseQuantity(tab.GetValue<string>(row, 4));
-                var quantitySpb =  ParseQuantity(tab.GetValue<string>(row, 5));
-                var price =  ParsePrice(tab.GetValue<string>(row, 6));
-           
+                var quantitySpb = ParseQuantity(tab.GetValue<string>(row, 5));
+                var price = ParsePrice(tab.GetValue<string>(row, 6));
+
                 var priceLine = new MultistockPriceLine(this)
                 {
                     Currency = CurrencyType.RUB,
@@ -65,7 +66,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
                 var quantityKaluga = ParseQuantity(tab.GetValue<string>(row, 4));
                 var quantitySpb = ParseQuantity(tab.GetValue<string>(row, 5));
-                
+
                 var price = ParsePrice(tab.GetValue<string>(row, 6));
 
                 var priceLine = new MultistockPriceLine(this)

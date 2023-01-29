@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtkBlazorApp.Core.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -19,7 +20,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string model = tab.GetValue<string>(row, 2);
                 var price = ParsePrice(tab.GetValue<string>(row, 3));
                 var quantity = ParseQuantity(tab.GetValue<string>(row, 5));
-                
+
                 //Тут в прайс-листе нет столбца с наименованием бренда, берем из разрешенного списка
                 string manufacturer = BrandsWhiteList.FirstOrDefault(vm => name.Contains(vm, StringComparison.OrdinalIgnoreCase));
                 if (SkipThisBrand(manufacturer)) { continue; }
@@ -39,6 +40,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             }
 
             return list;
-        }    
+        }
     }
 }

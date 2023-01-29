@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtkBlazorApp.Core.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,7 +22,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 3));
 
-                if(SkipThisBrand(manufacturer)) { continue; }
+                if (SkipThisBrand(manufacturer)) { continue; }
 
                 string skuNumber = tab.GetValue<string>(row, 1);
                 string productName = tab.GetValue<string>(row, 2);
@@ -31,7 +32,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string currencyTypeString = tab.GetValue<string>(row, 6);
 
                 CurrencyType priceCurreny = CurrencyType.RUB;
-                if(!Enum.TryParse(currencyTypeString, out priceCurreny)) { }
+                if (!Enum.TryParse(currencyTypeString, out priceCurreny)) { }
 
                 var priceLine = new PriceLine(this)
                 {
@@ -82,6 +83,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             return list;
         }
-        
+
     }
 }

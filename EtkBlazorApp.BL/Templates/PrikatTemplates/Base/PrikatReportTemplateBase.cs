@@ -1,3 +1,4 @@
+using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.DataAccess.Entity;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace EtkBlazorApp.BL.Templates
         public decimal Discount2 { get; set; }
         public string GLN { get; set; }
 
-        protected virtual decimal[] DEFAULT_DIMENSIONS { get; } = new decimal[] { 150, 100, 100, 0.4m }; 
+        protected virtual decimal[] DEFAULT_DIMENSIONS { get; } = new decimal[] { 150, 100, 100, 0.4m };
         protected virtual string LENGTH_UNIT { get; } = "миллиметр";
         protected virtual string WEIGHT_UNIT { get; } = "килограмм";
 
@@ -27,7 +28,7 @@ namespace EtkBlazorApp.BL.Templates
             Manufacturer = manufacturer;
             Currency = currency;
             Precission = (Currency == CurrencyType.RUB ? 0 : 2);
-        }        
+        }
 
         public void AppendLines(List<ProductEntity> products, List<PriceLine> priceLines, StreamWriter writer)
         {
@@ -71,17 +72,17 @@ namespace EtkBlazorApp.BL.Templates
             decimal priceInCurrency = (int)product.price;
             if (Currency != CurrencyType.RUB)
             {
-                priceInCurrency = (product.base_currency_code == Currency.ToString() && product.base_price != decimal.Zero) ? 
+                priceInCurrency = (product.base_currency_code == Currency.ToString() && product.base_price != decimal.Zero) ?
                     product.base_price :
                     Math.Round(product.price / CurrencyRatio, 2);
             }
-           
+
             decimal price1 = Math.Round(priceInCurrency * ((100m + Discount2) / 100m), Precission);
             decimal price2 = Math.Round((price1 * (100m + Discount1)) / 100m, Precission);
 
             string vi_price_rrc = price1.ToString($"F{Precission}", new CultureInfo("en-EN"));
             string vi_price = price2.ToString($"F{Precission}", new CultureInfo("en-EN"));
-            
+
             string length = (product.length != decimal.Zero ? product.length : DEFAULT_DIMENSIONS[0]).ToString("F2", new CultureInfo("en-EN"));
             string width = (product.width != decimal.Zero ? product.width : DEFAULT_DIMENSIONS[1]).ToString("F2", new CultureInfo("en-EN"));
             string height = (product.height != decimal.Zero ? product.height : DEFAULT_DIMENSIONS[2]).ToString("F2", new CultureInfo("en-EN"));

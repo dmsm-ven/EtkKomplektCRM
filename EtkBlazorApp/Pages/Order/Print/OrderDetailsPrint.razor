@@ -10,7 +10,7 @@
         <p><strong>Email: </strong>@order.CustomerEmail</p>
         <p><strong>Метод оплаты: </strong>@order.PaymentMethod</p>
         <p><strong>Адрес доставки: </strong>@order.ShippingAddress</p>
-        <p><strong>Метод доставки: </strong>@(HttpUtility.HtmlDecode(order.ShippingMethod))</p>
+        <p><strong>Метод доставки: </strong>@order.ShippingMethod)</p>
         <p><strong>Город: </strong> @order.City</p>
         <p><strong>Примечание к заказу: </strong> @order.Comment</p>
     </div>

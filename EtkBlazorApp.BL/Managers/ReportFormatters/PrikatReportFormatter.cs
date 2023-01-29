@@ -1,5 +1,7 @@
 ﻿using EtkBlazorApp.BL.Templates;
 using EtkBlazorApp.BL.Templates.PrikatTemplates;
+using EtkBlazorApp.Core.Data;
+using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using System;
@@ -19,8 +21,8 @@ namespace EtkBlazorApp.BL
         private readonly PriceListManager priceListManager;
 
         public VseInstrumentiReportGenerator(ICurrencyChecker currencyChecker,
-            IPrikatTemplateStorage templateStorage, 
-            IProductStorage productStorage, 
+            IPrikatTemplateStorage templateStorage,
+            IProductStorage productStorage,
             PriceListManager priceListManager)
         {
             this.currencyChecker = currencyChecker;
@@ -92,12 +94,12 @@ namespace EtkBlazorApp.BL
                     products.ForEach(product => product.quantity -= additionalStock.FirstOrDefault(p => p.product_id == product.product_id)?.quantity ?? 0);
                 }
 
-                products.ForEach(product => product.quantity = Math.Max(product.quantity, 0)); 
+                products.ForEach(product => product.quantity = Math.Max(product.quantity, 0));
             }
 
             await ApplyCustomProductsHandler(products, manufacturer_id);
 
-            if (options.StockGreaterThanZero) 
+            if (options.StockGreaterThanZero)
             {
                 products.RemoveAll(p => p.quantity <= 0);
             }
@@ -121,7 +123,7 @@ namespace EtkBlazorApp.BL
                 products.RemoveAll(product => product.quantity < MEAN_WELL_MINIMUM_QUANTITY);
             }
 
-            if(manufacturer_id == PROSKIT_MANUFACTURER_ID)
+            if (manufacturer_id == PROSKIT_MANUFACTURER_ID)
             {
                 var mainStock = await productStorage.GetProductQuantityInAdditionalStock((int)StockName._1C);
                 var secondStock = await productStorage.GetProductQuantityInAdditionalStock((int)StockName.Symmetron);
@@ -130,7 +132,7 @@ namespace EtkBlazorApp.BL
                     .GroupBy(p => p.product_id)
                     .ToDictionary(i => i.Key, j => j.Sum(p => p.quantity));
 
-                products.ForEach(product => 
+                products.ForEach(product =>
                 {
                     product.quantity = quantityInStocks.ContainsKey(product.product_id) ? quantityInStocks[product.product_id] : 0;
                 });

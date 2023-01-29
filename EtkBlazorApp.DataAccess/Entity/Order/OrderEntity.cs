@@ -8,6 +8,7 @@ public class OrderEntity
 {
     public DateTime date_added { get; set; }
     public int order_id { get; set; }
+    public int order_status_id { get; set; }
     public string payment_city { get; set; }
     public string payment_firstname { get; set; }
     public decimal total { get; set; }
@@ -28,6 +29,6 @@ public class OrderEntity
     public OrderStatusEntity order_status { get; set; }
 }
 
-public record OrderStatusEntity(int order_status_id, string order_status, string description);
+public record OrderStatusEntity(int order_status_id, int language_id, string name);
 
 public record OrderTagEntity(int order_tag_id, string name, string description);

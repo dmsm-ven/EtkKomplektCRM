@@ -1,4 +1,5 @@
-﻿using OfficeOpenXml;
+﻿using EtkBlazorApp.Core.Data;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             var tab = Excel.Workbook.Worksheets.OfType<ExcelWorksheet>().FirstOrDefault(t => t.Name.Contains("TM BERGER"));
             if (tab == null) { return list; }
-           
+
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
                 int? quantity = null;
@@ -51,7 +52,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
                 list.Add(priceLine);
             }
-            
+
 
             return list;
         }

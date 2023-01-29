@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtkBlazorApp.Core.Data;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -21,7 +22,7 @@ namespace EtkBlazorApp.BL
                 string name = tab.GetValue<string>(row, 5);
                 decimal? price = ParsePrice(tab.GetValue<string>(row, 7));
                 string quantityString = tab.GetValue<string>(row, 8);
-                
+
                 int quantity = QuantityMap[quantityString];
 
                 if (string.IsNullOrEmpty(skuNumber) || SkipThisBrand(manufacturer)) { continue; }

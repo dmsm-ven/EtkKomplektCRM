@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtkBlazorApp.Core.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -27,7 +28,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 int? quantity = ParseQuantity(tab.GetValue<string>(row, 4));
                 decimal price = tab.GetValue<decimal>(row, 5);
                 CurrencyType currency = CurrencyType.RUB;
-                if(Enum.TryParse(tab.GetValue<string>(row, 7)?.Replace("руб.", "RUB"), true, out currency)) { }
+                if (Enum.TryParse(tab.GetValue<string>(row, 7)?.Replace("руб.", "RUB"), true, out currency)) { }
 
                 var match1 = Regex.Match(name, @"^(.*?) (МЕГЕОН \S+)");
                 var match2 = Regex.Match(name, @"МЕГЕОН \S+");
@@ -44,7 +45,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Name = name,
                     //Stock = StockName.Megeon
                 };
-                list.Add(priceLine);              
+                list.Add(priceLine);
             }
 
             return list;
@@ -85,7 +86,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Manufacturer = "Мегеон",
                     Quantity = quantity
                 });
-                
+
             }
             return list;
         }

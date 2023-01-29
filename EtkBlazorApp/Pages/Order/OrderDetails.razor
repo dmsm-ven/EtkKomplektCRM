@@ -1,4 +1,5 @@
 ﻿@page "/order/{id:int}"
+@using EtkBlazorApp.Components.Controls.Orders;
 @attribute [Authorize(Roles = "Administrator, Manager")]
 
 @if (order == null)
@@ -34,11 +35,11 @@ else
                 <input type="text" readonly value="@order.City" class="form-control" />
             </div>
             <div class="col-md-2">
-                <p>Телефон заказчика</p>
+                <p>Телефон</p>
                 <input type="text" readonly value="@order.CustomerPhoneNumber" class="form-control" />
             </div>
             <div class="col-md-2">
-                <p>Email заказчика</p>
+                <p>Email</p>
                 <input type="text" readonly value="@order.CustomerEmail" class="form-control" />
             </div>
             <div class="col-md-6">
@@ -55,7 +56,7 @@ else
             </div>
             <div class="col-md-6">
                 <p>Метод доставки</p>
-                <input type="text" readonly value="@(HttpUtility.HtmlDecode(order.ShippingMethod))" class="form-control" />
+                <input type="text" readonly value="@order.ShippingMethod" class="form-control" />
             </div>
         </div>
 
@@ -131,11 +132,15 @@ else
                 <div class="row">
                     <div class="col-md-12">
                         <p>Комментарий к заказу</p>
-                        <textarea readonly value="@order.Comment" class="form-control" style="height: auto; width: 100%; margin: auto 20px;" />
+                        <textarea readonly value="@order.Comment" class="form-control" style="height: 120px; width: 100%; margin: auto 20px;" />
                     </div>
                 </div>
             </div>
         </div>
+
+        <hr style="margin: 20px auto;" />
+
+        <OrderDetailsAdditionalTabsControl Order="order" />
     </div>
 }
 

@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.BL.Templates;
+using EtkBlazorApp.Core.Data;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -21,12 +22,12 @@ namespace EtkBlazorApp.BL
             {
                 string skuNumber = tab.GetValue<string>(row, 1);
 
-                if(string.IsNullOrWhiteSpace(skuNumber) || !skuNumber.StartsWith("SQ")) { continue; }
+                if (string.IsNullOrWhiteSpace(skuNumber) || !skuNumber.StartsWith("SQ")) { continue; }
 
                 var price = ParsePrice(tab.GetValue<string>(row, 7)); // базовая цена
                 string quantityCellBackgroundColor = tab.Cells[row, 4].Style.Fill.BackgroundColor.LookupColor();
                 string quantityString = tab.GetValue<string>(row, 4);
-                var quantity = ParseQuantity(quantityString);              
+                var quantity = ParseQuantity(quantityString);
 
                 var priceLine = new PriceLineWithNextDeliveryDate(this)
                 {

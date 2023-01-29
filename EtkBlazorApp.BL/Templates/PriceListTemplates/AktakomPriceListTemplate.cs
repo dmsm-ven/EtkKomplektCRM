@@ -3,6 +3,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using EtkBlazorApp.Core.Data;
 
 namespace EtkBlazorApp.BL.Templates
 {

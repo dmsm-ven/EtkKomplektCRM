@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.DataAccess;
+﻿using EtkBlazorApp.Core.Data;
+using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using Microsoft.AspNetCore.StaticFiles;
 using System;

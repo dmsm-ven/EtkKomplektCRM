@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.DataAccess;
+﻿using EtkBlazorApp.Core.Interfaces;
+using EtkBlazorApp.DataAccess;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ namespace EtkBlazorApp.BL
         private readonly IPriceListTemplateStorage templateStorage;
         private readonly string guid;
 
-        internal EmailAttachmentRemoteTemplateFileLoader( 
+        internal EmailAttachmentRemoteTemplateFileLoader(
             ISettingStorage settingStorage,
             ICompressedFileExtractor zipExtractor,
             IPriceListTemplateStorage templateStorage,
@@ -27,7 +28,7 @@ namespace EtkBlazorApp.BL
         public async Task<RemoteTemplateFileResponse> GetFile()
         {
             var extractor = await GetExtractor();
-            
+
             string attachmentFilePath = "";
             try
             {
@@ -63,7 +64,7 @@ namespace EtkBlazorApp.BL
                 {
                     File.Delete(attachmentFilePath);
                 }
-            }            
+            }
         }
 
         private async Task<EmailAttachmentExtractor> GetExtractor()

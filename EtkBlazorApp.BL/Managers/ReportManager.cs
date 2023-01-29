@@ -1,15 +1,16 @@
-﻿using EtkBlazorApp.DataAccess;
+﻿using EtkBlazorApp.Core.Interfaces;
+using EtkBlazorApp.DataAccess;
 
 namespace EtkBlazorApp.BL
 {
     public class ReportManager
-    {        
-        public VseInstrumentiReportGenerator Prikat { get; } 
+    {
+        public VseInstrumentiReportGenerator Prikat { get; }
         public EtkKomplektReportGenerator EtkPricelist { get; }
 
-        public ReportManager(ICurrencyChecker currencyCheker, 
+        public ReportManager(ICurrencyChecker currencyCheker,
             IPrikatTemplateStorage templateStorage,
-            IProductStorage productStorage, 
+            IProductStorage productStorage,
             PriceListManager priceListManager)
         {
             Prikat = new VseInstrumentiReportGenerator(currencyCheker, templateStorage, productStorage, priceListManager);

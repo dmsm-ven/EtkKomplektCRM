@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtkBlazorApp.Core.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,7 +16,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         {
             var list = new List<PriceLine>();
 
-            for(int row = 3; row < tab.Dimension.Rows; row++)
+            for (int row = 3; row < tab.Dimension.Rows; row++)
             {
                 string skuNumber = "EIN-" + tab.GetValue<string>(row, 1);
                 string name = tab.GetValue<string>(row, 2);

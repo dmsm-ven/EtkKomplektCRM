@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using EtkBlazorApp.Core.Interfaces;
+using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Linq;
@@ -35,13 +36,13 @@ namespace EtkBlazorApp.BL
                     var uriQuery = new Uri(HttpUtility.UrlDecode(jsonObject.href)).Query;
                     var fileName = HttpUtility.ParseQueryString(uriQuery)["filename"];
 
-                    if(fileName.EndsWith(".zip") || fileName.EndsWith(".rar"))
+                    if (fileName.EndsWith(".zip") || fileName.EndsWith(".rar"))
                     {
                         var tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + Path.GetExtension(fileName));
                         File.WriteAllBytes(tempFile, bytes);
 
                         var extractedFiles = await zipExtractor.UnzipAll(tempFile, deleteArchive: true);
-                        
+
                         fileName = extractedFiles.FirstOrDefault();
                         bytes = File.ReadAllBytes(fileName);
                     }

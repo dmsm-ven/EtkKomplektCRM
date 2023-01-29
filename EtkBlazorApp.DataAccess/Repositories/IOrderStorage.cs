@@ -39,9 +39,9 @@ namespace EtkBlazorApp.DataAccess
             }
 
             var sb = new StringBuilder()
-                .AppendLine("SELECT o.*, s.name as order_status")
+                .AppendLine("SELECT o.*, os.*")
                 .AppendLine("FROM oc_order o")
-                .AppendLine("LEFT JOIN oc_order_status s ON o.order_status_id = s.order_status_id");
+                .AppendLine("LEFT JOIN oc_order_status os ON (o.order_status_id = os.order_status_id AND os.language_id = '2')");
 
             Dictionary<string, string> filter = new Dictionary<string, string>()
             {
@@ -67,14 +67,15 @@ namespace EtkBlazorApp.DataAccess
 
             string sql = sb.ToString().Trim();
 
-            dynamic parameter = new
-            {
-                takeCount,
-                order_id = $"%{order_id}%",
-                payment_city = $"%{payment_city}%",
-                shipping_firstname = $"%{shipping_firstname}%"
-            };
-            var orders = await database.GetList<OrderEntity, dynamic>(sql, parameter);
+            var orders = await database.GetListWithChild<OrderEntity, OrderStatusEntity, dynamic>(sql,
+                splitColumnName: "order_status_id",
+                new
+                {
+                    takeCount,
+                    order_id = $"%{order_id}%",
+                    payment_city = $"%{payment_city}%",
+                    shipping_firstname = $"%{shipping_firstname}%"
+                });
 
             return orders;
         }

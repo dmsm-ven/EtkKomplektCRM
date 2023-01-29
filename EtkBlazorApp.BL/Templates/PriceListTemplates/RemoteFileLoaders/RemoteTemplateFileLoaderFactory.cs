@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.DataAccess;
+﻿using EtkBlazorApp.Core.Interfaces;
+using EtkBlazorApp.DataAccess;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,15 +7,15 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
-{ 
+{
     public class RemoteTemplateFileLoaderFactory
     {
         private readonly ISettingStorage settings;
         private readonly ICompressedFileExtractor zipExtractor;
         private readonly IPriceListTemplateStorage templateStorage;
 
-        public RemoteTemplateFileLoaderFactory(ISettingStorage storage, 
-            ICompressedFileExtractor zipExtractor, 
+        public RemoteTemplateFileLoaderFactory(ISettingStorage storage,
+            ICompressedFileExtractor zipExtractor,
             IPriceListTemplateStorage templateStorage)
         {
             this.settings = storage;
