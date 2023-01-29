@@ -15,12 +15,11 @@ appsettings.Production.json
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
-*/bin/*
-*/obj/*
-*\bin\*
-*\obj\*
+bin
+obj
 *.cache
 *nuget*
+
 
 EtkBlazorApp.Integration/
 .config/
