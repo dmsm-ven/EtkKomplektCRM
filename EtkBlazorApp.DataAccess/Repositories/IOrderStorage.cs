@@ -15,7 +15,12 @@ namespace EtkBlazorApp.DataAccess
         Task<OrderEntity> GetLastOrder();
         Task<List<OrderDetailsEntity>> GetOrderDetails(int orderId);
         Task<OrderEntity> GetOrderById(int orderId);
-        Task<List<OrderEntity>> GetLinkedOrders(OrderEntity order);
+        Task<List<OrderEntity>> GetLinkedOrders(int order_id);
+
+        Task<List<OrderStatusEntity>> GetOrderStatuses();
+
+        Task ChangeOrderStatus(int order_id, int old_status_id, int new_status_id);
+        Task<List<OrderStatusHistoryEntity>> GetOrderChangeHistory(int order_id);
     }
 
     public class OrderStorage : IOrderStorage
@@ -106,9 +111,14 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task<OrderEntity> GetOrderById(int orderId)
         {
-            var sql = "SELECT * FROM oc_order WHERE order_id = @orderId";
+            var sql = new StringBuilder()
+                .AppendLine("SELECT o.*, os.*")
+                .AppendLine("FROM oc_order o")
+                .AppendLine("LEFT JOIN oc_order_status os ON (o.order_status_id = os.order_status_id)")
+                .AppendLine("WHERE o.order_id = @orderId")
+                .ToString();
 
-            var order = await database.GetFirstOrDefault<OrderEntity, dynamic>(sql, new { orderId });
+            var order = await database.GetSingleWithChild<OrderEntity, OrderStatusEntity, dynamic>(sql, "order_status_id", new { orderId });
 
             order.details = await GetOrderDetails(orderId);
 
@@ -128,8 +138,10 @@ namespace EtkBlazorApp.DataAccess
             return details;
         }
 
-        public async Task<List<OrderEntity>> GetLinkedOrders(OrderEntity order)
+        public async Task<List<OrderEntity>> GetLinkedOrders(int order_id)
         {
+            var order = await GetOrderById(order_id);
+
             var sql = @"SELECT * FROM oc_order
                       WHERE (email = @email OR telephone = @telephone OR ip = @ip)
                       ORDER BY date_added DESC";
@@ -146,5 +158,33 @@ namespace EtkBlazorApp.DataAccess
             return order;
         }
 
+        public async Task<List<OrderStatusEntity>> GetOrderStatuses()
+        {
+            var statuses = await database.GetList<OrderStatusEntity>("SELECT * FROM oc_order_status ORDER BY order_status_sort");
+
+            return statuses;
+        }
+
+        public async Task ChangeOrderStatus(int order_id, int old_status_id, int new_status_id)
+        {
+            string historySql = new StringBuilder()
+                .AppendLine("INSERT INTO etk_app_order_status_change_history (order_id, old_order_status_id, new_order_status_id)")
+                .AppendLine("VALUES (@order_id, @old_status_id, @new_status_id)")
+                .ToString();
+
+            await database.ExecuteQuery(historySql, new { order_id, old_status_id, new_status_id });
+
+            string statusSql = "UPDATE oc_order SET order_status_id = @new_status_id WHERE order_id = @order_id";
+            await database.ExecuteQuery(statusSql, new { order_id, new_status_id });
+        }
+
+        public async Task<List<OrderStatusHistoryEntity>> GetOrderChangeHistory(int order_id)
+        {
+            string sql = "SELECT * FROM etk_app_order_status_change_history WHERE order_id = @order_id";
+
+            var historyItems = await database.GetList<OrderStatusHistoryEntity, dynamic>(sql, new { order_id });
+
+            return historyItems;
+        }
     }
 }

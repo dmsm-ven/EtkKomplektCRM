@@ -88,6 +88,7 @@ namespace EtkBlazorApp
 
             services.AddMemoryCache();
             services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
+            services.AddSingleton<CashPlusPlusLinkGenerator>();
             services.AddSingleton<RemoteTemplateFileLoaderFactory>();
             services.AddSingleton<SystemEventsLogger>();
             services.AddSingleton<NewOrdersNotificationService>();

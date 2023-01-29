@@ -26,9 +26,6 @@ public class OrderEntity
 
     public List<OrderDetailsEntity> details { get; set; } = new();
     public List<OrderTagEntity> tags { get; set; } = new();
+    public List<OrderStatusHistoryEntity> status_changes_history { get; set; } = new();
     public OrderStatusEntity order_status { get; set; }
 }
-
-public record OrderStatusEntity(int order_status_id, int language_id, string name);
-
-public record OrderTagEntity(int order_tag_id, string name, string description);

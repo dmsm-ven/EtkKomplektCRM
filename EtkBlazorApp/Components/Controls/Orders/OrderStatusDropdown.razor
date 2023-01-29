@@ -1,26 +1,28 @@
 ﻿@using EtkBlazorApp.Model.Order
 
 <div class="dropdown show">
-    <button type="button"
-            data-bs-toggle="dropdown"
+    <button href="#"
+            type="button"
+            id=@($"dropdownOrderStatusLink_{Order.OrderId}")
+            @onclick="@(e => isOpened = !isOpened)"
+            data-toggle="dropdown"
             aria-haspopup="true"
             aria-expanded="false"
-            class=@cssClass
-            style="width: 160px;">
+            class=@cssClass>
         <span>@statusIcon</span>
         <span>@(Order?.Status?.Name ?? "Неизвестно")</span>
     </button>
-    @if (CanChangeStatus)
+    @if (CanChangeStatus && isOpened)
     {
-        @*<div class="dropdown-menu dropdown" aria-labelledby=@($"dropdownMenuButton_{Order.OrderId}")>
-            <a :key="orderId + '_' + s.id"
-            v-for="s in orderStatusesSource"
-            href="#"
-            @click.prevent="toggleOrderStatus(s.name)"
-            class="dropdown-item">
-            {{ s.name }}
-            </a>
-            </div>*@
+        <div class="dropdown-menu show" aria-labelledby=@($"dropdownOrderStatusLink_{Order.OrderId}")>
+            @foreach (var status in availableOrderStatuses)
+            {
+                <a href="#" class="dropdown-item" @onclick="@(async e => await ChangeOrderStatus(status))" @onclick:preventDefault>
+                    <span>@cssMap[status.Type].Icon</span>
+                    <span>@status.Name</span>
+                </a>
+            }
+        </div>
     }
 </div>
 
@@ -28,20 +30,43 @@
     [Parameter] public OrderViewModel Order { get; set; }
     [Parameter] public bool CanChangeStatus { get; set; }
 
+    [Inject] public IOrderStorage OrderRepository { get; set; }
+    [Inject] public IMapper Mapper { get; set; }
+    [Inject] public UserLogger Logger { get; set; }
+
+    bool isOpened = false;
+
+    List<OrderStatusViewModel> availableOrderStatuses = new();
+
+    private readonly Dictionary<OrderStatusType, EtkBlazorApp.Model.Order.OrderStatusDisplayData> cssMap = new()
+        {
+            [OrderStatusType.None] = new("❓", "dark"),
+            [OrderStatusType.Created] = new("🔄", "danger"),
+            [OrderStatusType.Complectation] = new("📦", "primary"),
+            [OrderStatusType.Delivery] = new("🚙", "info"),
+            [OrderStatusType.Completed] = new("✔️", "success"),
+            [OrderStatusType.WaitingToPickup] = new("🕘", "warning"),
+            [OrderStatusType.Canceled] = new("🛑", "light")
+        };
+
     private string cssClass
     {
         get
         {
-            string css = "btn btn-sm";
+            string css = "btn order-status-dropdown-button";
 
             if (Order?.Status != null && cssMap.TryGetValue(Order.Status.Type, out var kvp))
             {
-                css += $" btn-{kvp.Item2}";
+                css += $" btn-{kvp.Background}";
             }
 
             if (CanChangeStatus)
             {
                 css += " dropdown-toggle";
+            }
+            else
+            {
+                css += " btn-sm";
             }
 
             return css;
@@ -54,20 +79,33 @@
         {
             if (Order?.Status != null && cssMap.TryGetValue(Order.Status.Type, out var kvp))
             {
-                return kvp.Item1;
+                return kvp.Icon;
             }
-            return cssMap[OrderStatusType.None].Item1;
+            return cssMap[OrderStatusType.None].Icon;
         }
     }
 
-    private readonly Dictionary<OrderStatusType, Tuple<string, string>> cssMap = new()
+    protected override async Task OnParametersSetAsync()
+    {
+        if (CanChangeStatus)
         {
-            [OrderStatusType.None] = Tuple.Create("❓", "warning"),
-            [OrderStatusType.Created] = Tuple.Create("🔄", "warning"),
-            [OrderStatusType.Complectation] = Tuple.Create("📦", "info"),
-            [OrderStatusType.Delivery] = Tuple.Create("🚙", "info"),
-            [OrderStatusType.Completed] = Tuple.Create("✔️", "success"),
-            [OrderStatusType.WaitingToPickup] = Tuple.Create("🕘", "light"),
-            [OrderStatusType.Canceled] = Tuple.Create("🛑", "dark"),
-        };
+            availableOrderStatuses = Mapper.Map<List<OrderStatusViewModel>>(await OrderRepository.GetOrderStatuses());
+            StateHasChanged();
+        }
+    }
+
+    private async Task ChangeOrderStatus(OrderStatusViewModel status)
+    {
+        int oldStatus = (int)Order.Status.Type;
+        int newStatus = (int)status.Type;
+        Order.Status = status;
+        isOpened = false;
+
+        StateHasChanged();
+
+        await OrderRepository.ChangeOrderStatus(int.Parse(Order.OrderId), oldStatus, newStatus);
+
+        await Logger.Write(LogEntryGroupName.Orders, "Обновление статуса", $"Статус заказа {Order.OrderId} изменен с {Order.Status.Type} на {status.Type}");
+    }
 }
+

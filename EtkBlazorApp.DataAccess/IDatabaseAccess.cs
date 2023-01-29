@@ -16,9 +16,10 @@ public interface IDatabaseAccess
     Task<List<T>> GetList<T>(string sql);
     Task<List<TMain>> GetListWithChild<TMain, TSub1, U>(string sql, string splitColumnName, U parameters);
 
+
+    Task<TMain> GetSingleWithChild<TMain, TSub1, U>(string sql, string splitColumnName, U parameters);
     Task<T> GetFirstOrDefault<T, U>(string sql, U parameters);
     Task<T> GetFirstOrDefault<T>(string sql);
-
     Task<T> GetScalar<T, U>(string sql, U parameters);
     Task<T> GetScalar<T>(string sql);
 
@@ -61,17 +62,17 @@ public class EtkDatabaseDapperAccess : IDatabaseAccess
 
     public async Task<List<TMain>> GetListWithChild<TMain, TSub1, U>(string sql, string splitColumnName, U parameters)
     {
-        //throw new NotImplementedException();
-
         using var connection = new MySqlConnection(ConnectionString);
 
         var rows = await connection.QueryAsync<TMain, TSub1>(sql, parameters, splitOn: splitColumnName);
 
         return rows.ToList();
-
     }
 
-
+    public async Task<TMain> GetSingleWithChild<TMain, TSub1, U>(string sql, string splitColumnName, U parameters)
+    {
+        return (await GetListWithChild<TMain, TSub1, U>(sql, splitColumnName, parameters)).FirstOrDefault();
+    }
 
     public async Task<T> GetFirstOrDefault<T, U>(string sql, U parameters)
     {
@@ -128,4 +129,6 @@ public class EtkDatabaseDapperAccess : IDatabaseAccess
             await connection.ExecuteAsync(sql);
         }
     }
+
+
 }

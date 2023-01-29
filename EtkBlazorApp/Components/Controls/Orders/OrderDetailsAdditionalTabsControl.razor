@@ -11,8 +11,21 @@
 </div>
 
 <div class="row">
-    <div class="order-details-tabs">
-        @if (selectedTab != "")
+    <div class="order-details-tabs" style="margin: 20px 0px;">
+        @if (selectedTab == "Другие заказы клиента")
+        {
+            <select multiple class="form-control" style="height: 100%; overflow-y: auto;">
+                @foreach (var linkedOrder in linkedOrders)
+                {
+                    <option value="@linkedOrder.order_id"
+                    style="@(linkedOrder.order_id.ToString().Equals(Order.OrderId) ? "font-weight: bold; color: red;" : "")"
+                    @ondblclick="(e => OnLinkedOrderMouseDoubleClick(linkedOrder))">
+                        @($"{linkedOrder.order_id} от {linkedOrder.date_added.ToShortDateString()}")
+                    </option>
+                }
+            </select>
+        }
+        else
         {
             <h2>@selectedTab</h2>
         }
@@ -20,8 +33,24 @@
 </div>
 
 @code {
-    string selectedTab = "";
-    string[] tabData = new string[] { "Статус СДЭК", "Информация по ИНН" };
-
     [Parameter] public OrderViewModel Order { get; set; }
+
+    [Inject] public IJSRuntime Js { get; set; }
+    [Inject] public NavigationManager NavManager { get; set; }
+    [Inject] public IOrderStorage OrderStorage { get; set; }
+
+    List<OrderEntity> linkedOrders = new();
+    string selectedTab = "";
+    string[] tabData = new string[] { "Другие заказы клиента", "Статус СДЭК", "Информация по ИНН" };
+
+    private async Task OnLinkedOrderMouseDoubleClick(OrderEntity clickedOrder)
+    {
+        string linkedOrderPage = NavManager.Uri.Replace("/" + Order.OrderId, "/" + clickedOrder.order_id);
+        await Js.InvokeAsync<object>("open", linkedOrderPage, "_blank");
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        linkedOrders = await OrderStorage.GetLinkedOrders(int.Parse(Order.OrderId));
+    }
 }

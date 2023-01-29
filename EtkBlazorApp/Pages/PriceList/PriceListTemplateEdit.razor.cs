@@ -81,6 +81,7 @@ public partial class PriceListTemplateEdit : ComponentBase
         {
             var entity = await templateStorage.GetPriceListTemplateById(TemplateGuid);
 
+            //TODO: переделать на инициализацию через AutoMapper
             sourceTemplate = new PriceListTemplateItemViewModel(entity.id)
             {
                 Title = entity.title,

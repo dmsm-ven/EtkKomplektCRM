@@ -15,8 +15,11 @@ else
 
     <div class="container-fluid" style="padding-bottom: 30px;">
 
-        <h3>Основные данные</h3>
         <div class="row order-details-row">
+            <div class="col-md-2">
+                <p>Статус заказа</p>
+                <OrderStatusDropdown Order="order" CanChangeStatus=true />
+            </div>
             <div class="col-md-2">
                 <p>Номер заказа</p>
                 <input type="text" readonly value="@order.OrderId" class="form-control" />
@@ -25,7 +28,7 @@ else
                 <p>Дата заказа</p>
                 <input type="text" readonly value="@order.DateTime.ToString("g")" class="form-control" />
             </div>
-            <div class="col-md-8">
+            <div class="col-md-6">
                 <p>Заказчик</p>
                 <input type="text" readonly value="@(HttpUtility.HtmlDecode(order.Customer))" class="form-control" />
             </div>
@@ -49,7 +52,6 @@ else
             </div>
         </div>
 
-        <h3>Доставка</h3>
         <div class="row order-details-row">
             <div class="col-md-6">
                 <p>Адрес доставки</p>
@@ -64,20 +66,7 @@ else
         <hr style="margin: 20px auto;" />
 
         <div class="row">
-            <div class="col-md-2" style="padding-bottom:40px;@(hasLinkedOrders ? "" : "display: none;")">
-                <h3>Другие заказы этого клиента</h3>
-                <select multiple class="form-control" style="height: 100%; overflow-y: auto;">
-                    @foreach (var linkedOrder in linkedOrders)
-                    {
-                        <option value="@linkedOrder.order_id"
-                        style="@(linkedOrder.order_id.ToString().Equals(order.OrderId) ? "font-weight: bold; color: red;" : "")"
-                        @ondblclick="(e => OnLinkedOrderMouseDoubleClick(linkedOrder))">
-                            @($"{linkedOrder.order_id} от {linkedOrder.date_added.ToShortDateString()}")
-                        </option>
-                    }
-                </select>
-            </div>
-            <div class="@(hasLinkedOrders ? "col-md-10" : "col-md-12")">
+            <div class="col-md-12">
                 <div class="table-responsive">
                     <table class="table">
                         <thead class="thead-etk">
@@ -152,22 +141,16 @@ else
     [Inject] public IJSRuntime Js { get; set; }
     [Inject] public IMapper Mapper { get; set; }
     [Inject] public ICompanyInfoChecker CompanyInfoChecker { get; set; }
-    [Inject] public ISettingStorage SettingStorage { get; set; }
+    [Inject] public CashPlusPlusLinkGenerator OrderPdfLinkGenerator { get; set; }
     [Inject] public NavigationManager NavManager { get; set; }
 
 
     OrderViewModel order = null;
-    List<OrderEntity> linkedOrders = null;
-    bool hasLinkedOrders => linkedOrders.Count > 1;
 
     protected override async Task OnInitializedAsync()
     {
         var orderData = await OrderStorage.GetOrderById(Id);
         order = Mapper.Map<OrderViewModel>(orderData);
-
-        linkedOrders = await OrderStorage.GetLinkedOrders(orderData);
-
-        var info = await CompanyInfoChecker.GetInfoByInn("7811658788");
     }
 
     private async Task GoToPrintPage()
@@ -176,27 +159,10 @@ else
         //string printPage = NavManager.Uri + "/print";
 
         //Версия на страницу из заказа, код генерируется в модуле cash_plusplus
-
-        string code = await GetPdfCode();
-        string printPage = $"https://etk-komplekt.ru/index.php?route=account/cash_plusplus/view&code={code}&order={order.OrderId}";
-
+        string printPage = await OrderPdfLinkGenerator.GenerateLink(order.OrderId);
         await Js.InvokeAsync<object>("open", printPage, "_blank");
     }
 
-    private async Task OnLinkedOrderMouseDoubleClick(OrderEntity clickedOrder)
-    {
-        string linkedOrderPage = NavManager.Uri.Replace("/" + Id, "/" + clickedOrder.order_id);
-        await Js.InvokeAsync<object>("open", linkedOrderPage, "_blank");
-    }
-
-    private async Task<string> GetPdfCode()
-    {
-        string phrase = await SettingStorage.GetValue("shop_config_encyption_phrase");
-        string cash_plusplus_hash = EtkBlazorApp.Extensions.StringHelper.GetMD5(order.OrderId + phrase)
-        .Substring(0, 12)
-        .ToLower();
-        return cash_plusplus_hash;
-    }
 }
 
 

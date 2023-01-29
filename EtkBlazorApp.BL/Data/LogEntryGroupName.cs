@@ -42,5 +42,9 @@ namespace EtkBlazorApp.BL
 
         [Description("Партнеры")]
         Partners,
+
+        [Description("Заказы")]
+        Orders
+
     }
 }

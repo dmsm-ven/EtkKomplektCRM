@@ -11,7 +11,8 @@ public class OrderMapperProfile : Profile
     {
         CreateMap<OrderStatusEntity, OrderStatusViewModel>()
             .ForMember(o => o.Type, o => o.MapFrom(x => (OrderStatusType)x.order_status_id))
-            .ForMember(o => o.Name, o => o.MapFrom(x => x.name));
+            .ForMember(o => o.Name, o => o.MapFrom(x => x.name))
+            .ForMember(o => o.SortOrder, o => o.MapFrom(x => x.order_status_sort));
 
         CreateMap<OrderTagEntity, OrderTagViewModel>()
             .ForMember(o => o.Type, o => o.MapFrom(x => (OrderTagType)x.order_tag_id))
