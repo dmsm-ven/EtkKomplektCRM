@@ -14,20 +14,11 @@
     <div class="order-details-tabs w-100" style="margin: 20px 0px;">
         @if (selectedTab == "Другие заказы клиента")
         {
-            <select multiple class="form-control" style="height: 100%; overflow-y: auto;">
-                @foreach (var linkedOrder in linkedOrders)
-                {
-                    <option value="@linkedOrder.order_id"
-                    style="@(linkedOrder.order_id.ToString().Equals(Order.OrderId) ? "font-weight: bold; color: red;" : "")"
-                    @ondblclick="(e => OnLinkedOrderMouseDoubleClick(linkedOrder))">
-                        @($"{linkedOrder.order_id} от {linkedOrder.date_added.ToShortDateString()}")
-                    </option>
-                }
-            </select>
+            <LinkedOrdersListControl OrderId="@Order.OrderId" />
         }
         else if (selectedTab == "Статус СДЭК")
         {
-            <input type="text" class="form-control" value="@Order.CdekOrderNumber" @onchange="@(e => await ChangeCdekOrderNumber(e.Value.ToString()))" />
+            <CdekOrderInfoControl Order="@Order" />
         }
         else if (selectedTab == "Информация по ИНН")
         {
@@ -39,31 +30,6 @@
 @code {
     [Parameter] public OrderViewModel Order { get; set; }
 
-    [Inject] public IJSRuntime Js { get; set; }
-    [Inject] public NavigationManager NavManager { get; set; }
-    [Inject] public IOrderStorage OrderStorage { get; set; }
-
-    List<OrderEntity> linkedOrders = new();
     string selectedTab = "";
     string[] tabData = new string[] { "Другие заказы клиента", "Статус СДЭК", "Информация по ИНН" };
-
-    private async Task OnLinkedOrderMouseDoubleClick(OrderEntity clickedOrder)
-    {
-        string linkedOrderPage = NavManager.Uri.Replace("/" + Order.OrderId, "/" + clickedOrder.order_id);
-        await Js.InvokeAsync<object>("open", linkedOrderPage, "_blank");
-    }
-
-    protected override async Task OnParametersSetAsync()
-    {
-        linkedOrders = await OrderStorage.GetLinkedOrders(int.Parse(Order.OrderId));
-    }
-
-    private async Task ChangeCdekOrderNumber(string newCode)
-    {
-        if (newCode != Order.CdekOrderNumber && !string.IsNullOrWhiteSpace(newCode))
-        {
-            Order.CdekOrderNumber = newCode;
-            //await OrderStorage
-        }
-    }
 }

@@ -13,9 +13,9 @@ public class CashPlusPlusLinkGenerator
         this.settingStorage = settingStorage;
     }
 
-    public async Task<string> GenerateLink(string order_id)
+    public async Task<string> GenerateLink(int order_id)
     {
-        if (string.IsNullOrWhiteSpace(order_id))
+        if (order_id == 0)
         {
             return string.Empty;
         }

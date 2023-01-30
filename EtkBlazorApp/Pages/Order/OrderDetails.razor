@@ -10,7 +10,11 @@
 else
 {
     <h1>
-        Детали заказа <strong>@order.OrderId</strong> от @order.DateTime.ToString("g") <button class="btn btn-sm btn-warning" @onclick="GoToPrintPage"><span class="oi oi-print"></span></button>
+        Детали заказа <strong>@order.OrderId</strong> от @order.DateTime.ToString("g") (@order.DateTime.ToString("ddd"))
+        <button class="btn btn-sm btn-warning"
+            @onclick="GoToPrintPage">
+            <span class="oi oi-print"></span>
+        </button>
     </h1>
 
     <div class="container-fluid" style="padding-bottom: 30px;">
@@ -42,9 +46,7 @@ else
                 <p>ИНН</p>
                 <input type="text" readonly value="@order.Inn" class="form-control" />
             </div>
-
         </div>
-
         <div class="row order-details-row">
             <div class="col-md-4">
                 <p>Адрес доставки</p>

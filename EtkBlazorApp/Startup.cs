@@ -1,6 +1,7 @@
 using Blazored.Toast;
 using EtkBlazorApp.BL;
 using EtkBlazorApp.BL.Templates.PriceListTemplates;
+using EtkBlazorApp.CdekApi;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.Services;
@@ -104,7 +105,17 @@ namespace EtkBlazorApp
 
         private void ConfigureExteralApiClients(IServiceCollection services)
         {
-            services.AddSingleton<ICompanyInfoChecker>(x => new DadataApiClient(Configuration.GetValue<string>("DADATA_API_KEY")));
+            services.AddSingleton<ICompanyInfoChecker>(x =>
+            {
+                var section = Configuration.GetSection("DadataConfiguration");
+                return new DadataApiClient(section["Token"]);
+            });
+
+            services.AddSingleton<ITransportCompanyApi>(x =>
+            {
+                var section = Configuration.GetSection("CdekConfiguration");
+                return new CdekApiClient(section["Account"], section["SecurePassword"]);
+            });
         }
 
         private void ConfigureDatabaseServices(IServiceCollection services)
@@ -119,6 +130,7 @@ namespace EtkBlazorApp
             services.AddTransient<IPriceListTemplateStorage, PriceListTemplateStorage>();
             services.AddTransient<IPrikatTemplateStorage, PrikatTemplateStorage>();
             services.AddTransient<IOrderStorage, OrderStorage>();
+            services.AddTransient<IOrderUpdateService, OrderUpdateService>();
             services.AddTransient<IManufacturerStorage, ManufacturerStorage>();
             services.AddTransient<IStockStorage, StockStorage>();
             services.AddTransient<IMonobrandStorage, MonobrandStorage>();

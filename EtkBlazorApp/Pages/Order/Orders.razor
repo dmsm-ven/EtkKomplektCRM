@@ -23,7 +23,7 @@
     <table class="table table-hover orders-table" style="width: 100%">
         <thead class="thead-etk">
             <tr>
-                <th>№ заказа</th>
+                <th width="1%">№ заказа</th>
                 <th>Создан</th>
                 <th>Заказчик</th>
                 <th>Город</th>
@@ -40,16 +40,12 @@
                 {
                     <OrderInfoRowItem OrderData="@order" />
                 }
-
             }
             else
             {
-                @for (int i = 0; i < 10; i++)
-                {
-                    <tr colspan="">
-                        <td colspan="8"><IntermediateProgressBar /></td>
-                    </tr>
-                }
+                <tr>
+                    <td colspan="8">Загрузка ...</td>
+                </tr>
             }
         </tbody>
     </table>
@@ -80,7 +76,7 @@
 
         await Task.Delay(TimeSpan.FromMilliseconds(500));
 
-        var ordersData = await OrdersStorage.GetLastOrders(100, numberFilter, cityFilter, cutomerFilter);
+        var ordersData = await OrdersStorage.GetLastOrders(30, numberFilter, cityFilter, cutomerFilter);
         orders = Mapper.Map<List<OrderViewModel>>(ordersData);
 
         StateHasChanged();

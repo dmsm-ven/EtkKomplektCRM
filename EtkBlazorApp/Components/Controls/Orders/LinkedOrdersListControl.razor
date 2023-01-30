@@ -1,0 +1,31 @@
+﻿<select multiple class="form-control" style="height: 100%; overflow-y: auto;">
+    @foreach (var linkedOrder in linkedOrders)
+    {
+        <option value="@linkedOrder.order_id"
+            style="@(linkedOrder.order_id.ToString().Equals(OrderId) ? "font-weight: bold; color: red;" : "")"
+            @ondblclick="(e => OnLinkedOrderMouseDoubleClick(linkedOrder))">
+            @($"{linkedOrder.order_id} от {linkedOrder.date_added.ToShortDateString()}")
+        </option>
+    }
+</select>
+
+@code {
+    List<OrderEntity> linkedOrders = new();
+
+    [Inject] public IJSRuntime Js { get; set; }
+    [Inject] public IOrderStorage OrderStorage { get; set; }
+    [Inject] public NavigationManager NavManager { get; set; }
+
+    [Parameter] public int OrderId { get; set; }
+
+    private async Task OnLinkedOrderMouseDoubleClick(OrderEntity clickedOrder)
+    {
+        string linkedOrderPage = NavManager.Uri.Replace("/" + OrderId, "/" + clickedOrder.order_id);
+        await Js.InvokeAsync<object>("open", linkedOrderPage, "_blank");
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        linkedOrders = await OrderStorage.GetLinkedOrders(OrderId);
+    }
+}

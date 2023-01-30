@@ -3,8 +3,8 @@
 @if (OrderData != null)
 {
     <tr>
-        <td>@OrderData.OrderId</td>
-        <td>@OrderData.DateTime.ToString("dd.MM.yyyy | HH:mm")</td>
+        <td><strong>@OrderData.OrderId</strong></td>
+        <td><small>@OrderData.DateTime.ToString("dd.MM.yyyy в HH:mm (ddd)")</small></td>
         <td>@OrderData.Customer</td>
         <td>@OrderData.City</td>
         <td>@OrderData.TotalPrice.ToString("C0")</td>

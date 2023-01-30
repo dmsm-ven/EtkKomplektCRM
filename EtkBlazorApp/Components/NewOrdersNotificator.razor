@@ -19,7 +19,7 @@
                 City = entity.payment_city,
                 Customer = HttpUtility.HtmlDecode(entity.payment_firstname),
                 DateTime = entity.date_added,
-                OrderId = entity.order_id.ToString(),
+                OrderId = entity.order_id,
                 TotalPrice = entity.total
             };
         InvokeAsync(async () => await NewOrderPushed.InvokeAsync(order));

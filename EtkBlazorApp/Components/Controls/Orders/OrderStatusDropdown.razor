@@ -31,6 +31,7 @@
     [Parameter] public bool CanChangeStatus { get; set; }
 
     [Inject] public IOrderStorage OrderRepository { get; set; }
+    [Inject] public IOrderUpdateService OrderUpdateSerivce { get; set; }
     [Inject] public IMapper Mapper { get; set; }
     [Inject] public UserLogger Logger { get; set; }
 
@@ -103,7 +104,7 @@
 
         StateHasChanged();
 
-        await OrderRepository.ChangeOrderStatus(int.Parse(Order.OrderId), oldStatus, newStatus);
+        await OrderUpdateSerivce.ChangeOrderStatus(Order.OrderId, oldStatus, newStatus);
 
         await Logger.Write(LogEntryGroupName.Orders, "Обновление статуса", $"Статус заказа {Order.OrderId} изменен с {Order.Status.Type} на {status.Type}");
     }

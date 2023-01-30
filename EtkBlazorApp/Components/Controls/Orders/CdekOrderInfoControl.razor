@@ -1,0 +1,49 @@
+﻿<label for="cdek-order-number-field">Номер заказа в личном кабинете СДЭК</label>
+<input type="text"
+       class="form-control"
+       id="cdek-order-number-field"
+       value="@Order.CdekOrderNumber"
+       @onchange="@(async e => await ChangeCdekOrderNumber(e.Value.ToString()))" />
+
+<button class="btn btn-primary"
+        @onclick="GetCdekOrderDetails">
+    Получить данные от СДЭКА по этому заказу
+</button>
+
+@code {
+    [Parameter] public OrderViewModel Order { get; set; }
+    [Inject] public IToastService Toasts { get; set; }
+    [Inject] public IOrderUpdateService Orders { get; set; }
+    [Inject] public ITransportCompanyApi TransportCompany { get; set; }
+    [Inject] public IToastService Toast { get; set; }
+
+    bool IsValidCdekOrderNumber(string orderNumber) => Regex.IsMatch(orderNumber, @"^\d{8,}$");
+
+    private async Task ChangeCdekOrderNumber(string newCode)
+    {
+        if (IsValidCdekOrderNumber(newCode) && newCode != Order.CdekOrderNumber && !string.IsNullOrWhiteSpace(newCode))
+        {
+            Order.CdekOrderNumber = newCode;
+            await Orders.ChangeOrderLinkedCdekOrderNumber(Order.OrderId, newCode);
+
+            Toasts.ShowInfo("Закрепленный заказ изменен");
+        }
+    }
+
+    private async Task GetCdekOrderDetails()
+    {
+        if (!IsValidCdekOrderNumber(Order.CdekOrderNumber))
+        {
+            Toast.ShowError($"Код заказа СДЭК пуст");
+            return;
+        }
+        try
+        {
+            var result = await TransportCompany.GetOrderInfo(Order.CdekOrderNumber);
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError($"Ошибка запроса данных от ТК СДЭК: {ex.Message}");
+        }
+    }
+}
