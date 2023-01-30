@@ -1,6 +1,8 @@
-﻿namespace EtkBlazorApp.Core.Interfaces;
+﻿using EtkBlazorApp.Core.Data.Cdek;
+
+namespace EtkBlazorApp.Core.Interfaces;
 
 public interface ITransportCompanyApi
 {
-    Task<dynamic> GetOrderInfo(string orderId);
+    Task<CdekOrderInfo> GetOrderInfo(string orderId);
 }

@@ -2,6 +2,7 @@
 using Dadata.Model;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorAppi.Core.Data;
+using EtkBlazorAppi.Core.Data.CompanyInfo;
 
 namespace EtkBlazorAppi.DadataApi;
 

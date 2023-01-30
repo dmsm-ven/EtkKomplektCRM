@@ -12,13 +12,13 @@
 
 <div class="row">
     <div class="order-details-tabs w-100" style="margin: 20px 0px;">
-        @if (selectedTab == "Другие заказы клиента")
-        {
-            <LinkedOrdersListControl OrderId="@Order.OrderId" />
-        }
-        else if (selectedTab == "Статус СДЭК")
+        @if (selectedTab == "Статус СДЭК")
         {
             <CdekOrderInfoControl Order="@Order" />
+        }
+        else if (selectedTab == "Другие заказы клиента")
+        {
+            <LinkedOrdersListControl OrderId="@Order.OrderId" />
         }
         else if (selectedTab == "Информация по ИНН")
         {
@@ -30,6 +30,7 @@
 @code {
     [Parameter] public OrderViewModel Order { get; set; }
 
-    string selectedTab = "";
-    string[] tabData = new string[] { "Другие заказы клиента", "Статус СДЭК", "Информация по ИНН" };
+    private string selectedTab = "Статус СДЭК";
+    private readonly string[] tabData = new string[] { "Статус СДЭК", "Другие заказы клиента", "Информация по ИНН" };
+
 }

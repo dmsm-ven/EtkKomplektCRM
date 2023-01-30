@@ -1,4 +1,4 @@
-﻿namespace EtkBlazorAppi.Core.Data;
+﻿namespace EtkBlazorAppi.Core.Data.CompanyInfo;
 
 public class CompanyInformation
 {

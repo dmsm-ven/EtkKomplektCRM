@@ -1,9 +1,9 @@
-﻿@using EtkBlazorAppi.Core.Data
+﻿@using EtkBlazorAppi.Core.Data.CompanyInfo
 <h2>Информация о компании по ИНН</h2>
 
 
 <div class="inn-finder-box">
-    <input type="text" @bind="@Inn" placeholder="Введите ИНН" class="form-control" />
+    <input type="text" @bind="@Inn" placeholder="Введите ИНН" class="form-control w-auto" />
     <button class="btn btn-primary" @onclick="Find" disabled=@(!isValidInn)>
         Поиск по ИНН
     </button>
@@ -22,10 +22,6 @@
         gap: 12px;
         justify-content: center;
     }
-
-        .inn-finder-box > * {
-            flex: 1 1 25%;
-        }
 </style>
 
 

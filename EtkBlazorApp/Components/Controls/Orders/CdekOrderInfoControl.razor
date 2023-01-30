@@ -1,14 +1,108 @@
-﻿<label for="cdek-order-number-field">Номер заказа в личном кабинете СДЭК</label>
-<input type="text"
-       class="form-control"
-       id="cdek-order-number-field"
-       value="@Order.CdekOrderNumber"
-       @onchange="@(async e => await ChangeCdekOrderNumber(e.Value.ToString()))" />
+﻿@using EtkBlazorApp.Core.Data.Cdek
+<label for="cdek-order-number-field">Номер заказа в личном кабинете СДЭК</label>
 
-<button class="btn btn-primary"
-        @onclick="GetCdekOrderDetails">
-    Получить данные от СДЭКА по этому заказу
-</button>
+<div class="order-cdek-data-container my-2">
+    <input type="text"
+           class="form-control w-auto"
+           id="cdek-order-number-field"
+           value="@Order.CdekOrderNumber"
+           @onchange="@(async e => await ChangeCdekOrderNumber(e.Value.ToString()))" />
+
+    <button class="btn btn-primary"
+            @onclick="GetCdekOrderDetails">
+        Получить инфо СДЭК
+    </button>
+</div>
+
+@if (cdekOrderDetails is not null)
+{
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <tbody>
+                <tr>
+                    <th class="table-dark" colspan="2">Основные данные</th>
+                </tr>
+                <tr>
+                    <td>Код заказа СДЭК</td>
+                    <td>@cdekOrderDetails.cdek_number</td>
+                </tr>
+                <tr>
+                    <td>Примечание</td>
+                    <td>@cdekOrderDetails.comment</td>
+                </tr>
+                <tr>
+                    <td>Стоимость доставки</td>
+                    <td>@cdekOrderDetails.delivery_detail.delivery_sum.ToString("C0")</td>
+                </tr>
+                <tr>
+                    <td>Общая стоимость</td>
+                    <td>@cdekOrderDetails.delivery_detail.total_sum.ToString("C0")</td>
+                </tr>
+                <tr>
+                    <td>Код пункта назначения</td>
+                    <td>@cdekOrderDetails.delivery_point</td>
+                </tr>
+                <tr>
+                    <th class="table-dark" colspan="2">Принимающая строна</th>
+                </tr>
+                <tr>
+                    <td>Компания</td>
+                    <td>@cdekOrderDetails.recipient.company</td>
+                </tr>
+                @if (cdekOrderDetails.recipient.company != cdekOrderDetails.recipient.name)
+                {
+                    <tr>
+                        <td>Имя/Название</td>
+                        <td>@cdekOrderDetails.recipient.name</td>
+                    </tr>
+                }
+                @if (cdekOrderDetails.recipient.phones != null && cdekOrderDetails.recipient.phones.Any())
+                {
+                    <tr>
+                        <td>Телефоны</td>
+                        <td>
+                            @foreach (var phone in cdekOrderDetails.recipient.phones)
+                            {
+                                <span>@phone.number</span>
+
+                                <br />
+                            }
+                        </td>
+                    </tr>
+                }
+                <tr>
+                    <th class="table-dark" colspan="2">Точка назначения</th>
+                </tr>
+                <tr>
+                    <td>Страна</td>
+                    <td>@cdekOrderDetails.to_location.country</td>
+                </tr>
+                <tr>
+                    <td>Регион</td>
+                    <td>@cdekOrderDetails.to_location.region</td>
+                </tr>
+                <tr>
+                    <td>Город</td>
+                    <td>@cdekOrderDetails.to_location.city</td>
+                </tr>
+                <tr>
+                    <td>Адрес</td>
+                    <td>@cdekOrderDetails.to_location.address</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+}
+
+<style>
+    .order-cdek-data-container {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+    }
+</style>
+
+
 
 @code {
     [Parameter] public OrderViewModel Order { get; set; }
@@ -18,6 +112,8 @@
     [Inject] public IToastService Toast { get; set; }
 
     bool IsValidCdekOrderNumber(string orderNumber) => Regex.IsMatch(orderNumber, @"^\d{8,}$");
+
+    CdekOrderInfo cdekOrderDetails = null;
 
     private async Task ChangeCdekOrderNumber(string newCode)
     {
@@ -37,9 +133,10 @@
             Toast.ShowError($"Код заказа СДЭК пуст");
             return;
         }
+
         try
         {
-            var result = await TransportCompany.GetOrderInfo(Order.CdekOrderNumber);
+            cdekOrderDetails = await TransportCompany.GetOrderInfo(Order.CdekOrderNumber);
         }
         catch (Exception ex)
         {
