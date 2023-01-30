@@ -40,6 +40,8 @@ public class OrderMapperProfile : Profile
             .ForMember(o => o.ShippingAddress, o => o.MapFrom(x => HttpUtility.HtmlDecode(x.shipping_address_1)))
             .ForMember(o => o.PaymentMethod, o => o.MapFrom(x => HttpUtility.HtmlDecode(x.payment_method)))
             .ForMember(o => o.ShippingMethod, o => o.MapFrom(x => HttpUtility.HtmlDecode(x.shipping_method)))
+            .ForMember(o => o.Inn, o => o.MapFrom(x => x.inn ?? string.Empty))
+            .ForMember(o => o.CdekOrderNumber, o => o.MapFrom(x => x.cdek_order_number))
             .ForMember(o => o.Status, o => o.MapFrom(x => x.order_status))
             .ForMember(o => o.OrderDetails, o => o.MapFrom(x => x.details))
             .ForMember(o => o.Tags, o => o.MapFrom(x => x.tags));

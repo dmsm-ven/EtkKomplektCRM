@@ -11,6 +11,8 @@ namespace EtkBlazorApp.DataAccess
     {
         Task Write(LogEntryEntity logEntry);
         Task<List<LogEntryEntity>> GetLogItems(int count, int maxDaysOld, string selectedUser, string selectedGroup);
+
+        Task<List<AppUpdateHistoryEntity>> GetAppUpdateInfo(int count);
     }
 
     public class LogStorage : ILogStorage
@@ -59,9 +61,9 @@ namespace EtkBlazorApp.DataAccess
                 {
                     sb.AppendLine(" AND user = @user");
                 }
-                
+
             }
-            
+
             if (selectedGroup != null)
             {
                 if (!whereAdded)
@@ -73,7 +75,7 @@ namespace EtkBlazorApp.DataAccess
                 {
                     sb.AppendLine(" AND group_name = @group");
                 }
-                
+
             }
 
             sb.Append("ORDER BY date_time DESC LIMIT @limit");
@@ -90,6 +92,15 @@ namespace EtkBlazorApp.DataAccess
             var data = await database.GetList<LogEntryEntity, dynamic>(sql, parameters);
 
             return data;
+        }
+
+        public async Task<List<AppUpdateHistoryEntity>> GetAppUpdateInfo(int limit)
+        {
+            string sql = "SELECT * FROM etk_app_update_history ORDER BY id DESC LIMIT @limit";
+
+            var items = await database.GetList<AppUpdateHistoryEntity, dynamic>(sql, new { limit });
+
+            return items;
         }
     }
 

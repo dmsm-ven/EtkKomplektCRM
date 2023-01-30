@@ -24,12 +24,12 @@
         <thead class="thead-etk">
             <tr>
                 <th>№ заказа</th>
-                <th>Дата | Время</th>
+                <th>Создан</th>
                 <th>Заказчик</th>
                 <th>Город</th>
                 <th>Сумма</th>
-                <th>Тэги</th>
-                <th width="auto;">Статус</th>
+                <th>№ СДЭК</th>
+                <th>Статус</th>
                 <th width="1%"></th>
             </tr>
         </thead>
@@ -44,17 +44,10 @@
             }
             else
             {
-                @for (int i = 0; i < 100; i++)
+                @for (int i = 0; i < 10; i++)
                 {
                     <tr colspan="">
-                        <td>0000000</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td> <LoadingSpinner /></td>
-                        <td> <LoadingSpinner /></td>
+                        <td colspan="8"><IntermediateProgressBar /></td>
                     </tr>
                 }
             }

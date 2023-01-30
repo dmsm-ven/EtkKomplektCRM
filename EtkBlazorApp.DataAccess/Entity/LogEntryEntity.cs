@@ -11,6 +11,13 @@ namespace EtkBlazorApp.DataAccess.Entity
         public string title { get; set; }
         public string message { get; set; }
         public DateTime date_time { get; set; }
+    }
 
+    public class AppUpdateHistoryEntity
+    {
+        public int id { get; set; }
+        public DateTime date_time { get; set; }
+        public string title { get; set; }
+        public string description { get; set; }
     }
 }

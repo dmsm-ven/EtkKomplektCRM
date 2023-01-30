@@ -23,6 +23,8 @@ public class OrderEntity
     public string shipping_method { get; set; }
     public string comment { get; set; }
     public string ip { get; set; }
+    public string inn { get; set; }
+    public string cdek_order_number { get; set; }
 
     public List<OrderDetailsEntity> details { get; set; } = new();
     public List<OrderTagEntity> tags { get; set; } = new();

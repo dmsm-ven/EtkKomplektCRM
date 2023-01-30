@@ -44,9 +44,10 @@ namespace EtkBlazorApp.DataAccess
             }
 
             var sb = new StringBuilder()
-                .AppendLine("SELECT o.*, os.*")
+                .AppendLine("SELECT o.*, otc.cdek_order_number, os.*")
                 .AppendLine("FROM oc_order o")
-                .AppendLine("LEFT JOIN oc_order_status os ON (o.order_status_id = os.order_status_id AND os.language_id = '2')");
+                .AppendLine("LEFT JOIN oc_order_status os ON (o.order_status_id = os.order_status_id AND os.language_id = '2')")
+                .AppendLine("LEFT JOIN etk_app_order_to_cdek otc ON (o.order_id = otc.order_id)");
 
             Dictionary<string, string> filter = new Dictionary<string, string>()
             {
@@ -112,9 +113,11 @@ namespace EtkBlazorApp.DataAccess
         public async Task<OrderEntity> GetOrderById(int orderId)
         {
             var sql = new StringBuilder()
-                .AppendLine("SELECT o.*, os.*")
+                .AppendLine("SELECT o.*, osf.inn, otc.cdek_order_number, os.*")
                 .AppendLine("FROM oc_order o")
                 .AppendLine("LEFT JOIN oc_order_status os ON (o.order_status_id = os.order_status_id)")
+                .AppendLine("LEFT JOIN oc_order_simple_fields osf ON (o.order_id = osf.order_id)")
+                .AppendLine("LEFT JOIN etk_app_order_to_cdek otc ON (o.order_id = otc.order_id)")
                 .AppendLine("WHERE o.order_id = @orderId")
                 .ToString();
 

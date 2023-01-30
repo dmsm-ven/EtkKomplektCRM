@@ -11,7 +11,7 @@
 </div>
 
 <div class="row">
-    <div class="order-details-tabs" style="margin: 20px 0px;">
+    <div class="order-details-tabs w-100" style="margin: 20px 0px;">
         @if (selectedTab == "Другие заказы клиента")
         {
             <select multiple class="form-control" style="height: 100%; overflow-y: auto;">
@@ -25,9 +25,13 @@
                 }
             </select>
         }
-        else
+        else if (selectedTab == "Статус СДЭК")
         {
-            <h2>@selectedTab</h2>
+            <input type="text" class="form-control" value="@Order.CdekOrderNumber" @onchange="@(e => await ChangeCdekOrderNumber(e.Value.ToString()))" />
+        }
+        else if (selectedTab == "Информация по ИНН")
+        {
+            <InnCheckerControl Inn="@Order.Inn" />
         }
     </div>
 </div>
@@ -52,5 +56,14 @@
     protected override async Task OnParametersSetAsync()
     {
         linkedOrders = await OrderStorage.GetLinkedOrders(int.Parse(Order.OrderId));
+    }
+
+    private async Task ChangeCdekOrderNumber(string newCode)
+    {
+        if (newCode != Order.CdekOrderNumber && !string.IsNullOrWhiteSpace(newCode))
+        {
+            Order.CdekOrderNumber = newCode;
+            //await OrderStorage
+        }
     }
 }

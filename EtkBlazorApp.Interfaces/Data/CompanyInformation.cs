@@ -7,6 +7,8 @@ public class CompanyInformation
     public string RegistrationDate { get; set; } = string.Empty;
     public string Capital { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
+    public string AddressUnrestricted { get; set; } = string.Empty;
+    public string ActualityDate { get; set; } = string.Empty;
 
     public CompanyManagmentInformation Managment { get; set; } = new();
     public CompanyGeneralCodes Codes { get; set; } = new();

@@ -37,6 +37,8 @@ public class DadataApiClient : ICompanyInfoChecker
             CompanyName = result.value,
             Capital = (data.capital?.value?.ToString() ?? "-"),
             Address = data.address.value,
+            AddressUnrestricted = data.address.unrestricted_value,
+            ActualityDate = result.data?.state?.actuality_date?.ToString()?.Replace(" 0:00:00", string.Empty) ?? "-",
             Codes = new CompanyGeneralCodes()
             {
                 Kpp = data.kpp,
@@ -54,7 +56,7 @@ public class DadataApiClient : ICompanyInfoChecker
         if (data.state != null)
         {
             info.Status = data.state.status.ToString();
-            info.RegistrationDate = (data.state.registration_date?.ToString() ?? "-");
+            info.RegistrationDate = (data.state.registration_date?.ToString().Replace(" 0:00:00", string.Empty) ?? "-");
         }
 
         if (data.management != null)
@@ -78,7 +80,6 @@ public class DadataApiClient : ICompanyInfoChecker
         }
 
         return info;
-
     }
 }
 

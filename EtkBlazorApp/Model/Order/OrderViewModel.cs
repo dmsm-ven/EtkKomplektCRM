@@ -19,6 +19,8 @@ namespace EtkBlazorApp
         public string ShippingMethod { get; set; }
         public string PaymentMethod { get; set; }
         public string OrderStatusName { get; set; }
+        public string Inn { get; set; }
+        public string CdekOrderNumber { get; set; }
 
 
         //TODO: проверить, возможно есть какие-то другие скрытые суммы при расчете

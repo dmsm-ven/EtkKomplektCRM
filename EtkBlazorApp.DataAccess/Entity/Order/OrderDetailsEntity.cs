@@ -16,4 +16,3 @@ public class OrderDetailsEntity
     public decimal tax { get; set; }
     public string reward { get; set; }
 }
-

@@ -9,9 +9,9 @@
         <td>@OrderData.City</td>
         <td>@OrderData.TotalPrice.ToString("C0")</td>
         <td>
-            @foreach (var tag in OrderData.Tags)
+            @if (!string.IsNullOrWhiteSpace(OrderData?.CdekOrderNumber))
             {
-                <OrderTagControl Tag="tag" />
+                <a href="https://lk.cdek.ru/order-history/@OrderData.CdekOrderNumber/view" target="_blank">@OrderData.CdekOrderNumber</a>
             }
         </td>
         <td>
@@ -25,4 +25,6 @@
 
 @code {
     [Parameter] public OrderViewModel OrderData { get; set; }
+
+
 }
