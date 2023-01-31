@@ -20,52 +20,59 @@ else
     <div class="container-fluid" style="padding-bottom: 30px;">
 
         <div class="row order-details-row">
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <p>Статус заказа</p>
-                <OrderStatusDropdown Order="order" CanChangeStatus=true />
+                <div class="d-flex">
+                    <OrderStatusDropdown Order="order" CanChangeStatus=true />
+                    <button class="btn btn-sm btn-outline-secondary ml-2" @onclick="ShowStatusChangesDialog">
+                        <span class="oi oi-list"></span>
+                    </button>
+                </div>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <p>№ заказа СДЭК</p>
                 <input type="text" value="@order.CdekOrderNumber" class="form-control"
                    @onchange="(async e => await ChangeCdekOrderNumber(e.Value.ToString()))" />
             </div>
 
-            <div class="col-md-8">
+            <div class="col-md-6">
                 <p>Заказчик</p>
                 <input type="text" readonly value="@order.Customer" class="form-control" />
             </div>
         </div>
         <div class="row order-details-row">
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <p>Город</p>
                 <input type="text" readonly value="@order.City" class="form-control" />
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <p>Телефон</p>
                 <input type="text" readonly value="@order.CustomerPhoneNumber" class="form-control" />
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <p>Email</p>
                 <input type="text" readonly value="@order.CustomerEmail" class="form-control" />
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <p>ИНН</p>
                 <input type="text" readonly value="@order.Inn" class="form-control" />
             </div>
         </div>
         <div class="row order-details-row">
-            <div class="col-md-4">
-                <p>Адрес доставки</p>
-                <input type="text" readonly value="@order.ShippingAddress" class="form-control" />
-            </div>
-            <div class="col-md-4">
-                <p>Метод доставки</p>
-                <input type="text" readonly value="@order.ShippingMethod" class="form-control" />
-            </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <p>Вид оплаты</p>
                 <input type="text" readonly value="@order.PaymentMethod" class="form-control" />
             </div>
+            <div class="col-md-3">
+                <p>Метод доставки</p>
+                <input type="text" readonly value="@order.ShippingMethod" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <p>Адрес доставки</p>
+                <input type="text" readonly value="@order.ShippingAddress" class="form-control" />
+            </div>
+
+
         </div>
 
         <hr style="margin: 20px auto;" />
@@ -139,6 +146,16 @@ else
     </div>
 }
 
+<CustomDataDialog @ref="statusChangesDialog" ConfirmationTitle="История изменения статуса заказа">
+    <DialogBody>
+        <ul style="list-style-type: none;">
+            @foreach (var status in order.StatusChangesHistory.OrderByDescending(s => s.DateAdded))
+            {
+                <li><span style="color: royalblue;">@status.DateAdded.ToString("dd.MM.yyyy HH:ss")</span> - <strong>@status.StatusName</strong></li>
+            }
+        </ul>
+    </DialogBody>
+</CustomDataDialog>
 @code {
 
     [Parameter] public int Id { get; set; }
@@ -153,6 +170,8 @@ else
 
 
     OrderViewModel order = null;
+    CustomDataDialog statusChangesDialog;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -183,6 +202,10 @@ else
         }
     }
 
+    private void ShowStatusChangesDialog()
+    {
+        statusChangesDialog.Show();
+    }
 }
 
 

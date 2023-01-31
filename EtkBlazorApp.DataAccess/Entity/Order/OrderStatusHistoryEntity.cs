@@ -2,4 +2,13 @@
 
 namespace EtkBlazorApp.DataAccess.Entity;
 
-public record OrderStatusHistoryEntity(int order_id, DateTime date_time, int old_order_status_id, int new_order_status_id);
+public class OrderStatusHistoryEntity
+{
+    public int order_history_id { get; set; }
+    public int order_id { get; set; }
+    public int order_status_id { get; set; }
+    public bool notify { get; set; }
+    public string comment { get; set; }
+    public string status_name { get; set; }
+    public DateTime date_added { get; set; }
+};

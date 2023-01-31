@@ -29,7 +29,7 @@ namespace EtkBlazorApp
         public decimal ProductsTotalCost => OrderDetails.Sum(od => od.Sum);
 
         public OrderStatusViewModel Status { get; set; }
-        public List<OrderDetailsViewModel> OrderDetails { get; set; }
-        public List<OrderTagViewModel> Tags { get; set; }
+        public List<OrderDetailsViewModel> OrderDetails { get; set; } = new();
+        public List<OrderStatusHistoryViewModel> StatusChangesHistory { get; set; } = new();
     }
 }

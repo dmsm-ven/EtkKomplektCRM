@@ -25,7 +25,8 @@ public class CdekApiMemoryCachedClient : ITransportCompanyApi
         this.securePassword = section["SecurePassword"] ?? throw new ArgumentNullException("SecurePassword");
 
         this.memoryCache = memoryCache;
-        cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(CacheExpireTimeInSecods));
+        cacheEntryOptions = new MemoryCacheEntryOptions()
+            .SetAbsoluteExpiration(TimeSpan.FromSeconds(CacheExpireTimeInSecods));
 
         httpClient = new HttpClient(new HttpClientHandler()
         {

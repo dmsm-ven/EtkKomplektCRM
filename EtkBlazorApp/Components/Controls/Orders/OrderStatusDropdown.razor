@@ -26,6 +26,13 @@
     }
 </div>
 
+<style>
+    .order-status-changes-history-box {
+        background: #333;
+        color: white;
+    }
+</style>
+
 @code {
     [Parameter] public OrderViewModel Order { get; set; }
     [Parameter] public bool CanChangeStatus { get; set; }
@@ -99,14 +106,24 @@
     {
         int oldStatus = (int)(Order?.Status?.Type ?? OrderStatusType.None);
         int newStatus = (int)status.Type;
-        Order.Status = status;
-        isOpened = false;
 
-        StateHasChanged();
+        if (oldStatus != newStatus)
+        {
+            Order.Status = status;
+            isOpened = false;
 
-        await OrderUpdateSerivce.ChangeOrderStatus(Order.OrderId, newStatus);
+            StateHasChanged();
 
-        await Logger.Write(LogEntryGroupName.Orders, "Обновление статуса", $"Статус заказа {Order.OrderId} изменен с {Order.Status.Type} на {status.Type}");
+            await OrderUpdateSerivce.ChangeOrderStatus(Order.OrderId, newStatus);
+
+            await Logger.Write(LogEntryGroupName.Orders, "Обновление статуса", $"Статус заказа {Order.OrderId} изменен с {Order.Status.Type} на {status.Type}");
+
+            Order.StatusChangesHistory.Add(new OrderStatusHistoryViewModel()
+                {
+                    DateAdded = DateTime.Now,
+                    StatusName = status.Name
+                });
+        }
     }
 }
 

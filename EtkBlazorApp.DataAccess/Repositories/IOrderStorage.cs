@@ -120,7 +120,9 @@ namespace EtkBlazorApp.DataAccess
 
             var order = await database.GetSingleWithChild<OrderEntity, OrderStatusEntity, dynamic>(sql, "order_status_id", new { orderId });
 
+
             order.details = await GetOrderDetails(orderId);
+            order.status_changes_history = await GetOrderChangeHistory(orderId);
 
             return order;
         }
@@ -167,7 +169,10 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task<List<OrderStatusHistoryEntity>> GetOrderChangeHistory(int order_id)
         {
-            string sql = "SELECT * FROM etk_app_order_status_change_history WHERE order_id = @order_id";
+            string sql = @"SELECT oh.*, os.name as status_name
+                          FROM oc_order_history oh
+                          LEFT JOIN oc_order_status os ON (oh.order_status_id = os.order_status_id AND language_id = '2')
+                          WHERE order_id = @order_id";
 
             var historyItems = await database.GetList<OrderStatusHistoryEntity, dynamic>(sql, new { order_id });
 

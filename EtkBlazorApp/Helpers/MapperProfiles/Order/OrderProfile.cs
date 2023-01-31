@@ -5,28 +5,23 @@ using System.Web;
 
 namespace EtkBlazorApp.MapperProfiles;
 
-public class OrderMapperProfile : Profile
+public class OrderProfile : Profile
 {
-    public OrderMapperProfile()
+    public OrderProfile()
     {
+        CreateMap<OrderStatusHistoryEntity, OrderStatusHistoryViewModel>()
+            .ForMember(o => o.OrderHistoryId, o => o.MapFrom(x => x.order_id))
+            .ForMember(o => o.DateAdded, o => o.MapFrom(x => x.date_added))
+            .ForMember(o => o.OrderId, o => o.MapFrom(x => x.order_id))
+            .ForMember(o => o.Comment, o => o.MapFrom(x => x.comment))
+            .ForMember(o => o.OrderStatusId, o => o.MapFrom(x => x.order_status_id))
+            .ForMember(o => o.Notify, o => o.MapFrom(x => x.notify))
+            .ForMember(o => o.StatusName, o => o.MapFrom(x => x.status_name));
+
         CreateMap<OrderStatusEntity, OrderStatusViewModel>()
             .ForMember(o => o.Type, o => o.MapFrom(x => (OrderStatusType)x.order_status_id))
             .ForMember(o => o.Name, o => o.MapFrom(x => x.name))
             .ForMember(o => o.SortOrder, o => o.MapFrom(x => x.order_status_sort));
-
-        CreateMap<OrderTagEntity, OrderTagViewModel>()
-            .ForMember(o => o.Type, o => o.MapFrom(x => (OrderTagType)x.order_tag_id))
-            .ForMember(o => o.Name, o => o.MapFrom(x => x.name))
-            .ForMember(o => o.Description, o => o.MapFrom(x => x.description));
-
-        CreateMap<OrderDetailsEntity, OrderDetailsViewModel>()
-            .ForMember(o => o.ProductName, o => o.MapFrom(x => HttpUtility.HtmlDecode(x.name)))
-            .ForMember(o => o.Model, o => o.MapFrom(x => HttpUtility.HtmlDecode(x.model)))
-            .ForMember(o => o.Sku, o => o.MapFrom(x => HttpUtility.HtmlDecode(x.sku)))
-            .ForMember(o => o.Price, o => o.MapFrom(x => x.price))
-            .ForMember(o => o.ProductId, o => o.MapFrom(x => x.product_id))
-            .ForMember(o => o.Quantity, o => o.MapFrom(x => x.quantity))
-            .ForMember(o => o.Manufacturer, o => o.MapFrom(x => HttpUtility.HtmlDecode(x.manufacturer)));
 
         CreateMap<OrderEntity, OrderViewModel>()
             .ForMember(o => o.OrderId, o => o.MapFrom(x => x.order_id.ToString()))
@@ -44,6 +39,6 @@ public class OrderMapperProfile : Profile
             .ForMember(o => o.CdekOrderNumber, o => o.MapFrom(x => x.cdek_order_number))
             .ForMember(o => o.Status, o => o.MapFrom(x => x.order_status))
             .ForMember(o => o.OrderDetails, o => o.MapFrom(x => x.details))
-            .ForMember(o => o.Tags, o => o.MapFrom(x => x.tags));
+            .ForMember(o => o.StatusChangesHistory, o => o.MapFrom(x => x.status_changes_history));
     }
 }

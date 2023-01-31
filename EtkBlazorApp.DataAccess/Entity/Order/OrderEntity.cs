@@ -27,7 +27,6 @@ public class OrderEntity
     public string cdek_order_number { get; set; }
 
     public List<OrderDetailsEntity> details { get; set; } = new();
-    public List<OrderTagEntity> tags { get; set; } = new();
     public List<OrderStatusHistoryEntity> status_changes_history { get; set; } = new();
     public OrderStatusEntity order_status { get; set; }
 }
