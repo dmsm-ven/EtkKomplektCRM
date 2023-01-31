@@ -5,10 +5,11 @@ public class CompanyInformation
     public string CompanyName { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public string RegistrationDate { get; set; } = string.Empty;
-    public string Capital { get; set; } = string.Empty;
+    public decimal? Capital { get; set; }
     public string Address { get; set; } = string.Empty;
     public string AddressUnrestricted { get; set; } = string.Empty;
     public string ActualityDate { get; set; } = string.Empty;
+    public int? EmployeesCount { get; set; }
 
     public CompanyManagmentInformation Managment { get; set; } = new();
     public CompanyGeneralCodes Codes { get; set; } = new();
@@ -37,7 +38,8 @@ public class CompanyGeneralCodes
 
 public class CompanyFinanceInformation
 {
-    public string Income { get; set; } = string.Empty;
-    public string Expense { get; set; } = string.Empty;
-    public string Year { get; set; } = string.Empty;
+    public decimal? Debt { get; set; }
+    public decimal? Income { get; set; }
+    public decimal? Expense { get; set; }
+    public int? Year { get; set; }
 }

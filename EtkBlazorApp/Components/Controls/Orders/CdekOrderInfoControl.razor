@@ -5,17 +5,37 @@
     <input type="text"
            class="form-control w-auto"
            id="cdek-order-number-field"
-           value="@Order.CdekOrderNumber"
-           @onchange="@(async e => await ChangeCdekOrderNumber(e.Value.ToString()))" />
+           @bind="CdekOrderNumber" />
 
     <button class="btn btn-primary"
             @onclick="GetCdekOrderDetails">
-        Получить инфо СДЭК
+        Поиск заказа на СДЭК
     </button>
 </div>
 
 @if (cdekOrderDetails is not null)
 {
+    @if (cdekOrderDetails.statuses != null && cdekOrderDetails.statuses.Any())
+    {
+        <div class="order-cdek-status-box">
+            @{
+                int current = cdekOrderDetails.statuses.Length;
+            }
+            @foreach (var status in cdekOrderDetails.statuses)
+            {
+                <div class="cdek-status-item @(status == cdekOrderDetails.statuses.First() ? "cdek-status-item-current" : "")">
+                    <p>@status.name</p>
+                    <p>@status.ParsedDate</p>
+                    <p>@status.city</p>
+                </div>
+                @if (status != cdekOrderDetails.statuses.Last())
+                {
+                    <span class="oi oi-arrow-left arrow"></span>
+                }
+            }
+        </div>
+    }
+
     <div class="table-responsive">
         <table class="table table-bordered">
             <tbody>
@@ -100,43 +120,73 @@
         justify-content: center;
         gap: 12px;
     }
+
+    .order-cdek-status-box {
+        display: flex;
+        justify-content: start;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+        .order-cdek-status-box > div {
+            flex: 1 1 20%;
+            max-width: 20%;
+        }
+
+    .cdek-status-item {
+        background-color: #6f7081;
+        color: white;
+        padding: 10px;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 12px;
+        display: flex;
+        flex-direction: column;
+    }
+
+        .cdek-status-item p {
+            margin: 2px 2px 4px 2px;
+        }
+
+    .cdek-status-item-current {
+        background-color: #5da35c;
+    }
+
+    .arrow {
+        font-size: 24px;
+        color: #90978a;
+        margin: 2px;
+        align-self: center;
+    }
 </style>
 
 
 
 @code {
-    [Parameter] public OrderViewModel Order { get; set; }
+    [Parameter] public string CdekOrderNumber { get; set; }
+
     [Inject] public IToastService Toasts { get; set; }
     [Inject] public IOrderUpdateService Orders { get; set; }
     [Inject] public ITransportCompanyApi TransportCompany { get; set; }
     [Inject] public IToastService Toast { get; set; }
 
-    bool IsValidCdekOrderNumber(string orderNumber) => Regex.IsMatch(orderNumber, @"^\d{8,}$");
-
     CdekOrderInfo cdekOrderDetails = null;
 
-    private async Task ChangeCdekOrderNumber(string newCode)
+    protected override async Task OnParametersSetAsync()
     {
-        if (IsValidCdekOrderNumber(newCode) && newCode != Order.CdekOrderNumber && !string.IsNullOrWhiteSpace(newCode))
-        {
-            Order.CdekOrderNumber = newCode;
-            await Orders.ChangeOrderLinkedCdekOrderNumber(Order.OrderId, newCode);
-
-            Toasts.ShowInfo("Закрепленный заказ изменен");
-        }
+        await GetCdekOrderDetails();
     }
 
     private async Task GetCdekOrderDetails()
     {
-        if (!IsValidCdekOrderNumber(Order.CdekOrderNumber))
+        if (string.IsNullOrWhiteSpace(CdekOrderNumber))
         {
-            Toast.ShowError($"Код заказа СДЭК пуст");
             return;
         }
 
         try
         {
-            cdekOrderDetails = await TransportCompany.GetOrderInfo(Order.CdekOrderNumber);
+            cdekOrderDetails = await TransportCompany.GetOrderInfo(CdekOrderNumber);
         }
         catch (Exception ex)
         {

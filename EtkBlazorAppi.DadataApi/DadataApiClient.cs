@@ -36,7 +36,7 @@ public class DadataApiClient : ICompanyInfoChecker
         var info = new CompanyInformation()
         {
             CompanyName = result.value,
-            Capital = (data.capital?.value?.ToString() ?? "-"),
+            Capital = data.capital?.value,
             Address = data.address.value,
             AddressUnrestricted = data.address.unrestricted_value,
             ActualityDate = result.data?.state?.actuality_date?.ToString()?.Replace(" 0:00:00", string.Empty) ?? "-",
@@ -74,9 +74,10 @@ public class DadataApiClient : ICompanyInfoChecker
         {
             info.FinanceInfo = new CompanyFinanceInformation()
             {
-                Year = data.finance?.year?.ToString() ?? "-",
-                Income = data.finance?.income?.ToString() ?? "-",
-                Expense = data.finance?.expense?.ToString() ?? "-"
+                Year = data.finance?.year,
+                Income = data.finance?.income,
+                Expense = data.finance?.expense,
+                Debt = data.finance?.debt
             };
         }
 

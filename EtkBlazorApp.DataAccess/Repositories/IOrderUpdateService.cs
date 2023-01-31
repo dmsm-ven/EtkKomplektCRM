@@ -1,11 +1,12 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.DataAccess
 {
     public interface IOrderUpdateService
     {
-        Task ChangeOrderStatus(int order_id, int old_status_id, int new_status_id);
+        Task ChangeOrderStatus(int order_id, int order_status_id);
         Task ChangeOrderLinkedCdekOrderNumber(int order_id, string cdek_order_number);
     }
 
@@ -18,17 +19,17 @@ namespace EtkBlazorApp.DataAccess
             this.database = database;
         }
 
-        public async Task ChangeOrderStatus(int order_id, int old_status_id, int new_status_id)
+        public async Task ChangeOrderStatus(int order_id, int order_status_id)
         {
             string historySql = new StringBuilder()
-                .AppendLine("INSERT INTO etk_app_order_status_change_history (order_id, old_order_status_id, new_order_status_id)")
-                .AppendLine("VALUES (@order_id, @old_status_id, @new_status_id)")
+                .AppendLine("INSERT INTO oc_order_history (order_id, order_status_id, comment, date_added)")
+                .AppendLine("VALUES (@order_id, @order_status_id, @comment, @date_added)")
                 .ToString();
 
-            await database.ExecuteQuery(historySql, new { order_id, old_status_id, new_status_id });
+            await database.ExecuteQuery(historySql, new { order_id, order_status_id, comment = "LK", date_added = DateTime.Now });
 
-            string statusSql = "UPDATE oc_order SET order_status_id = @new_status_id WHERE order_id = @order_id";
-            await database.ExecuteQuery(statusSql, new { order_id, new_status_id });
+            string statusSql = "UPDATE oc_order SET order_status_id = @order_status_id WHERE order_id = @order_id";
+            await database.ExecuteQuery(statusSql, new { order_id, order_status_id });
         }
 
         public async Task ChangeOrderLinkedCdekOrderNumber(int order_id, string cdek_order_number)

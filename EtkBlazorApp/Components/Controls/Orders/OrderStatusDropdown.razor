@@ -104,7 +104,7 @@
 
         StateHasChanged();
 
-        await OrderUpdateSerivce.ChangeOrderStatus(Order.OrderId, oldStatus, newStatus);
+        await OrderUpdateSerivce.ChangeOrderStatus(Order.OrderId, newStatus);
 
         await Logger.Write(LogEntryGroupName.Orders, "Обновление статуса", $"Статус заказа {Order.OrderId} изменен с {Order.Status.Type} на {status.Type}");
     }

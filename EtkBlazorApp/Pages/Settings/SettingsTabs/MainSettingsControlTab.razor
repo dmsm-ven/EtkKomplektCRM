@@ -2,20 +2,24 @@
 
 @if (selectedTab == tabData)
 {
-<div id="main_tab">
-    <div class="form-group">
-        <label for="monobrand_key">Ключ обновления монобренд сайтов</label>
-        <input type="text" class="form-control" id="monobrand_key" @bind="monobrandKey">
+    <div id="main_tab">
+        <div class="form-group">
+            <label for="monobrand_key">Ключ обновления монобренд сайтов</label>
+            <input type="text" class="form-control" id="monobrand_key" @bind="monobrandKey">
+        </div>
+        <div class="form-group">
+            <label for="monobrand_update">Обновлять монобренд сайты</label>
+            <input class="form-check" type="checkbox" @bind="isMonobrandUpdateEnabled" id="monobrand_update">
+        </div>
+        <div class="form-group">
+            <label for="nds">НДС, %</label>
+            <input type="number" min="0" max="100" class="form-control" id="nds" @bind="nds">
+        </div>
+        <div class="form-group">
+            <label for="orders-in-table">Количество выводимых заказов в списке</label>
+            <input type="number" min="10" max="500" class="form-control" id="orders-in-table" @bind="ordersDisplayCount">
+        </div>
     </div>
-    <div class="form-group">
-        <label for="monobrand_update">Обновлять монобренд сайты</label>
-        <input class="form-check" type="checkbox" @bind="isMonobrandUpdateEnabled"  id="monobrand_update">
-    </div>
-    <div class="form-group">
-        <label for="nds">НДС, %</label>
-        <input type="number" min="0" max="100" class="form-control" id="nds" @bind="nds">
-    </div>
-</div>
 }
 
 @code {
@@ -26,18 +30,21 @@
     string monobrandKey;
     bool isMonobrandUpdateEnabled;
     int nds;
+    int ordersDisplayCount;
 
     protected override async Task OnInitializedAsync()
     {
         monobrandKey = await settings.GetValue("monobrand_updater_key");
         nds = await settings.GetValue<int>("nds");
+        ordersDisplayCount = await settings.GetValue<int>("orders_display_count");
         isMonobrandUpdateEnabled = (await settings.GetValue("update-monobrand-websites") == "true" ? true : false);
 
-        tabData.SaveButtonClicked = new Action(async() =>
+        tabData.SaveButtonClicked = new Action(async () =>
         {
             await settings.SetValue("monobrand_updater_key", monobrandKey);
             await settings.SetValue("update-monobrand-websites", isMonobrandUpdateEnabled ? "true" : "false");
             await settings.SetValue<int>("nds", nds);
+            await settings.SetValue<int>("orders_display_count", ordersDisplayCount);
         });
     }
 }

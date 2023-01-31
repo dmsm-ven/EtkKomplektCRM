@@ -10,7 +10,7 @@
 else
 {
     <h1>
-        Детали заказа <strong>@order.OrderId</strong> от @order.DateTime.ToString("g") (@order.DateTime.ToString("ddd"))
+        Детали заказа <strong>@order.OrderId</strong> от @order.DateTime.ToString("dd.MM.yyyy в HH:mm") (@order.DateTime.ToString("dddd"))
         <button class="btn btn-sm btn-warning"
             @onclick="GoToPrintPage">
             <span class="oi oi-print"></span>
@@ -25,16 +25,22 @@ else
                 <OrderStatusDropdown Order="order" CanChangeStatus=true />
             </div>
             <div class="col-md-2">
-                <p>Город</p>
-                <input type="text" readonly value="@order.City" class="form-control" />
+                <p>№ заказа СДЭК</p>
+                <input type="text" value="@order.CdekOrderNumber" class="form-control"
+                   @onchange="(async e => await ChangeCdekOrderNumber(e.Value.ToString()))" />
             </div>
+
             <div class="col-md-8">
                 <p>Заказчик</p>
                 <input type="text" readonly value="@order.Customer" class="form-control" />
             </div>
         </div>
         <div class="row order-details-row">
-            <div class="col-md-4">
+            <div class="col-md-2">
+                <p>Город</p>
+                <input type="text" readonly value="@order.City" class="form-control" />
+            </div>
+            <div class="col-md-2">
                 <p>Телефон</p>
                 <input type="text" readonly value="@order.CustomerPhoneNumber" class="form-control" />
             </div>
@@ -137,6 +143,8 @@ else
 
     [Parameter] public int Id { get; set; }
     [Inject] public IOrderStorage OrderStorage { get; set; }
+    [Inject] public IOrderUpdateService OrderUpdateService { get; set; }
+    [Inject] public IToastService Toasts { get; set; }
     [Inject] public IJSRuntime Js { get; set; }
     [Inject] public IMapper Mapper { get; set; }
     [Inject] public ICompanyInfoChecker CompanyInfoChecker { get; set; }
@@ -160,6 +168,19 @@ else
         //Версия на страницу из заказа, код генерируется в модуле cash_plusplus
         string printPage = await OrderPdfLinkGenerator.GenerateLink(order.OrderId);
         await Js.InvokeAsync<object>("open", printPage, "_blank");
+    }
+
+    private async Task ChangeCdekOrderNumber(string newCode)
+    {
+        string oldNumber = order.CdekOrderNumber;
+        if (oldNumber != newCode)
+        {
+
+            order.CdekOrderNumber = newCode;
+            await OrderUpdateService.ChangeOrderLinkedCdekOrderNumber(order.OrderId, newCode);
+
+            Toasts.ShowInfo($"Закрепленный номер заказ СДЭК изменен с '{oldNumber}' -> '{newCode}'");
+        }
     }
 
 }

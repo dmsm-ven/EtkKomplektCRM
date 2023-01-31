@@ -27,6 +27,8 @@
 
 @if (companyInfo is not null)
 {
+    <p class="my-1" style="font-size: 11px; font-style: italic; color: #c0c0c0;">Источник информации сервис Dadata.ru</p>
+
     <div class="table-responsive my-4">
         <table class="table table-bordered company-info-table">
             <tbody>
@@ -53,6 +55,10 @@
                 <tr>
                     <td>Дата регистрации компании</td>
                     <td>@companyInfo.RegistrationDate</td>
+                </tr>
+                <tr>
+                    <td>Количество рабочих</td>
+                    <td>@companyInfo.EmployeesCount</td>
                 </tr>
                 <tr>
                     <td>Уставной капитал</td>
@@ -110,18 +116,22 @@
                     <td>@companyInfo.Codes.Okved</td>
                 </tr>
 
-                @if (companyInfo.FinanceInfo.Year.Length == 4)
+                @if (companyInfo.FinanceInfo.Year.HasValue)
                 {
                     <tr>
                         <th class="table-dark" colspan="2">Финансовая информация за [@companyInfo.FinanceInfo.Year] год</th>
                     </tr>
                     <tr>
                         <td>Доходы</td>
-                        <td>@companyInfo.FinanceInfo.Income</td>
+                        <td>@(companyInfo.FinanceInfo?.Income?.ToString() ?? "-")</td>
                     </tr>
                     <tr>
                         <td>Расходы</td>
-                        <td>@companyInfo.FinanceInfo.Expense</td>
+                        <td>@(companyInfo.FinanceInfo?.Expense?.ToString() ?? "-")</td>
+                    </tr>
+                    <tr>
+                        <td>Долг</td>
+                        <td>@(companyInfo.FinanceInfo?.Debt?.ToString() ?? "-")</td>
                     </tr>
                 }
             </tbody>

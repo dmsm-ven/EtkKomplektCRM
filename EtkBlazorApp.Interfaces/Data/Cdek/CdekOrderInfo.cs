@@ -1,4 +1,6 @@
-﻿namespace EtkBlazorApp.Core.Data.Cdek;
+﻿using System.Globalization;
+
+namespace EtkBlazorApp.Core.Data.Cdek;
 
 public class CdekOrderInfoRoot
 {
@@ -14,6 +16,32 @@ public class CdekOrderInfo
     public CdekOrderInfo_Recipient recipient { get; set; }
     public CdekOrderInfo_ToLocation to_location { get; set; }
     public CdekOrderInfo_DeliveryDetail delivery_detail { get; set; }
+    public CdekOrderInfo_StatusStep[] statuses { get; set; }
+}
+
+public class CdekOrderInfo_StatusStep
+{
+    public string code { get; set; }
+    public string name { get; set; }
+    public string date_time { get; set; }
+    public string city { get; set; }
+
+    public string ParsedDate
+    {
+        get
+        {
+            try
+            {
+                var dt = DateTimeOffset.ParseExact(date_time, "yyyy-MM-ddTHH:mm:sszzz", CultureInfo.InvariantCulture);
+                return dt.LocalDateTime.ToString("dd.MM.yyyy HH:mm");
+            }
+            catch
+            {
+                return date_time;
+            }
+
+        }
+    }
 }
 
 public class CdekOrderInfo_Recipient

@@ -111,11 +111,7 @@ namespace EtkBlazorApp
                 return new DadataApiClient(section["Token"]);
             });
 
-            services.AddSingleton<ITransportCompanyApi>(x =>
-            {
-                var section = Configuration.GetSection("CdekConfiguration");
-                return new CdekApiClient(section["Account"], section["SecurePassword"]);
-            });
+            services.AddSingleton<ITransportCompanyApi, CdekApiMemoryCachedClient>();
         }
 
         private void ConfigureDatabaseServices(IServiceCollection services)

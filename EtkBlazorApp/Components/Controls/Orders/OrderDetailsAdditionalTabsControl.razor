@@ -14,7 +14,7 @@
     <div class="order-details-tabs w-100" style="margin: 20px 0px;">
         @if (selectedTab == "Статус СДЭК")
         {
-            <CdekOrderInfoControl Order="@Order" />
+            <CdekOrderInfoControl CdekOrderNumber="@Order.CdekOrderNumber" />
         }
         else if (selectedTab == "Другие заказы клиента")
         {

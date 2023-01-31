@@ -28,7 +28,7 @@
                 <th>Заказчик</th>
                 <th>Город</th>
                 <th>Сумма</th>
-                <th>№ СДЭК</th>
+                <th>СДЭК</th>
                 <th>Статус</th>
                 <th width="1%"></th>
             </tr>
@@ -53,6 +53,7 @@
 
 @code {
     [Inject] public IOrderStorage OrdersStorage { get; set; }
+    [Inject] public ISettingStorage SettingsStorage { get; set; }
     [Inject] public IMapper Mapper { get; set; }
 
     List<OrderViewModel> orders = null;
@@ -76,7 +77,8 @@
 
         await Task.Delay(TimeSpan.FromMilliseconds(500));
 
-        var ordersData = await OrdersStorage.GetLastOrders(30, numberFilter, cityFilter, cutomerFilter);
+        int takeCount = Math.Max(await SettingsStorage.GetValue<int>("orders_display_count"), 25);
+        var ordersData = await OrdersStorage.GetLastOrders(takeCount, numberFilter, cityFilter, cutomerFilter);
         orders = Mapper.Map<List<OrderViewModel>>(ordersData);
 
         StateHasChanged();

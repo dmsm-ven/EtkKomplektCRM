@@ -6,14 +6,14 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12 my-1">
-          @if (inProgress)
+            @if (inProgress)
             {
                 <IntermediateProgressBar></IntermediateProgressBar>
             }
             else
             {
                 <button class="btn btn-success btn-lg mx-2"
-                        @onclick="UpdateProductsPriceAndStock" disabled="@(priceListManager.PriceLines.Count == 0)">
+                    @onclick="UpdateProductsPriceAndStock" disabled="@(priceListManager.PriceLines.Count == 0)">
                     Обновить
                 </button>
             }

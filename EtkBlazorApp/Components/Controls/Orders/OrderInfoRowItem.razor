@@ -11,7 +11,17 @@
         <td>
             @if (!string.IsNullOrWhiteSpace(OrderData?.CdekOrderNumber))
             {
-                <a href="https://lk.cdek.ru/order-history/@OrderData.CdekOrderNumber/view" target="_blank">@OrderData.CdekOrderNumber</a>
+                <a class="btn btn-sm btn-outline-secondary" href="https://lk.cdek.ru/order-history/trace?orderNumber=@OrderData.CdekOrderNumber" target="_blank">
+                    <span class="oi oi-magnifying-glass"></span>
+                </a>
+                @if (string.IsNullOrWhiteSpace(lastCdekStatus))
+                {
+                    <span><small>Загрузка ...</small></span>
+                }
+                else
+                {
+                    <span style="margin-left: 4px;"><small>@lastCdekStatus</small></span>
+                }
             }
         </td>
         <td>
@@ -25,6 +35,15 @@
 
 @code {
     [Parameter] public OrderViewModel OrderData { get; set; }
+    [Inject] public ITransportCompanyApi CdekApi { get; set; }
+    string lastCdekStatus = null;
 
-
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(OrderData?.CdekOrderNumber))
+        {
+            var cdekOrderStatus = await CdekApi.GetOrderInfo(OrderData.CdekOrderNumber);
+            lastCdekStatus = cdekOrderStatus.statuses.FirstOrDefault()?.name;
+        }
+    }
 }

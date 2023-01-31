@@ -1,22 +1,31 @@
 ﻿using EtkBlazorApp.Core.Data.Cdek;
 using EtkBlazorApp.Core.Interfaces;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
 namespace EtkBlazorApp.CdekApi;
 
-public class CdekApiClient : ITransportCompanyApi
+public class CdekApiMemoryCachedClient : ITransportCompanyApi
 {
+    private readonly IMemoryCache memoryCache;
+    private readonly MemoryCacheEntryOptions cacheEntryOptions;
+    private readonly int CacheExpireTimeInSecods = 90;
     private readonly string account;
     private readonly string securePassword;
     private readonly HttpClient httpClient;
 
     private DateTime? tokenExpireTime;
 
-    public CdekApiClient(string account, string securePassword)
+    public CdekApiMemoryCachedClient(IConfiguration configuration, IMemoryCache memoryCache)
     {
-        this.account = account;
-        this.securePassword = securePassword;
+        var section = configuration.GetSection("CdekConfiguration");
+        this.account = section["Account"] ?? throw new ArgumentNullException("Account");
+        this.securePassword = section["SecurePassword"] ?? throw new ArgumentNullException("SecurePassword");
+
+        this.memoryCache = memoryCache;
+        cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(CacheExpireTimeInSecods));
 
         httpClient = new HttpClient(new HttpClientHandler()
         {
@@ -58,18 +67,27 @@ public class CdekApiClient : ITransportCompanyApi
 
     public async Task<CdekOrderInfo> GetOrderInfo(string cdekOrderNumber)
     {
-        await AuthorizeIfNeed();
+        string key = $"cdek_api_order_info_{cdekOrderNumber}";
 
-        var response = await httpClient.GetAsync($"/v2/orders?cdek_number={cdekOrderNumber}");
-
-        if (response.IsSuccessStatusCode)
+        if (!memoryCache.TryGetValue<CdekOrderInfo>(key, out var info))
         {
-            string json = await response.Content.ReadAsStringAsync();
-            CdekOrderInfoRoot orderInfo = JsonSerializer.Deserialize<CdekOrderInfoRoot>(json);
-            return orderInfo.entity;
-        }
+            await AuthorizeIfNeed();
 
-        return null;
+            var response = await httpClient.GetAsync($"/v2/orders?cdek_number={cdekOrderNumber}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                string json = await response.Content.ReadAsStringAsync();
+                var orderInfo = JsonSerializer.Deserialize<CdekOrderInfoRoot>(json);
+                var lastVersion = orderInfo.entity;
+
+
+                memoryCache.Set<CdekOrderInfo>(key, lastVersion, cacheEntryOptions);
+
+                return lastVersion;
+            }
+        }
+        return info;
     }
 }
 
