@@ -10,8 +10,7 @@
 *.userosscache
 *.sln.docstates
 
-project.assets.json
-project.nuget.cache
+obj
 appsettings.json
 appsettings.Production.json
 

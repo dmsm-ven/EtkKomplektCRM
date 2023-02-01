@@ -15,6 +15,7 @@ public class PriceListPriceHistoryManager
     private readonly IPriceListUpdateHistoryRepository repo;
     private readonly ISettingStorage settings;
     private readonly IProductStorage productStorage;
+    const int MAX_ITEMS = 500;
 
     public PriceListPriceHistoryManager(IPriceListUpdateHistoryRepository repo, ISettingStorage settings, IProductStorage productStorage)
     {
@@ -74,20 +75,17 @@ public class PriceListPriceHistoryManager
         await repo.SavePriceListUpdateProductsPriceData(guid, linesData);
     }
 
-    private Dictionary<int, decimal> GetNewLines(Dictionary<int, decimal> currentUpdateData,
-        Dictionary<int, decimal> previuosUpdateData,
-        HashSet<int> uniqueIds)
+    private Dictionary<int, decimal> GetNewLines(Dictionary<int, decimal> currentUpdateData, Dictionary<int, decimal> previuosUpdateData)
     {
         Dictionary<int, decimal> dic = new Dictionary<int, decimal>();
 
         foreach (var kvp in currentUpdateData)
         {
+            // Пропускаем если: в прошлую загрузку этот товар с точно такой же ценой как и сейчас
             if (previuosUpdateData.TryGetValue(kvp.Key, out var prev) && prev == kvp.Value)
             {
                 continue;
             }
-
-            //bool firstTimeInHistoryForPriceList = !uniqueIds.Contains(kvp.Key);
 
             dic[kvp.Key] = kvp.Value;
         }
@@ -98,12 +96,11 @@ public class PriceListPriceHistoryManager
     public async Task<PriceListProductPriceChangeHistory> GetProductsPriceChangeHistoryForPriceList(string guid)
     {
         double minmumChangePercent = await settings.GetValue<double>("price_list_product_price_change_percent_to_notify");
-        minmumChangePercent /= 100;
-
         if (minmumChangePercent == default(double))
         {
             throw new ArgumentNullException(nameof(minmumChangePercent));
         }
+        minmumChangePercent /= 100;
 
         var entiresDictionary = await repo.GetPriceListUpdateHistory(guid);
 
@@ -139,6 +136,7 @@ public class PriceListPriceHistoryManager
             .Where(v => v.Count > 1)
             .Select(i => i.Last())
             .Where(i => i.ChangePercent > minmumChangePercent)
+            .Take(MAX_ITEMS)
             .ToList();
 
         if (list.Count > 0)
