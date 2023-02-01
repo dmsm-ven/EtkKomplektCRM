@@ -16,6 +16,11 @@
             <input type="number" min="0" max="100" class="form-control" id="nds" @bind="nds">
         </div>
         <div class="form-group">
+            <label for="price_history_min_percent">Минимальный порог уведомлений о повышении цены</label>
+            <input type="number" min="1" max="99" class="form-control" id="price_history_min_percent" @bind="priceHistoryMinPercent">
+            <p><small>После скольки процентов отображать товар в истории прайс-листов, и уведомлять о повышении цены на него</small></p>
+        </div>
+        <div class="form-group">
             <label for="orders-in-table">Количество выводимых заказов в списке</label>
             <input type="number" min="10" max="500" class="form-control" id="orders-in-table" @bind="ordersDisplayCount">
         </div>
@@ -31,11 +36,13 @@
     bool isMonobrandUpdateEnabled;
     int nds;
     int ordersDisplayCount;
+    int priceHistoryMinPercent;
 
     protected override async Task OnInitializedAsync()
     {
         monobrandKey = await settings.GetValue("monobrand_updater_key");
-        nds = await settings.GetValue<int>("nds");
+        nds = await settings.GetValue<int>("price_list_product_price_change_percent_to_notify");
+        priceHistoryMinPercent = await settings.GetValue<int>("priceHistoryMinPercent");
         ordersDisplayCount = await settings.GetValue<int>("orders_display_count");
         isMonobrandUpdateEnabled = (await settings.GetValue("update-monobrand-websites") == "true" ? true : false);
 
@@ -44,6 +51,7 @@
             await settings.SetValue("monobrand_updater_key", monobrandKey);
             await settings.SetValue("update-monobrand-websites", isMonobrandUpdateEnabled ? "true" : "false");
             await settings.SetValue<int>("nds", nds);
+            await settings.SetValue<int>("price_list_product_price_change_percent_to_notify", priceHistoryMinPercent);
             await settings.SetValue<int>("orders_display_count", ordersDisplayCount);
         });
     }

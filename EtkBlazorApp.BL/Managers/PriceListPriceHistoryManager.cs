@@ -48,7 +48,7 @@ public class PriceListPriceHistoryManager
         // Шаг 1. Берем все вхождения (заголовки)
         var entries = await repo.GetPriceListUpdateEntries(guid);
 
-        //Если это первая загрузка - то пропускаем шаги 2,3,4
+        //Если это первая загрузка - то пропускаем шаги 2,3
         Dictionary<int, decimal> linesData = priceData;
         if (entries.Any())
         {
@@ -64,14 +64,11 @@ public class PriceListPriceHistoryManager
                 .GroupBy(i => i.product_id)
                 .ToDictionary(i => i.Key, p => p.First().price);
 
-            // Шаг 3. Берем все уникальные товары, что бы можно было найти новые в этой выгрузке
-            HashSet<int> uniqueIds = await repo.GetUniqueProductIdsInHistory(guid);
-
-            // Шаг 4. Находим только те которые нужно добавлять
-            linesData = GetNewLines(priceData, previuosUpdateData, uniqueIds);
+            // Шаг 3. Находим только те которые нужно добавлять
+            linesData = GetNewLines(priceData, previuosUpdateData);
         }
 
-        // Шаг 5. Сохраняем
+        // Шаг 4. Сохраняем
         await repo.SavePriceListUpdateProductsPriceData(guid, linesData);
     }
 
