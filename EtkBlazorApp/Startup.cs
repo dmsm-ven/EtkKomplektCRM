@@ -1,9 +1,11 @@
 using Blazored.Toast;
 using EtkBlazorApp.BL;
+using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.BL.Templates.PriceListTemplates;
 using EtkBlazorApp.CdekApi;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
+using EtkBlazorApp.DataAccess.Repositories;
 using EtkBlazorApp.Services;
 using EtkBlazorAppi.DadataApi;
 using Microsoft.AspNetCore.Builder;
@@ -93,7 +95,8 @@ namespace EtkBlazorApp
             services.AddSingleton<RemoteTemplateFileLoaderFactory>();
             services.AddSingleton<SystemEventsLogger>();
             services.AddSingleton<NewOrdersNotificationService>();
-            services.AddSingleton<UpdateManager>();
+            services.AddSingleton<PriceListPriceHistoryManager>();
+            services.AddSingleton<ProductsPriceAndStockUpdateManager>();
             services.AddSingleton<PriceListManager>();
             services.AddSingleton<CronTaskService>();
 
@@ -117,6 +120,7 @@ namespace EtkBlazorApp
         private void ConfigureDatabaseServices(IServiceCollection services)
         {
             services.AddTransient<IDatabaseAccess, EtkDatabaseDapperAccess>();
+            services.AddTransient<IPriceListUpdateHistoryRepository, PriceListUpdateHistoryRepository>();
             services.AddTransient<IPartnersInformationService, PartnersInformationService>();
             services.AddTransient<IProductDiscountStorage, ProductDiscountStorage>();
             services.AddTransient<IMarketplaceExportService, MarketplaceExportService>();

@@ -15,7 +15,7 @@ namespace EtkBlazorApp.BL
     public class FullCompareProductCorrelator : IDatabaseProductCorrelator
     {
         public async Task<List<ProductUpdateData>> GetCorrelationData(IEnumerable<ProductEntity> products, IEnumerable<PriceLine> priceLines)
-        {                   
+        {
             var bySku = new Func<ProductEntity, PriceLine>((p) => string.IsNullOrWhiteSpace(p.sku) ? null : priceLines.FirstOrDefault(line => p.sku.Equals(line.Sku)));
             var byModel = new Func<ProductEntity, PriceLine>((p) => string.IsNullOrWhiteSpace(p.model) ? null : priceLines.FirstOrDefault(line => p.model.Equals(line.Model)));
             var byEan = new Func<ProductEntity, PriceLine>((p) => string.IsNullOrWhiteSpace(p.ean) ? null : priceLines.FirstOrDefault(line => p.ean.Equals(line.Ean)));
@@ -28,7 +28,7 @@ namespace EtkBlazorApp.BL
                 {
                     var findedLine = new[] { byEan(product), bySku(product), byModel(product), byName(product) }
                         .FirstOrDefault(v => v != null);
-                    
+
                     if (findedLine != null)
                     {
                         var updateData = new ProductUpdateData()
@@ -69,7 +69,7 @@ namespace EtkBlazorApp.BL
 
             var dictionaries = await Task.Run(() => PrepareDictionaries(priceLines));
 
-            foreach(var product in products)
+            foreach (var product in products)
             {
                 var findedLine =
                     dictionaries["sku"].GetValueOrNull(product.sku) ??
@@ -108,7 +108,7 @@ namespace EtkBlazorApp.BL
 
         private Dictionary<string, Dictionary<string, PriceLine>> PrepareDictionaries(IEnumerable<PriceLine> priceLines)
         {
- 
+
             Dictionary<string, PriceLine> eanDic = null;
             bool useEan = priceLines.Any(p => !string.IsNullOrWhiteSpace(p.Ean));
             if (useEan)

@@ -11,9 +11,9 @@
 
 @if (innCheckerError != null)
 {
-    <div class="alert alert-danger my-4" role="alert">
+        <div class="alert alert-danger my-4" role="alert">
         @innCheckerError
-    </div>
+        </div>
 }
 
 <style>
@@ -27,116 +27,122 @@
 
 @if (companyInfo is not null)
 {
-    <p class="my-1" style="font-size: 11px; font-style: italic; color: #c0c0c0;">Источник информации сервис Dadata.ru</p>
+        <p class="my-1" style="font-size: 11px; font-style: italic; color: #c0c0c0;">Источник информации сервис Dadata.ru</p>
 
-    <div class="table-responsive my-4">
-        <table class="table table-bordered company-info-table">
-            <tbody>
-                <tr>
-                    <th class="table-dark" colspan="2">Основные данные</th>
-                </tr>
+        <div class="table-responsive my-4">
+            <table class="table table-bordered company-info-table">
+                <tbody>
+                    <tr>
+                        <th class="table-dark" colspan="2">Основные данные</th>
+                    </tr>
 
-                <tr>
-                    <td>Компания</td>
-                    <td>@companyInfo.CompanyName</td>
-                </tr>
-                <tr>
-                    <td>Адрес</td>
-                    <td>@companyInfo.Address</td>
-                </tr>
-                <tr>
-                    <td>Адрес (версия 2)</td>
-                    <td>@companyInfo.AddressUnrestricted</td>
-                </tr>
-                <tr>
-                    <td>Статус на @companyInfo.ActualityDate</td>
-                    <td>@(companyInfo.Status == "ACTIVE" ? "Активна" : companyInfo.Status)</td>
-                </tr>
-                <tr>
-                    <td>Дата регистрации компании</td>
-                    <td>@companyInfo.RegistrationDate</td>
-                </tr>
-                <tr>
-                    <td>Количество рабочих</td>
-                    <td>@companyInfo.EmployeesCount</td>
-                </tr>
-                <tr>
-                    <td>Уставной капитал</td>
-                    <td>@companyInfo.Capital</td>
-                </tr>
+                    <tr>
+                        <td>Компания</td>
+                        <td>@companyInfo.CompanyName</td>
+                    </tr>
+                    <tr>
+                        <td>Адрес</td>
+                        <td>@companyInfo.Address</td>
+                    </tr>
+                    <tr>
+                        <td>Адрес (версия 2)</td>
+                        <td>@companyInfo.AddressUnrestricted</td>
+                    </tr>
+                    <tr>
+                        <td>Статус на @companyInfo.ActualityDate</td>
+                        <td>@(companyInfo.Status == "ACTIVE" ? "Активна" : companyInfo.Status)</td>
+                    </tr>
+                    <tr>
+                        <td>Дата регистрации компании</td>
+                        <td>@companyInfo.RegistrationDate</td>
+                    </tr>
+                @if (companyInfo.EmployeesCount.HasValue)
+                {
+                            <tr>
+                                <td>Количество рабочих</td>
+                                <td>@companyInfo.EmployeesCount</td>
+                            </tr>
+                }
+                @if (companyInfo.Capital.HasValue)
+                {
+                            <tr>
+                                <td>Уставной капитал</td>
+                                <td>@companyInfo.Capital</td>
+                            </tr>
+                }
 
-                <tr>
-                    <th class="table-dark" colspan="2">Управляющий</th>
-                </tr>
-                <tr>
-                    <td>Имя</td>
-                    <td>@companyInfo.Managment.Name</td>
-                </tr>
-                <tr>
-                    <td>Должность</td>
-                    <td>@companyInfo.Managment.Post</td>
-                </tr>
-                <tr>
-                    <td>Отстранен</td>
-                    <td>@(string.IsNullOrWhiteSpace(companyInfo.Managment.Disqualified) ? "Нет" : companyInfo.Managment.Disqualified)</td>
-                </tr>
-                <tr>
-                    <th class="table-dark" colspan="2">Коды</th>
-                </tr>
-                <tr>
-                    <td>КПП</td>
-                    <td>@companyInfo.Codes.Kpp</td>
-                </tr>
-                <tr>
-                    <td>ИНН</td>
-                    <td>@companyInfo.Codes.Inn</td>
-                </tr>
-                <tr>
-                    <td>ОГРН</td>
-                    <td>@companyInfo.Codes.Ogrn</td>
-                </tr>
-                <tr>
-                    <td>ОКПО</td>
-                    <td>@companyInfo.Codes.Okpo</td>
-                </tr>
-                <tr>
-                    <td>ОКАТО</td>
-                    <td>@companyInfo.Codes.Okato</td>
-                </tr>
-                <tr>
-                    <td>ОКОГУ</td>
-                    <td>@companyInfo.Codes.Okogu</td>
-                </tr>
-                <tr>
-                    <td>ОКФС</td>
-                    <td>@companyInfo.Codes.Okfs</td>
-                </tr>
-                <tr>
-                    <td>ОКВЭД</td>
-                    <td>@companyInfo.Codes.Okved</td>
-                </tr>
+                    <tr>
+                        <th class="table-dark" colspan="2">Управляющий</th>
+                    </tr>
+                    <tr>
+                        <td>Имя</td>
+                        <td>@companyInfo.Managment.Name</td>
+                    </tr>
+                    <tr>
+                        <td>Должность</td>
+                        <td>@companyInfo.Managment.Post</td>
+                    </tr>
+                    <tr>
+                        <td>Отстранен</td>
+                        <td>@(string.IsNullOrWhiteSpace(companyInfo.Managment.Disqualified) ? "Нет" : companyInfo.Managment.Disqualified)</td>
+                    </tr>
+                    <tr>
+                        <th class="table-dark" colspan="2">Коды</th>
+                    </tr>
+                    <tr>
+                        <td>КПП</td>
+                        <td>@companyInfo.Codes.Kpp</td>
+                    </tr>
+                    <tr>
+                        <td>ИНН</td>
+                        <td>@companyInfo.Codes.Inn</td>
+                    </tr>
+                    <tr>
+                        <td>ОГРН</td>
+                        <td>@companyInfo.Codes.Ogrn</td>
+                    </tr>
+                    <tr>
+                        <td>ОКПО</td>
+                        <td>@companyInfo.Codes.Okpo</td>
+                    </tr>
+                    <tr>
+                        <td>ОКАТО</td>
+                        <td>@companyInfo.Codes.Okato</td>
+                    </tr>
+                    <tr>
+                        <td>ОКОГУ</td>
+                        <td>@companyInfo.Codes.Okogu</td>
+                    </tr>
+                    <tr>
+                        <td>ОКФС</td>
+                        <td>@companyInfo.Codes.Okfs</td>
+                    </tr>
+                    <tr>
+                        <td>ОКВЭД</td>
+                        <td>@companyInfo.Codes.Okved</td>
+                    </tr>
 
                 @if (companyInfo.FinanceInfo.Year.HasValue)
                 {
-                    <tr>
-                        <th class="table-dark" colspan="2">Финансовая информация за [@companyInfo.FinanceInfo.Year] год</th>
-                    </tr>
-                    <tr>
-                        <td>Доходы</td>
-                        <td>@(companyInfo.FinanceInfo?.Income?.ToString() ?? "-")</td>
-                    </tr>
-                    <tr>
-                        <td>Расходы</td>
-                        <td>@(companyInfo.FinanceInfo?.Expense?.ToString() ?? "-")</td>
-                    </tr>
-                    <tr>
-                        <td>Долг</td>
-                        <td>@(companyInfo.FinanceInfo?.Debt?.ToString() ?? "-")</td>
-                    </tr>
+                            <tr>
+                                <th class="table-dark" colspan="2">Финансовая информация за [@companyInfo.FinanceInfo.Year] год</th>
+                            </tr>
+                            <tr>
+                                <td>Доходы</td>
+                                <td>@(companyInfo.FinanceInfo?.Income?.ToString() ?? "-")</td>
+                            </tr>
+                            <tr>
+                                <td>Расходы</td>
+                                <td>@(companyInfo.FinanceInfo?.Expense?.ToString() ?? "-")</td>
+                            </tr>
+                            <tr>
+                                <td>Долг</td>
+                                <td>@(companyInfo.FinanceInfo?.Debt?.ToString() ?? "-")</td>
+                            </tr>
                 }
-            </tbody>
-        </table>
-    </div>
+                </tbody>
+            </table>
+        </div>
 }
 
 @code {

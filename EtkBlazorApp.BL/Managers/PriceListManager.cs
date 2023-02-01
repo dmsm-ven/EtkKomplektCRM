@@ -33,28 +33,6 @@ namespace EtkBlazorApp.BL
             this.settings = settings;
         }
 
-        public static string GetPriceListGuidByType(Type priceListTemplateType)
-        {
-            var id = ((PriceListTemplateGuidAttribute)priceListTemplateType
-                .GetCustomAttributes(typeof(PriceListTemplateGuidAttribute), false)
-                .FirstOrDefault())
-                .Guid;
-
-            return id;
-        }
-
-        public static Type GetPriceListTypeByGuid(string guid)
-        {
-            var typesWithMyAttribute =
-            from a in AppDomain.CurrentDomain.GetAssemblies().AsParallel()
-            from t in a.GetTypes()
-            let attributes = t.GetCustomAttributes(typeof(PriceListTemplateGuidAttribute), true)
-            where attributes != null && attributes.Length > 0
-            select new { Type = t, Attributes = attributes.Cast<PriceListTemplateGuidAttribute>() };
-
-            return typesWithMyAttribute.FirstOrDefault(t => t.Attributes.First().Guid == guid)?.Type;
-        }
-
         public void RemovePriceListAll()
         {
             LoadedFiles.Clear();
@@ -209,7 +187,7 @@ namespace EtkBlazorApp.BL
 
         private async Task<PriceListTemplateEntity> GetTemplateDescription(Type templateType)
         {
-            var guid = GetPriceListGuidByType(templateType);
+            var guid = templateType.GetPriceListGuidByType();
             var info = await templateStorage.GetPriceListTemplateById(guid);
             return info;
         }

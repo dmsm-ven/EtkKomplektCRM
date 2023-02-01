@@ -6,6 +6,28 @@ namespace EtkBlazorApp.BL
 {
     public static class ReflectionExtensions
     {
+        public static string GetPriceListGuidByType(this Type priceListTemplateType)
+        {
+            var id = ((PriceListTemplateGuidAttribute)priceListTemplateType
+                .GetCustomAttributes(typeof(PriceListTemplateGuidAttribute), false)
+                .FirstOrDefault())
+                .Guid;
+
+            return id;
+        }
+
+        public static Type GetPriceListTypeByGuid(this string guid)
+        {
+            var typesWithMyAttribute =
+            from a in AppDomain.CurrentDomain.GetAssemblies().AsParallel()
+            from t in a.GetTypes()
+            let attributes = t.GetCustomAttributes(typeof(PriceListTemplateGuidAttribute), true)
+            where attributes != null && attributes.Length > 0
+            select new { Type = t, Attributes = attributes.Cast<PriceListTemplateGuidAttribute>() };
+
+            return typesWithMyAttribute.FirstOrDefault(t => t.Attributes.First().Guid == guid)?.Type;
+        }
+
         public static string GetDescriptionAttribute(this Enum currentEnum)
         {
             Type genericEnumType = currentEnum.GetType();

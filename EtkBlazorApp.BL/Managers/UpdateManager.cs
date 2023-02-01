@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.DataAccess;
+﻿using EtkBlazorApp.BL.Managers;
+using EtkBlazorApp.DataAccess;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
 {
-    public class UpdateManager
+    public class ProductsPriceAndStockUpdateManager
     {
         //Запуск пересчета цен товаров в валюте
         //readonly string CurrencyPlusUri = "https://etk-komplekt.ru/cron/currency_plus.php";
@@ -21,13 +22,15 @@ namespace EtkBlazorApp.BL
         private readonly IManufacturerStorage manufacturerStorage;
         private readonly IMonobrandStorage monobrandStorage;
         private readonly IDatabaseProductCorrelator correlator;
+        private readonly PriceListPriceHistoryManager priceHistoryManager;
 
-        public UpdateManager(IProductStorage productsStorage,
+        public ProductsPriceAndStockUpdateManager(IProductStorage productsStorage,
             IProductUpdateService productUpdateService,
             ISettingStorage settingStorage,
             IManufacturerStorage manufacturerStorage,
             IMonobrandStorage monobrandStorage,
-            IDatabaseProductCorrelator correlator)
+            IDatabaseProductCorrelator correlator,
+            PriceListPriceHistoryManager priceHistoryManager)
         {
             this.productsStorage = productsStorage;
             this.productUpdateService = productUpdateService;
@@ -35,6 +38,7 @@ namespace EtkBlazorApp.BL
             this.manufacturerStorage = manufacturerStorage;
             this.monobrandStorage = monobrandStorage;
             this.correlator = correlator;
+            this.priceHistoryManager = priceHistoryManager;
         }
 
         public async Task UpdatePriceAndStock(
@@ -52,6 +56,9 @@ namespace EtkBlazorApp.BL
 
             progress?.Report("Обновление цен etk-komplekt.ru");
             await productUpdateService.UpdateProductsPrice(data);
+
+            progress?.Report("Сохранение истории изменения цены");
+            await priceHistoryManager.SavePriceChangesHistory(priceLines, data);
 
             progress?.Report("Обновление остатков на складах etk-komplekt.ru");
             await productUpdateService.UpdateProductsStockPartner(data, affectedBrandsIds);
@@ -97,7 +104,6 @@ namespace EtkBlazorApp.BL
 
             return affectedBrandsIds.ToArray();
         }
-
 
         /// <summary>
         /// Дополнительное добавление брендов для нахождения сопоставления. Если в прайс-листе поставщика нет отдельного поля с брендом - то что бы он корректно загрузился, нужно добавить его в дополнительную загруку

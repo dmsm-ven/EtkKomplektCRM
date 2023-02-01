@@ -17,7 +17,7 @@ public partial class UpdateProducts : ComponentBase, IDisposable
     [Inject] public ISettingStorage setting { get; set; }
     [Inject] public IManufacturerStorage manufacturers { get; set; }
     [Inject] public PriceListManager priceListManager { get; set; }
-    [Inject] public UpdateManager databaseManager { get; set; }
+    [Inject] public ProductsPriceAndStockUpdateManager databaseManager { get; set; }
     [Inject] public UserLogger logger { get; set; }
 
     bool inProgress = false;

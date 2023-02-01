@@ -32,7 +32,7 @@ namespace EtkBlazorApp.BL
         private readonly ICronTaskStorage cronTaskStorage;
         internal readonly IPriceListTemplateStorage templates;
         internal readonly SystemEventsLogger logger;
-        internal readonly UpdateManager updateManager;
+        internal readonly ProductsPriceAndStockUpdateManager updateManager;
         internal readonly PriceListManager priceListManager;
         internal readonly RemoteTemplateFileLoaderFactory remoteTemplateLoaderFactory;
         private readonly Timer checkTimer;
@@ -43,7 +43,7 @@ namespace EtkBlazorApp.BL
             ICronTaskStorage cronTaskStorage,
             IPriceListTemplateStorage templates,
             SystemEventsLogger logger,
-            UpdateManager updateManager, 
+            ProductsPriceAndStockUpdateManager updateManager, 
             PriceListManager priceListManager,
             RemoteTemplateFileLoaderFactory remoteTemplateLoaderFactory)
         {

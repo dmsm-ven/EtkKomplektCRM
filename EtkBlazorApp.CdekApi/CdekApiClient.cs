@@ -11,7 +11,7 @@ public class CdekApiMemoryCachedClient : ITransportCompanyApi
 {
     private readonly IMemoryCache memoryCache;
     private readonly MemoryCacheEntryOptions cacheEntryOptions;
-    private readonly int CacheExpireTimeInSecods = 90;
+    private readonly TimeSpan CacheExpireTime = TimeSpan.FromSeconds(90);
     private readonly string account;
     private readonly string securePassword;
     private readonly HttpClient httpClient;
@@ -26,7 +26,7 @@ public class CdekApiMemoryCachedClient : ITransportCompanyApi
 
         this.memoryCache = memoryCache;
         cacheEntryOptions = new MemoryCacheEntryOptions()
-            .SetAbsoluteExpiration(TimeSpan.FromSeconds(CacheExpireTimeInSecods));
+            .SetAbsoluteExpiration(CacheExpireTime);
 
         httpClient = new HttpClient(new HttpClientHandler()
         {

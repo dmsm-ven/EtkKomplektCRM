@@ -151,7 +151,7 @@ else
         <ul style="list-style-type: none;">
             @foreach (var status in order.StatusChangesHistory.OrderByDescending(s => s.DateAdded))
             {
-                <li><span style="color: royalblue;">@status.DateAdded.ToString("dd.MM.yyyy HH:ss")</span> - <strong>@status.StatusName</strong></li>
+                <li><span style="color: royalblue;">@status.DateAdded.ToString("dd.MM.yyyy HH:mm")</span> - <strong>@status.StatusName</strong></li>
             }
         </ul>
     </DialogBody>

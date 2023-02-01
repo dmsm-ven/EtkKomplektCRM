@@ -3,15 +3,19 @@ using Dadata.Model;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorAppi.Core.Data;
 using EtkBlazorAppi.Core.Data.CompanyInfo;
+using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace EtkBlazorAppi.DadataApi;
 
 public class DadataApiClient : ICompanyInfoChecker
 {
     private readonly SuggestClientAsync api;
+    private readonly string token;
 
     public DadataApiClient(string token)
     {
+        this.token = token;
         api = new SuggestClientAsync(token);
     }
 
@@ -82,6 +86,25 @@ public class DadataApiClient : ICompanyInfoChecker
         }
 
         return info;
+    }
+
+    private async Task<Party> GetInfoByInnCustom(string inn)
+    {
+        var rawClient = new HttpClient();
+        rawClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "application/json");
+        rawClient.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Token {token}");
+        rawClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", $"application/json");
+
+        var rawContent = JsonContent.Create(new { query = inn });
+        var rawResult = await rawClient.PostAsync("https://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party", rawContent);
+        if (rawResult.IsSuccessStatusCode)
+        {
+            var rawResponse = await rawResult.Content.ReadAsStringAsync();
+            var rawResponseObj = JsonSerializer.Deserialize<Party>(rawResponse);
+            return rawResponseObj;
+        }
+
+        return null;
     }
 }
 
