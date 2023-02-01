@@ -1,10 +1,11 @@
 ﻿@page "/loaded-price-list-details/{TemplateGuid}"
+@attribute [Authorize(Roles = "Manager, Administrator")]
 
 @if (templateInformation != null)
 {
     <img src="@templateInformation.image"
-         style="width: 300px; margin-bottom: 20px; border: 1px solid lightgray;"
-         class="rounded mx-auto d-block">
+     style="width: 300px; margin-bottom: 20px; border: 1px solid lightgray;"
+     class="rounded mx-auto d-block">
 }
 
 @if (priceLines == null)
@@ -27,8 +28,8 @@ else
             @foreach (var kvp in productsByBrand)
             {
                 <button type="button"
-                        class="btn btn-@(filteredManufacturer == kvp.Key ? "warning" : "primary") mx-1 my-2"
-                        @onclick="@(e => ApplyManufacturerFilter(kvp.Key))">
+            class="btn btn-@(filteredManufacturer == kvp.Key ? "warning" : "primary") mx-1 my-2"
+            @onclick="@(e => ApplyManufacturerFilter(kvp.Key))">
                     @kvp.Key <span class="badge badge-pill badge-info">@kvp.Value</span>
                 </button>
             }
@@ -37,8 +38,8 @@ else
 
     <div class="row py-2">
         <input type="text"
-               @bind="searchText"
-               placeholder="Поиск ..." class="form-control" style="max-width: 250px; margin-left: 12px; margin-right: 4px;" />
+           @bind="searchText"
+           placeholder="Поиск ..." class="form-control" style="max-width: 250px; margin-left: 12px; margin-right: 4px;" />
         <button class="btn btn-outline-primary" @onclick="ApplySearchFilter">
             <i class="bi bi-search"></i>
             Поиск

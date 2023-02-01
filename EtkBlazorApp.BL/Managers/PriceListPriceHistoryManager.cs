@@ -1,4 +1,6 @@
-﻿using EtkBlazorApp.DataAccess;
+﻿using EtkBlazorApp.Core.Data;
+using EtkBlazorApp.Core.Interfaces;
+using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity.PriceList;
 using EtkBlazorApp.DataAccess.Repositories;
 using System;
@@ -15,13 +17,22 @@ public class PriceListPriceHistoryManager
     private readonly IPriceListUpdateHistoryRepository repo;
     private readonly ISettingStorage settings;
     private readonly IProductStorage productStorage;
+    private readonly IPriceListTemplateStorage priceListRepo;
+    private readonly IEtkUpdatesNotifier notifier;
+
     const int MAX_ITEMS = 500;
 
-    public PriceListPriceHistoryManager(IPriceListUpdateHistoryRepository repo, ISettingStorage settings, IProductStorage productStorage)
+    public PriceListPriceHistoryManager(IPriceListUpdateHistoryRepository repo,
+        ISettingStorage settings,
+        IProductStorage productStorage,
+        IPriceListTemplateStorage priceListRepo,
+        IEtkUpdatesNotifier notifier)
     {
         this.repo = repo;
         this.settings = settings;
         this.productStorage = productStorage;
+        this.priceListRepo = priceListRepo;
+        this.notifier = notifier;
     }
 
     /// <summary>
@@ -38,12 +49,7 @@ public class PriceListPriceHistoryManager
             .ToDictionary(p => p.product_id, p => p.price.Value);
 
         //TODO: проверить, тут может быть ошибка, если загружается несколько прайс-листов за раз
-        string guid = products
-            .GroupBy(p => p.Template)
-            .Single()
-            .Key
-            .GetType()
-            .GetPriceListGuidByType();
+        string guid = products.GroupBy(p => p.Template).Single().Key.GetType().GetPriceListGuidByType();
 
         // Шаг 1. Берем все вхождения (заголовки)
         var entries = await repo.GetPriceListUpdateEntries(guid);
@@ -54,7 +60,7 @@ public class PriceListPriceHistoryManager
         {
             // Шаг 2. Берем товары из истории, если за прошлую загрузку данных нет, значит должна идти максимально близкая записить где были какие-то данные о цене
             var previuosUpdateData = (await repo.GetPriceListUpdateHistory(guid))
-                .OrderByDescending(i => i.Key)
+                .OrderByDescending(i => i.Key.update_id)
                 .SelectMany(i => i.Value.Select(j => new
                 {
                     product_id = j.product_id,
@@ -70,6 +76,17 @@ public class PriceListPriceHistoryManager
 
         // Шаг 4. Сохраняем
         await repo.SavePriceListUpdateProductsPriceData(guid, linesData);
+
+        // Шаг 5. Уведомляем клиентов если есть изменения
+        if (linesData.Any())
+        {
+            var newData = await GetProductsPriceChangeHistoryForPriceList(guid);
+
+            if (newData.Data.Count > 0)
+            {
+                await notifier.NotifyPriceListProductPriceChanged(newData);
+            }
+        }
     }
 
     private Dictionary<int, decimal> GetNewLines(Dictionary<int, decimal> currentUpdateData, Dictionary<int, decimal> previuosUpdateData)
@@ -138,10 +155,15 @@ public class PriceListPriceHistoryManager
 
         if (list.Count > 0)
         {
-            return new PriceListProductPriceChangeHistory { Data = list };
+            string priceListName = (await priceListRepo.GetPriceListTemplateById(guid)).title;
+            return new PriceListProductPriceChangeHistory
+            {
+                Data = list,
+                PriceListGuid = guid,
+                PriceListName = priceListName,
+                MinimumOverpricePercent = minmumChangePercent
+            };
         }
         return new PriceListProductPriceChangeHistory();
     }
-
-
 }

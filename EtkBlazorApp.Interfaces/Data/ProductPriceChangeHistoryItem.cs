@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace EtkBlazorApp.BL.Managers;
+namespace EtkBlazorApp.Core.Data;
 
 public class ProductPriceChangeHistoryItem
 {

@@ -7,6 +7,7 @@ using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Repositories;
 using EtkBlazorApp.Services;
+using EtkBlazorApp.TelegramBotLib;
 using EtkBlazorAppi.DadataApi;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -90,6 +91,11 @@ namespace EtkBlazorApp
             ConfigureExteralApiClients(services);
 
             services.AddMemoryCache();
+            services.AddSingleton<IEtkUpdatesNotifier>((x) =>
+            {
+                var section = Configuration.GetSection("TelegramBotNotifierConfiguration");
+                return new EtkTelegramBotNotifier(section["Token"], long.Parse(section["ChannelId"]));
+            });
             services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
             services.AddSingleton<CashPlusPlusLinkGenerator>();
             services.AddSingleton<RemoteTemplateFileLoaderFactory>();
@@ -99,6 +105,7 @@ namespace EtkBlazorApp
             services.AddSingleton<ProductsPriceAndStockUpdateManager>();
             services.AddSingleton<PriceListManager>();
             services.AddSingleton<CronTaskService>();
+
 
             services.AddTransient<IUserService, BCryptUserService>();
             services.AddScoped<AuthenticationStateProvider, CustomAuthProvider>();

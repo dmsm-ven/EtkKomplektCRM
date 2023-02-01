@@ -10,7 +10,7 @@ namespace EtkBlazorApp
 {
     public class PriceListTemplateItemViewModel
     {
-        public Type Type { get; private set; }
+        public Type Type => Guid.GetPriceListTypeByGuid();
 
         [Required]
         public string Guid { get; set; }
@@ -46,16 +46,6 @@ namespace EtkBlazorApp
         public Dictionary<string, string> ManufacturerNameMap { get; set; } = new();
         public List<ManufacturerDiscountItemViewModel> ManufacturerDiscountMap { get; set; } = new();
         public List<ManufacturerSkipItemViewModel> ManufacturerSkipList { get; set; } = new();
-
-        public PriceListTemplateItemViewModel(string guid)
-        {
-            Guid = guid;
-
-            Type = Assembly
-                .GetAssembly(typeof(PriceListTemplateGuidAttribute))
-                .GetTypes()
-                .FirstOrDefault(type => type.GetCustomAttribute<PriceListTemplateGuidAttribute>()?.Guid == guid);
-        }
     }
 
 }

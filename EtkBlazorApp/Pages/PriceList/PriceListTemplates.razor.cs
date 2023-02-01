@@ -1,4 +1,5 @@
-﻿using Blazored.Toast.Services;
+﻿using AutoMapper;
+using Blazored.Toast.Services;
 using EtkBlazorApp.BL;
 using EtkBlazorApp.BL.Templates.PriceListTemplates;
 using EtkBlazorApp.Components.Controls;
@@ -33,6 +34,7 @@ public partial class PriceListTemplates
     [Inject] public RemoteTemplateFileLoaderFactory remoteTemplateFileLoaderFactory { get; set; }
     [Inject] public ReportManager reportManager { get; set; }
     [Inject] public IPriceListTemplateStorage templateStorage { get; set; }
+    [Inject] public IMapper mapper { get; set; }
     [Inject] public IJSRuntime js { get; set; }
     [Inject] public IToastService toast { get; set; }
 
@@ -55,26 +57,13 @@ public partial class PriceListTemplates
 
     protected override async Task OnInitializedAsync()
     {
-        templates = (await templateStorage.GetPriceListTemplates())
-            .Select(t => new PriceListTemplateItemViewModel(t.id)
-            {
-                Description = t.description,
-                Discount = t.discount,
-                GroupName = t.group_name,
-                Image = t.image,
-                RemoteUrl = t.remote_uri,
-                RemoteUrlMethodName = t.remote_uri_method_name,
-                EmailSearchCriteria_Sender = t.email_criteria_sender,
-                Title = t.title,
-                Nds = t.nds
-            })
+        var source = await templateStorage.GetPriceListTemplates();
+        templates = mapper.Map<IEnumerable<PriceListTemplateItemViewModel>>(source)
             .GroupBy(template => template.GroupName ?? "<Без группы>")
-            .OrderBy(g => g.Key == "Symmetron" ? 0 : 1)
-            .ThenBy(g => g.Key)
+            .OrderBy(g => g.Key)
             .ToDictionary(i => i.Key, i => i.ToList());
 
         filteredTemplates = templates;
-
     }
 
     private async Task UploadSelectedPriceListTemplateFile(InputFileChangeEventArgs e)

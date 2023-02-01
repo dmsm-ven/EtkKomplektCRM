@@ -1,10 +1,12 @@
 ﻿@page "/price-list/products-price-history/{TemplateGuid}"
 @using EtkBlazorApp.BL.Managers
+@attribute [Authorize(Roles = "Manager, Administrator")]
 
-<h3>История изменения цена на товары для данного прайс-листа</h3>
+
 
 @if (historyData is null)
 {
+    <h1>Загрузка данных</h1>
     <LoadingSpinner />
 }
 else if (historyData.Data.Count == 0)
@@ -13,6 +15,10 @@ else if (historyData.Data.Count == 0)
 }
 else
 {
+    <div class="mx-auto d-block image-select-container m-1 p-1">
+        <img src="@priceListData.Image" class="rounded image" style="width: 100%; height: 100%;" />
+    </div>
+    <h3>История изменения цена на товары в прайс-листе @priceListData.Title</h3>
     <div class="table-responsive">
         <table class="table table-bordered product-price-update-history-table">
             <thead>
@@ -55,14 +61,20 @@ else
 @code {
     [Parameter] public string TemplateGuid { get; set; }
     [Inject] public PriceListPriceHistoryManager HistoryManager { get; set; }
+    [Inject] public IPriceListTemplateStorage PriceListRepository { get; set; }
+    [Inject] public IMapper Mapper { get; set; }
 
     PriceListProductPriceChangeHistory historyData;
+    PriceListTemplateItemViewModel priceListData;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             historyData = await HistoryManager.GetProductsPriceChangeHistoryForPriceList(TemplateGuid);
+
+            priceListData = Mapper.Map<PriceListTemplateItemViewModel>(await PriceListRepository.GetPriceListTemplateById(TemplateGuid));
+
             StateHasChanged();
         }
     }

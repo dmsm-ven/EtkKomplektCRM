@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.Pages.PriceList;
 
+//TODO: разбить класс, получилось слишком много данных, дополнить маппер и использовать проброс через него
 public partial class PriceListTemplateEdit : ComponentBase
 {
     [Inject] public IPriceListTemplateStorage templateStorage { get; set; }
@@ -82,8 +83,9 @@ public partial class PriceListTemplateEdit : ComponentBase
             var entity = await templateStorage.GetPriceListTemplateById(TemplateGuid);
 
             //TODO: переделать на инициализацию через AutoMapper
-            sourceTemplate = new PriceListTemplateItemViewModel(entity.id)
+            sourceTemplate = new PriceListTemplateItemViewModel()
             {
+                Guid = entity.id,
                 Title = entity.title,
                 Description = entity.description,
                 Discount = entity.discount,
@@ -122,7 +124,7 @@ public partial class PriceListTemplateEdit : ComponentBase
         else
         {
             TemplateGuid = string.Empty;
-            sourceTemplate = new PriceListTemplateItemViewModel(TemplateGuid);
+            sourceTemplate = new PriceListTemplateItemViewModel() { Guid = TemplateGuid };
             createNew = true;
         }
 
