@@ -1,0 +1,69 @@
+﻿@page "/price-list/products-price-history/{TemplateGuid}"
+@using EtkBlazorApp.BL.Managers
+
+<h3>История изменения цена на товары для данного прайс-листа</h3>
+
+@if (historyData is null)
+{
+    <LoadingSpinner />
+}
+else if (historyData.Data.Count == 0)
+{
+    <h2>Нет данных по изменению цен</h2>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-bordered product-price-update-history-table">
+            <thead>
+                <tr>
+                    <th rowspan="2">Товар</th>
+                    <th colspan="2">Актуальная</th>
+                    <th colspan="2">Прежняя</th>
+                    <th colspan="2" rowspan="2">Изменение</th>
+                </tr>
+                <tr>
+                    <th>Дата</th>
+                    <th>Цена</th>
+                    <th>Дата</th>
+                    <th>Цена</th>
+                </tr>
+            </thead>
+            @foreach (var item in historyData.Data)
+            {
+                <tr>
+                    <td>@item.ProductName</td>
+                    <td>@item.DateTime.ToShortDateString()</td>
+                    <td>@item.Price.ToString("C0")</td>
+                    <td>@item.PreviousItem.DateTime.ToShortDateString()</td>
+                    <td>@item.PreviousItem.Price.ToString("C0")</td>
+                    <td>@item.ChangePercent.ToString("P2")</td>
+                    <td>@item.ChangeInCurrency.ToString("C0")</td>
+                </tr>
+            }
+        </table>
+    </div>
+}
+
+<style>
+    .product-price-update-history-table th {
+        text-align: center;
+        vertical-align: middle;
+    }
+</style>
+
+@code {
+    [Parameter] public string TemplateGuid { get; set; }
+    [Inject] public PriceListPriceHistoryManager HistoryManager { get; set; }
+
+    PriceListProductPriceChangeHistory historyData;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            historyData = await HistoryManager.GetProductsPriceChangeHistoryForPriceList(TemplateGuid);
+            StateHasChanged();
+        }
+    }
+}

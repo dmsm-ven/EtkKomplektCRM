@@ -44,8 +44,7 @@ public partial class PriceListTemplates
     PriceListTemplateItemViewModel selectedTemplate = null;
     PriceListTemplateItemViewModel editingTemplate = null;
     string searchPhrase = String.Empty;
-    bool filterHasUri = false;
-    bool filterFromEmail = false;
+
     bool etkPriceListDownloadInProgress = false;
     bool isIntermediateProgress = false;
     bool isFileUploading = false;
@@ -179,7 +178,7 @@ public partial class PriceListTemplates
 
     private void ApplyFilter(KeyboardEventArgs e)
     {
-        if (string.IsNullOrWhiteSpace(searchPhrase) && !filterHasUri && !filterFromEmail)
+        if (string.IsNullOrWhiteSpace(searchPhrase))
         {
             filteredTemplates = templates;
         }
@@ -203,22 +202,6 @@ public partial class PriceListTemplates
             bool hasDescription = items.Any(t => t.Title.IndexOf(searchPhrase, StringComparison.OrdinalIgnoreCase) >= 0);
 
             isMatch = hasTitle || hasDescription;
-            if (isMatch)
-            {
-                return true;
-            }
-        }
-        if (filterHasUri)
-        {
-            isMatch = items.Any(t => !string.IsNullOrEmpty(t.RemoteUrl));
-            if (isMatch)
-            {
-                return true;
-            }
-        }
-        if (filterFromEmail)
-        {
-            isMatch = items.Any(t => !string.IsNullOrEmpty(t.EmailSearchCriteria_Sender));
             if (isMatch)
             {
                 return true;

@@ -1,4 +1,4 @@
-﻿@page "/load-price-list"
+﻿@page "/price-list"
 @attribute [Authorize(Roles = "Administrator, Manager")]
 
 <div class="my-2" style="margin-left: -15px; margin-right: -15px;">
@@ -49,17 +49,6 @@
 
 <div class="row my-2">
     <div class="input-group px-2" style="width: 425px;">
-        <button class="btn btn-outline-primary @(filterHasUri ? "active" : "")"
-                title="Фильтр - показать только шаблоны с возможность загрузки по ссылке"
-                @onclick="@(e => { filterHasUri = !filterHasUri; ApplyFilter(null); } )">
-            <span class="oi oi-cloud-download"></span>
-        </button>
-        <button class="mx-1 btn btn-outline-primary @(filterFromEmail ? "active" : "")"
-                title="Фильтр - показать только шаблоны с возможность загрузки из почты"
-                @onclick="@(e => { filterFromEmail = !filterFromEmail; ApplyFilter(null); } )">
-            <span class="oi oi-envelope-open"></span>
-        </button>
-
         <input type="search"
                @onkeypress="ApplyFilter"
                @oninput="@(e => { searchPhrase = (string)e.Value; ApplyFilter(null); })"
@@ -79,6 +68,14 @@
                 @onclick="@(e => navManager.NavigateTo($"/price-list/edit/{selectedTemplate?.Guid}"))">
             <span class="oi oi-pencil"></span>
         </button>
+
+        <button class="btn btn-outline-primary mx-1"
+                title="Информация по изменению загруженных цен для этого прайс-листа"
+                disabled="@(selectedTemplate == null)"
+                @onclick="@(e => navManager.NavigateTo($"/price-list/products-price-history/{selectedTemplate?.Guid}"))">
+            <span class="oi oi-pulse"></span>
+        </button>
+
     </div>
 
     <div class="d-inline px-2 float-right" style="margin-left: auto;">

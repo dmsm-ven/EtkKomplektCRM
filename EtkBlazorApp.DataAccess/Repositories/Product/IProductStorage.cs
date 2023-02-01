@@ -9,6 +9,7 @@ using System.Web;
 
 namespace EtkBlazorApp.DataAccess
 {
+    //TODO: разбить на части
     public interface IProductStorage
     {
         Task<List<ProductEntity>> GetLastAddedProducts(int count);
@@ -18,6 +19,7 @@ namespace EtkBlazorApp.DataAccess
         Task<List<ProductEntity>> ReadProducts(IEnumerable<int> allowedManufacturers = null);
         Task<List<ProductEntity>> ReadProducts(int manufacturer_id);
         Task<List<ProductEntity>> SearchProductsByName(string searchText);
+        Task<Dictionary<int, string>> GetProductNames(int[] productIds);
 
         Task<ProductEntity> GetProductByKeyword(string keyword);
         Task<ProductEntity> GetProductByModel(string model);
@@ -31,6 +33,7 @@ namespace EtkBlazorApp.DataAccess
         Task AddFixedProduct(ProductEntity product);
     }
 
+
     public class ProductStorage : IProductStorage
     {
         private readonly IDatabaseAccess database;
@@ -42,7 +45,7 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task<List<ProductEntity>> GetLastAddedProducts(int count)
         {
-                var sql = @"SELECT p.*, d.name as name, m.name as manufacturer
+            var sql = @"SELECT p.*, d.name as name, m.name as manufacturer
                             FROM oc_product p
                             JOIN oc_product_description d ON p.product_id = d.product_id
                             JOIN oc_manufacturer m ON p.manufacturer_id = m.manufacturer_id
@@ -96,7 +99,7 @@ namespace EtkBlazorApp.DataAccess
 
             return product;
         }
-      
+
         public async Task<List<StockStatusEntity>> GetStockStatuses()
         {
             var data = await database.GetList<StockStatusEntity>("SELECT * FROM oc_stock_status");
@@ -137,7 +140,7 @@ namespace EtkBlazorApp.DataAccess
         public Task<List<ProductEntity>> ReadProducts(int manufacturer_id)
         {
             return ReadProducts(new List<int>(new[] { manufacturer_id }));
-        }        
+        }
 
         private async Task<List<ProductEntity>> GetBestsellersByField(int count, int maxOrderOldInDays, string columnOrder)
         {
@@ -226,6 +229,22 @@ namespace EtkBlazorApp.DataAccess
         {
             string sql = @"INSERT INTO etk_app_fixed_product (product_id) VALUES (@product_id)";
             await database.ExecuteQuery(sql, product);
+        }
+
+        public async Task<Dictionary<int, string>> GetProductNames(int[] productIds)
+        {
+            if (productIds == null || productIds.Length == 0)
+            {
+                return new();
+            }
+
+            string pidArray = string.Join(",", productIds);
+
+            string sql = $"SELECT product_id, name FROM oc_product_description WHERE product_id IN ({pidArray})";
+
+            var data = await database.GetList<ProductEntity>(sql);
+
+            return data.ToDictionary(i => i.product_id, i => HttpUtility.HtmlDecode(i.name));
         }
     }
 }

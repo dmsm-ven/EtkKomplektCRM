@@ -13,7 +13,7 @@ using System.Timers;
 namespace EtkBlazorApp.BL
 {
     //TODO: Переделать - заместо ручного выполнения по таймеру на библиотеку Hangfire
-    
+
     /// <summary>
     /// Выполняет переодический опрос удаленных поставщиков для загрузки их прайс-листов
     /// </summary>
@@ -43,7 +43,7 @@ namespace EtkBlazorApp.BL
             ICronTaskStorage cronTaskStorage,
             IPriceListTemplateStorage templates,
             SystemEventsLogger logger,
-            ProductsPriceAndStockUpdateManager updateManager, 
+            ProductsPriceAndStockUpdateManager updateManager,
             PriceListManager priceListManager,
             RemoteTemplateFileLoaderFactory remoteTemplateLoaderFactory)
         {
@@ -58,7 +58,7 @@ namespace EtkBlazorApp.BL
 
             //TODO: Убрать хардкод таймера
             checkTimer = new Timer(TimeSpan.FromSeconds(60).TotalMilliseconds);
-           
+
             if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
             {
                 checkTimer.Elapsed += CheckTimer_Elapsed;
@@ -73,7 +73,7 @@ namespace EtkBlazorApp.BL
         /// <param name="task_id"></param>
         /// <returns></returns>
         public async Task ExecuteForced(int task_id)
-        {            
+        {
             await RefreshTaskList(force: true);
             var kvp = tasks.FirstOrDefault(t => t.Key.TaskId == task_id);
 
@@ -91,9 +91,9 @@ namespace EtkBlazorApp.BL
 
             TimeSpan currentTime = DateTime.Now.TimeOfDay;
 
-            foreach(var kvp in tasks.Where(t => t.Value.enabled))
+            foreach (var kvp in tasks.Where(t => t.Value.enabled))
             {
-                if(IsTimeToRun(kvp.Value, currentTime) && !inProgress.Contains(kvp.Key))
+                if (IsTimeToRun(kvp.Value, currentTime) && !inProgress.Contains(kvp.Key))
                 {
                     await ExecuteTask(kvp.Key, kvp.Value);
                 }
@@ -150,7 +150,7 @@ namespace EtkBlazorApp.BL
                 exec_result = CronTaskExecResult.Success;
 
                 sw.Stop();
-                      
+
                 await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {taskInfo.name} выполнено. Длительность выполнения {(int)sw.Elapsed.TotalSeconds} сек.");
             }
             catch (CronTaskSkipException)
@@ -167,7 +167,7 @@ namespace EtkBlazorApp.BL
                 inProgress.Remove(task);
                 taskInfo.last_exec_date_time = DateTime.Now;
                 taskInfo.last_exec_result = exec_result;
-                await cronTaskStorage.SaveCronTaskExecResult(taskInfo);               
+                await cronTaskStorage.SaveCronTaskExecResult(taskInfo);
                 TaskInProgress = null;
 
                 OnTaskExecutionEnd?.Invoke(taskInfo);
@@ -176,11 +176,11 @@ namespace EtkBlazorApp.BL
                 {
                     OnTaskExecutionSuccess?.Invoke(taskInfo);
                 }
-                else if(exec_result == CronTaskExecResult.Failed)
+                else if (exec_result == CronTaskExecResult.Failed)
                 {
                     OnTaskExecutionError?.Invoke(taskInfo);
                 }
-            }         
+            }
         }
 
         /// <summary>
@@ -211,7 +211,7 @@ namespace EtkBlazorApp.BL
                 }
                 catch
                 {
-                    
+
                 }
             }
 
@@ -229,7 +229,7 @@ namespace EtkBlazorApp.BL
         /// <exception cref="ArgumentException"></exception>
         private CronTaskBase CreateTask(CronTaskType taskType, string parameter, int taskId)
         {
-            Type linkedPriceListType = parameter != null ? PriceListManager.GetPriceListTypeByGuid(parameter) : null;
+            Type linkedPriceListType = parameter != null ? parameter.GetPriceListTypeByGuid() : null;
 
             //Таблица etk_app_cron_task_type
             switch (taskType)

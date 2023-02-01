@@ -22,13 +22,13 @@ namespace EtkBlazorApp.BL.CronTask
 
         public override async Task Run(CronTaskEntity taskInfo)
         {
-            var templateGuid = PriceListManager.GetPriceListGuidByType(templateType);
+            var templateGuid = templateType.GetPriceListGuidByType();
             var templateInfo = await service.templates.GetPriceListTemplateById(templateGuid);
 
             var loader = service.remoteTemplateLoaderFactory.GetMethod(templateInfo.remote_uri, templateInfo.remote_uri_method_name, templateGuid);
             var response = await loader.GetFile();
 
-            if(response.Bytes.Length == taskInfo.last_exec_file_size)
+            if (response.Bytes.Length == taskInfo.last_exec_file_size)
             {
                 throw new CronTaskSkipException();
             }
@@ -36,7 +36,7 @@ namespace EtkBlazorApp.BL.CronTask
             using (var ms = new MemoryStream(response.Bytes))
             {
                 var lines = await service.priceListManager.ReadTemplateLines(templateType, ms, response.FileName);
-                
+
                 await service.updateManager.UpdatePriceAndStock(lines);
 
                 taskInfo.last_exec_file_size = response.Bytes.Length;

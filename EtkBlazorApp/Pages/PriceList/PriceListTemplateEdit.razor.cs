@@ -217,7 +217,7 @@ public partial class PriceListTemplateEdit : ComponentBase
             await templateStorage.CreatePriceList(entity);
             toasts.ShowInfo($"Шаблон добавлен: {sourceTemplate.Title}");
             await logger.Write(LogEntryGroupName.TemplateUpdate, "Шаблон создан", $"Добавление шаблона '{sourceTemplate.Title}' ({sourceTemplate.Guid})");
-            navManager.NavigateTo("/load-price-list");
+            navManager.NavigateTo("/price-list");
         }
         catch (Exception ex)
         {
@@ -234,7 +234,7 @@ public partial class PriceListTemplateEdit : ComponentBase
 
             await logger.Write(LogEntryGroupName.TemplateUpdate, "Удаление шаблон", $"Шаблон '{sourceTemplate.Title}' ({sourceTemplate.Guid}) удален");
             toasts.ShowInfo($"Шаблон удален: {sourceTemplate.Title}");
-            navManager.NavigateTo("/load-price-list");
+            navManager.NavigateTo("/price-list");
         }
     }
 

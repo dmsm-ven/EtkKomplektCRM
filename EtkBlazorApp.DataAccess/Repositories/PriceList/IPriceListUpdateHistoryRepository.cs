@@ -9,11 +9,14 @@ namespace EtkBlazorApp.DataAccess.Repositories;
 
 public interface IPriceListUpdateHistoryRepository
 {
-    Task SavePriceListUpdateProductsPriceData(string guid, IEnumerable<KeyValuePair<int, decimal>> productToPrice);
+    Task SavePriceListUpdateProductsPriceData(string guid, Dictionary<int, decimal> productToPrice);
     Task<List<PriceListUpdateEntryEntity>> GetPriceListUpdateEntries(string guid);
-    Task<List<PriceListUpdateProductHistory>> GetProductHistory(int update_id);
+    Task<List<PriceListUpdateProductHistoryEntity>> GetProductHistory(int update_id);
+    Task<Dictionary<PriceListUpdateEntryEntity, List<PriceListUpdateProductHistoryEntity>>> GetPriceListUpdateHistory(string guid);
+    Task<HashSet<int>> GetUniqueProductIdsInHistory(string guid);
 }
 
+// Вынести логику в класс Менеджер
 public class PriceListUpdateHistoryRepository : IPriceListUpdateHistoryRepository
 {
     private readonly IDatabaseAccess database;
@@ -30,32 +33,74 @@ public class PriceListUpdateHistoryRepository : IPriceListUpdateHistoryRepositor
         return data;
     }
 
-    public async Task<List<PriceListUpdateProductHistory>> GetProductHistory(int update_id)
+    public async Task<Dictionary<PriceListUpdateEntryEntity, List<PriceListUpdateProductHistoryEntity>>> GetPriceListUpdateHistory(string guid)
+    {
+        var entiresDictionary = (await GetPriceListUpdateEntries(guid))
+            .ToDictionary(i => i, i => new List<PriceListUpdateProductHistoryEntity>());
+
+        foreach (var entry in entiresDictionary.Keys)
+        {
+            entiresDictionary[entry] = await GetProductHistory(entry.update_id);
+        }
+
+        return entiresDictionary;
+    }
+
+    public async Task<List<PriceListUpdateProductHistoryEntity>> GetProductHistory(int update_id)
     {
         string sql = "SELECT * FROM etk_app_price_list_update_product_history WHERE update_id = @update_id";
-        var data = await database.GetList<PriceListUpdateProductHistory, dynamic>(sql, new { update_id });
+        var data = await database.GetList<PriceListUpdateProductHistoryEntity, dynamic>(sql, new { update_id });
         return data;
     }
 
-    public async Task SavePriceListUpdateProductsPriceData(string guid, IEnumerable<KeyValuePair<int, decimal>> productToPrice)
+
+    public async Task SavePriceListUpdateProductsPriceData(string guid, Dictionary<int, decimal> productToPrice)
     {
-        if (productToPrice.Count() == 0) { return; }
+        if (productToPrice.Count() == 0)
+        {
+            return;
+        }
 
+        // Шаг 1. Добавляем вхождение загрузки
         await database.ExecuteQuery("INSERT INTO etk_app_price_list_update_entry (price_list_id) VALUES (@guid)", new { guid });
-
         int update_id = await database.GetScalar<int>("SELECT max(update_id) FROM etk_app_price_list_update_entry");
 
+        // Шаг 2. Добавляем изменившиеся данные
+        string sql = BuildInsertNewUpdateLinesSql(update_id, productToPrice);
+        if (sql != null)
+        {
+            await database.ExecuteQuery(sql);
+        }
+    }
 
+    public async Task<HashSet<int>> GetUniqueProductIdsInHistory(string guid)
+    {
+        string sql = @"SELECT DISTINCT product_id
+                       FROM etk_app_price_list_update_product_history ph
+                       JOIN etk_app_price_list_update_entry ue ON (ph.update_id = ue.update_id)
+                       WHERE ue.price_list_id = @guid";
+
+        var data = await database.GetList<int, dynamic>(sql, new { guid });
+
+        return data.ToHashSet();
+    }
+
+
+
+    private string BuildInsertNewUpdateLinesSql(int update_id, Dictionary<int, decimal> lines)
+    {
         var sb = new StringBuilder()
             .AppendLine("INSERT INTO etk_app_price_list_update_product_history (update_id, product_id, price) VALUES");
 
-        foreach (var kvp in productToPrice)
+        foreach (var kvp in lines)
         {
             sb.Append($"({update_id}, {kvp.Key}, {kvp.Value.ToString().Replace(",", ".")}),");
         }
 
         var sql = sb.ToString().Trim(',') + ";";
 
-        await database.ExecuteQuery(sql);
+        return sql;
     }
+
+
 }
