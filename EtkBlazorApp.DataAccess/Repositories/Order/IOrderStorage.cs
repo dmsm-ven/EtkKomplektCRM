@@ -15,6 +15,7 @@ namespace EtkBlazorApp.DataAccess
         Task<OrderEntity> GetLastOrder();
         Task<List<OrderDetailsEntity>> GetOrderDetails(int orderId);
         Task<OrderEntity> GetOrderById(int orderId);
+        Task<OrderEntity> GetOrderByCdekNumber(string cdek_order_number);
         Task<List<OrderEntity>> GetLinkedOrders(int order_id);
         Task<List<OrderStatusEntity>> GetOrderStatuses();
         Task<List<OrderStatusHistoryEntity>> GetOrderChangeHistory(int order_id);
@@ -127,6 +128,17 @@ namespace EtkBlazorApp.DataAccess
             return order;
         }
 
+        public async Task<OrderEntity> GetOrderByCdekNumber(string cdek_order_number)
+        {
+            string sql = @"SELECT o.*, otc.*
+                           FROM etk_app_order_to_cdek otc
+                           JOIN oc_order o ON (otc.order_id = o.order_id)
+                           WHERE otc.cdek_order_number = @cdek_order_number";
+
+            var order = await database.GetFirstOrDefault<OrderEntity, dynamic>(sql, new { cdek_order_number });
+            return order;
+        }
+
         public async Task<List<OrderDetailsEntity>> GetOrderDetails(int orderId)
         {
             string sql = @"SELECT op.*, p.sku as sku, m.name as manufacturer 
@@ -178,5 +190,7 @@ namespace EtkBlazorApp.DataAccess
 
             return historyItems;
         }
+
+
     }
 }

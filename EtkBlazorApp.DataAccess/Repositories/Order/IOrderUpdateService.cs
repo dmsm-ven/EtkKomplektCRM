@@ -6,6 +6,12 @@ namespace EtkBlazorApp.DataAccess
 {
     public interface IOrderUpdateService
     {
+        /// <summary>
+        /// Меняет статус заказа и заносит изменение о новом татусе
+        /// </summary>
+        /// <param name="order_id"></param>
+        /// <param name="order_status_id"></param>
+        /// <returns></returns>
         Task ChangeOrderStatus(int order_id, int order_status_id);
         Task ChangeOrderLinkedCdekOrderNumber(int order_id, string cdek_order_number);
     }

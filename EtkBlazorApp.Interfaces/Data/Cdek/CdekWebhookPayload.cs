@@ -19,4 +19,14 @@ public class CdekWebhookOrderStatusData_Attributes
     public string status_date_time { get; set; }
     public string city_name { get; set; }
     public string city_code { get; set; }
+
+    public CdekOrderStatusCode GetCodeStatus()
+    {
+        if (Enum.TryParse<CdekOrderStatusCode>(code, out var result))
+        {
+            return result;
+        }
+
+        return CdekOrderStatusCode.None;
+    }
 }
