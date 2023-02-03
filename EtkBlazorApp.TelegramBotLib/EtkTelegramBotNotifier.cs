@@ -21,6 +21,11 @@ public class EtkTelegramBotNotifier : IEtkUpdatesNotifier
         bot.StartReceiving(HandleUpdate, HandleException);
     }
 
+    /// <summary>
+    /// Уведомляем об изменении в цене на прайс-лист
+    /// </summary>
+    /// <param name="data"></param>
+    /// <returns></returns>
     public async Task NotifyPriceListProductPriceChanged(PriceListProductPriceChangeHistory data)
     {
         var message = new StringBuilder()
@@ -29,26 +34,49 @@ public class EtkTelegramBotNotifier : IEtkUpdatesNotifier
             .Append($"В <b>{data.Data.Count}</b> 📦 товарах ")
             .ToString();
 
-        var lkButton = new InlineKeyboardButton("Открыть в личном кабинете")
-        {
-            Url = $"https://lk.etk-komplekt.ru/price-list/products-price-history/{data.PriceListGuid}"
-        };
-        var replyMarkup = new InlineKeyboardMarkup(new InlineKeyboardButton[] { lkButton });
+        var replyMarkup = GetSimpleMarkupWithUri($"https://lk.etk-komplekt.ru/price-list/products-price-history/{data.PriceListGuid}");
 
         await bot.SendTextMessageAsync(ChannelId, message, ParseMode.Html, replyMarkup: replyMarkup);
     }
 
+    /// <summary>
+    /// Уведомляем о неудачной загрузке прайс-листа
+    /// </summary>
+    /// <param name="taskName"></param>
+    /// <returns></returns>
     public async Task NotifyPriceListLoadingError(string taskName)
     {
         string message = $"🛑 Выполнение 🕒 задачи <b>{taskName}</b> завершилось ошибкой";
 
-        var lkButton = new InlineKeyboardButton("Открыть журнал выполнения")
+        var replyMarkup = GetSimpleMarkupWithUri("https://lk.etk-komplekt.ru/cron-task-history");
+
+        await bot.SendTextMessageAsync(ChannelId, message, ParseMode.Html, replyMarkup: replyMarkup);
+    }
+
+    /// <summary>
+    /// Уведомляем об изменении статуса заказа
+    /// </summary>
+    /// <param name="order_id"></param>
+    /// <param name="statusName"></param>
+    /// <returns></returns>
+    public async Task NotifOrderStatusChanged(int order_id, string statusName)
+    {
+        string message = $"🚚📦 Статус заказа <b>{order_id}</b> измен на <b>{statusName}</b>";
+
+        var replyMarkup = GetSimpleMarkupWithUri($"https://lk.etk-komplekt.ru/order/{order_id}");
+
+        await bot.SendTextMessageAsync(ChannelId, message, ParseMode.Html, replyMarkup: replyMarkup);
+    }
+
+    private InlineKeyboardMarkup GetSimpleMarkupWithUri(string uri)
+    {
+        var lkButton = new InlineKeyboardButton("Смотреть в LK")
         {
-            Url = $"https://lk.etk-komplekt.ru/cron-task-history"
+            Url = uri
         };
         var replyMarkup = new InlineKeyboardMarkup(new InlineKeyboardButton[] { lkButton });
 
-        await bot.SendTextMessageAsync(ChannelId, message, ParseMode.Html, replyMarkup: replyMarkup);
+        return replyMarkup;
     }
 
     private async void HandleUpdate(ITelegramBotClient bot, Update update, CancellationToken cancel)
