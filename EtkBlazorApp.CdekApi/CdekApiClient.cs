@@ -18,26 +18,14 @@ public class CdekApiMemoryCachedClient : ITransportCompanyApi
 
     private DateTime? tokenExpireTime;
 
-    public CdekApiMemoryCachedClient(IConfiguration configuration, IMemoryCache memoryCache)
+    public CdekApiMemoryCachedClient(string account, string securePassword, IMemoryCache memoryCache, HttpClient httpClient)
     {
-        var section = configuration.GetSection("CdekConfiguration");
-        this.account = section["Account"] ?? throw new ArgumentNullException("Account");
-        this.securePassword = section["SecurePassword"] ?? throw new ArgumentNullException("SecurePassword");
-
+        this.account = account;
+        this.securePassword = securePassword;
         this.memoryCache = memoryCache;
+        this.httpClient = httpClient;
         cacheEntryOptions = new MemoryCacheEntryOptions()
             .SetAbsoluteExpiration(CacheExpireTime);
-
-        httpClient = new HttpClient(new HttpClientHandler()
-        {
-            AllowAutoRedirect = true,
-            CookieContainer = new System.Net.CookieContainer(),
-        });
-        //httpClient.BaseAddress = new Uri("https://api.edu.cdek.ru"); // тестовая версия
-        httpClient.BaseAddress = new Uri("https://api.cdek.ru");
-        httpClient.DefaultRequestHeaders
-          .Accept
-          .Add(new MediaTypeWithQualityHeaderValue("application/json"));
     }
 
     private async Task AuthorizeIfNeed()
@@ -89,6 +77,26 @@ public class CdekApiMemoryCachedClient : ITransportCompanyApi
             }
         }
         return info;
+    }
+
+
+    public async Task RegisterWebhook()
+    {
+        await AuthorizeIfNeed();
+
+        //List
+        //var allWebhooksRequest = await httpClient.GetAsync("v2/webhooks");
+        //var allWebhooks = allWebhooksRequest.Content.ReadAsStringAsync();
+
+        //Delete
+        //string uuid = "55fe7a9f-62d5-4fec-bffc-eec0934c6790";
+        //var deleteWebhook = await httpClient.DeleteAsync($"v2/webhooks/{uuid}");
+
+        // Create
+        //string url = https://lk.etk-komplekt.ru/api/cdek_webhook";
+        //string eventType = "ORDER_STATUS";
+        //var payload = new CdekWebhookRegsterRequest(url, eventType);
+        //var result = await httpClient.PostAsJsonAsync("v2/webhooks", payload);
     }
 }
 
