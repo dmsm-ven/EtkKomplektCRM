@@ -172,7 +172,7 @@
 
 .file-input-zone {
     position: relative;
-    width: 250px;
+    width: 240px;
     height: 38px;
 }
 
@@ -666,6 +666,7 @@ input[type='radio'], input[type='checkbox'] {
     margin: 2px 2px 4px 6px;
     color: navy;
     font-weight: 600;
+    display: contents;
 }
 
 price-list-template-group li {
