@@ -15,9 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorApp.Core", "..\Etk
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ExternalApi", "ExternalApi", "{F4ED17F6-25DE-40FE-96F5-DA5CCE5B81B4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorAppi.DadataApi", "..\EtkBlazorAppi.DadataApi\EtkBlazorAppi.DadataApi.csproj", "{BC490AD7-1B62-442B-99FA-978119C670D0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorApp.DadataApi", "..\EtkBlazorAppi.DadataApi\EtkBlazorApp.DadataApi.csproj", "{BC490AD7-1B62-442B-99FA-978119C670D0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtkBlazorApp.TelegramBotLib", "..\EtkBlazorApp.TelegramBotLib\EtkBlazorApp.TelegramBotLib.csproj", "{6DAADE80-1548-4808-B316-91FD7EFD1FF4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorApp.TelegramBotLib", "..\EtkBlazorApp.TelegramBotLib\EtkBlazorApp.TelegramBotLib.csproj", "{6DAADE80-1548-4808-B316-91FD7EFD1FF4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
