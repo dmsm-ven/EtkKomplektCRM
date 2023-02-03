@@ -16,4 +16,15 @@ public enum CdekOrderStatusCode
     REMOVED,
     DELIVERED, // Успешно доставлен и вручен адресату (конечный статус)
     NOT_DELIVERED, // 	Покупатель отказался от покупки, возврат в ИМ (конечный статус)
+
+
+}
+
+public static class CdekOrderStatusCodeExtensions
+{
+    public static bool IsEndpointStatus(this CdekOrderStatusCode code)
+    {
+        return code == CdekOrderStatusCode.DELIVERED ||
+           code == CdekOrderStatusCode.NOT_DELIVERED;
+    }
 }

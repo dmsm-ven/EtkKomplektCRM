@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using EtkBlazorApp.Core.Data.Order;
+using System;
 
 namespace EtkBlazorApp.Controllers
 {
@@ -13,21 +14,20 @@ namespace EtkBlazorApp.Controllers
     [Route("api/cdek_webhook")]
     public class CdekWebhookHandlerController : Controller
     {
-        private readonly ITransportCompanyApi cdekApi;
         private readonly IEtkUpdatesNotifier notifier;
         private readonly IOrderStorage orderStorage;
         private readonly IOrderUpdateService orderUpdateService;
         private readonly SystemEventsLogger eventsLogger;
 
-        public CdekWebhookHandlerController(ITransportCompanyApi cdekApi,
-            IEtkUpdatesNotifier notifier,
+        public CdekWebhookHandlerController(IEtkUpdatesNotifier notifier,
             IOrderStorage orderStorage,
             IOrderUpdateService orderUpdateService,
             SystemEventsLogger eventsLogger)
         {
-            this.cdekApi = cdekApi;
-            this.notifier = notifier;
+            this.orderStorage = orderStorage ?? throw new ArgumentNullException(nameof(orderStorage));
+            this.orderUpdateService = orderUpdateService ?? throw new ArgumentNullException(nameof(orderStorage));
             this.eventsLogger = eventsLogger;
+            this.notifier = notifier;
         }
 
         //TODO: Добавить проверку что заказ действительно от сдэка
@@ -40,28 +40,28 @@ namespace EtkBlazorApp.Controllers
             }
 
             OrderEntity shopOrder = await orderStorage.GetOrderByCdekNumber(data.attributes.cdek_number);
-
             if (shopOrder == null)
             {
                 return BadRequest();
             }
 
-            var status = data.attributes.GetCodeStatus();
-
+            var cdekStatus = data.attributes.GetCodeStatus();
             //Берем только конечные статусы, другие не нужны
-            if (status == CdekOrderStatusCode.DELIVERED || status == CdekOrderStatusCode.NOT_DELIVERED)
+            if (cdekStatus.IsEndpointStatus())
             {
-                string statusName = (status == CdekOrderStatusCode.DELIVERED ? 
-                    "Вручен" : 
-                    "Не вручен");
-                int orderStatus = (status == CdekOrderStatusCode.DELIVERED ? 
-                    (int)OrderStatusCode.Completed : 
-                    (int)OrderStatusCode.Canceled);
-                string message = $"Заказ номер {shopOrder.order_id} (№ СДЭК {data.attributes.cdek_number}) {statusName}";
-
-                await orderUpdateService.ChangeOrderStatus(shopOrder.order_id, orderStatus);              
-                await eventsLogger.WriteSystemEvent(LogEntryGroupName.Orders, "СДЭК", message);
+                return Ok();
             }
+
+            string statusName = (cdekStatus == CdekOrderStatusCode.DELIVERED ? "Вручен" : "Не вручен");
+            int orderStatus = (cdekStatus == CdekOrderStatusCode.DELIVERED ?
+                (int)OrderStatusCode.Completed :
+                (int)OrderStatusCode.Canceled);
+            string message = $"Заказ ETK {shopOrder.order_id} (СДЭК {data.attributes.cdek_number}) {statusName}";
+
+            await orderUpdateService.ChangeOrderStatus(shopOrder.order_id, orderStatus);
+            await eventsLogger?.WriteSystemEvent(LogEntryGroupName.Orders, "СДЭК", message);
+            await notifier.NotifOrderStatusChanged(shopOrder.order_id, statusName);
+
             return Ok();
         }
     }
