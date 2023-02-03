@@ -1,4 +1,5 @@
-﻿@using EtkBlazorApp.Model.Order
+﻿@using EtkBlazorApp.Core.Data.Order
+@using EtkBlazorApp.Model.Order
 
 <div class="dropdown show order-status-dropdown-container">
     <button href="#"
@@ -46,15 +47,15 @@
 
     List<OrderStatusViewModel> availableOrderStatuses = new();
 
-    private readonly Dictionary<OrderStatusType, EtkBlazorApp.Model.Order.OrderStatusDisplayData> cssMap = new()
+    private readonly Dictionary<OrderStatusCode, EtkBlazorApp.Model.Order.OrderStatusDisplayData> cssMap = new()
         {
-            [OrderStatusType.None] = new("❓", "dark"),
-            [OrderStatusType.Created] = new("🔄", "dark"),
-            [OrderStatusType.Complectation] = new("📦", "primary"),
-            [OrderStatusType.Delivery] = new("🚙", "info"),
-            [OrderStatusType.Completed] = new("✔️", "success"),
-            [OrderStatusType.WaitingToPickup] = new("🕘", "warning"),
-            [OrderStatusType.Canceled] = new("🛑", "light")
+            [OrderStatusCode.None] = new("❓", "dark"),
+            [OrderStatusCode.Created] = new("🔄", "dark"),
+            [OrderStatusCode.InProcessing] = new("📦", "primary"),
+            [OrderStatusCode.InDelivery] = new("🚙", "info"),
+            [OrderStatusCode.Completed] = new("✔️", "success"),
+            [OrderStatusCode.WaitingToPickup] = new("🕘", "warning"),
+            [OrderStatusCode.Canceled] = new("🛑", "light")
         };
 
     private string cssClass
@@ -89,7 +90,7 @@
             {
                 return kvp.Icon;
             }
-            return cssMap[OrderStatusType.None].Icon;
+            return cssMap[OrderStatusCode.None].Icon;
         }
     }
 
@@ -104,8 +105,8 @@
 
     private async Task ChangeOrderStatus(OrderStatusViewModel status)
     {
-        int oldStatus = (int)(Order?.Status?.Type ?? OrderStatusType.None);
-        int newStatus = (int)status.Type;
+        OrderStatusCode oldStatus = (Order?.Status?.Type ?? OrderStatusCode.None);
+        OrderStatusCode newStatus = status.Type;
 
         if (oldStatus != newStatus)
         {
@@ -114,10 +115,11 @@
 
             StateHasChanged();
 
-            await OrderUpdateSerivce.ChangeOrderStatus(Order.OrderId, newStatus);
+            await OrderUpdateSerivce.ChangeOrderStatus(Order.OrderId, (int)newStatus);
 
             await Logger.Write(LogEntryGroupName.Orders, "Обновление статуса", $"Статус заказа {Order.OrderId} изменен с {Order.Status.Type} на {status.Type}");
 
+            //Проверить что действительно добавляется на активной странице
             Order.StatusChangesHistory.Add(new OrderStatusHistoryViewModel()
                 {
                     DateAdded = DateTime.Now,

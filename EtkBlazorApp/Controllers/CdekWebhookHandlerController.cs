@@ -42,23 +42,21 @@ namespace EtkBlazorApp.Controllers
             OrderEntity shopOrder = await orderStorage.GetOrderByCdekNumber(data.attributes.cdek_number);
             if (shopOrder == null)
             {
-                return BadRequest();
+                return Ok();
             }
 
-            var cdekStatus = data.attributes.GetCodeStatus();
             //Берем только конечные статусы, другие не нужны
+            var cdekStatus = data.attributes.GetCodeStatus();
             if (cdekStatus.IsEndpointStatus())
             {
                 return Ok();
             }
 
             string statusName = (cdekStatus == CdekOrderStatusCode.DELIVERED ? "Вручен" : "Не вручен");
-            int orderStatus = (cdekStatus == CdekOrderStatusCode.DELIVERED ?
-                (int)OrderStatusCode.Completed :
-                (int)OrderStatusCode.Canceled);
+            OrderStatusCode orderStatus = (cdekStatus == CdekOrderStatusCode.DELIVERED ? OrderStatusCode.Completed : OrderStatusCode.Canceled);
             string message = $"Заказ ETK {shopOrder.order_id} (СДЭК {data.attributes.cdek_number}) {statusName}";
 
-            await orderUpdateService.ChangeOrderStatus(shopOrder.order_id, orderStatus);
+            await orderUpdateService.ChangeOrderStatus(shopOrder.order_id, (int)orderStatus);
             await eventsLogger?.WriteSystemEvent(LogEntryGroupName.Orders, "СДЭК", message);
             await notifier.NotifOrderStatusChanged(shopOrder.order_id, statusName);
 

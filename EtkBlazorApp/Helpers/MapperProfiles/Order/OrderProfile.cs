@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using EtkBlazorApp.Core.Data.Order;
 using EtkBlazorApp.DataAccess.Entity;
 using EtkBlazorApp.Model.Order;
 using System.Web;
@@ -19,7 +20,7 @@ public class OrderProfile : Profile
             .ForMember(o => o.StatusName, o => o.MapFrom(x => x.status_name));
 
         CreateMap<OrderStatusEntity, OrderStatusViewModel>()
-            .ForMember(o => o.Type, o => o.MapFrom(x => (OrderStatusType)x.order_status_id))
+            .ForMember(o => o.Type, o => o.MapFrom(x => (OrderStatusCode)x.order_status_id))
             .ForMember(o => o.Name, o => o.MapFrom(x => x.name))
             .ForMember(o => o.SortOrder, o => o.MapFrom(x => x.order_status_sort));
 
