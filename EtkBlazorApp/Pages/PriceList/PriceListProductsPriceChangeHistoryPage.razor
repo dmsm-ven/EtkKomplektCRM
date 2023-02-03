@@ -1,5 +1,6 @@
 ﻿@page "/price-list/products-price-history/{TemplateGuid}"
 @using EtkBlazorApp.BL.Managers
+@using System.Globalization
 @attribute [Authorize(Roles = "Manager, Administrator")]
 
 
@@ -18,12 +19,12 @@ else
     <div class="mx-auto d-block image-select-container m-1 p-1">
         <img src="@priceListData.Image" class="rounded image" style="width: 100%; height: 100%;" />
     </div>
-    <h3>История изменения цена на товары в прайс-листе @priceListData.Title</h3>
+    <h3>История изменения цены на товары в прайс-листе @priceListData.Title</h3>
     <div class="table-responsive">
-        <table class="table table-bordered product-price-update-history-table">
+        <table class="table table-bordered table-hover table-sm product-price-update-history-table">
             <thead>
                 <tr>
-                    <th rowspan="2">Товар</th>
+                    <th rowspan="2" width="50%">Товар</th>
                     <th colspan="2">Актуальная</th>
                     <th colspan="2">Прежняя</th>
                     <th colspan="2" rowspan="2">Изменение</th>
@@ -35,16 +36,21 @@ else
                     <th>Цена</th>
                 </tr>
             </thead>
-            @foreach (var item in historyData.Data)
+            @foreach (var item in orderedSource)
             {
                 <tr>
-                    <td>@item.ProductName</td>
-                    <td>@item.DateTime.ToShortDateString()</td>
-                    <td>@item.Price.ToString("C0")</td>
-                    <td>@item.PreviousItem.DateTime.ToShortDateString()</td>
-                    <td>@item.PreviousItem.Price.ToString("C0")</td>
+                    <td>
+                        <a href="https://etk-komplekt.ru/index.php?route=product/product&product_id=@item.ProductId"
+                   target="_blank"
+                   class="btn btn-sm btn-outline-primary small-external-link-button"><span class="oi oi-external-link"></span></a>
+                        <span>@item.ProductName</span>
+                    </td>
+                    <td>@item.DateTime.ToString("dd.MM.yyyy")</td>
+                    <td>@item.Price.ToString("0.##")</td>
+                    <td>@item.PreviousItem.DateTime.ToString("dd.MM.yyyy")</td>
+                    <td>@item.PreviousItem.Price.ToString("0.##")</td>
                     <td>@item.ChangePercent.ToString("P2")</td>
-                    <td>@item.ChangeInCurrency.ToString("C0")</td>
+                    <td>@item.ChangeInCurrency.ToString("0.##")</td>
                 </tr>
             }
         </table>
@@ -52,9 +58,24 @@ else
 }
 
 <style>
-    .product-price-update-history-table th {
+    .product-price-update-history-table tr th {
         text-align: center;
         vertical-align: middle;
+    }
+
+    .product-price-update-history-table tr td {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .product-price-update-history-table a {
+        padding: 2px 5px;
+        margin-right: 4px;
+    }
+
+    .product-price-update-history-table tr td:first-child {
+        font-size: smaller;
+        text-align: left;
     }
 </style>
 
@@ -64,6 +85,19 @@ else
     [Inject] public IPriceListTemplateStorage PriceListRepository { get; set; }
     [Inject] public IMapper Mapper { get; set; }
 
+    IEnumerable<ProductPriceChangeHistoryItem> orderedSource
+    {
+        get
+        {
+            if (historyData?.Data == null)
+            {
+                return new List<ProductPriceChangeHistoryItem>();
+            }
+            return historyData?.Data
+                .OrderByDescending(i => i.DateTime)
+                .ThenBy(i => i.ChangeInCurrency);
+        }
+    }
     PriceListProductPriceChangeHistory historyData;
     PriceListTemplateItemViewModel priceListData;
 

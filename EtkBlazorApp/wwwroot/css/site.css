@@ -504,6 +504,15 @@ input[type='radio'], input[type='checkbox'] {
     font-weight: bold;
 }
 
+.product-item .product-price {
+    display: inline;
+    font-size: 12px;
+    position: absolute;
+    right: 20px;
+    top: 10px;
+    color: red;
+}
+
 .product-item-image {
     position: absolute;
     max-height: 100%;
@@ -531,14 +540,6 @@ input[type='radio'], input[type='checkbox'] {
     padding: 0px;
     font-size: 12px;
     padding: 6px 2px 0px 2px;
-}
-
-.product-item .product-price {
-    font-size: 12px;
-    position: absolute;
-    right: 20px;
-    top: 10px;
-    color: red;
 }
 
 .product-item .view-counter oi {
@@ -811,7 +812,7 @@ app {
     .nav-item a {
         color: #d7d7d7;
         border-radius: 4px;
-        height: 3rem;
+        height: 2.25rem;
         display: flex;
         align-items: center;
         line-height: 3rem;

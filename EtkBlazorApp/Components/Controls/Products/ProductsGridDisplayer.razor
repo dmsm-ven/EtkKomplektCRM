@@ -14,25 +14,26 @@ else
         @foreach (var product in Products.Take(MaxDisplayCount))
         {
             <div class="product-item">
-                @if (ShowPrice && product.Price != decimal.Zero)
-                {
-                    <p class="product-price">@product.Price.ToString("C0")</p>
-                }
-                @if (ShowDiscountLabel && product.DiscountPercent.HasValue)
-                {
-                    <p class="product-price discount-info">-@product.DiscountPercent.Value.ToString("P0")</p>
-                }
-                @if (ShowViewCounter)
-                {
-                    <p class="product-price view-counter">
-
-                        <span class="oi oi-eye"></span>
-                        @product.NumberOfViews
-                    </p>
-
-                }
                 <a href="@product.ProductIdUri" target="_blank">
                     <div class="product-item-inner shadow">
+                        @if (ShowPrice && product.Price != decimal.Zero)
+                        {
+                            <div class="product-price">
+                                <p>@product.Price.ToString("C0")</p>
+                            </div>
+                        }
+                        @if (ShowDiscountLabel && product.DiscountPercent.HasValue)
+                        {
+                            <p class="product-price discount-info">-@product.DiscountPercent.Value.ToString("P0")</p>
+                        }
+                        @if (ShowViewCounter)
+                        {
+                            <p class="product-price view-counter">
+                                <span class="oi oi-eye"></span>
+                                @product.NumberOfViews
+                            </p>
+                        }
+
                         <div class="product-item-manufacturer">
                             <p>@product.Manufacturer</p>
                         </div>

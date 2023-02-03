@@ -1,5 +1,6 @@
 ﻿using EtkBlazorApp.BL.CronTask;
 using EtkBlazorApp.BL.Templates.PriceListTemplates;
+using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using Newtonsoft.Json;
@@ -31,6 +32,7 @@ namespace EtkBlazorApp.BL
 
         private readonly ICronTaskStorage cronTaskStorage;
         internal readonly IPriceListTemplateStorage templates;
+        internal readonly IEtkUpdatesNotifier notifier;
         internal readonly SystemEventsLogger logger;
         internal readonly ProductsPriceAndStockUpdateManager updateManager;
         internal readonly PriceListManager priceListManager;
@@ -42,6 +44,7 @@ namespace EtkBlazorApp.BL
         public CronTaskService(
             ICronTaskStorage cronTaskStorage,
             IPriceListTemplateStorage templates,
+            IEtkUpdatesNotifier notifier,
             SystemEventsLogger logger,
             ProductsPriceAndStockUpdateManager updateManager,
             PriceListManager priceListManager,
@@ -49,6 +52,7 @@ namespace EtkBlazorApp.BL
         {
             this.cronTaskStorage = cronTaskStorage;
             this.templates = templates;
+            this.notifier = notifier;
             this.logger = logger;
             this.updateManager = updateManager;
             this.priceListManager = priceListManager;
@@ -177,8 +181,9 @@ namespace EtkBlazorApp.BL
                     OnTaskExecutionSuccess?.Invoke(taskInfo);
                 }
                 else if (exec_result == CronTaskExecResult.Failed)
-                {
+                {                   
                     OnTaskExecutionError?.Invoke(taskInfo);
+                    notifier.NotifyPriceListLoadingError(taskInfo.name);
                 }
             }
         }

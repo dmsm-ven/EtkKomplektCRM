@@ -167,6 +167,7 @@ else
     [Inject] public ICompanyInfoChecker CompanyInfoChecker { get; set; }
     [Inject] public CashPlusPlusLinkGenerator OrderPdfLinkGenerator { get; set; }
     [Inject] public NavigationManager NavManager { get; set; }
+    [Inject] public UserLogger Logger { get; set; }
 
 
     OrderViewModel order = null;
@@ -198,7 +199,8 @@ else
             order.CdekOrderNumber = newCode;
             await OrderUpdateService.ChangeOrderLinkedCdekOrderNumber(order.OrderId, newCode);
 
-            Toasts.ShowInfo($"Закрепленный номер заказ СДЭК изменен с '{oldNumber}' -> '{newCode}'");
+            Toasts.ShowInfo($"Закрепленный номер заказ СДЭК обновлен");
+            Logger.Write(LogEntryGroupName.Orders, "СДЭК", $"Изменен закрепленный номер заказа СДЭК на '{newCode}' для заказа {order.OrderId}");
         }
     }
 
