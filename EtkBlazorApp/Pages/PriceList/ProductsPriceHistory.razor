@@ -7,54 +7,54 @@
 
 @if (historyData is null)
 {
-    <h1>Загрузка данных</h1>
-    <LoadingSpinner />
+        <h1>Загрузка данных</h1>
+        <LoadingSpinner />
 }
 else if (historyData.Data.Count == 0)
 {
-    <h2>Нет данных по изменению цен</h2>
+        <h2>Нет данных по изменению цен</h2>
 }
 else
 {
-    <div class="mx-auto d-block image-select-container m-1 p-1">
-        <img src="@priceListData.Image" class="rounded image" style="width: 100%; height: 100%;" />
-    </div>
-    <h3>История изменения цены на товары в прайс-листе @priceListData.Title</h3>
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover table-sm product-price-update-history-table">
-            <thead>
-                <tr>
-                    <th rowspan="2" width="50%">Товар</th>
-                    <th colspan="2">Актуальная</th>
-                    <th colspan="2">Прежняя</th>
-                    <th colspan="2" rowspan="2">Изменение</th>
-                </tr>
-                <tr>
-                    <th>Дата</th>
-                    <th>Цена</th>
-                    <th>Дата</th>
-                    <th>Цена</th>
-                </tr>
-            </thead>
+        <div class="mx-auto d-block image-select-container m-1 p-1">
+            <img src="@priceListData.Image" class="rounded image" style="width: 100%; height: 100%;" />
+        </div>
+        <h3>История изменения цены на товары в прайс-листе @priceListData.Title</h3>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm product-price-update-history-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2" width="50%">Товар</th>
+                        <th colspan="2">Актуальная</th>
+                        <th colspan="2">Прежняя</th>
+                        <th colspan="2" rowspan="2">Изменение</th>
+                    </tr>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Цена</th>
+                        <th>Дата</th>
+                        <th>Цена</th>
+                    </tr>
+                </thead>
             @foreach (var item in orderedSource)
             {
-                <tr>
-                    <td>
-                        <a href="https://etk-komplekt.ru/index.php?route=product/product&product_id=@item.ProductId"
+                        <tr>
+                            <td>
+                                <a href="https://etk-komplekt.ru/index.php?route=product/product&product_id=@item.ProductId"
                    target="_blank"
                    class="btn btn-sm btn-outline-primary small-external-link-button"><span class="oi oi-external-link"></span></a>
-                        <span>@item.ProductName</span>
-                    </td>
-                    <td>@item.DateTime.ToString("dd.MM.yyyy")</td>
-                    <td>@item.Price.ToString("0.##")</td>
-                    <td>@item.PreviousItem.DateTime.ToString("dd.MM.yyyy")</td>
-                    <td>@item.PreviousItem.Price.ToString("0.##")</td>
-                    <td>@item.ChangePercent.ToString("P2")</td>
-                    <td>@item.ChangeInCurrency.ToString("0.##")</td>
-                </tr>
+                                <span>@item.ProductName</span>
+                            </td>
+                            <td>@item.DateTime.ToString("dd.MM.yyyy")</td>
+                            <td>@item.Price.ToString("0.##")</td>
+                            <td>@item.PreviousItem.DateTime.ToString("dd.MM.yyyy")</td>
+                            <td>@item.PreviousItem.Price.ToString("0.##")</td>
+                            <td>@item.ChangePercent.ToString("P2")</td>
+                            <td>@item.ChangeInCurrency.ToString("0.##")</td>
+                        </tr>
             }
-        </table>
-    </div>
+            </table>
+        </div>
 }
 
 <style>
@@ -95,7 +95,7 @@ else
             }
             return historyData?.Data
                 .OrderByDescending(i => i.DateTime)
-                .ThenBy(i => i.ChangeInCurrency);
+                .ThenByDescending(i => i.ChangeInCurrency);
         }
     }
     PriceListProductPriceChangeHistory historyData;
