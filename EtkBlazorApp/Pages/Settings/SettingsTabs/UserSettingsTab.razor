@@ -1,11 +1,6 @@
-﻿@inject IUserService userStorage
-@inject IToastService toasts
-@attribute [Authorize(Roles = "Administrator")]
-@inject AuthenticationStateProvider stateProvider
-@inject UserLogger logger
+﻿@attribute [Authorize(Roles = "Administrator")]
 
-@if (selectedTab == tabData)
-{
+
 <div id="user_settings_tab">
 
     <div class="row p-1">
@@ -18,8 +13,8 @@
             @if (selectedUser != null)
             {
                 <button class="btn btn-danger mx-2"
-                        disabled="@(selectedUser == null || selectedUser == loginedUser)"
-                        @onclick="@(e => deleteDialog.Show())">
+                    disabled="@(selectedUser == null || selectedUser == loginedUser)"
+                    @onclick="@(e => deleteDialog.Show())">
                     <span class="oi oi-trash"></span>
                     Удалить
                 </button>
@@ -52,9 +47,9 @@
                         {
                             <CascadingValue Value="@selectedUser">
                                 <AppUserDisplayItem User="@item"
-                                                    Groups="@groups"
-                                                    OnItemSelect="@(e => selectedUser = item)"
-                                                    OnSaveChanges="@(e => UpdateUser(item))">
+                                            Groups="@groups"
+                                            OnItemSelect="@(e => selectedUser = item)"
+                                            OnSaveChanges="@(e => UpdateUser(item))">
                                 </AppUserDisplayItem>
                             </CascadingValue>
                         }
@@ -70,9 +65,13 @@
 
     <AddNewUserDialog @ref="addNewDialog" ConfirmationChanged="AddNewUserConfirmed" />
 </div>
-}
+
 
 @code {
+    [Inject] public AuthenticationStateProvider stateProvider { get; set; }
+    [Inject] public UserLogger logger { get; set; }
+    [Inject] public IUserService userStorage { get; set; }
+    [Inject] public IToastService toasts { get; set; }
 
     [Parameter] public SettingsTabData tabData { get; set; }
     [CascadingParameter] public SettingsTabData selectedTab { get; set; }
@@ -89,16 +88,16 @@
     protected override async Task OnInitializedAsync()
     {
         users = (await userStorage.GetUsers()).Select(u => new AppUser()
-        {
-            Login = u.login,
-            Id = u.user_id,
-            LastLoginDateTime = u.last_login_date,
-            CreatingDate = u.creation_date,
-            GroupName = u.group_name,
-            GroupId = u.user_group_id,
-            IsEnabled = u.status,
-            AllowedIp = u.ip
-        }).ToList();
+            {
+                Login = u.login,
+                Id = u.user_id,
+                LastLoginDateTime = u.last_login_date,
+                CreatingDate = u.creation_date,
+                GroupName = u.group_name,
+                GroupId = u.user_group_id,
+                IsEnabled = u.status,
+                AllowedIp = u.ip
+            }).ToList();
         groups = await userStorage.GetUserGroups();
 
         string loginedUserName = (await stateProvider.GetAuthenticationStateAsync()).User.Identity.Name;
@@ -109,13 +108,13 @@
     private async Task UpdateUser(AppUser user)
     {
         var updateData = new AppUserEntity()
-        {
-            user_id = user.Id,
-            status = user.IsEnabled,
-            user_group_id = user.GroupId,
-            password = user.Password,
-            ip = string.IsNullOrWhiteSpace(user.AllowedIp) ? null : user.AllowedIp
-        };
+            {
+                user_id = user.Id,
+                status = user.IsEnabled,
+                user_group_id = user.GroupId,
+                password = user.Password,
+                ip = string.IsNullOrWhiteSpace(user.AllowedIp) ? null : user.AllowedIp
+            };
         await userStorage.UpdateUser(updateData);
         await logger.Write(LogEntryGroupName.Accounts, "Аккаунт обновлен", user.Login);
 
@@ -143,12 +142,12 @@
         if (newUser == null) { return; }
 
         var entity = new AppUserEntity()
-        {
-            login = newUser.Login,
-            password = newUser.Password,
-            user_group_id = newUser.GroupId,
-            ip = newUser.AllowedIp
-        };
+            {
+                login = newUser.Login,
+                password = newUser.Password,
+                user_group_id = newUser.GroupId,
+                ip = newUser.AllowedIp
+            };
 
         await userStorage.AddUser(entity);
         users.Add(newUser);

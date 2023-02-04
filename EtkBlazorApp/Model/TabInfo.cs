@@ -8,5 +8,6 @@ namespace EtkBlazorApp
         public string Title { get; set; }
         public MarkupString Icon { get; set; }
         public Action SaveButtonClicked { get; set; }
+        public Type TabComponent { get; set; }
     }
 }

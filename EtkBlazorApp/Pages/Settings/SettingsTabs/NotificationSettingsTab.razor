@@ -1,0 +1,61 @@
+﻿
+
+<div id="email_tab">
+    <div>
+        <input type="checkbox" id="general" @bind="generalStatus">
+        <p for="general">Включить Telegram уведомления</p>
+
+    </div>
+    <div class="ml-4">
+        <div>
+            <input type="checkbox" id="price" @bind="priceChangedEnabled" disabled=@isDisabled>
+            <p for="price">Изменение цены</p>
+
+        </div>
+        <div>
+            <input type="checkbox" id="task" @bind="taskErrorEbaled" disabled=@isDisabled>
+            <p for="task">Ошибка загрузки прайс-листа</p>
+
+        </div>
+        <div>
+            <input type="checkbox" id="cdek" @bind="cdekOrderStatusChangedEnabled" disabled=@isDisabled>
+            <p for="cdek">Изменение статуса заказа СДЭК</p>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    #email_tab p {
+        display: inline;
+        margin-left: 6px;
+    }
+</style>
+
+@code {
+    [Inject] public ISettingStorage settings { get; set; }
+    [CascadingParameter] public SettingsTabData tabData { get; set; }
+
+    bool isDisabled => !generalStatus;
+
+    bool generalStatus;
+    bool priceChangedEnabled;
+    bool taskErrorEbaled;
+    bool cdekOrderStatusChangedEnabled;
+
+    protected override async Task OnInitializedAsync()
+    {
+        generalStatus = await settings.GetValue<bool>("telegram_notification_enabled");
+        priceChangedEnabled = await settings.GetValue<bool>("telegram_notification_price_enabled");
+        taskErrorEbaled = await settings.GetValue<bool>("telegram_notification_task_enabled");
+        cdekOrderStatusChangedEnabled = await settings.GetValue<bool>("telegram_notification_cdek_enabled");
+
+        tabData.SaveButtonClicked = new Action(async () =>
+        {
+            await settings.SetValue("telegram_notification_enabled", generalStatus);
+            await settings.SetValue("telegram_notification_price_enabled", priceChangedEnabled);
+            await settings.SetValue("telegram_notification_task_enabled", taskErrorEbaled);
+            await settings.SetValue("telegram_notification_cdek_enabled", cdekOrderStatusChangedEnabled);
+        });
+    }
+}

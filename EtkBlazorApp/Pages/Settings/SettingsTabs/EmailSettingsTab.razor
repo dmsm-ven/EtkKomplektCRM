@@ -1,45 +1,41 @@
-﻿@inject ISettingStorage settings
+﻿
 
-@if (selectedTab == tabData)
-{
-    <div id="email_tab">
-        <button type="button"
+<div id="email_tab">
+    <button type="button"
             @onclick="@(e => priceMailboxTabExpanded = !priceMailboxTabExpanded)"
             class="btn expander-button-item @(priceMailboxTabExpanded ? "expanded" : string.Empty)">
-            Почтовый ящик с прайс-листами
-        </button>
-        <div class="expander-content" style="display: @(priceMailboxTabExpanded ? "block" : "none")">
-            <form>
-                <div class="form-group">
-                    <label for="imap_server">Сервер</label>
-                    <input type="text" class="form-control" id="imap_server" placeholder="IMAP сервер" @bind="imapServer">
-                </div>
-                <div class="form-group">
-                    <label for="imap_port">Порт</label>
-                    <select class="form-control" id="imap_port" @bind="@imapPort">
-                        <option value="143">143</option>
-                        <option value="993">993</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="Почтовый ящик" @bind="email">
-                </div>
-                <div class="form-group">
-                    <label for="password">Пароль</label>
-                    <input type="password" class="form-control" id="password" placeholder="Пароль от почтового ящика" @bind="password">
-                </div>
-            </form>
-        </div>
-
-
+        Почтовый ящик с прайс-листами
+    </button>
+    <div class="expander-content" style="display: @(priceMailboxTabExpanded ? "block" : "none")">
+        <form>
+            <div class="form-group">
+                <label for="imap_server">Сервер</label>
+                <input type="text" class="form-control" id="imap_server" placeholder="IMAP сервер" @bind="imapServer">
+            </div>
+            <div class="form-group">
+                <label for="imap_port">Порт</label>
+                <select class="form-control" id="imap_port" @bind="@imapPort">
+                    <option value="143">143</option>
+                    <option value="993">993</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="Почтовый ящик" @bind="email">
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <input type="password" class="form-control" id="password" placeholder="Пароль от почтового ящика" @bind="password">
+            </div>
+        </form>
     </div>
-}
+
+
+</div>
 
 @code {
-
-    [Parameter] public SettingsTabData tabData { get; set; }
-    [CascadingParameter] public SettingsTabData selectedTab { get; set; }
+    [Inject] public ISettingStorage settings { get; set; }
+    [CascadingParameter] public SettingsTabData tabData { get; set; }
 
     string imapServer, imapPort, password, email;
     bool priceMailboxTabExpanded = true;
@@ -47,11 +43,7 @@
     protected override async Task OnInitializedAsync()
     {
         imapServer = await settings.GetValue("general_email_imap_server");
-        imapPort = await settings.GetValue("general_email_imap_port");
-        if (string.IsNullOrWhiteSpace(imapPort))
-        {
-            imapPort = "143";
-        }
+        imapPort = (await settings.GetValue("general_email_imap_port")) ?? "143";
         email = await settings.GetValue("general_email_login");
         password = EncryptHelper.Decrypt(await settings.GetValue("general_email_password"));
 

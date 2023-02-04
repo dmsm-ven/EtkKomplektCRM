@@ -13,21 +13,15 @@
     }
 </div>
 
-
-<button class="btn btn-success float-right"
-        @onclick="SaveCurrentTabSettings">
+<button class="btn btn-success float-right" @onclick="SaveCurrentTabSettings">
     <span class="oi oi-check"></span>
     Сохранить настройки
 </button>
 
 <div class="settings-tab-content container">
-    <h2>@selectedTab.Title</h2>
-    <CascadingValue Value="selectedTab">
-        <UserSettingsTab tabData="@tabData[0]" />
-        <MainSettingsControlTab tabData="@tabData[1]" />
-        <EmailSettingsTab tabData="@tabData[2]" />
-        <MarketplaceSettingsTab tabData="@tabData[3]" />
-        <MonobrandSettingsTab tabData="@tabData[4]" />
+    <h2>@selectedTab.Title @selectedTab.Icon</h2>
+    <CascadingValue Value=@selectedTab>
+        <DynamicComponent Type=@selectedTab.TabComponent></DynamicComponent>
     </CascadingValue>
 </div>
 
@@ -36,11 +30,12 @@
 
     List<SettingsTabData> tabData = new List<SettingsTabData>()
     {
-        new SettingsTabData() { Title = "Пользователи", Icon = new MarkupString("&#128589;") },
-        new SettingsTabData() { Title = "Общие настройки", Icon = new MarkupString("&#128295;") },
-        new SettingsTabData() { Title = "Почтовые ящики", Icon = new MarkupString("&#9993;")  },
-        new SettingsTabData() { Title = "Маркетплейсы", Icon = new MarkupString("&#128722;") },
-        new SettingsTabData() { Title = "Монобренды" , Icon = new MarkupString("&#127760;") }
+        new SettingsTabData() { Title = "Пользователи", Icon = new MarkupString("&#128589;"), TabComponent = typeof(UserSettingsTab) },
+        new SettingsTabData() { Title = "Общие настройки", Icon = new MarkupString("&#128295;"), TabComponent = typeof(MainSettingsControlTab) },
+        new SettingsTabData() { Title = "Уведмоления" , Icon = new MarkupString("&#128712;"), TabComponent = typeof(NotificationSettingsTab) },
+        new SettingsTabData() { Title = "Почтовые ящики", Icon = new MarkupString("&#9993;"), TabComponent = typeof(EmailSettingsTab)  },
+        new SettingsTabData() { Title = "Маркетплейсы", Icon = new MarkupString("&#128722;"), TabComponent = typeof(MarketplaceSettingsTab), },
+        new SettingsTabData() { Title = "Монобренды" , Icon = new MarkupString("&#127760;"), TabComponent = typeof(MonobrandSettingsTab) },
     };
     protected override void OnInitialized()
     {
@@ -50,6 +45,6 @@
     private void SaveCurrentTabSettings()
     {
         selectedTab?.SaveButtonClicked?.Invoke();
-        toasts.ShowInfo($"{selectedTab.Title}: Настройки сохранены");
+        toasts.ShowInfo($"Настройки для вкладки {selectedTab.Title} сохранены");
     }
 }
