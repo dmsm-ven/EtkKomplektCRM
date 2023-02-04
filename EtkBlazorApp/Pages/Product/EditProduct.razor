@@ -2,19 +2,13 @@
 @page "/edit-product/keyword/{Keyword}";
 @using EtkBlazorApp.Core.Data
 
-@inject IProductStorage productStorage
-@inject IProductUpdateService productUpdateService
-@inject ISettingStorage settingStorage
-@inject ICurrencyChecker currencyChecker
-@inject IToastService toasts
-@inject UserLogger log
 @attribute [Authorize]
 
 
 <h3>Редактирование товара</h3>
-<div class="container">
+<div style="max-width: 768px;">
     <div class="row">
-        <div class="offset-2 col-md-8">
+        <div class="col-md-8 col-sm-12 col-lg-6">
 
             <div class="form-row" style="margin-bottom: 20px;">
                 <div class="form-group col-md-10">
@@ -108,6 +102,14 @@
 
 
 @code {
+    [Inject] public IProductStorage productStorage { get; set; }
+    [Inject] public IProductUpdateService productUpdateService { get; set; }
+    [Inject] public ISettingStorage settingStorage { get; set; }
+    [Inject] public ICurrencyChecker currencyChecker { get; set; }
+    [Inject] public IToastService toasts { get; set; }
+    [Inject] public IMapper mapper { get; set; }
+    [Inject] public UserLogger log { get; set; }
+
     ProductViewModel editedProduct = null;
     ProductEntity replacementProduct;
 
@@ -146,41 +148,26 @@
 
     private async Task LoadProduct()
     {
-        if (string.IsNullOrWhiteSpace(enteredUri)) { return; }
+        if (string.IsNullOrWhiteSpace(enteredUri))
+        {
+            return;
+        }
 
         string keyword = new Uri(enteredUri).AbsolutePath.Trim('/', '?', '&');
         var entity = await productStorage.GetProductByKeyword(keyword);
-        if (entity == null) { editedProduct = null; return; }
-
-        editedProduct = new ProductViewModel()
-            {
-                Id = entity.product_id,
-                Uri = $"https://etk-komplekt.ru/{entity.keyword}",
-                Name = entity.name,
-                Model = entity.model,
-                Manufacturer = entity.manufacturer,
-                Sku = entity.sku,
-                EAN = entity.ean,
-                Quantity = entity.quantity,
-                BasePrice = entity.base_currency_code == CurrencyType.RUB.ToString() ? entity.price : entity.base_price,
-                BasePriceCurrency = entity.base_currency_code,
-                StockStatus = entity.stock_status,
-                DateModified = entity.date_modified.HasValue ? entity.date_modified.ToString() : string.Empty,
-                ReplacementProductId = entity.replacement_id,
-            };
-
-        if (editedProduct.ReplacementProductId.HasValue)
-        {
-            replacementProduct = await productStorage.GetProductById(editedProduct.ReplacementProductId.Value);
-        }
-
         if (entity != null)
         {
-            await settingStorage.SetValue("edit-product-page-last-uri", editedProduct.Uri);
-        }
+            editedProduct = mapper.Map<ProductViewModel>(entity);
 
-        currentStateCode = GetCurrentStateCode();
-        StateHasChanged();
+            if (editedProduct.ReplacementProductId.HasValue)
+            {
+                replacementProduct = await productStorage.GetProductById(editedProduct.ReplacementProductId.Value);
+            }
+
+            await settingStorage.SetValue("edit-product-page-last-uri", editedProduct.Uri);
+            currentStateCode = GetCurrentStateCode();
+            StateHasChanged();
+        }
     }
 
     private async Task SaveChanges()
@@ -196,16 +183,8 @@
             editedProduct.Price = editedProduct.BasePrice;
         }
 
-        var entity = new ProductEntity()
-            {
-                product_id = editedProduct.Id,
-                price = editedProduct.Price,
-                base_price = editedProduct.BasePriceCurrency == CurrencyType.RUB.ToString() ? 0 : editedProduct.BasePrice,
-                base_currency_code = editedProduct.BasePriceCurrency,
-                quantity = editedProduct.Quantity,
-                stock_status = editedProduct.StockStatus,
-                replacement_id = (editedProduct.StockStatus == "Снято с производства" ? replacementProduct?.product_id : (int?)null)
-            };
+        editedProduct.ReplacementProductId = replacementProduct?.product_id;
+        var entity = mapper.Map<ProductEntity>(editedProduct);
 
         await productUpdateService.UpdateDirectProduct(entity);
 

@@ -18,10 +18,10 @@ namespace EtkBlazorApp
         public decimal? DiscountedPrice { get; set; }
         public decimal BasePrice { get; set; }
         public string BasePriceCurrency { get; set; }
-        public string StockStatus { get; set; }   
+        public string StockStatus { get; set; }
         public int NumberOfViews { get; set; }
         public int Quantity { get; set; }
-        public string DateModified { get; set; }
+        public DateTime? DateModified { get; set; }
 
         public int? ReplacementProductId { get; set; }
         public string ReplacementProductName { get; set; }
@@ -31,7 +31,7 @@ namespace EtkBlazorApp
         {
             get
             {
-                if(DiscountedPrice.HasValue && Price != decimal.Zero)
+                if (DiscountedPrice.HasValue && Price != decimal.Zero)
                 {
                     return (1d - (double)Math.Round(DiscountedPrice.Value / Price, 2));
                 }

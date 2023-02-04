@@ -43,7 +43,7 @@
         if (!string.IsNullOrWhiteSpace(OrderData?.CdekOrderNumber))
         {
             var cdekOrderStatus = await CdekApi.GetOrderInfo(OrderData.CdekOrderNumber);
-            lastCdekStatus = cdekOrderStatus.statuses.FirstOrDefault()?.name;
+            lastCdekStatus = cdekOrderStatus?.statuses?.FirstOrDefault()?.name;
         }
     }
 }

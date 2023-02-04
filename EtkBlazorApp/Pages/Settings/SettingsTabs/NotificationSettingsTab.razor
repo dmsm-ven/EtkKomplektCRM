@@ -1,35 +1,46 @@
 ﻿
 
-<div id="email_tab">
-    <div>
-        <input type="checkbox" id="general" @bind="generalStatus">
-        <p for="general">Включить Telegram уведомления</p>
+<div id="notification_tab">
+    <div id="telegram_notification_settings">
+        <img src="/image/logotips/telegram.png" width="64" height="64" />
+        <div>
+            <input type="checkbox" id="general" @bind="generalStatus">
+            <p for="general">Включить Telegram уведомления</p>
+        </div>
+        <div class="ml-4">
+            <div>
+                <input type="checkbox" id="price" @bind="priceChangedEnabled" disabled=@isDisabled>
+                <p for="price">Изменение цены</p>
 
+            </div>
+            <div>
+                <input type="checkbox" id="task" @bind="taskErrorEbaled" disabled=@isDisabled>
+                <p for="task">Ошибка загрузки прайс-листа</p>
+
+            </div>
+            <div>
+                <input type="checkbox" id="cdek" @bind="cdekOrderStatusChangedEnabled" disabled=@isDisabled>
+                <p for="cdek">Изменение статуса заказа СДЭК</p>
+            </div>
+        </div>
     </div>
-    <div class="ml-4">
-        <div>
-            <input type="checkbox" id="price" @bind="priceChangedEnabled" disabled=@isDisabled>
-            <p for="price">Изменение цены</p>
 
-        </div>
-        <div>
-            <input type="checkbox" id="task" @bind="taskErrorEbaled" disabled=@isDisabled>
-            <p for="task">Ошибка загрузки прайс-листа</p>
-
-        </div>
-        <div>
-            <input type="checkbox" id="cdek" @bind="cdekOrderStatusChangedEnabled" disabled=@isDisabled>
-            <p for="cdek">Изменение статуса заказа СДЭК</p>
-        </div>
-    </div>
 
 </div>
 
 <style>
-    #email_tab p {
-        display: inline;
-        margin-left: 6px;
+    #telegram_notification_settings {
+        border: 1px solid #8a86a1;
+        padding: 10px 20px;
+        background: linear-gradient(45deg, #1b5f81, #239ad6);
+        border-radius: 7px;
+        color: white;
     }
+
+        #telegram_notification_settings p {
+            display: inline;
+            margin-left: 6px;
+        }
 </style>
 
 @code {
