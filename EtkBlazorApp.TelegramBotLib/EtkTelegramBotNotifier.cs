@@ -1,6 +1,5 @@
 ﻿using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.Core.Interfaces;
-using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -12,10 +11,12 @@ namespace EtkBlazorApp.TelegramBotLib;
 public class EtkTelegramBotNotifier : IEtkUpdatesNotifier
 {
     private readonly ITelegramBotClient bot;
+    private readonly IEtkUpdatesNotifierMessageFormatter messageFormatter;
     private readonly long ChannelId;
 
-    public EtkTelegramBotNotifier(string token, long channelId)
+    public EtkTelegramBotNotifier(IEtkUpdatesNotifierMessageFormatter messageFormatter, string token, long channelId)
     {
+        this.messageFormatter = messageFormatter;
         ChannelId = channelId;
         bot = new TelegramBotClient(token);
         bot.StartReceiving(HandleUpdate, HandleException);
@@ -28,11 +29,7 @@ public class EtkTelegramBotNotifier : IEtkUpdatesNotifier
     /// <returns></returns>
     public async Task NotifyPriceListProductPriceChanged(PriceListProductPriceChangeHistory data)
     {
-        var message = new StringBuilder()
-            .Append($"🔎 При загрузке прайс-листа <b>{data.PriceListName}</b>\n")
-            .Append($"Обнаружено повышение цен 📈, более чем на <b>{data.MinimumOverpricePercent:P0}</b>\n")
-            .Append($"В <b>{data.Data.Count}</b> 📦 товарах ")
-            .ToString();
+        string message = messageFormatter.GetPriceListChangedMessage(data);
 
         var replyMarkup = GetSimpleMarkupWithUri($"https://lk.etk-komplekt.ru/price-list/products-price-history/{data.PriceListGuid}");
 
@@ -46,7 +43,7 @@ public class EtkTelegramBotNotifier : IEtkUpdatesNotifier
     /// <returns></returns>
     public async Task NotifyPriceListLoadingError(string taskName)
     {
-        string message = $"🛑 Выполнение 🕒 задачи <b>{taskName}</b> завершилось ошибкой";
+        string message = messageFormatter.GetTaskLoadErrorMessage(taskName);
 
         var replyMarkup = GetSimpleMarkupWithUri("https://lk.etk-komplekt.ru/cron-task-history");
 
@@ -61,7 +58,7 @@ public class EtkTelegramBotNotifier : IEtkUpdatesNotifier
     /// <returns></returns>
     public async Task NotifOrderStatusChanged(int order_id, string statusName)
     {
-        string message = $"🚚📦 Статус заказа <b>{order_id}</b> измен на <b>{statusName}</b>";
+        string message = messageFormatter.GetOrderStatusChangedMessage(order_id, statusName);
 
         var replyMarkup = GetSimpleMarkupWithUri($"https://lk.etk-komplekt.ru/order/{order_id}");
 

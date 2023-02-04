@@ -99,7 +99,8 @@ public class Startup
         services.AddSingleton<IEtkUpdatesNotifier>((x) =>
         {
             var section = Configuration.GetSection("TelegramBotNotifierConfiguration");
-            return new EtkTelegramBotNotifier(section["Token"], long.Parse(section["ChannelId"]));
+            IEtkUpdatesNotifierMessageFormatter messageFormatter = new TelegramNotifierMessageFormatter();
+            return new EtkTelegramBotNotifier(messageFormatter, section["Token"], long.Parse(section["ChannelId"]));
         });
         services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
         services.AddSingleton<CashPlusPlusLinkGenerator>();
