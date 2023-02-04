@@ -110,6 +110,7 @@ public class PriceListPriceHistoryManager
     public async Task<PriceListProductPriceChangeHistory> GetProductsPriceChangeHistoryForPriceList(string guid, bool getOnlyLast)
     {
         double minmumChangePercent = await settings.GetValue<double>("price_list_product_price_change_percent_to_notify");
+        DateTime now = DateTime.Now.Date;
 
         if (minmumChangePercent == default(double))
         {
@@ -148,11 +149,14 @@ public class PriceListPriceHistoryManager
             }
         }
 
+        // Проверить при getOnlyLast == true.
+        // Если несколько загрузок прайс-листа за день, то может выдавать от предудыщей.
+        // Как вариант можно сохранять update_id вхождение, даже если не было новых данных
         var list = items
             .Values
             .Where(v => v.Count > 1)
             .Select(i => i.Last())
-            .Where(i => getOnlyLast ? (i.UpdateId == lastUpdateId) : true)
+            .Where(i => getOnlyLast ? (i.UpdateId == lastUpdateId && i.DateTime.Date == now) : true)
             .Where(i => i.ChangePercent > minmumChangePercent)
             .Take(MAX_ITEMS)
             .ToList();

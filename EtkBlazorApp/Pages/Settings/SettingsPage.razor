@@ -27,8 +27,7 @@
         <MainSettingsControlTab tabData="@tabData[1]" />
         <EmailSettingsTab tabData="@tabData[2]" />
         <MarketplaceSettingsTab tabData="@tabData[3]" />
-        <VISettingsTab tabData="@tabData[4]" />
-        <MonobrandSettingsTab tabData="@tabData[5]" />
+        <MonobrandSettingsTab tabData="@tabData[4]" />
     </CascadingValue>
 </div>
 
@@ -37,11 +36,10 @@
 
     List<SettingsTabData> tabData = new List<SettingsTabData>()
     {
-        new SettingsTabData() { Title = "Пользователи" },
-        new SettingsTabData() { Title = "Общие настройки" },
+        new SettingsTabData() { Title = "Пользователи", Icon = new MarkupString("&#128589;") },
+        new SettingsTabData() { Title = "Общие настройки", Icon = new MarkupString("&#128295;") },
         new SettingsTabData() { Title = "Почтовые ящики", Icon = new MarkupString("&#9993;")  },
-        new SettingsTabData() { Title = "Маркетплейсы" },
-        new SettingsTabData() { Title = "ВсеИнструменты" },
+        new SettingsTabData() { Title = "Маркетплейсы", Icon = new MarkupString("&#128722;") },
         new SettingsTabData() { Title = "Монобренды" , Icon = new MarkupString("&#127760;") }
     };
     protected override void OnInitialized()

@@ -47,18 +47,22 @@ namespace EtkBlazorApp.Controllers
 
             //Берем только конечные статусы, другие не нужны
             var cdekStatus = data.attributes.GetCodeStatus();
-            if (cdekStatus.IsEndpointStatus())
+
+            if (cdekStatus.InDelivery())
             {
-                return Ok();
+                await orderUpdateService.ChangeOrderStatus(shopOrder.order_id, (int)OrderStatusCode.InDelivery);
             }
 
-            string statusName = (cdekStatus == CdekOrderStatusCode.DELIVERED ? "Вручен" : "Не вручен");
-            OrderStatusCode orderStatus = (cdekStatus == CdekOrderStatusCode.DELIVERED ? OrderStatusCode.Completed : OrderStatusCode.Canceled);
-            string message = $"Заказ ETK {shopOrder.order_id} (СДЭК {data.attributes.cdek_number}) {statusName}";
+            if (cdekStatus.IsFinalStatus())
+            {
+                string statusName = (cdekStatus == CdekOrderStatusCode.DELIVERED ? "Вручен" : "Не вручен");
+                OrderStatusCode orderStatus = (cdekStatus == CdekOrderStatusCode.DELIVERED ? OrderStatusCode.Completed : OrderStatusCode.Canceled);
+                string message = $"Заказ ETK {shopOrder.order_id} (СДЭК {data.attributes.cdek_number}) {statusName}";
 
-            await orderUpdateService.ChangeOrderStatus(shopOrder.order_id, (int)orderStatus);
-            await eventsLogger?.WriteSystemEvent(LogEntryGroupName.Orders, "СДЭК", message);
-            await notifier.NotifOrderStatusChanged(shopOrder.order_id, statusName);
+                await orderUpdateService.ChangeOrderStatus(shopOrder.order_id, (int)orderStatus);
+                await eventsLogger?.WriteSystemEvent(LogEntryGroupName.Orders, "СДЭК", message);
+                await notifier.NotifOrderStatusChanged(shopOrder.order_id, statusName);
+            }
 
             return Ok();
         }
