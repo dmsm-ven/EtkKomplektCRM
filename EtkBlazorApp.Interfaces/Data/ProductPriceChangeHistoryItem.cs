@@ -8,6 +8,8 @@ public class ProductPriceChangeHistoryItem
 
     public int ProductId { get; init; }
 
+    public int UpdateId { get; init; }
+
     public decimal Price { get; init; }
 
     public DateTime DateTime { get; init; }

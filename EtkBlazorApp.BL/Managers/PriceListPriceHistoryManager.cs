@@ -80,7 +80,7 @@ public class PriceListPriceHistoryManager
         // Шаг 5. Уведомляем клиентов если есть изменения
         if (linesData.Any())
         {
-            var newData = await GetProductsPriceChangeHistoryForPriceList(guid);
+            var newData = await GetProductsPriceChangeHistoryForPriceList(guid, getOnlyLast: true);
 
             if (newData.Data.Count > 0)
             {
@@ -107,9 +107,10 @@ public class PriceListPriceHistoryManager
         return dic;
     }
 
-    public async Task<PriceListProductPriceChangeHistory> GetProductsPriceChangeHistoryForPriceList(string guid)
+    public async Task<PriceListProductPriceChangeHistory> GetProductsPriceChangeHistoryForPriceList(string guid, bool getOnlyLast)
     {
         double minmumChangePercent = await settings.GetValue<double>("price_list_product_price_change_percent_to_notify");
+
         if (minmumChangePercent == default(double))
         {
             throw new ArgumentNullException(nameof(minmumChangePercent));
@@ -117,6 +118,7 @@ public class PriceListPriceHistoryManager
         minmumChangePercent /= 100;
 
         var entiresDictionary = await repo.GetPriceListUpdateHistory(guid);
+        int lastUpdateId = entiresDictionary.Max(i => i.Key.update_id);
 
         int[] productIds = entiresDictionary.Values.SelectMany(i => i).Select(i => i.product_id).Distinct().OrderBy(i => i).ToArray();
         Dictionary<int, string> productNames = await productStorage.GetProductNames(productIds);
@@ -138,7 +140,8 @@ public class PriceListPriceHistoryManager
                     DateTime = kvp.Key.date_time,
                     ProductId = i.product_id,
                     ProductName = productNames[i.product_id],
-                    PreviousItem = items[i.product_id].LastOrDefault()
+                    PreviousItem = items[i.product_id].LastOrDefault(),
+                    UpdateId = kvp.Key.update_id
                 };
 
                 items[i.product_id].Add(node);
@@ -149,6 +152,7 @@ public class PriceListPriceHistoryManager
             .Values
             .Where(v => v.Count > 1)
             .Select(i => i.Last())
+            .Where(i => getOnlyLast ? (i.UpdateId == lastUpdateId) : true)
             .Where(i => i.ChangePercent > minmumChangePercent)
             .Take(MAX_ITEMS)
             .ToList();
@@ -156,6 +160,7 @@ public class PriceListPriceHistoryManager
         if (list.Count > 0)
         {
             string priceListName = (await priceListRepo.GetPriceListTemplateById(guid)).title;
+
             return new PriceListProductPriceChangeHistory
             {
                 Data = list,
