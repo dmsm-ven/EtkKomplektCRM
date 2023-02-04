@@ -72,6 +72,7 @@
     [Inject] public UserLogger logger { get; set; }
     [Inject] public IUserService userStorage { get; set; }
     [Inject] public IToastService toasts { get; set; }
+    [Inject] public IMapper mapper { get; set; }
 
     [Parameter] public SettingsTabData tabData { get; set; }
     [CascadingParameter] public SettingsTabData selectedTab { get; set; }
@@ -87,42 +88,21 @@
 
     protected override async Task OnInitializedAsync()
     {
-        users = (await userStorage.GetUsers()).Select(u => new AppUser()
-            {
-                Login = u.login,
-                Id = u.user_id,
-                LastLoginDateTime = u.last_login_date,
-                CreatingDate = u.creation_date,
-                GroupName = u.group_name,
-                GroupId = u.user_group_id,
-                IsEnabled = u.status,
-                AllowedIp = u.ip
-            }).ToList();
+        users = mapper.Map<List<AppUser>>(await userStorage.GetUsers());
         groups = await userStorage.GetUserGroups();
 
         string loginedUserName = (await stateProvider.GetAuthenticationStateAsync()).User.Identity.Name;
         loginedUser = users.Single(u => u.Login == loginedUserName);
-
     }
 
     private async Task UpdateUser(AppUser user)
     {
-        var updateData = new AppUserEntity()
-            {
-                user_id = user.Id,
-                status = user.IsEnabled,
-                user_group_id = user.GroupId,
-                password = user.Password,
-                ip = string.IsNullOrWhiteSpace(user.AllowedIp) ? null : user.AllowedIp
-            };
-        await userStorage.UpdateUser(updateData);
+        await userStorage.UpdateUser(mapper.Map<AppUserEntity>(user));
         await logger.Write(LogEntryGroupName.Accounts, "Аккаунт обновлен", user.Login);
 
         user.Password = null;
         user = null;
-        toasts.ShowSuccess("Информация обновлена");
-
-        StateHasChanged();
+        toasts.ShowSuccess("Данные пользователя обновлены");
     }
 
     private async Task DeleteConfirmed(bool dialogResult)
@@ -141,18 +121,12 @@
     {
         if (newUser == null) { return; }
 
-        var entity = new AppUserEntity()
-            {
-                login = newUser.Login,
-                password = newUser.Password,
-                user_group_id = newUser.GroupId,
-                ip = newUser.AllowedIp
-            };
-
-        await userStorage.AddUser(entity);
-        users.Add(newUser);
+        await userStorage.AddUser(mapper.Map<AppUserEntity>(newUser));
         await logger.Write(LogEntryGroupName.Accounts, "Аккаунт добавлен", newUser.Login);
+        toasts.ShowSuccess("Пользователь добавлен");
+        users.Add(newUser);
         selectedUser = newUser;
+
 
     }
 }
