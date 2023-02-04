@@ -16,7 +16,17 @@ public class EtkTelegramBotNotifier : IEtkUpdatesNotifier
 
     public EtkTelegramBotNotifier(IEtkUpdatesNotifierMessageFormatter messageFormatter, string token, long channelId)
     {
-        this.messageFormatter = messageFormatter;
+        this.messageFormatter = messageFormatter ?? throw new ArgumentNullException(nameof(messageFormatter));
+
+        if (channelId == 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(channelId));
+        }
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            throw new ArgumentNullException(nameof(token));
+        }
+
         ChannelId = channelId;
         bot = new TelegramBotClient(token);
         bot.StartReceiving(HandleUpdate, HandleException);

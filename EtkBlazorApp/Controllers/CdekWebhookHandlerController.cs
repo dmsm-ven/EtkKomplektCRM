@@ -16,15 +16,18 @@ namespace EtkBlazorApp.Controllers
     {
         private readonly IEtkUpdatesNotifier notifier;
         private readonly IOrderStorage orderStorage;
+        private readonly ISettingStorage settings;
         private readonly IOrderUpdateService orderUpdateService;
         private readonly SystemEventsLogger eventsLogger;
 
         public CdekWebhookHandlerController(IEtkUpdatesNotifier notifier,
             IOrderStorage orderStorage,
+            ISettingStorage settings,
             IOrderUpdateService orderUpdateService,
             SystemEventsLogger eventsLogger)
         {
             this.orderStorage = orderStorage ?? throw new ArgumentNullException(nameof(orderStorage));
+            this.settings = settings;
             this.orderUpdateService = orderUpdateService ?? throw new ArgumentNullException(nameof(orderStorage));
             this.eventsLogger = eventsLogger;
             this.notifier = notifier;
@@ -61,7 +64,13 @@ namespace EtkBlazorApp.Controllers
 
                 await orderUpdateService.ChangeOrderStatus(shopOrder.order_id, (int)orderStatus);
                 await eventsLogger?.WriteSystemEvent(LogEntryGroupName.Orders, "СДЭК", message);
-                await notifier.NotifOrderStatusChanged(shopOrder.order_id, statusName);
+
+                var generalStatus = await settings.GetValue<bool>("telegram_notification_enabled");
+                var cdekOrderStatusChangedEnabled = await settings.GetValue<bool>("telegram_notification_cdek_enabled");
+                if (generalStatus && cdekOrderStatusChangedEnabled)
+                {
+                    await notifier.NotifOrderStatusChanged(shopOrder.order_id, statusName);
+                }
             }
 
             return Ok();

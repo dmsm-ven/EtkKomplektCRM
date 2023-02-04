@@ -54,7 +54,7 @@ public class PriceListPriceHistoryManager
         // Шаг 1. Берем все вхождения (заголовки)
         var entries = await repo.GetPriceListUpdateEntries(guid);
 
-        //Если это первая загрузка - то пропускаем шаги 2,3
+        //Шаг 2, 3
         Dictionary<int, decimal> linesData = priceData;
         if (entries.Any())
         {
@@ -78,15 +78,26 @@ public class PriceListPriceHistoryManager
         await repo.SavePriceListUpdateProductsPriceData(guid, linesData);
 
         // Шаг 5. Уведомляем клиентов если есть изменения
-        if (linesData.Any())
-        {
-            var newData = await GetProductsPriceChangeHistoryForPriceList(guid, getOnlyLast: true);
+        await NotifyIfHasNewData(guid, linesData.Count > 0);
+    }
 
-            if (newData.Data.Count > 0)
-            {
-                await notifier.NotifyPriceListProductPriceChanged(newData);
-            }
+    private async Task NotifyIfHasNewData(string guid, bool hasNewLines)
+    {
+        var isNotifyEnabled = await settings.GetValue<bool>("telegram_notification_enabled");
+        var isNotiyfyPriceChangedEnabled = await settings.GetValue<bool>("telegram_notification_price_enabled");
+
+        if (!isNotifyEnabled || !isNotiyfyPriceChangedEnabled || !hasNewLines)
+        {
+            return;
         }
+
+        var newData = await GetProductsPriceChangeHistoryForPriceList(guid, getOnlyLast: true);
+
+        if (newData.Data.Count > 0)
+        {
+            await notifier.NotifyPriceListProductPriceChanged(newData);
+        }
+
     }
 
     private Dictionary<int, decimal> GetNewLines(Dictionary<int, decimal> currentUpdateData, Dictionary<int, decimal> previuosUpdateData)
