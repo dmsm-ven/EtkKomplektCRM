@@ -12,12 +12,12 @@ public class TelegramNotifierMessageFormatter : IEtkUpdatesNotifierMessageFormat
         return message;
     }
 
-    public string GetPriceListChangedMessage(PriceListProductPriceChangeHistory data)
+    public string GetPriceListChangedMessage(string priceListName, double percent, int totalProducts)
     {
         var message = new StringBuilder()
-            .Append($"🔎 При загрузке прайс-листа <b>{data.PriceListName}</b>\n")
-            .Append($"Обнаружено повышение цен 📈, более чем на <b>{data.MinimumOverpricePercent:P0}</b>\n")
-            .Append($"В <b>{data.Data.Count}</b> 📦 товарах ")
+            .Append($"🔎 При загрузке прайс-листа <b>{priceListName}</b>\n")
+            .Append($"Обнаружено повышение цен 📈, более чем на <b>{percent:P0}</b>\n")
+            .Append($"В <b>{totalProducts}</b> 📦 товарах ")
             .ToString();
 
         return message;

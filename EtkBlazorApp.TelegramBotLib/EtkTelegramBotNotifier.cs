@@ -29,7 +29,7 @@ public class EtkTelegramBotNotifier : IEtkUpdatesNotifier
     /// <returns></returns>
     public async Task NotifyPriceListProductPriceChanged(PriceListProductPriceChangeHistory data)
     {
-        string message = messageFormatter.GetPriceListChangedMessage(data);
+        string message = messageFormatter.GetPriceListChangedMessage(data.PriceListName, data.MinimumOverpricePercent, data.Data.Count);
 
         var replyMarkup = GetSimpleMarkupWithUri($"https://lk.etk-komplekt.ru/price-list/products-price-history/{data.PriceListGuid}");
 
