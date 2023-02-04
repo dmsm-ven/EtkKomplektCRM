@@ -6,206 +6,115 @@
 
 
 <h3>Редактирование товара</h3>
-<div style="max-width: 768px;">
-    <div class="row">
-        <div class="col-md-8 col-sm-12 col-lg-6">
+<div class="row">
+    <div class="col-lg-6 col-md-8 col-sm-12 m-auto" style="max-width: 640px;">
 
-            <div class="form-row" style="margin-bottom: 20px;">
-                <div class="form-group col-md-10">
-                    <input type="url" class="form-control" id="product-uri" @bind="enteredUri">
+        <div class="form-row" style="margin-bottom: 20px;">
+            <div class="form-group col-md-10">
+                <input type="url" class="form-control" id="product-uri" @bind="enteredUri">
+            </div>
+            <div class="form-group col-md-2">
+                <button class="btn btn-primary"
+                        style="width: 100%;"
+                        disabled="@(string.IsNullOrWhiteSpace(enteredUri))"
+                        @onclick="LoadProduct">
+                    Открыть
+                </button>
+            </div>
+        </div>
+
+        @if (editedProduct is not null)
+        {
+            <div class="form-group">
+                <label for="product-manufacturer">Бренд</label>
+                <input type="text" class="form-control" id="product-manufacturer" value="@editedProduct.Manufacturer" readonly>
+            </div>
+            <div class="form-group">
+                <div class="float-left">
+                    <label for="product-name">Наименование</label>
                 </div>
-                <div class="form-group col-md-2">
-                    <button class="btn btn-primary"
-                            style="width: 100%;"
-                            disabled="@(string.IsNullOrWhiteSpace(enteredUri))"
-                            @onclick="LoadProduct">
-                        Открыть
-                    </button>
+                <div class="float-right">
+                    <small style="color: lightgray">Последнее обновление: <span style="color: #7b7ba5;">@editedProduct.DateModified</span></small>
+                </div>
+                <input type="text" class="form-control" id="product-name" value="@editedProduct.Name" readonly>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="product-model">Модель</label>
+                    <input type="text" class="form-control" id="product-model" value="@editedProduct.Model)" readonly>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="product-sku">Артикул</label>
+                    <input type="text" class="form-control" id="product-sku" value="@editedProduct.Sku" readonly>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="product-ean">EAN</label>
+                    <input type="text" class="form-control" id="product-ean" value="@editedProduct.EAN" readonly>
                 </div>
             </div>
-
-            @if (editedProduct == null)
-            {
-                <LoadingSpinner />
-            }
-            else
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="product-quantity">Количество</label>
+                    <input type="number" min="0" max="99999" class="form-control" id="product-quantity" @bind="@editedProduct.Quantity">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="product-stock-status">Статус на складе</label>
+                    <select class="form-control" @bind="editedProduct.StockStatus" id="product-stock-status">
+                        @foreach (var name in stockStatusNames)
+                        {
+                            <option value="@name" selected="@(name == editedProduct.StockStatus)">@name</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="product-price">Цена товара</label>
+                    <input type="number" min="0" class="form-control" id="product-price" @bind="editedProduct.BasePrice">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="product-base-currency-code">Валюта</label>
+                    <select class="form-control" id="base-currency-code" @bind="editedProduct.BasePriceCurrency">
+                        @foreach (var currency in basePriceCurrencyNames)
+                        {
+                            <option value="@currency" selected="@(currency == editedProduct.BasePriceCurrency)">@currency</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            @if (editedProduct.StockStatus == "Снято с производства")
             {
                 <div class="form-group">
-                    <div class="float-left">
-                        <label for="product-name">Наименование</label>
-                    </div>
-                    <div class="float-right">
-                        <small style="color: lightgray">Последнее обновление: <span style="color: #7b7ba5;">@editedProduct.DateModified</span></small>
-                    </div>
-                    <input type="text" class="form-control" id="product-name" value="@(HttpUtility.HtmlDecode(editedProduct.Name))" readonly>
+                    <label>Замена</label>
+                    <SelectProductBlazoredTypehead @bind-Product="replacementProduct" />
                 </div>
-                <div class="form-row">
-                    <div class="form-group col-md-4">
-                        <label for="product-model">Модель</label>
-                        <input type="text" class="form-control" id="product-model" value="@(HttpUtility.HtmlDecode(editedProduct.Model))" readonly>
-                    </div>
-                    <div class="form-group col-md-4">
-                        <label for="product-sku">Артикул</label>
-                        <input type="text" class="form-control" id="product-sku" value="@editedProduct.Sku" readonly>
-                    </div>
-                    <div class="form-group col-md-4">
-                        <label for="product-ean">EAN</label>
-                        <input type="text" class="form-control" id="product-ean" value="@editedProduct.EAN" readonly>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group col-md-6">
-                        <label for="product-quantity">Количество</label>
-                        <input type="number" min="0" max="99999" class="form-control" id="product-quantity" @bind="@editedProduct.Quantity">
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label for="product-stock-status">Статус на складе</label>
-                        <select class="form-control" @bind="editedProduct.StockStatus" id="product-stock-status">
-                            @foreach (var name in stockStatusNames)
-                            {
-                                <option value="@name" selected="@(name == editedProduct.StockStatus)">@name</option>
-                            }
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group col-md-6">
-                        <label for="product-price">Цена товара</label>
-                        <input type="number" min="0" class="form-control" id="product-price" @bind="editedProduct.BasePrice">
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label for="product-base-currency-code">Валюта</label>
-                        <select class="form-control" id="base-currency-code" @bind="editedProduct.BasePriceCurrency">
-                            @foreach (var currency in basePriceCurrencyNames)
-                            {
-                                <option value="@currency" selected="@(currency == editedProduct.BasePriceCurrency)">@currency</option>
-                            }
-                        </select>
-                    </div>
-                </div>
-                @if (editedProduct.StockStatus == "Снято с производства")
-                {
-                    <div class="form-group">
-                        <label>Замена</label>
-                        <SelectProductBlazoredTypehead @bind-Product="replacementProduct" />
-                    </div>
-                }
-
-                if (hasChanges)
-                {
-                    <button class="btn btn-success" style="width: 100%;" @onclick="SaveChanges">Сохранить</button>
-                }
             }
-        </div>
+
+            <button class="btn btn-success" style="width: 100%;" @onclick="SaveChanges" disabled=@(!hasChanges)>Сохранить изменения</button>
+
+            <div class="edit-product-image-container mt-2">
+                <img src="@editedProduct.FullSizeImage" title="@editedProduct.Name" alt="@editedProduct.Name" />
+            </div>
+        }
+        else
+        {
+            <LoadingSpinner />
+        }
     </div>
 </div>
 
-
-@code {
-    [Inject] public IProductStorage productStorage { get; set; }
-    [Inject] public IProductUpdateService productUpdateService { get; set; }
-    [Inject] public ISettingStorage settingStorage { get; set; }
-    [Inject] public ICurrencyChecker currencyChecker { get; set; }
-    [Inject] public IToastService toasts { get; set; }
-    [Inject] public IMapper mapper { get; set; }
-    [Inject] public UserLogger log { get; set; }
-
-    ProductViewModel editedProduct = null;
-    ProductEntity replacementProduct;
-
-    string[] basePriceCurrencyNames = Enum.GetNames(typeof(CurrencyType));
-    string[] stockStatusNames = null;
-    string enteredUri = null;
-
-    [Parameter] public string Keyword { get; set; }
-
-    int currentStateCode = 0;
-    bool hasChanges => currentStateCode != 0 && currentStateCode != GetCurrentStateCode();
-
-    protected override async Task OnInitializedAsync()
-    {
-        if (!string.IsNullOrWhiteSpace(Keyword))
-        {
-            enteredUri = $"https://etk-komplekt.ru/{Keyword}";
-        }
-        else
-        {
-            enteredUri = await settingStorage.GetValue("edit-product-page-last-uri");
-        }
+<style>
+    .edit-product-image-container {
+        display: flex;
+        justify-content: center;
+        align-items: start;
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            stockStatusNames = (await productStorage.GetStockStatuses()).Select(e => e.name).ToArray();
-            if (!string.IsNullOrWhiteSpace(enteredUri))
-            {
-                await LoadProduct();
-            }
+        .edit-product-image-container img {
+            border: 1px solid lightgray;
+            margin: 4px;
+            object-fit: cover;
+            width: 400px;
+            height: 400px;
         }
-    }
-
-    private async Task LoadProduct()
-    {
-        if (string.IsNullOrWhiteSpace(enteredUri))
-        {
-            return;
-        }
-
-        string keyword = new Uri(enteredUri).AbsolutePath.Trim('/', '?', '&');
-        var entity = await productStorage.GetProductByKeyword(keyword);
-        if (entity != null)
-        {
-            editedProduct = mapper.Map<ProductViewModel>(entity);
-
-            if (editedProduct.ReplacementProductId.HasValue)
-            {
-                replacementProduct = await productStorage.GetProductById(editedProduct.ReplacementProductId.Value);
-            }
-
-            await settingStorage.SetValue("edit-product-page-last-uri", editedProduct.Uri);
-            currentStateCode = GetCurrentStateCode();
-            StateHasChanged();
-        }
-    }
-
-    private async Task SaveChanges()
-    {
-        if (editedProduct.BasePriceCurrency != CurrencyType.RUB.ToString())
-        {
-            decimal ratio = await currencyChecker.GetCurrencyRate(Enum.Parse<CurrencyType>(editedProduct.BasePriceCurrency));
-            editedProduct.Price = Math.Round(ratio * editedProduct.BasePrice);
-        }
-        else
-        {
-            editedProduct.BasePriceCurrency = CurrencyType.RUB.ToString();
-            editedProduct.Price = editedProduct.BasePrice;
-        }
-
-        editedProduct.ReplacementProductId = replacementProduct?.product_id;
-        var entity = mapper.Map<ProductEntity>(editedProduct);
-
-        await productUpdateService.UpdateDirectProduct(entity);
-
-        await log.Write(LogEntryGroupName.ProductUpdate, "Товар обновлен", $"{HttpUtility.HtmlDecode(editedProduct.Name)} ({editedProduct.ProductIdUri})");
-
-        currentStateCode = GetCurrentStateCode();
-    }
-
-    private int GetCurrentStateCode()
-    {
-        int code = 0;
-        if (editedProduct != null)
-        {
-            code += editedProduct.Id;
-            code += editedProduct.Price.GetHashCode();
-            code += editedProduct.BasePrice.GetHashCode();
-            code += editedProduct.Quantity.GetHashCode();
-            code += (editedProduct?.StockStatus ?? string.Empty).GetHashCode();
-            code += (editedProduct?.BasePriceCurrency ?? string.Empty).GetHashCode();
-            code += (replacementProduct?.product_id.GetHashCode() ?? 9);
-        }
-        return code;
-    }
-}
+</style>
