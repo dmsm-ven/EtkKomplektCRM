@@ -12,6 +12,8 @@ public enum CurrencyType
     [Description("€")]
     EUR,
     [Description("$")]
-    USD
+    USD,
+    [Description("¥")]
+    CNY
 }
 

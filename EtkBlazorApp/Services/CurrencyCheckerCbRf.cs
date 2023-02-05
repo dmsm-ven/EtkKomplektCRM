@@ -52,36 +52,45 @@ public class CurrencyCheckerCbRf : ICurrencyChecker
             throw new TimeoutException("Не удалось получить цены с сайта ЦБ РФ");
         }
 
-        string USDXml, EuroXML;
-        ReadXmlData(xmlStreamTask.Result, out USDXml, out EuroXML);
+        string USDXml, EuroXML, YanXML;
+        ReadXmlData(xmlStreamTask.Result, out USDXml, out EuroXML, out YanXML);
 
         //Из выдернутых кусков XML кода создаем новые XML документы
         XmlDocument usdXmlDocument = new XmlDocument();
         usdXmlDocument.LoadXml(USDXml);
         XmlDocument euroXmlDocument = new XmlDocument();
         euroXmlDocument.LoadXml(EuroXML);
+        XmlDocument yanXmlDocument = new XmlDocument();
+        yanXmlDocument.LoadXml(YanXML);
+
         //Метод возвращает узел, соответствующий выражению XPath
         XmlNode xmlNode = usdXmlDocument.SelectSingleNode("Valute/Value");
-        //Считываем значение и конвертируем в decimal. Курс валют получен
         decimal usdValue = Convert.ToDecimal(xmlNode.InnerText);
+
         xmlNode = euroXmlDocument.SelectSingleNode("Valute/Value");
         decimal euroValue = Convert.ToDecimal(xmlNode.InnerText);
 
+        xmlNode = yanXmlDocument.SelectSingleNode("Valute/Value");
+        decimal yanValue = Convert.ToDecimal(xmlNode.InnerText);
+
         dic[CurrencyType.USD] = usdValue;
         dic[CurrencyType.EUR] = euroValue;
+        dic[CurrencyType.CNY] = yanValue;
         dic[CurrencyType.RUB] = 1;
 
 
         return dic;
     }
 
-    private static void ReadXmlData(Stream xmlStreamTask, out string USDXml, out string EuroXML)
+    private static void ReadXmlData(Stream xmlStreamTask, out string USDXml, out string EuroXML, out string UanXML)
     {
         XmlTextReader reader = new XmlTextReader(xmlStreamTask);
         //В эти переменные будем сохранять куски XML
         //с определенными валютами (Euro, USD)
         USDXml = "";
         EuroXML = "";
+        UanXML = "";
+
         //Перебираем все узлы в загруженном документе
         while (reader.Read())
         {
@@ -100,23 +109,28 @@ public class CurrencyCheckerCbRf : ICurrencyChecker
                             {
                                 if (reader.Name == "ID")
                                 {
-                                    //Если значение атрибута равно R01235, то перед нами информация о курсе доллара
                                     if (reader.Value == "R01235")
                                     {
-                                        //Возвращаемся к элементу, содержащий текущий узел атрибута
                                         reader.MoveToElement();
-                                        //Считываем содержимое дочерних узлом
                                         USDXml = reader.ReadOuterXml();
                                     }
                                 }
 
-                                //Аналогичную процедуру делаем для ЕВРО
                                 if (reader.Name == "ID")
                                 {
                                     if (reader.Value == "R01239")
                                     {
                                         reader.MoveToElement();
                                         EuroXML = reader.ReadOuterXml();
+                                    }
+                                }
+
+                                if (reader.Name == "ID")
+                                {
+                                    if (reader.Value == "R01375")
+                                    {
+                                        reader.MoveToElement();
+                                        UanXML = reader.ReadOuterXml();
                                     }
                                 }
                             }
