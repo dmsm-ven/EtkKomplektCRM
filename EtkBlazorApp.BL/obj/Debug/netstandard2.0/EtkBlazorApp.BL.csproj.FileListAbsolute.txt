@@ -1,9 +1,0 @@
-D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.BL\bin\Debug\netstandard2.0\EtkBlazorApp.BL.deps.json
-D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.BL\bin\Debug\netstandard2.0\EtkBlazorApp.BL.dll
-D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.BL\bin\Debug\netstandard2.0\EtkBlazorApp.BL.pdb
-D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.BL\obj\Debug\netstandard2.0\EtkBlazorApp.BL.csprojAssemblyReference.cache
-D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.BL\obj\Debug\netstandard2.0\EtkBlazorApp.BL.AssemblyInfoInputs.cache
-D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.BL\obj\Debug\netstandard2.0\EtkBlazorApp.BL.AssemblyInfo.cs
-D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.BL\obj\Debug\netstandard2.0\EtkBlazorApp.BL.csproj.CoreCompileInputs.cache
-D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.BL\obj\Debug\netstandard2.0\EtkBlazorApp.BL.dll
-D:\Programming\CSharp\Blazor\EtkBlazorApp\EtkBlazorApp.BL\obj\Debug\netstandard2.0\EtkBlazorApp.BL.pdb
