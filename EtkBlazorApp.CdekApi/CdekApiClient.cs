@@ -56,6 +56,10 @@ public class CdekApiMemoryCachedClient : ITransportCompanyApi
 
     public async Task<CdekOrderInfo> GetOrderInfo(string cdekOrderNumber)
     {
+        //if (cdekOrderNumber == "webhook")
+        //{
+        //    await RegisterWebhook();
+        //}
         string key = $"cdek_api_order_info_{cdekOrderNumber}";
 
         if (!memoryCache.TryGetValue<CdekOrderInfo>(key, out var info))
@@ -78,7 +82,6 @@ public class CdekApiMemoryCachedClient : ITransportCompanyApi
         }
         return info;
     }
-
 
     public async Task RegisterWebhook()
     {

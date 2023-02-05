@@ -19,20 +19,17 @@ namespace EtkBlazorApp.Controllers
         private readonly IOrderStorage orderStorage;
         private readonly ISettingStorage settings;
         private readonly IOrderUpdateService orderUpdateService;
-        private readonly IHttpContextAccessor httpContextAccessor;
         private readonly SystemEventsLogger eventsLogger;
 
         public CdekWebhookHandlerController(IEtkUpdatesNotifier notifier,
             IOrderStorage orderStorage,
             ISettingStorage settings,
             IOrderUpdateService orderUpdateService,
-            IHttpContextAccessor httpContextAccessor,
             SystemEventsLogger eventsLogger)
         {
             this.orderStorage = orderStorage ?? throw new ArgumentNullException(nameof(orderStorage));
             this.settings = settings;
             this.orderUpdateService = orderUpdateService ?? throw new ArgumentNullException(nameof(orderStorage));
-            this.httpContextAccessor = httpContextAccessor;
             this.eventsLogger = eventsLogger;
             this.notifier = notifier;
         }
@@ -41,10 +38,9 @@ namespace EtkBlazorApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Index([FromBody] CdekWebhookOrderStatusData data)
         {
-            var invalidHost = !httpContextAccessor.HttpContext.Request.Host.HasValue ||
-                !httpContextAccessor.HttpContext.Request.Host.Value.Contains("cdek.ru");
+            string saved_uuid = await settings.GetValue("cdek_webhook_uuid");
 
-            if (invalidHost)
+            if (saved_uuid == null || saved_uuid != data.uuid)
             {
                 return BadRequest();
             }
