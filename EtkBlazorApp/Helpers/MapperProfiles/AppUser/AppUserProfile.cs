@@ -17,6 +17,7 @@ public class AppUserProfile : Profile
 
         CreateMap<AppUserEntity, AppUser>()
             .ForMember(u => u.Id, x => x.MapFrom(u => u.user_id))
+            .ForMember(u => u.CreatingDate, x => x.MapFrom(u => u.creation_date))
             .ForMember(u => u.Login, x => x.MapFrom(u => u.login))
             .ForMember(u => u.LastLoginDateTime, x => x.MapFrom(u => u.last_login_date))
             .ForMember(u => u.GroupName, x => x.MapFrom(u => u.group_name))

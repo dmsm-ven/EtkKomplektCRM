@@ -6,9 +6,19 @@ namespace EtkBlazorApp.TelegramBotLib;
 
 public class TelegramNotifierMessageFormatter : IEtkUpdatesNotifierMessageFormatter
 {
-    public string GetOrderStatusChangedMessage(int order_id, string statusName)
+    public string GetOrderStatusChangedMessage(int? etkOrderId, string cdekOrderId, string statusName)
     {
-        string message = $"🚚📦 Статус заказа <b>{order_id}</b> измен на <b>{statusName}</b>";
+        string message = null;
+
+        if (etkOrderId.HasValue)
+        {
+            message = $"🚚📦 Статус заказа ЕТК<b>{etkOrderId.Value}</b> измен на <b>{statusName}</b>";
+        }
+        else
+        {
+            message = $"🚚📦 Статус заказа СДЭК<b>{cdekOrderId}</b> измен на <b>{statusName}</b>";
+        }
+
         return message;
     }
 

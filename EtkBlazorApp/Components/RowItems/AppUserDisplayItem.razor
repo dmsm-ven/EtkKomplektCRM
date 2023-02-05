@@ -13,8 +13,8 @@ else
             <select class="form-control" @bind="User.GroupId" id="group">
                 @foreach (var group in Groups)
                 {
-                    <option selected="@(group.user_group_id == User.GroupId)" 
-                            value="@group.user_group_id">@group.name</option>
+                    <option selected="@(group.user_group_id == User.GroupId)"
+                    value="@group.user_group_id">@group.name</option>
                 }
             </select>
         </td>
@@ -22,7 +22,7 @@ else
             @if (!User.HasAllowedIp)
             {
                 <input type="checkbox" checked="checked" class="form-check" style="display: inline;"
-                       @onchange="@(e => User.HasAllowedIp = true)" />
+               @onchange="@(e => User.HasAllowedIp = true)" />
                 <label style="display: inline;">Все</label>
             }
             else
@@ -69,11 +69,15 @@ else
         {
             if (User.LastLoginDateTime.HasValue)
             {
-                if(User.LastLoginDateTime.Value.Date == DateTime.Now.Date)
+                if (User.LastLoginDateTime.Value.Date == DateTime.Now.Date)
                 {
                     return $"Сегодня в {User.LastLoginDateTime.Value.TimeOfDay.ToString(@"hh\:mm")}";
                 }
-                return User.LastLoginDateTime.Value.ToString("g");
+                if (User.LastLoginDateTime.Value.Date == DateTime.Now.AddDays(-1).Date)
+                {
+                    return $"Вчера в {User.LastLoginDateTime.Value.TimeOfDay.ToString(@"hh\:mm")}";
+                }
+                return User.LastLoginDateTime.Value.ToString("dd.MM.yyyy HH:mm");
             }
             return string.Empty;
         }

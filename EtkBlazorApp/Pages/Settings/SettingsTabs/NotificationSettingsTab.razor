@@ -8,11 +8,16 @@
             <p for="general">Включить Telegram уведомления</p>
         </div>
         <div class="ml-4">
+            <div class="form-group">
+                <label for="price_history_min_percent">Минимальный порог уведомлений о повышении цены</label>
+                <input type="number" min="1" max="99" class="form-control" id="price_history_min_percent" @bind="priceHistoryMinPercent" disabled=@isDisabled>
+                <p><small style="color: darkgray;">После скольки процентов отображать товар в истории прайс-листов, и уведомлять о повышении цены на него</small></p>
+            </div>
             <div>
                 <input type="checkbox" id="price" @bind="priceChangedEnabled" disabled=@isDisabled>
                 <p for="price">Изменение цены</p>
-
             </div>
+
             <div>
                 <input type="checkbox" id="task" @bind="taskErrorEbaled" disabled=@isDisabled>
                 <p for="task">Ошибка загрузки прайс-листа</p>
@@ -49,6 +54,7 @@
 
     bool isDisabled => !generalStatus;
 
+    int priceHistoryMinPercent;
     bool generalStatus;
     bool priceChangedEnabled;
     bool taskErrorEbaled;
@@ -60,6 +66,8 @@
         priceChangedEnabled = await settings.GetValue<bool>("telegram_notification_price_enabled");
         taskErrorEbaled = await settings.GetValue<bool>("telegram_notification_task_enabled");
         cdekOrderStatusChangedEnabled = await settings.GetValue<bool>("telegram_notification_cdek_enabled");
+        priceHistoryMinPercent = await settings.GetValue<int>("price_list_product_price_change_percent_to_notify");
+
 
         tabData.SaveButtonClicked = new Action(async () =>
         {
@@ -67,6 +75,7 @@
             await settings.SetValue("telegram_notification_price_enabled", priceChangedEnabled);
             await settings.SetValue("telegram_notification_task_enabled", taskErrorEbaled);
             await settings.SetValue("telegram_notification_cdek_enabled", cdekOrderStatusChangedEnabled);
+            await settings.SetValue<int>("price_list_product_price_change_percent_to_notify", priceHistoryMinPercent);
         });
     }
 }

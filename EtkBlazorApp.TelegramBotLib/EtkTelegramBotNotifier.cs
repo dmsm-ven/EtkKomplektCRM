@@ -66,11 +66,15 @@ public class EtkTelegramBotNotifier : IEtkUpdatesNotifier
     /// <param name="order_id"></param>
     /// <param name="statusName"></param>
     /// <returns></returns>
-    public async Task NotifOrderStatusChanged(int order_id, string statusName)
+    public async Task NotifOrderStatusChanged(int? etkOrderId, string cdekOrderId, string statusName)
     {
-        string message = messageFormatter.GetOrderStatusChangedMessage(order_id, statusName);
+        string message = messageFormatter.GetOrderStatusChangedMessage(etkOrderId, cdekOrderId, statusName);
 
-        var replyMarkup = GetSimpleMarkupWithUri($"https://lk.etk-komplekt.ru/order/{order_id}");
+        string buttonUrl = etkOrderId.HasValue ?
+            $"https://lk.etk-komplekt.ru/order/{etkOrderId.Value}" :
+            "https://lk.cdek.ru/order-history/{cdekOrderId}/view";
+
+        InlineKeyboardMarkup replyMarkup = GetSimpleMarkupWithUri(buttonUrl);
 
         await bot.SendTextMessageAsync(ChannelId, message, ParseMode.Html, replyMarkup: replyMarkup);
     }

@@ -7,6 +7,7 @@ using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using EtkBlazorApp.Core.Data.Order;
 using System;
+using Microsoft.AspNetCore.Http;
 
 namespace EtkBlazorApp.Controllers
 {
@@ -18,17 +19,20 @@ namespace EtkBlazorApp.Controllers
         private readonly IOrderStorage orderStorage;
         private readonly ISettingStorage settings;
         private readonly IOrderUpdateService orderUpdateService;
+        private readonly IHttpContextAccessor httpContextAccessor;
         private readonly SystemEventsLogger eventsLogger;
 
         public CdekWebhookHandlerController(IEtkUpdatesNotifier notifier,
             IOrderStorage orderStorage,
             ISettingStorage settings,
             IOrderUpdateService orderUpdateService,
+            IHttpContextAccessor httpContextAccessor,
             SystemEventsLogger eventsLogger)
         {
             this.orderStorage = orderStorage ?? throw new ArgumentNullException(nameof(orderStorage));
             this.settings = settings;
             this.orderUpdateService = orderUpdateService ?? throw new ArgumentNullException(nameof(orderStorage));
+            this.httpContextAccessor = httpContextAccessor;
             this.eventsLogger = eventsLogger;
             this.notifier = notifier;
         }
@@ -37,39 +41,43 @@ namespace EtkBlazorApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Index([FromBody] CdekWebhookOrderStatusData data)
         {
-            if (string.IsNullOrWhiteSpace(data?.attributes?.cdek_number))
+            var invalidHost = !httpContextAccessor.HttpContext.Request.Host.HasValue ||
+                !httpContextAccessor.HttpContext.Request.Host.Value.Contains("cdek.ru");
+
+            if (invalidHost)
             {
                 return BadRequest();
             }
 
-            OrderEntity shopOrder = await orderStorage.GetOrderByCdekNumber(data.attributes.cdek_number);
-            if (shopOrder == null)
+            string cdekOrderNumber = data?.attributes?.cdek_number;
+            if (string.IsNullOrWhiteSpace(cdekOrderNumber))
             {
                 return Ok();
             }
 
-            //Берем только конечные статусы, другие не нужны
-            var cdekStatus = data.attributes.GetCodeStatus();
-
-            if (cdekStatus.InDelivery())
+            OrderEntity shopOrder = await orderStorage.GetOrderByCdekNumber(cdekOrderNumber);
+            CdekOrderStatusCode cdekStatus = data.attributes.GetCodeStatus();
+            EtkOrderStatusCode orderStatus = cdekStatus switch
             {
-                await orderUpdateService.ChangeOrderStatus(shopOrder.order_id, (int)OrderStatusCode.InDelivery);
+                CdekOrderStatusCode.RECEIVED_AT_SHIPMENT_WAREHOUSE => EtkOrderStatusCode.InDelivery,
+                CdekOrderStatusCode.DELIVERED => EtkOrderStatusCode.Completed,
+                CdekOrderStatusCode.NOT_DELIVERED => EtkOrderStatusCode.Canceled,
+                _ => EtkOrderStatusCode.None
+            };
+
+            //На етк меняем статус заказа только если он: вручен, не вручен, поступил в доставку
+            if (shopOrder != null && orderStatus != EtkOrderStatusCode.None)
+            {
+                await orderUpdateService.ChangeOrderStatus(shopOrder.order_id, (int)orderStatus);
             }
 
-            if (cdekStatus.IsFinalStatus())
+            if (cdekStatus == CdekOrderStatusCode.DELIVERED || cdekStatus == CdekOrderStatusCode.NOT_DELIVERED)
             {
-                string statusName = (cdekStatus == CdekOrderStatusCode.DELIVERED ? "Вручен" : "Не вручен");
-                OrderStatusCode orderStatus = (cdekStatus == CdekOrderStatusCode.DELIVERED ? OrderStatusCode.Completed : OrderStatusCode.Canceled);
-                string message = $"Заказ ETK {shopOrder.order_id} (СДЭК {data.attributes.cdek_number}) {statusName}";
-
-                await orderUpdateService.ChangeOrderStatus(shopOrder.order_id, (int)orderStatus);
-                await eventsLogger?.WriteSystemEvent(LogEntryGroupName.Orders, "СДЭК", message);
-
                 var generalStatus = await settings.GetValue<bool>("telegram_notification_enabled");
                 var cdekOrderStatusChangedEnabled = await settings.GetValue<bool>("telegram_notification_cdek_enabled");
                 if (generalStatus && cdekOrderStatusChangedEnabled)
                 {
-                    await notifier.NotifOrderStatusChanged(shopOrder.order_id, statusName);
+                    await notifier.NotifOrderStatusChanged(shopOrder?.order_id, cdekOrderNumber, cdekStatus.GetDescriptionAttribute());
                 }
             }
 

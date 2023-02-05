@@ -1,0 +1,32 @@
+﻿<div id="main_tab">
+    <div class="form-group">
+        <label for="nds">НДС, %</label>
+        <input type="number" min="0" max="100" class="form-control" id="nds" @bind="nds">
+    </div>
+    <div class="form-group">
+        <label for="orders-in-table">Количество выводимых заказов в списке</label>
+        <input type="number" min="10" max="500" class="form-control" id="orders-in-table" @bind="ordersDisplayCount">
+    </div>
+</div>
+
+
+@code {
+    [Inject] public ISettingStorage settings { get; set; }
+    [CascadingParameter] public SettingsTabData tabData { get; set; }
+
+    int nds;
+    int ordersDisplayCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        nds = await settings.GetValue<int>("nds");
+        ordersDisplayCount = await settings.GetValue<int>("orders_display_count");
+
+        tabData.SaveButtonClicked = new Action(async () =>
+        {
+            await settings.SetValue<int>("nds", nds);
+            await settings.SetValue<int>("orders_display_count", ordersDisplayCount);
+        });
+    }
+}

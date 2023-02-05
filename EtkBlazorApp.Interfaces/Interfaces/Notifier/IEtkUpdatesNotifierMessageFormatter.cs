@@ -6,5 +6,5 @@ public interface IEtkUpdatesNotifierMessageFormatter
 {
     string GetPriceListChangedMessage(string priceListName, double percent, int totalProducts);
     string GetTaskLoadErrorMessage(string taskName);
-    string GetOrderStatusChangedMessage(int order_id, string statusName);
+    string GetOrderStatusChangedMessage(int? etkOrderId, string cdekOrderId, string statusName);
 }

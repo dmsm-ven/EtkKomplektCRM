@@ -47,15 +47,15 @@
 
     List<OrderStatusViewModel> availableOrderStatuses = new();
 
-    private readonly Dictionary<OrderStatusCode, EtkBlazorApp.Model.Order.OrderStatusDisplayData> cssMap = new()
+    private readonly Dictionary<EtkOrderStatusCode, EtkBlazorApp.Model.Order.OrderStatusDisplayData> cssMap = new()
         {
-            [OrderStatusCode.None] = new("❓", "dark"),
-            [OrderStatusCode.Created] = new("🔄", "dark"),
-            [OrderStatusCode.InProcessing] = new("📦", "primary"),
-            [OrderStatusCode.InDelivery] = new("🚚", "info"),
-            [OrderStatusCode.Completed] = new("✔️", "success"),
-            [OrderStatusCode.WaitingToPickup] = new("🕘", "warning"),
-            [OrderStatusCode.Canceled] = new("🛑", "light")
+            [EtkOrderStatusCode.None] = new("❓", "dark"),
+            [EtkOrderStatusCode.Created] = new("🔄", "dark"),
+            [EtkOrderStatusCode.InProcessing] = new("📦", "primary"),
+            [EtkOrderStatusCode.InDelivery] = new("🚚", "info"),
+            [EtkOrderStatusCode.Completed] = new("✔️", "success"),
+            [EtkOrderStatusCode.WaitingToPickup] = new("🕘", "warning"),
+            [EtkOrderStatusCode.Canceled] = new("🛑", "light")
         };
 
     private string cssClass
@@ -90,7 +90,7 @@
             {
                 return kvp.Icon;
             }
-            return cssMap[OrderStatusCode.None].Icon;
+            return cssMap[EtkOrderStatusCode.None].Icon;
         }
     }
 
@@ -105,8 +105,8 @@
 
     private async Task ChangeOrderStatus(OrderStatusViewModel status)
     {
-        OrderStatusCode oldStatus = (Order?.Status?.Type ?? OrderStatusCode.None);
-        OrderStatusCode newStatus = status.Type;
+        EtkOrderStatusCode oldStatus = (Order?.Status?.Type ?? EtkOrderStatusCode.None);
+        EtkOrderStatusCode newStatus = status.Type;
 
         if (oldStatus != newStatus)
         {

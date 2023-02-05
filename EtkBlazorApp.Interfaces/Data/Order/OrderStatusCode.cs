@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp.Core.Data.Order;
 
-public enum OrderStatusCode
+public enum EtkOrderStatusCode
 {
     [Description("Неизвестно")]
     None = 0,

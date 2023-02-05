@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,25 +12,21 @@ namespace EtkBlazorApp.Core.Data.Cdek;
 /// </summary>
 public enum CdekOrderStatusCode
 {
+    [Description("Не указано")]
     None,
+
+    [Description("Создан")]
     CREATED,
+
+    [Description("Удален")]
     REMOVED,
+
+    [Description("Вручен")]
     DELIVERED, // Успешно доставлен и вручен адресату (конечный статус)
+
+    [Description("Не вручен")]
     NOT_DELIVERED, // 	Покупатель отказался от покупки, возврат в ИМ (конечный статус),
+
+    [Description("Принят")]
     RECEIVED_AT_SHIPMENT_WAREHOUSE, //Оформлен приход на склад СДЭК в городе-отправителе.
-
-
-}
-
-public static class CdekOrderStatusCodeExtensions
-{
-    public static bool InDelivery(this CdekOrderStatusCode code)
-    {
-        return code == CdekOrderStatusCode.RECEIVED_AT_SHIPMENT_WAREHOUSE;
-    }
-    public static bool IsFinalStatus(this CdekOrderStatusCode code)
-    {
-        return code == CdekOrderStatusCode.DELIVERED || code == CdekOrderStatusCode.NOT_DELIVERED;
-    }
-
 }
