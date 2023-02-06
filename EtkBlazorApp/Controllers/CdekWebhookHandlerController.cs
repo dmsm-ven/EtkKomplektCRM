@@ -8,6 +8,8 @@ using EtkBlazorApp.DataAccess.Entity;
 using EtkBlazorApp.Core.Data.Order;
 using System;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
+using System.Linq;
 
 namespace EtkBlazorApp.Controllers
 {
@@ -34,24 +36,27 @@ namespace EtkBlazorApp.Controllers
             this.notifier = notifier;
         }
 
-        //TODO: Добавить проверку что заказ действительно от сдэка
+        //TODO: Сделать реальную проверку        
         [HttpPost]
         public async Task<IActionResult> Index([FromBody] CdekWebhookOrderStatusData data)
         {
-            string saved_uuid = await settings.GetValue("cdek_webhook_uuid");
+            string cdekHost = await settings.GetValue<string>("cdek_webhook_host");
+            var isAuthorized = HttpContext.Request.Headers.TryGetValue("X-Forwarded-For", out var ip) && ip == cdekHost;
 
-            if (saved_uuid == null || saved_uuid != data.uuid)
+            if (!isAuthorized)
             {
-                return BadRequest();
+                await eventsLogger.WriteSystemEvent(LogEntryGroupName.Orders, "СДЭК", $"Неавторизованный доступ к webhook от хоста: {ip}");
+                return Forbid();
             }
 
             string cdekOrderNumber = data?.attributes?.cdek_number;
             if (string.IsNullOrWhiteSpace(cdekOrderNumber))
             {
-                return Ok();
+                return BadRequest();
             }
 
             OrderEntity shopOrder = await orderStorage.GetOrderByCdekNumber(cdekOrderNumber);
+
             CdekOrderStatusCode cdekStatus = data.attributes.GetCodeStatus();
             EtkOrderStatusCode orderStatus = cdekStatus switch
             {

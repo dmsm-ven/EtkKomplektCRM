@@ -38,11 +38,13 @@ else
             </thead>
             @foreach (var item in orderedSource)
             {
-                <tr>
+                <tr class="@(item.DateTime.Date == DateTime.Now.Date ? "today" : "")">
                     <td>
                         <a href="https://etk-komplekt.ru/index.php?route=product/product&product_id=@item.ProductId"
                    target="_blank"
-                   class="btn btn-sm btn-outline-primary small-external-link-button"><span class="oi oi-external-link"></span></a>
+                   class="btn btn-sm btn-outline-@(item.DateTime.Date == DateTime.Now.Date ? "light" : "primary") small-external-link-button">
+                            <span class="oi oi-external-link"></span>
+                        </a>
                         <span>@item.ProductName</span>
                     </td>
                     <td>@item.DateTime.ToString("dd.MM.yyyy")</td>
@@ -76,6 +78,11 @@ else
     .product-price-update-history-table tr td:first-child {
         font-size: smaller;
         text-align: left;
+    }
+
+    .product-price-update-history-table tr.today {
+        background: #ed143d;
+        color: white;
     }
 </style>
 

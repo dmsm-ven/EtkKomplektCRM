@@ -55,7 +55,8 @@
             [EtkOrderStatusCode.InDelivery] = new("🚚", "info"),
             [EtkOrderStatusCode.Completed] = new("✔️", "success"),
             [EtkOrderStatusCode.WaitingToPickup] = new("🕘", "warning"),
-            [EtkOrderStatusCode.Canceled] = new("🛑", "light")
+            [EtkOrderStatusCode.Canceled] = new("🛑", "light"),
+            [EtkOrderStatusCode.PaidUsingYKassa] = new("💳", "warning")
         };
 
     private string cssClass
@@ -117,7 +118,7 @@
 
             await OrderUpdateSerivce.ChangeOrderStatus(Order.OrderId, (int)newStatus);
 
-            await Logger.Write(LogEntryGroupName.Orders, "Обновление статуса", $"Статус заказа {Order.OrderId} изменен с {Order.Status.Type} на {status.Type}");
+            await Logger.Write(LogEntryGroupName.Orders, "Обновление статуса", $"Статус заказа {Order.OrderId} изменен с {oldStatus} на {newStatus}");
 
             //Проверить что действительно добавляется на активной странице
             Order.StatusChangesHistory.Add(new OrderStatusHistoryViewModel()

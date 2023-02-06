@@ -7,9 +7,11 @@
         <span class="navbar-toggler-icon"></span>
     </button>
     <p>
-        <span class="oi oi-euro currency-top">&nbsp;&nbsp;@eur</span>
+        <span class="oi oi-euro currency-top">&nbsp;&nbsp;<span>@eur</span></span>
         &nbsp; &nbsp;
-        <span class="oi oi-dollar currency-top">&nbsp;&nbsp;@usd</span>
+        <span class="oi oi-dollar currency-top">&nbsp;&nbsp;<span>@usd</span></span>
+        &nbsp; &nbsp;
+        <span class="oi oi-yen currency-top" style="font-size: 1rem; margin-right: 4px;">&nbsp;&nbsp;<span>@cny</span></span>
     </p>
 </div>
 
@@ -96,6 +98,7 @@
 
     string usd;
     string eur;
+    string cny;
 
     void ToggleNavMenu()
     {
@@ -106,6 +109,7 @@
     {
         eur = (await currencyService.GetCurrencyRate(CurrencyType.EUR)).ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
         usd = (await currencyService.GetCurrencyRate(CurrencyType.USD)).ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+        cny = (await currencyService.GetCurrencyRate(CurrencyType.CNY)).ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
     }
 
 }

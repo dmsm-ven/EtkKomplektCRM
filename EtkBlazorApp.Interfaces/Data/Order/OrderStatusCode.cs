@@ -29,4 +29,7 @@ public enum EtkOrderStatusCode
 
     [Description("Выполнен")]
     Completed = 19,
+
+    [Description("Оплачен ЮKassa")]
+    PaidUsingYKassa = 20,
 }

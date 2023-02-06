@@ -22,7 +22,7 @@ public class CurrencyCheckerCbRf : ICurrencyChecker
         this.cache = cache;
     }
 
-    public async Task<decimal> GetCurrencyRate(CurrencyType type)
+    public async ValueTask<decimal> GetCurrencyRate(CurrencyType type)
     {
         if (!cache.TryGetValue(nameof(rates), out rates))
         {
