@@ -12,11 +12,11 @@ public class TelegramNotifierMessageFormatter : IEtkUpdatesNotifierMessageFormat
 
         if (etkOrderId.HasValue)
         {
-            message = $"🚚📦 Статус заказа ЕТК<b>{etkOrderId.Value}</b> измен на <b>{statusName}</b>";
+            message = $"🚚📦 Статус заказа ЕТК №<b>{etkOrderId.Value}</b> (СДЭК №<b>{cdekOrderId}</b>) измен на <b>{statusName}</b>";
         }
         else
         {
-            message = $"🚚📦 Статус заказа СДЭК<b>{cdekOrderId}</b> измен на <b>{statusName}</b>";
+            message = $"🚚📦 Статус заказа СДЭК №<b>{cdekOrderId}</b> измен на <b>{statusName}</b>";
         }
 
         return message;

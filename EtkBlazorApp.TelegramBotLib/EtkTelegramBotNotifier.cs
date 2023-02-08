@@ -72,7 +72,7 @@ public class EtkTelegramBotNotifier : IEtkUpdatesNotifier
 
         string buttonUrl = etkOrderId.HasValue ?
             $"https://lk.etk-komplekt.ru/order/{etkOrderId.Value}" :
-            "https://lk.cdek.ru/order-history/{cdekOrderId}/view";
+            $"https://lk.cdek.ru/order-history/{cdekOrderId}/view";
 
         InlineKeyboardMarkup replyMarkup = GetSimpleMarkupWithUri(buttonUrl);
 
