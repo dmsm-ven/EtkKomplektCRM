@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.BL.Managers;
+using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.DataAccess;
 using System;
 using System.Collections.Generic;
@@ -54,17 +55,17 @@ namespace EtkBlazorApp.BL
             progress?.Report("Сопоставление товаров для обновления");
             var data = await correlator.GetCorrelationData(products, priceLines);
 
-            progress?.Report("Обновление цен etk-komplekt.ru");
-            await productUpdateService.UpdateProductsPrice(data);
-
             progress?.Report("Сохранение истории изменения цены");
             await priceHistoryManager.SavePriceChangesHistory(priceLines, data);
 
-            progress?.Report("Обновление остатков на складах etk-komplekt.ru");
-            await productUpdateService.UpdateProductsStockPartner(data, affectedBrandsIds);
+            progress?.Report("Обновление цен/остатков отдельных складов");
+            await productUpdateService.UpdateStockProducts(data, affectedBrandsIds);
 
-            progress?.Report("Складывание остатков складов etk-komplekt.ru");
-            await productUpdateService.ComputeStockQuantity(data);
+            progress?.Report("Перерасчет основного остатка в товарах");
+            await productUpdateService.ComputeStocksQuantity(data);
+
+            progress?.Report("Перерасчет основной цены в товарах");
+            await productUpdateService.ComputeProductsPrice(data);
 
             if (data.Any(d => d.NextStockDelivery != null))
             {
@@ -72,13 +73,13 @@ namespace EtkBlazorApp.BL
                 await productUpdateService.UpdateNextStockDelivery(data);
             }
 
-            if (data.Any(line => line.price.HasValue) && data.Any(pl => pl.currency_code != "RUB"))
+            if (data.Any(line => line.price.HasValue) && data.Any(pl => pl.currency_code != CurrencyType.RUB))
             {
                 progress?.Report("Пересчет цен товаров в валюте");
                 await (new WebClient().DownloadStringTaskAsync(CurrencyCustomUri));
             }
 
-            if ((await settingStorage.GetValue("update-monobrand-websites")) == "true")
+            if ((await settingStorage.GetValue<bool>("update-monobrand-websites")))
             {
                 await UpdateMonobrands(affectedBrandsIds, progress);
             }

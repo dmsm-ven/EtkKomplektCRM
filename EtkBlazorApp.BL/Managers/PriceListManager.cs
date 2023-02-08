@@ -123,6 +123,8 @@ namespace EtkBlazorApp.BL
         private async Task ApplyDiscounts(IEnumerable<PriceLine> list, PriceListTemplateEntity templateInfo)
         {
             var source = list.Where(line => line.Price.HasValue);
+            source.ToList().ForEach(line => line.OriginalPrice = line.Price);
+
 
             bool emptyDiscountGeneralDiscount = templateInfo.discount == decimal.Zero;
             bool emptyDiscountMap = templateInfo.manufacturer_discount_map.Count == 0;
@@ -147,6 +149,7 @@ namespace EtkBlazorApp.BL
                 if (templateInfo.nds)
                 {
                     line.Price = AddNds(line.Price.Value, line.Currency);
+                    line.OriginalPrice = AddNds(line.OriginalPrice.Value, line.Currency);
                 }
 
                 decimal discountValue = emptyDiscountGeneralDiscount ? 0m : templateInfo.discount;

@@ -1,21 +1,23 @@
-﻿using EtkBlazorApp.DataAccess.Entity;
+﻿using EtkBlazorApp.Core.Data;
+using EtkBlazorApp.DataAccess.Entity;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.DataAccess
 {
     public interface IProductUpdateService
     {
-        Task UpdateProductsPrice(List<ProductUpdateData> data);
-        Task UpdateProductsStock(List<ProductUpdateData> data);
-        Task UpdateNextStockDelivery(List<ProductUpdateData> data);
-        Task UpdateProductsStockPartner(List<ProductUpdateData> data, int [] affectedBrands);
-        Task ComputeStockQuantity(List<ProductUpdateData> data);
+        Task UpdateNextStockDelivery(IEnumerable<ProductUpdateData> data);
         Task UpdateDirectProduct(ProductEntity product);
+
+        Task UpdateStockProducts(IEnumerable<ProductUpdateData> data, int[] affectedBrands);
+        Task ComputeStocksQuantity(IEnumerable<ProductUpdateData> data);
+        Task ComputeProductsPrice(IEnumerable<ProductUpdateData> data);
     }
 
     public class ProductUpdateService : IProductUpdateService
@@ -27,138 +29,79 @@ namespace EtkBlazorApp.DataAccess
             this.database = database;
         }
 
-        public async Task UpdateProductsPrice(List<ProductUpdateData> data)
+        public async Task UpdateStockProducts(IEnumerable<ProductUpdateData> source, int[] affectedBrands)
         {
-            //Если товар в акции или в специальном списке то не обновляем его
-            List<int> skipProducts = await GetSkipProductIds();
+            if (source.Count() == 0)
+            {
+                return;
+            }
 
-            List<ProductUpdateData> source = data
+            var orderedSource = source
                 .OrderBy(p => p.product_id)
-                .Where(d => d.price.HasValue && skipProducts.Contains(d.product_id) == false)
                 .ToList();
 
-            if (source.Count == 0) { return; }
+            var groupedByPartner = orderedSource
+                .GroupBy(line => line.stock_id)
+                .ToDictionary(i => i.Key, j => j.ToList());
 
-            Dictionary<string, List<int>> idsGroupedByCurrency = source
-                .GroupBy(p => p.currency_code)
-                .ToDictionary(g => g.Key, g => g.Select(p => p.product_id).OrderBy(id => id).ToList());
-            bool onlyOneCurrency = idsGroupedByCurrency.Keys.Count == 1;
-            bool onlyInRubCurrency = onlyOneCurrency && idsGroupedByCurrency.Keys.First() == "RUB";
-
-            string idsArray = string.Join(",", source.Select(d => d.product_id).Distinct().OrderBy(id => id));
-
-            var sb = new StringBuilder()
-                .AppendLine("UPDATE oc_product")
-                .AppendLine("SET base_price = CASE product_id");
-
-            foreach (var productInfo in source)
+            //Дополнительные склады
+            if (source.Any(i => i.AdditionalStocksQuantity != null))
             {
-                sb.AppendLine($"WHEN '{productInfo.product_id}' THEN '{productInfo.price.Value.ToString(new CultureInfo("en-EN"))}'");
+                AppendToAdditionalStocks(orderedSource, groupedByPartner);
             }
 
-            sb.AppendLine("ELSE base_price")
-              .AppendLine("END, date_modified = NOW()");
+            await UpdateProductsStockQuantity(groupedByPartner);
 
-            if (onlyOneCurrency)
+            await UpdateProductsStockPrice(groupedByPartner);
+        }
+
+        private async Task UpdateProductsStockQuantity(IReadOnlyDictionary<int, List<ProductUpdateData>> groupedByPartner)
+        {
+            if (!groupedByPartner.Any(kvp => kvp.Value.Count(i => i.quantity.HasValue) > 0))
             {
-                sb.AppendLine($", base_currency_code = '{idsGroupedByCurrency.Keys.First()}'");
-                if (onlyInRubCurrency)
+                return;
+            }
+
+
+            var sb = new StringBuilder("INSERT INTO oc_product_to_stock (stock_partner_id, product_id, quantity) VALUES\n");
+            foreach (var group in groupedByPartner)
+            {
+                foreach (var kvp in group.Value.Where(v => v.quantity.HasValue))
                 {
-                    sb.AppendLine($", price = base_price");
+                    sb.AppendLine($"({group.Key}, {kvp.product_id}, {Math.Max(kvp.quantity.Value, 0)}),");
                 }
             }
-            sb.AppendLine($"WHERE product_id IN ({idsArray});");
-
-            if (!onlyOneCurrency)
-            {
-                //Обновляем тип валюты товара
-                foreach (var kvp in idsGroupedByCurrency)
-                {
-                    string currencyIdsArray = string.Join(",", kvp.Value.OrderBy(id => id));
-                    sb.AppendLine($"UPDATE oc_product SET base_currency_code = '{kvp.Key}' WHERE product_id IN ({currencyIdsArray});");
-                }
-            }
-
-            var sql = sb.ToString();
+            var sql = sb.ToString().Trim('\r', '\n', ',') + " ON DUPLICATE KEY UPDATE quantity = VALUES(quantity);";
 
             await database.ExecuteQuery(sql);
         }
 
-        public async Task UpdateProductsStock(List<ProductUpdateData> data)
+        private async Task UpdateProductsStockPrice(IReadOnlyDictionary<int, List<ProductUpdateData>> groupedByPartner)
         {
-            List<ProductUpdateData> source = data
-                .OrderBy(p => p.product_id)
-                .Where(d => d.quantity.HasValue && d.stock_id != 0)
-                .ToList();
-
-            if (source.Count == 0) { return; }
-
-            string pidArray = string.Join(",", source.Select(ud => ud.product_id).OrderBy(pid => pid).Distinct());
-
-            var sb = new StringBuilder()
-                .AppendLine("UPDATE oc_product")
-                .AppendLine("SET quantity = CASE product_id");
-
-            foreach (var productInfo in source)
+            if (!groupedByPartner.Any(kvp => kvp.Value.Count(i => i.price.HasValue && i.original_price.HasValue) > 0))
             {
-                sb.AppendLine($"WHEN '{productInfo.product_id}' THEN '{Math.Max(productInfo.quantity.Value, 0)}'");
+                return;
             }
 
-            sb.AppendLine("ELSE quantity")
-              .AppendLine("END, date_modified = NOW()")
-              .AppendLine($"WHERE product_id IN ({pidArray});");
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
-
-            string sql = sb.ToString();
-
-            await database.ExecuteQuery<dynamic>(sql, new { });
-        }
-
-        public async Task UpdateProductsStockPartner(List<ProductUpdateData> source, int[] affectedBrands)
-        {           
-            source = source
-                .OrderBy(p => p.product_id)
-                .Where(item => item.quantity.HasValue)
-                .ToList();
-
-            if (source.Any())
+            var sb = new StringBuilder("INSERT INTO oc_product_to_stock (stock_partner_id, product_id, original_price, price, currency_code) VALUES\n");
+            foreach (var group in groupedByPartner)
             {
-                var groupedByPartner = source
-                    .GroupBy(line => line.stock_id)
-                    .ToDictionary(i => i.Key, j => j.ToList());
-
-                //Дополнительные склады
-                if (source.Any(i => i.AdditionalStocksQuantity != null))
-                { 
-                    AppendQuantityFromAdditionalStocks(source, groupedByPartner);
-                }
-
-                var partnerIdArray = string.Join(",", groupedByPartner.Select(g => g.Key).Distinct());
-                var affectedBrandIdsArray = string.Join(",", affectedBrands);
-
-                string clearStockSql = $@"UPDATE oc_product_to_stock
-                                          JOIN oc_product ON oc_product.product_id = oc_product_to_stock.product_id
-                                          JOIN oc_manufacturer ON oc_product.manufacturer_id = oc_manufacturer.manufacturer_id
-                                          SET oc_product_to_stock.quantity = 0
-                                          WHERE oc_product_to_stock.stock_partner_id IN ({partnerIdArray}) AND oc_manufacturer.manufacturer_id IN ({affectedBrandIdsArray})";
-                await database.ExecuteQuery(clearStockSql);
-
-
-                var sb = new StringBuilder("INSERT INTO oc_product_to_stock (stock_partner_id, product_id, quantity) VALUES\n");
-                foreach (var group in groupedByPartner)
+                foreach (var kvp in group.Value)
                 {
-                    foreach (var kvp in group.Value)
-                    {
-                        sb.AppendLine($"({group.Key}, {kvp.product_id}, {Math.Max(kvp.quantity.Value, 0)}),");
-                    }
+                    sb.AppendLine($"({group.Key}, {kvp.product_id}, '{kvp.original_price}', '{kvp.price}', '{kvp.currency_code}'),");
                 }
-                var sql = sb.ToString().Trim('\r', '\n', ',') + " ON DUPLICATE KEY UPDATE quantity = VALUES(quantity)";
-                await database.ExecuteQuery(sql);
             }
+            var sql = sb.ToString().Trim('\r', '\n', ',') + @" ON DUPLICATE KEY UPDATE 
+                                                                    original_price = VALUES(original_price), 
+                                                                    price = VALUES(price), 
+                                                                    currency_code = VALUES(currency_code);";
+            await database.ExecuteQuery(sql);
         }
 
-        private void AppendQuantityFromAdditionalStocks(List<ProductUpdateData> source, Dictionary<int, List<ProductUpdateData>> groupedByPartner)
-        {          
+        private void AppendToAdditionalStocks(IEnumerable<ProductUpdateData> source, Dictionary<int, List<ProductUpdateData>> groupedByPartner)
+        {
             foreach (var item in source.Where(i => i.AdditionalStocksQuantity != null))
             {
                 foreach (var kvp in item.AdditionalStocksQuantity)
@@ -167,12 +110,44 @@ namespace EtkBlazorApp.DataAccess
                     {
                         groupedByPartner.Add(kvp.Key, new List<ProductUpdateData>());
                     }
-                    groupedByPartner[kvp.Key].Add(new ProductUpdateData() { product_id = item.product_id, quantity = kvp.Value });
+                    groupedByPartner[kvp.Key].Add(new ProductUpdateData()
+                    {
+                        product_id = item.product_id,
+                        quantity = kvp.Value,
+                        original_price = item.original_price,
+                        price = item.price,
+                        currency_code = item.currency_code
+                    });
                 }
             }
         }
 
-        public async Task ComputeStockQuantity(List<ProductUpdateData> data)
+        public async Task ComputeProductsPrice(IEnumerable<ProductUpdateData> data)
+        {
+            var idsToUpdate = data
+                .Where(d => d.price.HasValue)
+                .Select(d => d.product_id)
+                .Distinct()
+                .OrderBy(p => p)
+                .ToList();
+
+            var pidArray = string.Join(",", idsToUpdate);
+
+            string pileUpStockSql = $@"UPDATE oc_product
+                                       INNER JOIN (SELECT pts.*, MIN(pts.price) as min_price
+      		                                       FROM oc_product_to_stock as pts
+      		                                       JOIN oc_currency as curr ON (`pts`.`currency_code` = `curr`.`code`)
+			                                       WHERE product_id IN ({pidArray})
+                                                   GROUP BY pts.product_id) as inner_tbl
+                                       SET oc_product.price = inner_tbl.min_price, 
+	                                       oc_product.base_price = inner_tbl.price,
+                                           oc_product.base_currency_code = inner_tbl.currency_code,
+                                           oc_product.date_modified = NOW()
+                                       WHERE oc_product.product_id = inner_tbl.product_id";
+            await database.ExecuteQuery(pileUpStockSql);
+        }
+
+        public async Task ComputeStocksQuantity(IEnumerable<ProductUpdateData> data)
         {
             var idsToUpdate = data
                 .Where(d => d.quantity.HasValue)
@@ -222,11 +197,11 @@ namespace EtkBlazorApp.DataAccess
             }
         }
 
-        public async Task UpdateNextStockDelivery(List<ProductUpdateData> data)
+        public async Task UpdateNextStockDelivery(IEnumerable<ProductUpdateData> data)
         {
             var source = data.Where(pl => pl.NextStockDelivery != null).ToList();
-            
-            if(source.Count == 0) { return; }
+
+            if (source.Count == 0) { return; }
 
             string stock_ids = string.Join(",", source.GroupBy(p => p.stock_id).Select(g => g.Key));
             await database.ExecuteQuery($"DELETE FROM oc_stock_next_delivery WHERE stock_id IN ({stock_ids})");
@@ -234,7 +209,7 @@ namespace EtkBlazorApp.DataAccess
             var sb = new StringBuilder();
 
             sb.AppendLine("INSERT INTO oc_stock_next_delivery (stock_id, product_id, quantity, next_shipment_date) VALUES");
-            foreach(var line in source)
+            foreach (var line in source)
             {
                 sb.AppendLine($"({line.stock_id}, {line.product_id}, {line.NextStockDelivery.Quantity}, '{line.NextStockDelivery.Date.ToString("yyyy-MM-dd")}'),");
             }

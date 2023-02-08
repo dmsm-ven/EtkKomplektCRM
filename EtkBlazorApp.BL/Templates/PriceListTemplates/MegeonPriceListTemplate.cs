@@ -76,7 +76,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
                 int? quantity = ParseQuantity(offer.Element("outlets").Element("outlet")?.Attribute("instock").Value ?? "0");
 
-                list.Add(new PriceLine(this)
+                var line = new PriceLine(this)
                 {
                     Price = ParsePrice(offer.Element("price").Value),
                     Currency = CurrencyType.RUB,
@@ -85,7 +85,9 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Sku = offer.Attribute("id").Value,
                     Manufacturer = "Мегеон",
                     Quantity = quantity
-                });
+                };
+
+                list.Add(line);
 
             }
             return list;

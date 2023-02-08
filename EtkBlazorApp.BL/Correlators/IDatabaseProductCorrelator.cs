@@ -35,7 +35,7 @@ namespace EtkBlazorApp.BL
                         {
                             product_id = product.product_id,
                             price = findedLine.Price,
-                            currency_code = findedLine.Currency.ToString(),
+                            currency_code = findedLine.Currency,
                             quantity = findedLine.Quantity,
                             stock_id = (int)findedLine.Stock
                         };
@@ -82,7 +82,8 @@ namespace EtkBlazorApp.BL
                     {
                         product_id = product.product_id,
                         price = findedLine.Price,
-                        currency_code = findedLine.Currency.ToString(),
+                        original_price = findedLine.OriginalPrice,
+                        currency_code = findedLine.Currency,
                         quantity = findedLine.Quantity,
                         stock_id = (int)findedLine.Stock
                     };

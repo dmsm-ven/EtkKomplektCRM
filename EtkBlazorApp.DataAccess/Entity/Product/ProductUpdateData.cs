@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using EtkBlazorApp.Core.Data;
+using System.Collections.Generic;
 
 namespace EtkBlazorApp.DataAccess
 {
@@ -6,10 +7,12 @@ namespace EtkBlazorApp.DataAccess
     {
         public int product_id { get; set; }
         public decimal? price { get; set; }
-        public string currency_code { get; set; }
+        public decimal? original_price { get; set; }
+        public CurrencyType currency_code { get; set; }
 
         public int? quantity { get; set; }
         public int stock_id { get; set; }
+
 
         //Только для типа 'MultistockPriceLine'
         public Dictionary<int, int> AdditionalStocksQuantity { get; set; } = null;
