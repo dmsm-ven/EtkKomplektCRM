@@ -1,0 +1,145 @@
+﻿<div class="additional-settings" style="display: block;">
+
+    <PriceListTemplateEditExpanderItem Title="Наценки для отдельных брендов">
+        <div>
+            <p class="pl-template-add-settings-desc">Наценка для бренда будет равна указанной, а не той которая общая для всего прайс-листа</p>
+            <button type="button" class="btn btn-success"
+                    @onclick="AddDiscountMapRecord">
+                <span class="oi oi-plus"></span>
+            </button>
+            <input type="number" class="form-control price-list-template-map-control" placeholder="Наценка" @bind="newDiscountMapValue" />
+            <strong style="margin: 0px 12px;">=</strong>
+            <SelectManufacturerDropdown CustomStyle="display: inline-block; width: 250px;"
+                                        @bind-Manufacturer="newDiscountMapRecordItem" />
+        </div>
+        <hr />
+        @foreach (var mitem in sourceTemplate.ManufacturerDiscountMap)
+        {
+            <div style="margin-top: 8px;">
+                <button type="button" class="btn btn-outline-danger" @onclick="@(e => RemoveDiscountMapRecord(mitem))">
+                    <span class="oi oi-minus"></span>
+                </button>
+                <input type="text" class="form-control price-list-template-map-control" readonly value="@mitem.manufacturer_name" />
+                <strong style="margin: 0px 12px;">=</strong>
+                <input type="text" class="form-control price-list-template-map-control" readonly value="@mitem.discount" />
+            </div>
+        }
+    </PriceListTemplateEditExpanderItem>
+
+    <PriceListTemplateEditExpanderItem Title="Закупочные цены для брендов">
+        <div>
+            <p class="pl-template-add-settings-desc">Название бренда в прайс-листе должно точно соответствовать названию на сайте</p>
+            <button type="button" class="btn btn-success"
+                    @onclick="AddDiscountMapRecord">
+                <span class="oi oi-plus"></span>
+            </button>
+            <input type="number" class="form-control price-list-template-map-control" placeholder="Наценка" @bind="newDiscountMapValue" />
+            <strong style="margin: 0px 12px;">=</strong>
+            <SelectManufacturerDropdown CustomStyle="display: inline-block; width: 250px;"
+                                        @bind-Manufacturer="newDiscountMapRecordItem" />
+        </div>
+        <hr />
+        @foreach (var mitem in sourceTemplate.ManufacturerDiscountMap)
+        {
+            <div style="margin-top: 8px;">
+                <button type="button" class="btn btn-outline-danger" @onclick="@(e => RemoveDiscountMapRecord(mitem))">
+                    <span class="oi oi-minus"></span>
+                </button>
+                <input type="text" class="form-control price-list-template-map-control" readonly value="@mitem.manufacturer_name" />
+                <strong style="margin: 0px 12px;">=</strong>
+                <input type="text" class="form-control price-list-template-map-control" readonly value="@mitem.discount" />
+            </div>
+        }
+    </PriceListTemplateEditExpanderItem>
+
+    <PriceListTemplateEditExpanderItem Title="Нечисловые количества остатков">
+        <div>
+            <p class="pl-template-add-settings-desc">Если в прайс-листе есть неточные значения в словах (например "Да", "В наличии" или другие) то необходимо перечислить каждое такое значение</p>
+            <div>
+                <button type="button" class="btn btn-success"
+                        disabled="@(string.IsNullOrWhiteSpace(newQuantityMapRecordWord))"
+                        @onclick="AddNewQuantityMapRecord">
+                    <span class="oi oi-plus"></span>
+                </button>
+                <input type="text" class="form-control price-list-template-map-control" placeholder="Слово" @bind="newQuantityMapRecordWord" />
+                <strong style="margin: 0px 12px;">=</strong>
+                <input type="number" class="form-control price-list-template-map-control" placeholder="Количество" @bind="newQuantityMapRecordValue" />
+            </div>
+        </div>
+        <hr />
+        @foreach (var qitem in sourceTemplate.QuantityMap)
+        {
+            <div style="margin-top: 8px;">
+                <button type="button" class="btn btn-outline-danger" @onclick="@(e => RemoveQuantityMapRecord(qitem.Key))">
+                    <span class="oi oi-minus"></span>
+                </button>
+                <input type="text" class="form-control price-list-template-map-control" readonly value="@qitem.Key" />
+                <strong style="margin: 0px 12px;">=</strong>
+                <input type="number" class="form-control price-list-template-map-control" readonly value="@qitem.Value" />
+            </div>
+        }
+    </PriceListTemplateEditExpanderItem>
+
+    <PriceListTemplateEditExpanderItem Title="Преобразование названий брендов">
+        <div>
+            <p class="pl-template-add-settings-desc">Название бренда в прайс-листе должно точно соответствовать названию на сайте. Если оно отличается то его необходимо добавить в список и выбрать соответствующее название бренда на сайте (в выпадающем списке)</p>
+            <button type="button" class="btn btn-success"
+                    disabled="@addNewManufacturerMapButtonDisabled"
+                    @onclick="AddManufacturerMapRecord">
+                <span class="oi oi-plus"></span>
+            </button>
+            <input type="text" class="form-control price-list-template-map-control" placeholder="Слово" @bind="newManufacturerMapRecordWord" />
+            <strong style="margin: 0px 12px;">=</strong>
+            <SelectManufacturerDropdown CustomStyle="display: inline-block; width: 250px;"
+                                        @bind-Manufacturer="newManufacturerMapRecordItem" />
+        </div>
+        <hr />
+        @foreach (var mitem in sourceTemplate.ManufacturerNameMap)
+        {
+            <div style="margin-top: 8px;">
+                <button type="button" class="btn btn-outline-danger" @onclick="@(e => RemoveManufacturerMapRecord(mitem.Key))">
+                    <span class="oi oi-minus"></span>
+                </button>
+                <input type="text" class="form-control price-list-template-map-control" readonly value="@mitem.Key" />
+                <strong style="margin: 0px 12px;">=</strong>
+                <input type="text" class="form-control price-list-template-map-control" readonly value="@mitem.Value" />
+            </div>
+        }
+    </PriceListTemplateEditExpanderItem>
+
+    <PriceListTemplateEditExpanderItem Title="Список исключения брендов">
+        <div>
+            <p class="pl-template-add-settings-desc"><strong>Черный список</strong> - выбранный производитель будет пропущен</p>
+            <p class="pl-template-add-settings-desc"><strong>Белый список</strong> - выбранный производитель будет загружен, но все остальные бренды будут пропущены</p>
+            <button type="button" class="btn btn-success"
+                    disabled="@skipManufacturerAddNewRecordButtonDisabled"
+                    @onclick="AddSkipManufacturerRecord">
+                <span class="oi oi-plus"></span>
+            </button>
+            <SelectManufacturerDropdown CustomStyle="display: inline-block; width: 250px;"
+                                        @bind-Manufacturer="newSkipManufacturerItem" />
+
+            <strong style="margin: 0px 12px;"></strong>
+            <select @onchange="@(e => newSkipManufacturerListType = Enum.Parse<SkipManufacturerListType>(e.Value.ToString()))"
+                    class="form-control price-list-template-map-control">
+                <option value="black_list" selected="@(newSkipManufacturerListType == SkipManufacturerListType.black_list)">Черный список</option>
+                <option value="white_list" selected="@(newSkipManufacturerListType == SkipManufacturerListType.white_list)">Белый список</option>
+            </select>
+        </div>
+        <hr />
+        @foreach (var si in sourceTemplate.ManufacturerSkipList)
+        {
+            <div style="margin-top: 8px;">
+                <button type="button" class="btn btn-outline-danger" @onclick="@(e => RemoveSkipManufacturerRecord(si))">
+                    <span class="oi oi-minus"></span>
+                </button>
+                <input type="text" class="form-control price-list-template-map-control" readonly value="@si.Name" />
+                <strong style="margin: 0px 12px;">действие</strong>
+                <input type="text" class="form-control price-list-template-map-control" readonly value="@si.ListTypeDescription" />
+            </div>
+        }
+    </PriceListTemplateEditExpanderItem>
+</div>
+
+
+

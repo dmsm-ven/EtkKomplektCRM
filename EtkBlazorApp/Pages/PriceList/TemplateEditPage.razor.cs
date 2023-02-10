@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace EtkBlazorApp.Pages.PriceList;
 
 //TODO: разбить класс, получилось слишком много данных, дополнить маппер и использовать проброс через него
-public partial class PriceListTemplateEdit : ComponentBase
+public partial class TemplateEditPage : ComponentBase
 {
     [Inject] public IPriceListTemplateStorage templateStorage { get; set; }
     [Inject] public IStockStorage stockStorage { get; set; }
@@ -34,43 +34,14 @@ public partial class PriceListTemplateEdit : ComponentBase
     List<string> alreadyUsedGuids;
 
     StockPartnerEntity linkedStock;
-    SkipManufacturerListType newSkipManufacturerListType = SkipManufacturerListType.black_list;
-    ManufacturerEntity newSkipManufacturerItem;
-    ManufacturerEntity newManufacturerMapRecordItem;
-    ManufacturerEntity newDiscountMapRecordItem;
-
-    string newManufacturerMapRecordWord;
-    string newQuantityMapRecordWord;
-    decimal newDiscountMapValue;
-    int newQuantityMapRecordValue;
 
     bool createNew = false;
-    bool expandedQuantityMap = false;
-    bool expandedManufacturerMap = false;
-    bool expandedDiscountMap = false;
-    bool expandedSkipList = false;
 
     bool showEmailPatternBox
     {
-        get => sourceTemplate.RemoteUrlMethodName == "EmailAttachment";
+        get => sourceTemplate?.RemoteUrlMethodName == "EmailAttachment";
     }
-    bool addNewManufacturerMapButtonDisabled
-    {
-        get
-        {
-            return string.IsNullOrWhiteSpace(newManufacturerMapRecordWord) ||
-                newManufacturerMapRecordItem == null ||
-                newManufacturerMapRecordItem.name.Equals(newManufacturerMapRecordWord, StringComparison.OrdinalIgnoreCase);
-        }
-    }
-    bool skipManufacturerAddNewRecordButtonDisabled
-    {
-        get
-        {
-            return newSkipManufacturerItem == null ||
-                sourceTemplate.ManufacturerSkipList.Any(i => i.manufacturer_id == newSkipManufacturerItem.manufacturer_id || i.ListType != newSkipManufacturerListType);
-        }
-    }
+
     string buttonActionName
     {
         get => string.IsNullOrWhiteSpace(TemplateGuid) ? "Создать" : "Сохранить изменения";
@@ -239,93 +210,5 @@ public partial class PriceListTemplateEdit : ComponentBase
             navManager.NavigateTo("/price-list");
         }
     }
-
-    #region Дополнительные настройки шаблона
-    private async Task AddDiscountMapRecord()
-    {
-        await templateStorage.AddDiscountMapRecord(sourceTemplate.Guid, newDiscountMapRecordItem.manufacturer_id, newDiscountMapValue);
-
-        sourceTemplate.ManufacturerDiscountMap.Add(new ManufacturerDiscountItemViewModel()
-        {
-            manufacturer_id = newDiscountMapRecordItem.manufacturer_id,
-            manufacturer_name = newDiscountMapRecordItem.name,
-            discount = newDiscountMapValue
-        });
-        StateHasChanged();
-
-        await logger.Write(LogEntryGroupName.TemplateUpdate, "Добавлено", $"Скидка у бренда в прайс-листе'{newDiscountMapRecordItem.name}' --> '{newDiscountMapValue}' для шаблона {sourceTemplate.Title}");
-    }
-
-    private async Task RemoveDiscountMapRecord(ManufacturerDiscountItemViewModel data)
-    {
-        await templateStorage.RemoveDiscountMapRecord(sourceTemplate.Guid, data.manufacturer_id);
-        sourceTemplate.ManufacturerDiscountMap.Remove(data);
-        StateHasChanged();
-
-        await logger.Write(LogEntryGroupName.TemplateUpdate, "Убрано", $"Наценка для '{data.manufacturer_name}' из шаблона {sourceTemplate.Title}");
-    }
-
-    private async Task AddManufacturerMapRecord()
-    {
-        await templateStorage.AddManufacturerMapRecord(sourceTemplate.Guid, newManufacturerMapRecordWord, newManufacturerMapRecordItem.manufacturer_id);
-
-        sourceTemplate.ManufacturerNameMap[newManufacturerMapRecordWord] = newManufacturerMapRecordItem.name;
-        StateHasChanged();
-
-        await logger.Write(LogEntryGroupName.TemplateUpdate, "Добавлено", $"Преобразование названия бренда '{newManufacturerMapRecordWord}' --> '{newManufacturerMapRecordItem.name}' для шаблона {sourceTemplate.Title}");
-    }
-
-    private async Task RemoveManufacturerMapRecord(string word)
-    {
-        await templateStorage.RemoveManufacturerMapRecord(sourceTemplate.Guid, word);
-        sourceTemplate.ManufacturerNameMap.Remove(word);
-        StateHasChanged();
-
-        await logger.Write(LogEntryGroupName.TemplateUpdate, "Убрано", $"Преобразование названия бренда '{word}' из шаблона {sourceTemplate.Title}");
-    }
-
-    private async Task AddNewQuantityMapRecord()
-    {
-        await templateStorage.AddQuantityMapRecord(sourceTemplate.Guid, newQuantityMapRecordWord, newQuantityMapRecordValue);
-        sourceTemplate.QuantityMap[newQuantityMapRecordWord] = newQuantityMapRecordValue;
-        StateHasChanged();
-
-        await logger.Write(LogEntryGroupName.TemplateUpdate, "Добавлено", $"Преобразование остатков '{newQuantityMapRecordWord}' --> '{newQuantityMapRecordValue}' для шаблона {sourceTemplate.Title}");
-    }
-
-    private async Task RemoveQuantityMapRecord(string word)
-    {
-        await templateStorage.RemoveQuantityMapRecord(sourceTemplate.Guid, word);
-        sourceTemplate.QuantityMap.Remove(word);
-        StateHasChanged();
-
-        await logger.Write(LogEntryGroupName.TemplateUpdate, "Убрано", $"Преобразование остатков '{word}' из шаблона {sourceTemplate.Title}");
-    }
-
-    private async Task AddSkipManufacturerRecord()
-    {
-        await templateStorage.AddSkipManufacturerRecord(sourceTemplate.Guid, newSkipManufacturerItem.manufacturer_id, newSkipManufacturerListType.ToString());
-        var skipItem = new ManufacturerSkipItemViewModel()
-        {
-            manufacturer_id = newSkipManufacturerItem.manufacturer_id,
-            Name = newSkipManufacturerItem.name,
-            ListType = newSkipManufacturerListType
-        };
-        sourceTemplate.ManufacturerSkipList.Add(skipItem);
-        StateHasChanged();
-
-        await logger.Write(LogEntryGroupName.TemplateUpdate, "Добавлено", $"Исключение бренда '{newSkipManufacturerItem.name}' ({skipItem.ListTypeDescription}) для шаблона {sourceTemplate.Title}");
-
-    }
-
-    private async Task RemoveSkipManufacturerRecord(ManufacturerSkipItemViewModel skipInfo)
-    {
-        await templateStorage.RemoveSkipManufacturerRecord(sourceTemplate.Guid, skipInfo.manufacturer_id, skipInfo.ListType.ToString());
-        sourceTemplate.ManufacturerSkipList.Remove(skipInfo);
-        StateHasChanged();
-
-        await logger.Write(LogEntryGroupName.TemplateUpdate, "Убрано", $"Исключение бренда '{skipInfo.Name}' ({skipInfo.ListTypeDescription}) из шаблона {sourceTemplate.Title}");
-    }
-    #endregion
 }
 

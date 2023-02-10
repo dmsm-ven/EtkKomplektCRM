@@ -1,0 +1,17 @@
+﻿<button type="button"
+        @onclick="@(e => isExpanded = !isExpanded)"
+        class="btn expander-button-item @(isExpanded ? "expanded" : string.Empty)">
+    @Title
+</button>
+<div class="expander-content" style=@contentStyle>
+    @ChildContent
+</div>
+@code {
+    [Parameter] public string Title { get; set; }
+    [Parameter] public RenderFragment ChildContent { get; set; }
+
+
+    bool isExpanded = false;
+
+    string contentStyle => isExpanded ? "display: block;" : "display: none;";
+}

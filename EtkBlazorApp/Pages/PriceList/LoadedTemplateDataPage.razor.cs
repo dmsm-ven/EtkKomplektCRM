@@ -11,7 +11,7 @@ using System.Web;
 
 namespace EtkBlazorApp.Pages.PriceList;
 
-public partial class PriceListLoadedLines : ComponentBase
+public partial class LoadedTemplateDataPage : ComponentBase
 {
     [Parameter] public string TemplateGuid { get; set; }
 
