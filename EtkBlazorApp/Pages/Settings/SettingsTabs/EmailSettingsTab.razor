@@ -1,12 +1,7 @@
 ﻿
 
 <div id="email_tab">
-    <button type="button"
-            @onclick="@(e => priceMailboxTabExpanded = !priceMailboxTabExpanded)"
-            class="btn expander-button-item @(priceMailboxTabExpanded ? "expanded" : string.Empty)">
-        Почтовый ящик с прайс-листами
-    </button>
-    <div class="expander-content" style="display: @(priceMailboxTabExpanded ? "block" : "none")">
+    <ContentButtonExpander Title="Почтовый ящик с прайс-листами">
         <form>
             <div class="form-group">
                 <label for="imap_server">Сервер</label>
@@ -28,8 +23,7 @@
                 <input type="password" class="form-control" id="password" placeholder="Пароль от почтового ящика" @bind="password">
             </div>
         </form>
-    </div>
-
+    </ContentButtonExpander>
 
 </div>
 
@@ -38,7 +32,6 @@
     [CascadingParameter] public SettingsTabData tabData { get; set; }
 
     string imapServer, imapPort, password, email;
-    bool priceMailboxTabExpanded = true;
 
     protected override async Task OnInitializedAsync()
     {

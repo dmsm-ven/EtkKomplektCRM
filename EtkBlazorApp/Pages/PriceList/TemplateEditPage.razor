@@ -62,9 +62,25 @@ else
                     <SelectStockDropdown @bind-Stock="@linkedStock" />
                 </div>
 
+                <div class="form-group">
+                    <input type="checkbox" @bind="@sourceTemplate.Nds" id="nds" class="form-check-inline" />
+                    <label for="nds">Добавлять к цене НДС</label>
+                </div>
+
+                <div class="form-group">
+                    <label for="discount">Наценка, %</label>
+                    <input type="number" @bind="@sourceTemplate.Discount" id="discount" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Примечание</label>
+                    <textarea type="text" @bind="@sourceTemplate.Description" id="description" class="form-control" style="height: 60px;" />
+                </div>
+
                 @if (sourceTemplate.RemoteUrlMethodId.HasValue)
                 {
-                    <h3>Данные для загрузки прайс-листа</h3>
+                    <h2>Данные для загрузки прайс-листа</h2>
+                    <hr />
                     <div class="price-list-load-method-box">
                         <div class="form-group">
                             <label for="remote-uri-method">Метод загрузки файла</label>
@@ -140,22 +156,6 @@ else
                         </select>
                     </div>
                 }
-
-                <div class="form-group">
-                    <input type="checkbox" @bind="@sourceTemplate.Nds" id="nds" class="form-check-inline" />
-                    <label for="nds">Добавлять к цене НДС</label>
-                </div>
-
-                <div class="form-group">
-                    <label for="discount">Наценка, %</label>
-                    <input type="number" @bind="@sourceTemplate.Discount" id="discount" class="form-control" />
-                </div>
-
-                <div class="form-group">
-                    <label for="description">Примечание</label>
-                    <textarea type="text" @bind="@sourceTemplate.Description" id="description" class="form-control" style="height: 60px;" />
-                </div>
-
 
                 <PriceListTemplateEditAdditionalSettngs sourceTemplate=@sourceTemplate />
 

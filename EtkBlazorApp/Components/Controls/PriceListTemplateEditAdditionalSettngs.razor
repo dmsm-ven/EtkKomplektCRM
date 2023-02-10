@@ -1,6 +1,7 @@
 ﻿<div class="additional-settings" style="display: block;">
-
-    <PriceListTemplateEditExpanderItem Title="Наценки для отдельных брендов">
+    <h2>Дополнительные настройки</h2>
+    <hr />
+    <ContentButtonExpander Title="Наценки для отдельных брендов">
         <div>
             <p class="pl-template-add-settings-desc">Наценка для бренда будет равна указанной, а не той которая общая для всего прайс-листа</p>
             <button type="button" class="btn btn-success"
@@ -24,9 +25,9 @@
                 <input type="text" class="form-control price-list-template-map-control" readonly value="@mitem.discount" />
             </div>
         }
-    </PriceListTemplateEditExpanderItem>
+    </ContentButtonExpander>
 
-    <PriceListTemplateEditExpanderItem Title="Закупочные цены для брендов">
+    <ContentButtonExpander Title="Закупочные цены для брендов">
         <div>
             <p class="pl-template-add-settings-desc">Название бренда в прайс-листе должно точно соответствовать названию на сайте</p>
             <button type="button" class="btn btn-success"
@@ -50,9 +51,9 @@
                 <input type="text" class="form-control price-list-template-map-control" readonly value="@mitem.discount" />
             </div>
         }
-    </PriceListTemplateEditExpanderItem>
+    </ContentButtonExpander>
 
-    <PriceListTemplateEditExpanderItem Title="Нечисловые количества остатков">
+    <ContentButtonExpander Title="Нечисловые количества остатков">
         <div>
             <p class="pl-template-add-settings-desc">Если в прайс-листе есть неточные значения в словах (например "Да", "В наличии" или другие) то необходимо перечислить каждое такое значение</p>
             <div>
@@ -78,9 +79,9 @@
                 <input type="number" class="form-control price-list-template-map-control" readonly value="@qitem.Value" />
             </div>
         }
-    </PriceListTemplateEditExpanderItem>
+    </ContentButtonExpander>
 
-    <PriceListTemplateEditExpanderItem Title="Преобразование названий брендов">
+    <ContentButtonExpander Title="Преобразование названий брендов">
         <div>
             <p class="pl-template-add-settings-desc">Название бренда в прайс-листе должно точно соответствовать названию на сайте. Если оно отличается то его необходимо добавить в список и выбрать соответствующее название бренда на сайте (в выпадающем списке)</p>
             <button type="button" class="btn btn-success"
@@ -105,9 +106,9 @@
                 <input type="text" class="form-control price-list-template-map-control" readonly value="@mitem.Value" />
             </div>
         }
-    </PriceListTemplateEditExpanderItem>
+    </ContentButtonExpander>
 
-    <PriceListTemplateEditExpanderItem Title="Список исключения брендов">
+    <ContentButtonExpander Title="Список исключения брендов">
         <div>
             <p class="pl-template-add-settings-desc"><strong>Черный список</strong> - выбранный производитель будет пропущен</p>
             <p class="pl-template-add-settings-desc"><strong>Белый список</strong> - выбранный производитель будет загружен, но все остальные бренды будут пропущены</p>
@@ -138,7 +139,7 @@
                 <input type="text" class="form-control price-list-template-map-control" readonly value="@si.ListTypeDescription" />
             </div>
         }
-    </PriceListTemplateEditExpanderItem>
+    </ContentButtonExpander>
 </div>
 
 
