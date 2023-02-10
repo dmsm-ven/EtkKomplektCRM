@@ -131,20 +131,28 @@ namespace EtkBlazorApp.DataAccess
                 .OrderBy(p => p)
                 .ToList();
 
+            if (idsToUpdate.Count == 0)
+            {
+                return;
+            }
+
             var pidArray = string.Join(",", idsToUpdate);
 
-            string pileUpStockSql = $@"UPDATE oc_product
-                                       INNER JOIN (SELECT pts.*, MIN(pts.price) as min_price
-      		                                       FROM oc_product_to_stock as pts
-      		                                       JOIN oc_currency as curr ON (`pts`.`currency_code` = `curr`.`code`)
-			                                       WHERE product_id IN ({pidArray})
-                                                   GROUP BY pts.product_id) as inner_tbl
-                                       SET oc_product.price = inner_tbl.min_price, 
-	                                       oc_product.base_price = inner_tbl.price,
-                                           oc_product.base_currency_code = inner_tbl.currency_code,
-                                           oc_product.date_modified = NOW()
-                                       WHERE oc_product.product_id = inner_tbl.product_id";
-            await database.ExecuteQuery(pileUpStockSql);
+            string sql = $@"UPDATE oc_product
+				INNER JOIN (SELECT pts.product_id, pts.price, pts.currency_code, curr.value_official                              	
+							FROM oc_product_to_stock as pts
+							JOIN oc_currency as curr ON (`pts`.`currency_code` = `curr`.`code`)
+							WHERE (NOT pts.currency_code IS NULL) AND 
+                                    (NOT pts.price IS NULL) AND
+                                    pts.product_id IN ({pidArray})
+							ORDER BY (pts.price != 0), (pts.price * curr.value_official) ASC            
+							) as inner_tbl
+				SET oc_product.price = ROUND(inner_tbl.price * inner_tbl.value_official, 0),
+					oc_product.base_price = inner_tbl.price,
+					oc_product.base_currency_code = inner_tbl.currency_code,
+					oc_product.date_modified = NOW()
+				WHERE oc_product.product_id = inner_tbl.product_id";
+            await database.ExecuteQuery(sql);
         }
 
         public async Task ComputeStocksQuantity(IEnumerable<ProductUpdateData> data)
@@ -155,6 +163,11 @@ namespace EtkBlazorApp.DataAccess
                 .Distinct()
                 .OrderBy(p => p)
                 .ToList();
+
+            if (idsToUpdate.Count == 0)
+            {
+                return;
+            }
 
             var pidArray = string.Join(",", idsToUpdate);
 

@@ -73,9 +73,9 @@ namespace EtkBlazorApp.BL
                 await productUpdateService.UpdateNextStockDelivery(data);
             }
 
-            if (data.Any(line => line.price.HasValue) && data.Any(pl => pl.currency_code != CurrencyType.RUB))
+            if (data.Any(line => line.price.HasValue))
             {
-                progress?.Report("Пересчет цен товаров в валюте");
+                progress?.Report("Пересчет цен товаров");
                 await (new WebClient().DownloadStringTaskAsync(CurrencyCustomUri));
             }
 
