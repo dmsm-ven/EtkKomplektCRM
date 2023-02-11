@@ -1,7 +1,7 @@
 ﻿function GenerateChart(title, labelNames, pointsArray) {
     var canvas = document.getElementById('myChart');
     var parent = canvas.parentElement;
-   
+
     canvas.remove();
     parent.innerHTML = '<canvas id="myChart"></canvas>';
     canvas = document.getElementById('myChart');
@@ -9,7 +9,7 @@
     var ctx = canvas.getContext('2d');
 
     var myChart = new Chart(ctx, {
-        type: 'bar',
+        type: 'line',
         data: {
             labels: labelNames,
             datasets: [{

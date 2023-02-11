@@ -1,0 +1,89 @@
+﻿@page "/price-list/product-price-change-chart/{product_id:int}"
+@using EtkBlazorApp.Model.Chart
+@using EtkBlazorApp.Model.Product
+
+@if (product == default(ProductModel))
+{
+    <LoadingSpinner />
+}
+else if (product == null)
+{
+    <h1>Товар с ID: @product_id не найден</h1>
+}
+else if (product != null)
+{
+    <div class="row">
+        <div class="col-md-10">
+            <h1>@product.Name</h1>
+            <h3>Динамика цен</h3>
+        </div>
+        <div class="col-md-2">
+            <ProductMainImage Product=@product Size="ProductImageSize.Small" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            @if (inProgress)
+            {
+                <p>Загрузка данных ...</p>
+            }
+            <canvas id="myChart" />
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int product_id { get; set; }
+    [Inject] public IMapper mapper { get; set; }
+    [Inject] public IProductStorage productService { get; set; }
+    [Inject] public IJSRuntime js { get; set; }
+    [Inject] public ChartDataExtractor dataExtractor { get; set; }
+
+    bool inProgress = false;
+    ProductModel product = new ProductModel();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            product = null;
+            StateHasChanged();
+
+            product = mapper.Map<ProductModel>(await productService.GetProductById(product_id));
+
+
+
+
+            await GenerateChart();
+            StateHasChanged();
+        }
+    }
+
+    private async Task GenerateChart()
+    {
+        //inProgress = true;
+        //StateHasChanged();
+        //try
+        //{
+        //    var data = await dataExtractor.GetDataSourceForProductPriceDynamic(product_id);
+
+        //    if (data.ByPriceListTitle.Count == 0) { return; }
+
+        //    string chartTitle = $"Динамика цен товара '{product.Name}'";
+
+        //    var points = data
+        //        .ByPriceListTitle[0]
+        //        .PriceByDate
+        //        .Select(i => new { x = i.Key.ToShortDateString(), y = i.Value })
+        //        .ToArray();
+        //  <script async src="https://cdn.jsdelivr.net/npm/chart.js@3.3.0/dist/chart.min.js"></script>
+        //   <script src="/script/chart.js"></script>
+        //    await js.InvokeVoidAsync("GenerateChart", chartTitle, points.Select(i => i.);
+        //    StateHasChanged();
+        //}
+        //finally
+        //{
+        //    inProgress = false;
+        //}
+    }
+}

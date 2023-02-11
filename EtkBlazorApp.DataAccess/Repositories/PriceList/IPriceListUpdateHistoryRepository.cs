@@ -11,9 +11,18 @@ public interface IPriceListUpdateHistoryRepository
 {
     Task SavePriceListUpdateProductsPriceData(string guid, Dictionary<int, decimal> productToPrice);
     Task<List<PriceListUpdateEntryEntity>> GetPriceListUpdateEntries(string guid);
-    Task<List<PriceListUpdateProductHistoryEntity>> GetProductHistory(int update_id);
     Task<Dictionary<PriceListUpdateEntryEntity, List<PriceListUpdateProductHistoryEntity>>> GetPriceListUpdateHistory(string guid);
+    Task<List<PriceListUpdateProductHistoryEntity>> GetProductHistory(int update_id);
     Task<HashSet<int>> GetUniqueProductIdsInHistory(string guid);
+
+    Task<List<ProductPriceDynamicEntry>> GetPriceDynamicForProduct(int product_id);
+}
+
+public class ProductPriceDynamicEntry
+{
+    public string price_list_title { get; set; }
+    public decimal price { get; set; }
+    public DateTime date_time { get; set; }
 }
 
 // Вынести логику в класс Менеджер
@@ -102,5 +111,17 @@ public class PriceListUpdateHistoryRepository : IPriceListUpdateHistoryRepositor
         return sql;
     }
 
+    public async Task<List<ProductPriceDynamicEntry>> GetPriceDynamicForProduct(int product_id)
+    {
+        string sql = @"SELECT ph.price, ue.date_time, t.title as price_list_title
+                       FROM etk_app_price_list_update_product_history ph
+                       JOIN etk_app_price_list_update_entry ue ON (ph.update_id = ue.update_id)
+                       JOIN etk_app_price_list_template t ON (ue.price_list_id = t.id)
+                       WHERE product_id = @product_id";
+
+        var data = await database.GetList<ProductPriceDynamicEntry, dynamic>(sql, new { product_id });
+
+        return data;
+    }
 
 }

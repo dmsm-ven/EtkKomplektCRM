@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace EtkBlazorApp
 {
-    public class ProductViewModel
+    public class ProductModel
     {
         public int Id { get; set; }
 

@@ -1,4 +1,5 @@
-﻿@inject IJSRuntime js
+﻿@using EtkBlazorApp.Model.Chart
+@inject IJSRuntime js
 @inject IOrderStorage ordersStorage
 
 @if (inProgress)
@@ -12,9 +13,11 @@
 
 
 @code {
-    [Parameter] public ChartDateRange? Range { get; set; }
-    [Parameter] public ChartKind? Kind { get; set; }
-    [Parameter] public int MaxItems { get; set; }
+    [Parameter] public ChartDateRange Range { get; set; } = ChartDateRange.Month;
+    [Parameter] public ChartKind Kind { get; set; } = ChartKind.ByManufacturer;
+    [Parameter] public int MaxItems { get; set; } = 10;
+
+    [Inject] public ChartDataExtractor dataExtractor { get; set; }
 
     int uniqueOrdersInChart = 0;
     bool inProgress = false;
@@ -30,7 +33,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (isRendered && Range.HasValue && Kind.HasValue && MaxItems != 0)
+        if (isRendered && MaxItems != 0)
         {
             StateHasChanged();
             await GenerateChart();
@@ -42,9 +45,9 @@
         inProgress = true;
         StateHasChanged();
 
-        var data = await GetDataSource();
+        var data = await dataExtractor.GetDataSourceForOrdersChart(Range, Kind, MaxItems);
 
-        string chartTitle = $"Статистика ({uniqueOrdersInChart}) заказов {Kind.GetDescriptionAttribute().ToLower()} {Range.GetDescriptionAttribute().ToLower()}";
+        string chartTitle = $"Статистика заказов";
         string[] labels = data.Select(c => c.Key).ToArray();
         decimal[] points = data.Select(c => c.Value).ToArray();
 
@@ -52,96 +55,4 @@
         inProgress = false;
     }
 
-    private async Task<Dictionary<string, decimal>> GetDataSource()
-    {
-        DateTime startDate = GetStartDate();
-
-        Dictionary<string, decimal> data = null;
-
-        if (Kind.Value == ChartKind.ByCustomer)
-        {
-            var orders = await ordersStorage.GetOrdersFromDate(startDate);
-            uniqueOrdersInChart = orders.Select(o => o.order_id).Distinct().Count();
-
-            data = orders
-            .GroupBy(order => Regex.Replace(order.telephone, @"[^\d]", "").TrimStart('8', '7'))
-            .Select(g => new
-            {
-                Customer = $"{HttpUtility.HtmlDecode(g.First().firstname)} (+7{g.Key})",
-                TotalSum = g.Sum(o => o.total)
-            })
-            .Where(g => g.Customer != null)
-            .OrderByDescending(i => i.TotalSum)
-            .Take(MaxItems)
-            .ToDictionary(i => i.Customer, j => j.TotalSum);
-    }
-    if (Kind.Value == ChartKind.ByCity)
-    {
-        var orders = await ordersStorage.GetOrdersFromDate(startDate);
-    uniqueOrdersInChart = orders.Select(o => o.order_id).Distinct().Count();
-
-    data = orders
-        .GroupBy(order => order.payment_zone, StringComparer.OrdinalIgnoreCase)
-            .Select(g => new
-            {
-                City = HttpUtility.HtmlDecode(g.Key),
-                TotalSum = g.Sum(o => o.total)
-            })
-            .Where(g => g.City != null)
-            .OrderByDescending(i => i.TotalSum)
-            .Take(MaxItems)
-            .ToDictionary(i => i.City, j => j.TotalSum);
-}
-if (Kind.Value == ChartKind.ByManufacturer)
-{
-var orders = await ordersStorage.GetOrderDetailsFromDate(startDate);
-uniqueOrdersInChart = orders.Select(od => od.order_id).Distinct().Count();
-
-data = orders
-.GroupBy(od => od.manufacturer, StringComparer.OrdinalIgnoreCase)
-.Select(g => new
-{
-    Manufacturer = HttpUtility.HtmlDecode(g.Key),
-    TotalSum = g.Sum(o => o.total)
-})
-.Where(g => g.Manufacturer != null)
-.OrderByDescending(i => i.TotalSum)
-.Take(MaxItems)
-.ToDictionary(i => i.Manufacturer, j => j.TotalSum);
-}
-if (Kind.Value == ChartKind.ByProduct)
-{
-var orders = await ordersStorage.GetOrderDetailsFromDate(startDate);
-uniqueOrdersInChart = orders.Select(od => od.order_id).Distinct().Count();
-
-data = orders
-    .GroupBy(od => od.name, StringComparer.OrdinalIgnoreCase)
-    .Select(g => new
-    {
-        ProductName = HttpUtility.HtmlDecode(g.Key),
-        TotalSum = g.Sum(o => o.total)
-    })
-    .Where(g => g.ProductName != null)
-    .OrderByDescending(i => i.TotalSum)
-    .Take(MaxItems)
-    .ToDictionary(i => i.ProductName, j => j.TotalSum);
-}
-
-return data;
-}
-
-    private DateTime GetStartDate()
-    {
-        int maxAge = 0;
-        switch (Range)
-        {
-            case ChartDateRange.Week: maxAge = 7; break;
-            case ChartDateRange.Month: maxAge = 31; break;
-            case ChartDateRange.Year: maxAge = 365; break;
-            default: maxAge = 0; break;
-        }
-
-        return DateTime.Now.AddDays(-maxAge);
-
-    }
 }

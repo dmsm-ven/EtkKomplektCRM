@@ -10,7 +10,7 @@ public class ProductMapperProfile : Profile
     public ProductMapperProfile()
     {
 
-        CreateMap<ProductViewModel, ProductEntity>()
+        CreateMap<ProductModel, ProductEntity>()
             .ForMember(p => p.product_id, e => e.MapFrom(p => p.Id))
             .ForMember(p => p.price, e => e.MapFrom(p => p.Price))
             .ForMember(p => p.base_price, e => e.MapFrom(p => p.BasePriceCurrency == CurrencyType.RUB.ToString() ? 0 : p.BasePrice))
@@ -20,7 +20,7 @@ public class ProductMapperProfile : Profile
             .ForMember(p => p.replacement_id, e => e.MapFrom(p => p.ReplacementProductId));
 
 
-        CreateMap<ProductEntity, ProductViewModel>()
+        CreateMap<ProductEntity, ProductModel>()
             .ForMember(p => p.Id, x => x.MapFrom(p => p.product_id))
             .ForMember(p => p.Image, x => x.MapFrom(p => p.image))
             .ForMember(p => p.Name, x => x.MapFrom(p => HttpUtility.HtmlDecode(p.name) ?? string.Empty))

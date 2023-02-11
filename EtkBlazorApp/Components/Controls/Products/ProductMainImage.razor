@@ -1,0 +1,39 @@
+﻿@using EtkBlazorApp.Model.Product
+<div class="edit-product-image-container mt-2">
+    @if (Product is not null)
+    {
+        <img src="@Product.FullSizeImage"
+         title="@Product.Name" alt="@Product.Name"
+         width=@imageSizeDic[Size] height=@imageSizeDic[Size] />
+    }
+    else
+    {
+        <LoadingSpinner />
+    }
+</div>
+
+<style>
+    .edit-product-image-container {
+        display: flex;
+        justify-content: center;
+        align-items: start;
+    }
+
+        .edit-product-image-container img {
+            border: 1px solid lightgray;
+            margin: 4px;
+            object-fit: cover;
+        }
+</style>
+
+@code {
+    [Parameter] public ProductModel Product { get; set; }
+    [Parameter] public ProductImageSize Size { get; set; } = ProductImageSize.Medium;
+
+    Dictionary<ProductImageSize, double> imageSizeDic = new Dictionary<ProductImageSize, double>()
+        {
+            [ProductImageSize.Small] = 100,
+            [ProductImageSize.Medium] = 200,
+            [ProductImageSize.Large] = 400,
+        };
+}

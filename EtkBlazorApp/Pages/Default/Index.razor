@@ -33,8 +33,8 @@
 
 @code {
 
-    List<ProductViewModel> lastAddedProducts = null;
-    List<ProductViewModel> bestsellerProducts = null;
+    List<ProductModel> lastAddedProducts = null;
+    List<ProductModel> bestsellerProducts = null;
     List<AppUpdateHistoryEntity> updateInfo = new List<AppUpdateHistoryEntity>();
 
     [Inject] public IMapper Mapper { get; set; }
@@ -46,8 +46,8 @@
     {
         if (firstRender)
         {
-            lastAddedProducts = Mapper.Map<List<ProductViewModel>>(await ProductStorage.GetLastAddedProducts(4));
-            bestsellerProducts = Mapper.Map<List<ProductViewModel>>(await ProductStorage.GetBestsellersBySum(4, 31));
+            lastAddedProducts = Mapper.Map<List<ProductModel>>(await ProductStorage.GetLastAddedProducts(4));
+            bestsellerProducts = Mapper.Map<List<ProductModel>>(await ProductStorage.GetBestsellersBySum(4, 31));
 
             updateInfo = await LogStorage.GetAppUpdateInfo(25);
             StateHasChanged();

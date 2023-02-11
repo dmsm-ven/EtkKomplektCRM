@@ -37,7 +37,7 @@ namespace EtkBlazorApp.Pages.Product
         [Inject]
         public UserLogger log { get; set; }
 
-        ProductViewModel editedProduct = null;
+        ProductModel editedProduct = null;
         ProductEntity replacementProduct;
         string[] basePriceCurrencyNames = Enum.GetNames(typeof(CurrencyType));
         string[] stockStatusNames = null;
@@ -82,7 +82,7 @@ namespace EtkBlazorApp.Pages.Product
             var entity = await productStorage.GetProductByKeyword(keyword);
             if (entity != null)
             {
-                editedProduct = mapper.Map<ProductViewModel>(entity);
+                editedProduct = mapper.Map<ProductModel>(entity);
                 if (editedProduct.ReplacementProductId.HasValue)
                 {
                     replacementProduct = await productStorage.GetProductById(editedProduct.ReplacementProductId.Value);

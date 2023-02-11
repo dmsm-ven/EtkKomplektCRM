@@ -7,6 +7,7 @@ using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Repositories;
 using EtkBlazorApp.DellinApi;
+using EtkBlazorApp.Model.Chart;
 using EtkBlazorApp.Services;
 using EtkBlazorApp.TelegramBotLib;
 using EtkBlazorAppi.DadataApi;
@@ -117,6 +118,7 @@ public class Startup
         services.AddScoped<AuthenticationStateProvider, CustomAuthProvider>();
         services.AddScoped<UserLogger>();
         services.AddScoped<ReportManager>();
+        services.AddScoped<ChartDataExtractor>();
     }
 
     private void ConfigureExteralApiClients(IServiceCollection services)

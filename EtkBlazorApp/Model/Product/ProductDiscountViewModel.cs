@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EtkBlazorApp
 {
-    public class ProductDiscountViewModel : ProductViewModel, INotifyPropertyChanged
+    public class ProductDiscountViewModel : ProductModel, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 

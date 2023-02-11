@@ -1,6 +1,7 @@
 ﻿@page "/edit-product";
 @page "/edit-product/keyword/{Keyword}";
 @using EtkBlazorApp.Core.Data
+@using EtkBlazorApp.Model.Product
 
 @attribute [Authorize]
 
@@ -92,9 +93,7 @@
 
             <button class="btn btn-success" style="width: 100%;" @onclick="SaveChanges" disabled=@(!hasChanges)>Сохранить изменения</button>
 
-            <div class="edit-product-image-container mt-2">
-                <img src="@editedProduct.FullSizeImage" title="@editedProduct.Name" alt="@editedProduct.Name" />
-            </div>
+            <ProductMainImage Product=@editedProduct Size="ProductImageSize.Large" />
         }
         else
         {
@@ -102,19 +101,3 @@
         }
     </div>
 </div>
-
-<style>
-    .edit-product-image-container {
-        display: flex;
-        justify-content: center;
-        align-items: start;
-    }
-
-        .edit-product-image-container img {
-            border: 1px solid lightgray;
-            margin: 4px;
-            object-fit: cover;
-            width: 400px;
-            height: 400px;
-        }
-</style>
