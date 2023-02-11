@@ -91,11 +91,10 @@ namespace EtkBlazorApp.DataAccess
             string sql = @"SELECT t.*, m.name
                            FROM etk_app_price_list_template_purchase_discount t
                            LEFT JOIN oc_manufacturer m ON (t.manufacturer_id = m.manufacturer_id)
-                           WHERE template_guid = @guid";
+                           WHERE price_list_guid = @guid";
             var data = await database.GetList<ManufacturerDiscountMapEntity, dynamic>(sql, new { guid });
             return data;
         }
-
 
         private async Task<List<ManufacturerMapRecordEntity>> GetManufacturerNameMapRecordsForTemplate(string guid)
         {
@@ -217,6 +216,7 @@ namespace EtkBlazorApp.DataAccess
             await database.ExecuteQuery("DELETE FROM etk_app_price_list_manufacturer_map WHERE price_list_guid = @guid", new { guid });
             await database.ExecuteQuery("DELETE FROM etk_app_price_list_quantity_map WHERE price_list_guid = @guid", new { guid });
             await database.ExecuteQuery("DELETE FROM etk_app_price_list_discount_map WHERE price_list_guid = @guid", new { guid });
+            await database.ExecuteQuery("DELETE FROM etk_app_price_list_template_purchase_discount WHERE price_list_guid = @guid", new { guid });
         }
 
     }

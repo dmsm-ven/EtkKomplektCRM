@@ -118,10 +118,10 @@ namespace EtkBlazorApp.DataAccess
         public async Task AddPurchaseDiscountMapRecord(string guid, int manufacturer_id, decimal discount)
         {
             string sql = @"INSERT INTO etk_app_price_list_template_purchase_discount
-                            (template_guid, manufacturer_id, discount) VALUES
+                            (price_list_guid, manufacturer_id, discount) VALUES
                             (@guid, @manufacturer_id, @discount)
                           ON DUPLICATE KEY UPDATE
-                            template_guid = @guid,                            
+                            price_list_guid = @guid,                            
                             manufacturer_id = @manufacturer_id, 
                             discount = @discount";
 
@@ -131,7 +131,7 @@ namespace EtkBlazorApp.DataAccess
         public async Task RemovePurchaseDiscountMapRecord(string guid, int manufacturer_id)
         {
             string sql = @"DELETE FROM etk_app_price_list_template_purchase_discount
-                           WHERE template_guid = @guid AND manufacturer_id = @manufacturer_id";
+                           WHERE price_list_guid = @guid AND manufacturer_id = @manufacturer_id";
             await database.ExecuteQuery(sql, new { guid, manufacturer_id });
         }
     }
