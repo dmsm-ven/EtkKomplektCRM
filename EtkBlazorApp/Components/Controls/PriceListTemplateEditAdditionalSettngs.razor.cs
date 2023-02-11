@@ -67,7 +67,7 @@ public partial class PriceListTemplateEditAdditionalSettngs
         StateHasChanged();
 
         toasts.ShowSuccess("Выполнено");
-        await logger.Write(LogEntryGroupName.TemplateUpdate, "Убрано", $"Наценка для '{data.manufacturer_name}' из шаблона {sourceTemplate.Title}");
+        await logger.Write(LogEntryGroupName.TemplateUpdate, "Удалено", $"Наценка для '{data.manufacturer_name}' из шаблона {sourceTemplate.Title}");
     }
 
     private async Task AddPurchaseDiscountRecord()
@@ -83,7 +83,7 @@ public partial class PriceListTemplateEditAdditionalSettngs
         StateHasChanged();
 
         toasts.ShowSuccess("Выполнено");
-        await logger.Write(LogEntryGroupName.TemplateUpdate, "Добавлено", $"Закупочная скидка у бренда в прайс-листе'{newDiscountMapRecordItem.name}' --> '{newDiscountMapValue}' для шаблона {sourceTemplate.Title}");
+        await logger.Write(LogEntryGroupName.TemplateUpdate, "Добавлено", $"Закупочная скидка в прайс-листе {sourceTemplate.Title} у бренда {newDiscountMapRecordItem.name} поменяна на [{newDiscountMapValue}]");
     }
 
     private async Task RemovePurchaseDiscountRecord(ManufacturerDiscountItemViewModel data)
@@ -93,7 +93,7 @@ public partial class PriceListTemplateEditAdditionalSettngs
         StateHasChanged();
 
         toasts.ShowSuccess("Выполнено");
-        await logger.Write(LogEntryGroupName.TemplateUpdate, "Убрано", $"Закупочная скидка для '{data.manufacturer_name}' из шаблона {sourceTemplate.Title}");
+        await logger.Write(LogEntryGroupName.TemplateUpdate, "Удалено", $"Закупочная скидка из прайс-листа {sourceTemplate.Title} для бренда {data.manufacturer_name}");
     }
 
     private async Task AddManufacturerMapRecord()
@@ -114,7 +114,7 @@ public partial class PriceListTemplateEditAdditionalSettngs
         StateHasChanged();
 
         toasts.ShowSuccess("Выполнено");
-        await logger.Write(LogEntryGroupName.TemplateUpdate, "Убрано", $"Преобразование названия бренда '{word}' из шаблона {sourceTemplate.Title}");
+        await logger.Write(LogEntryGroupName.TemplateUpdate, "Удалено", $"Преобразование названия бренда '{word}' из шаблона {sourceTemplate.Title}");
     }
 
     private async Task AddNewQuantityMapRecord()
@@ -134,7 +134,7 @@ public partial class PriceListTemplateEditAdditionalSettngs
         StateHasChanged();
 
         toasts.ShowSuccess("Выполнено");
-        await logger.Write(LogEntryGroupName.TemplateUpdate, "Убрано", $"Преобразование остатков '{word}' из шаблона {sourceTemplate.Title}");
+        await logger.Write(LogEntryGroupName.TemplateUpdate, "Удалено", $"Преобразование остатков '{word}' из шаблона {sourceTemplate.Title}");
     }
 
     private async Task AddSkipManufacturerRecord()
@@ -161,7 +161,7 @@ public partial class PriceListTemplateEditAdditionalSettngs
         StateHasChanged();
 
         toasts.ShowSuccess("Выполнено");
-        await logger.Write(LogEntryGroupName.TemplateUpdate, "Убрано", $"Исключение бренда '{skipInfo.Name}' ({skipInfo.ListTypeDescription}) из шаблона {sourceTemplate.Title}");
+        await logger.Write(LogEntryGroupName.TemplateUpdate, "Удалено", $"Исключение бренда '{skipInfo.Name}' ({skipInfo.ListTypeDescription}) из шаблона {sourceTemplate.Title}");
     }
 
 }
