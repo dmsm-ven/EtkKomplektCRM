@@ -31,8 +31,8 @@ else
             </div>
             <div class="col-md-3">
                 <p>№ заказа СДЭК</p>
-                <input type="text" value="@order.CdekOrderNumber" class="form-control"
-                   @onchange="(async e => await ChangeCdekOrderNumber(e.Value.ToString()))" />
+                <input type="text" value="@order.TkOrderNumber" class="form-control"
+                   @onchange="(async e => await ChangeTkOrderNumber(e.Value.ToString()))" />
             </div>
 
             <div class="col-md-6">
@@ -166,18 +166,19 @@ else
     [Inject] public IMapper Mapper { get; set; }
     [Inject] public ICompanyInfoChecker CompanyInfoChecker { get; set; }
     [Inject] public CashPlusPlusLinkGenerator OrderPdfLinkGenerator { get; set; }
+    [Inject] public DeliveryServiceApiManager DeliveryManager { get; set; }
     [Inject] public NavigationManager NavManager { get; set; }
     [Inject] public UserLogger Logger { get; set; }
 
 
-    OrderViewModel order = null;
+    Order order = null;
     CustomDataDialog statusChangesDialog;
 
 
     protected override async Task OnInitializedAsync()
     {
         var orderData = await OrderStorage.GetOrderById(Id);
-        order = Mapper.Map<OrderViewModel>(orderData);
+        order = Mapper.Map<Order>(orderData);
     }
 
     private async Task GoToPrintPage()
@@ -190,17 +191,24 @@ else
         await Js.InvokeAsync<object>("open", printPage, "_blank");
     }
 
-    private async Task ChangeCdekOrderNumber(string newCode)
+    private async Task ChangeTkOrderNumber(string newCode)
     {
-        string oldNumber = order.CdekOrderNumber;
+        string oldNumber = order.TkOrderNumber;
         if (oldNumber != newCode)
         {
+            var tk = DeliveryManager.GetTkOrderPrefixByEnteredOrderNumber(newCode);
+            if (tk != TransportDeliveryCompany.None)
+            {
 
-            order.CdekOrderNumber = newCode;
-            await OrderUpdateService.ChangeOrderLinkedCdekOrderNumber(order.OrderId, newCode);
+                await OrderUpdateService.ChangeOrderLinkedTkNumber(order.OrderId, newCode, tk.ToString());
 
-            Toasts.ShowInfo($"Закрепленный номер заказ СДЭК обновлен");
-            Logger.Write(LogEntryGroupName.Orders, "СДЭК", $"Изменен закрепленный номер заказа СДЭК на '{newCode}' для заказа {order.OrderId}");
+                Toasts.ShowInfo($"Закрепленный номер заказа с ТК обновлен");
+                await Logger.Write(LogEntryGroupName.Orders, "№ ТК изменен", $"Изменен закрепленный номер заказа ТК '{tk}' на '{newCode}' для заказа {order.OrderId}");
+            }
+            else
+            {
+                Toasts.ShowError($"Не найдено сопоставление с ТК для заказа с таким номером");
+            }
         }
     }
 

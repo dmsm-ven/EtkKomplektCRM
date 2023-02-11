@@ -14,7 +14,7 @@
     <div class="order-details-tabs w-100" style="margin: 20px 0px;">
         @if (selectedTab == "Статус СДЭК")
         {
-            <CdekOrderInfoControl CdekOrderNumber="@Order.CdekOrderNumber" />
+            <CdekOrderInfoControl CdekOrderNumber="@Order.TkOrderNumber" />
         }
         else if (selectedTab == "Другие заказы клиента")
         {
@@ -28,7 +28,7 @@
 </div>
 
 @code {
-    [Parameter] public OrderViewModel Order { get; set; }
+    [Parameter] public Order Order { get; set; }
 
     private string selectedTab = "Статус СДЭК";
     private readonly string[] tabData = new string[] { "Статус СДЭК", "Другие заказы клиента", "Информация по ИНН" };

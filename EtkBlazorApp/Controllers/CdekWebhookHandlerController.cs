@@ -55,7 +55,7 @@ namespace EtkBlazorApp.Controllers
                 return BadRequest();
             }
 
-            OrderEntity shopOrder = await orderStorage.GetOrderByCdekNumber(cdekOrderNumber);
+            OrderEntity shopOrder = await orderStorage.GetOrderByTkOrderNumber(cdekOrderNumber);
 
             CdekOrderStatusCode cdekStatus = data.attributes.GetCodeStatus();
             EtkOrderStatusCode orderStatus = cdekStatus switch

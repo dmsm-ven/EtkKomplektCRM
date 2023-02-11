@@ -1,6 +1,36 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+.tk-order-icon-small {
+    margin: 2px;
+    padding: 0px;
+    border: 1px solid gray;
+    border-radius: 4px;
+    position: relative;
+}
+
+    .tk-order-icon-small:hover .tk-icon-overlay {
+        opacity: 0.9;
+    }
+
+.tk-icon-overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    width: 100%;
+    opacity: 0;
+    transition: .15s ease;
+    background-color: #c0c0c0;
+}
+
+.tk-order-icon-small img {
+    width: 32px;
+    height: 32px;
+}
+
 .product-grid {
     display: flex;
     justify-content: start;

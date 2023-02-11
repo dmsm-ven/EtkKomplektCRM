@@ -139,6 +139,8 @@ public class Startup
 
             return new CdekApiMemoryCachedClient(section["Account"], section["SecurePassword"], cache, client);
         });
+
+        services.AddSingleton<DeliveryServiceApiManager>();
     }
 
     private void ConfigureDatabaseServices(IServiceCollection services)

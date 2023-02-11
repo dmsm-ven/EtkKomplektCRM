@@ -1,6 +1,6 @@
 ﻿namespace EtkBlazorApp;
 
-public class OrderDetailsViewModel
+public class OrderDetails
 {
     public int ProductId { get; set; }
     public string ProductName { get; set; }

@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.Core.Data.Cdek;
+﻿using EtkBlazorApp.Core.Data;
+using EtkBlazorApp.Core.Data.Cdek;
 using EtkBlazorApp.Core.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
@@ -15,8 +16,9 @@ public class CdekApiMemoryCachedClient : ITransportCompanyApi
     private readonly string account;
     private readonly string securePassword;
     private readonly HttpClient httpClient;
-
     private DateTime? tokenExpireTime;
+
+    public TransportDeliveryCompany Prefix { get; } = TransportDeliveryCompany.Cdek;
 
     public CdekApiMemoryCachedClient(string account, string securePassword, IMemoryCache memoryCache, HttpClient httpClient)
     {
@@ -100,6 +102,15 @@ public class CdekApiMemoryCachedClient : ITransportCompanyApi
         //string eventType = "ORDER_STATUS";
         //var payload = new CdekWebhookRegsterRequest(url, eventType);
         //var result = await httpClient.PostAsJsonAsync("v2/webhooks", payload);
+    }
+
+    public string GetOrderDetailsLink(string orderId)
+    {
+        if (!string.IsNullOrWhiteSpace(orderId))
+        {
+            return $"https://lk.cdek.ru/order-history/trace?orderNumber={orderId}";
+        }
+        return "https://lk.cdek.ru/order-history/";
     }
 }
 

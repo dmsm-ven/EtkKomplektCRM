@@ -1,4 +1,4 @@
-﻿namespace EtkBlazorApp.Model.Order;
+﻿namespace EtkBlazorApp;
 
 public class OrderStatusDisplayData
 {

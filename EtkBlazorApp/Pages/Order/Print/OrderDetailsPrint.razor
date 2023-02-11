@@ -66,12 +66,12 @@
     [Inject] public IOrderStorage OrdersStorage { get; set; }
     [Inject] public IMapper Mapper { get; set; }
 
-    OrderViewModel order = null;
+    Order order = null;
 
     protected override async Task OnInitializedAsync()
     {
         var orderData = await OrdersStorage.GetOrderById(Id);
 
-        order = Mapper.Map<OrderViewModel>(orderData);
+        order = Mapper.Map<Order>(orderData);
     }
 }

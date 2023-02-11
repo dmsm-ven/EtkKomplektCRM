@@ -1,4 +1,4 @@
-﻿@using EtkBlazorApp.Model.Order
+﻿@using EtkBlazorApp.BL.Managers
 
 @if (OrderData != null)
 {
@@ -9,19 +9,14 @@
         <td>@OrderData.City</td>
         <td>@OrderData.TotalPrice.ToString("C0")</td>
         <td>
-            @if (!string.IsNullOrWhiteSpace(OrderData?.CdekOrderNumber))
+            @if (tkApi is not null)
             {
-                <a class="btn btn-sm btn-outline-secondary" href="https://lk.cdek.ru/order-history/trace?orderNumber=@OrderData.CdekOrderNumber" target="_blank">
-                    <span class="oi oi-magnifying-glass"></span>
+                <a class="btn btn-sm btn-outline-secondary tk-order-icon-small" href=@tkApi.GetOrderDetailsLink(OrderData.TkOrderNumber) target="_blank">
+                    <img src="/image/logotips/delivery_companies/@($"{OrderData.TkCode}-logo-small.png")" />
+                    <div class="tk-icon-overlay">
+                        <span class="oi oi-magnifying-glass m-auto"></span>
+                    </div>
                 </a>
-                @if (string.IsNullOrWhiteSpace(lastCdekStatus))
-                {
-                    <span><small>Загрузка ...</small></span>
-                }
-                else
-                {
-                    <span style="margin-left: 4px;"><small>@lastCdekStatus</small></span>
-                }
             }
         </td>
         <td>
@@ -34,16 +29,13 @@
 }
 
 @code {
-    [Parameter] public OrderViewModel OrderData { get; set; }
-    [Inject] public ITransportCompanyApi CdekApi { get; set; }
-    string lastCdekStatus = null;
+    [Parameter] public Order OrderData { get; set; }
+    [Inject] public DeliveryServiceApiManager DeliveryApiManager { get; set; }
+
+    ITransportCompanyApi tkApi = null;
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!string.IsNullOrWhiteSpace(OrderData?.CdekOrderNumber))
-        {
-            var cdekOrderStatus = await CdekApi.GetOrderInfo(OrderData.CdekOrderNumber);
-            lastCdekStatus = cdekOrderStatus?.statuses?.FirstOrDefault()?.name;
-        }
+        tkApi = DeliveryApiManager.GetTkApiForOrder(OrderData.TkOrderNumber);
     }
 }

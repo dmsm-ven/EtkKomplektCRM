@@ -13,7 +13,7 @@ namespace EtkBlazorApp.DataAccess
         /// <param name="order_status_id"></param>
         /// <returns></returns>
         Task ChangeOrderStatus(int order_id, int order_status_id);
-        Task ChangeOrderLinkedCdekOrderNumber(int order_id, string cdek_order_number);
+        Task ChangeOrderLinkedTkNumber(int order_id, string order_number, string tk_prefix);
     }
 
     public class OrderUpdateService : IOrderUpdateService
@@ -38,13 +38,13 @@ namespace EtkBlazorApp.DataAccess
             await database.ExecuteQuery(statusSql, new { order_id, order_status_id });
         }
 
-        public async Task ChangeOrderLinkedCdekOrderNumber(int order_id, string cdek_order_number)
+        public async Task ChangeOrderLinkedTkNumber(int order_id, string order_number, string tk_prefix)
         {
-            string removeOldSql = "DELETE FROM etk_app_order_to_cdek WHERE order_id = @order_id";
+            string removeOldSql = "DELETE FROM etk_app_order_to_tk_order WHERE order_id = @order_id";
             await database.ExecuteQuery(removeOldSql, new { order_id });
 
-            string addOrderNumberSql = "INSERT INTO etk_app_order_to_cdek (order_id, cdek_order_number) VALUES (@order_id, @cdek_order_number)";
-            await database.ExecuteQuery(addOrderNumberSql, new { order_id, cdek_order_number });
+            string addOrderNumberSql = $"INSERT INTO etk_app_order_to_tk_order (order_id, @tk_prefix_order_number) VALUES (@order_id, @order_number)";
+            await database.ExecuteQuery(addOrderNumberSql, new { order_id, order_number, tk_prefix });
         }
     }
 }

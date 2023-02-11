@@ -1,5 +1,4 @@
 ﻿@using EtkBlazorApp.Core.Data.Order
-@using EtkBlazorApp.Model.Order
 
 <div class="dropdown show order-status-dropdown-container">
     <button href="#"
@@ -35,7 +34,7 @@
 </style>
 
 @code {
-    [Parameter] public OrderViewModel Order { get; set; }
+    [Parameter] public Order Order { get; set; }
     [Parameter] public bool CanChangeStatus { get; set; }
 
     [Inject] public IOrderStorage OrderRepository { get; set; }
@@ -45,9 +44,9 @@
 
     bool isOpened = false;
 
-    List<OrderStatusViewModel> availableOrderStatuses = new();
+    List<OrderStatus> availableOrderStatuses = new();
 
-    private readonly Dictionary<EtkOrderStatusCode, EtkBlazorApp.Model.Order.OrderStatusDisplayData> cssMap = new()
+    private readonly Dictionary<EtkOrderStatusCode, OrderStatusDisplayData> cssMap = new()
         {
             [EtkOrderStatusCode.None] = new("❓", "dark"),
             [EtkOrderStatusCode.Created] = new("🔄", "dark"),
@@ -99,12 +98,12 @@
     {
         if (CanChangeStatus)
         {
-            availableOrderStatuses = Mapper.Map<List<OrderStatusViewModel>>(await OrderRepository.GetOrderStatuses());
+            availableOrderStatuses = Mapper.Map<List<OrderStatus>>(await OrderRepository.GetOrderStatuses());
             StateHasChanged();
         }
     }
 
-    private async Task ChangeOrderStatus(OrderStatusViewModel status)
+    private async Task ChangeOrderStatus(OrderStatus status)
     {
         EtkOrderStatusCode oldStatus = (Order?.Status?.Type ?? EtkOrderStatusCode.None);
         EtkOrderStatusCode newStatus = status.Type;
@@ -121,7 +120,7 @@
             await Logger.Write(LogEntryGroupName.Orders, "Обновление статуса", $"Статус заказа {Order.OrderId} изменен с {oldStatus} на {newStatus}");
 
             //Проверить что действительно добавляется на активной странице
-            Order.StatusChangesHistory.Add(new OrderStatusHistoryViewModel()
+            Order.StatusChangesHistory.Add(new OrderStatusHistoryEntry()
                 {
                     DateAdded = DateTime.Now,
                     StatusName = status.Name

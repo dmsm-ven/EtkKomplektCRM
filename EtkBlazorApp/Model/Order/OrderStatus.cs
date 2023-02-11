@@ -1,11 +1,8 @@
-﻿
+﻿using EtkBlazorApp.Core.Data.Order;
 
-using EtkBlazorApp.Core.Data.Order;
+namespace EtkBlazorApp;
 
-namespace EtkBlazorApp.Model.Order;
-
-
-public class OrderStatusViewModel
+public class OrderStatus
 {
     public EtkOrderStatusCode Type { get; set; }
     public string Name { get; set; }

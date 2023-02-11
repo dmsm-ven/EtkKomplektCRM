@@ -3,7 +3,7 @@
 @implements IDisposable
 
 @code {
-    [Parameter] public EventCallback<OrderViewModel> NewOrderPushed { get; set; }
+    [Parameter] public EventCallback<Order> NewOrderPushed { get; set; }
 
     protected override void OnInitialized()
     {
@@ -14,7 +14,7 @@
     {
         throw new NotImplementedException();
 
-        var order = new OrderViewModel()
+        var order = new Order()
             {
                 City = entity.payment_city,
                 Customer = HttpUtility.HtmlDecode(entity.payment_firstname),

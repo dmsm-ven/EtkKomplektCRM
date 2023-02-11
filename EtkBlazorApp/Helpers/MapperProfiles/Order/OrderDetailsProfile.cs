@@ -8,7 +8,7 @@ public class OrderDetailsProfile : Profile
 {
     public OrderDetailsProfile()
     {
-        CreateMap<OrderDetailsEntity, OrderDetailsViewModel>()
+        CreateMap<OrderDetailsEntity, OrderDetails>()
             .ForMember(o => o.ProductName, o => o.MapFrom(x => HttpUtility.HtmlDecode(x.name)))
             .ForMember(o => o.Model, o => o.MapFrom(x => HttpUtility.HtmlDecode(x.model)))
             .ForMember(o => o.Sku, o => o.MapFrom(x => HttpUtility.HtmlDecode(x.sku)))

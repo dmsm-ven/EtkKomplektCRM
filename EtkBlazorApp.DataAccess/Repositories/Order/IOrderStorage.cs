@@ -15,7 +15,7 @@ namespace EtkBlazorApp.DataAccess
         Task<OrderEntity> GetLastOrder();
         Task<List<OrderDetailsEntity>> GetOrderDetails(int orderId);
         Task<OrderEntity> GetOrderById(int orderId);
-        Task<OrderEntity> GetOrderByCdekNumber(string cdek_order_number);
+        Task<OrderEntity> GetOrderByTkOrderNumber(string tk_order_number);
         Task<List<OrderEntity>> GetLinkedOrders(int order_id);
         Task<List<OrderStatusEntity>> GetOrderStatuses();
         Task<List<OrderStatusHistoryEntity>> GetOrderChangeHistory(int order_id);
@@ -42,10 +42,10 @@ namespace EtkBlazorApp.DataAccess
             }
 
             var sb = new StringBuilder()
-                .AppendLine("SELECT o.*, otc.cdek_order_number, os.*")
+                .AppendLine("SELECT o.*, otc.tk_order_number, otc.tk_code, os.*")
                 .AppendLine("FROM oc_order o")
                 .AppendLine("LEFT JOIN oc_order_status os ON (o.order_status_id = os.order_status_id AND os.language_id = '2')")
-                .AppendLine("LEFT JOIN etk_app_order_to_cdek otc ON (o.order_id = otc.order_id)");
+                .AppendLine("LEFT JOIN etk_app_order_to_tk_order otc ON (o.order_id = otc.order_id)");
 
             Dictionary<string, string> filter = new Dictionary<string, string>()
             {
@@ -111,11 +111,11 @@ namespace EtkBlazorApp.DataAccess
         public async Task<OrderEntity> GetOrderById(int orderId)
         {
             var sql = new StringBuilder()
-                .AppendLine("SELECT o.*, osf.inn, otc.cdek_order_number, os.*")
+                .AppendLine("SELECT o.*, osf.inn, otc.tk_order_number, otc.tk_code, os.*")
                 .AppendLine("FROM oc_order o")
                 .AppendLine("LEFT JOIN oc_order_status os ON (o.order_status_id = os.order_status_id)")
                 .AppendLine("LEFT JOIN oc_order_simple_fields osf ON (o.order_id = osf.order_id)")
-                .AppendLine("LEFT JOIN etk_app_order_to_cdek otc ON (o.order_id = otc.order_id)")
+                .AppendLine("LEFT JOIN etk_app_order_to_tk_order otc ON (o.order_id = otc.order_id)")
                 .AppendLine("WHERE o.order_id = @orderId")
                 .ToString();
 
@@ -128,14 +128,14 @@ namespace EtkBlazorApp.DataAccess
             return order;
         }
 
-        public async Task<OrderEntity> GetOrderByCdekNumber(string cdek_order_number)
+        public async Task<OrderEntity> GetOrderByTkOrderNumber(string tk_order_number)
         {
             string sql = @"SELECT o.*, otc.*
-                           FROM etk_app_order_to_cdek otc
+                           FROM etk_app_order_to_tk_order otc
                            JOIN oc_order o ON (otc.order_id = o.order_id)
-                           WHERE otc.cdek_order_number = @cdek_order_number";
+                           WHERE otc.tk_order_number = @tk_order_number";
 
-            var order = await database.GetFirstOrDefault<OrderEntity, dynamic>(sql, new { cdek_order_number });
+            var order = await database.GetFirstOrDefault<OrderEntity, dynamic>(sql, new { tk_order_number });
             return order;
         }
 

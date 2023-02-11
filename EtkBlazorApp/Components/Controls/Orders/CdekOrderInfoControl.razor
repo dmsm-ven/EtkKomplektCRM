@@ -1,4 +1,5 @@
 ﻿@using EtkBlazorApp.Core.Data.Cdek
+
 <label for="cdek-order-number-field">Номер заказа в личном кабинете СДЭК</label>
 
 <div class="order-cdek-data-container my-2">
@@ -163,14 +164,21 @@
 
 
 @code {
+    private ITransportCompanyApi cdekApi;
+
     [Parameter] public string CdekOrderNumber { get; set; }
 
     [Inject] public IToastService Toasts { get; set; }
     [Inject] public IOrderUpdateService Orders { get; set; }
-    [Inject] public ITransportCompanyApi TransportCompany { get; set; }
+    [Inject] public DeliveryServiceApiManager TkApis { get; set; }
     [Inject] public IToastService Toast { get; set; }
 
     CdekOrderInfo cdekOrderDetails = null;
+
+    protected override void OnInitialized()
+    {
+        cdekApi = TkApis.TkApiByName[TransportDeliveryCompany.Cdek];
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -186,7 +194,7 @@
 
         try
         {
-            cdekOrderDetails = await TransportCompany.GetOrderInfo(CdekOrderNumber);
+            cdekOrderDetails = await cdekApi.GetOrderInfo(CdekOrderNumber);
         }
         catch (Exception ex)
         {
