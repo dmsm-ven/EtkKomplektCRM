@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorApp.DadataApi", ".
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorApp.TelegramBotLib", "..\EtkBlazorApp.TelegramBotLib\EtkBlazorApp.TelegramBotLib.csproj", "{6DAADE80-1548-4808-B316-91FD7EFD1FF4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtkBlazorApp.DellinApi", "..\EtkBlazorApp.DellinApi\EtkBlazorApp.DellinApi.csproj", "{2B33344D-FD87-4C24-91AC-A85C698081FB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,10 @@ Global
 		{6DAADE80-1548-4808-B316-91FD7EFD1FF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6DAADE80-1548-4808-B316-91FD7EFD1FF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6DAADE80-1548-4808-B316-91FD7EFD1FF4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B33344D-FD87-4C24-91AC-A85C698081FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B33344D-FD87-4C24-91AC-A85C698081FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B33344D-FD87-4C24-91AC-A85C698081FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B33344D-FD87-4C24-91AC-A85C698081FB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -60,6 +66,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{0F40A8B2-DC45-430C-8DEE-F1CEED09F155} = {F4ED17F6-25DE-40FE-96F5-DA5CCE5B81B4}
 		{BC490AD7-1B62-442B-99FA-978119C670D0} = {F4ED17F6-25DE-40FE-96F5-DA5CCE5B81B4}
+		{2B33344D-FD87-4C24-91AC-A85C698081FB} = {F4ED17F6-25DE-40FE-96F5-DA5CCE5B81B4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AC89A115-2F62-4E4D-9351-559FC4BE2606}

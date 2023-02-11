@@ -12,7 +12,7 @@ namespace EtkBlazorApp;
 //TODO: Возможно стоит заменить на фабрику
 public class DeliveryServiceApiManager
 {
-    public IReadOnlyDictionary<TransportDeliveryCompany, ITransportCompanyApi> TkApiByName { get; }
+    private readonly IReadOnlyDictionary<TransportDeliveryCompany, ITransportCompanyApi> TkApiByName;
 
     public DeliveryServiceApiManager(IEnumerable<ITransportCompanyApi> apis)
     {
@@ -20,11 +20,9 @@ public class DeliveryServiceApiManager
             .ToDictionary(i => i.Prefix, i => i);
     }
 
-    public ITransportCompanyApi GetTkApiForOrder(string tk_order_id)
+    public ITransportCompanyApi GetTkApiByCode(TransportDeliveryCompany code)
     {
-        TransportDeliveryCompany tk = GetTkOrderPrefixByEnteredOrderNumber(tk_order_id);
-
-        if (TkApiByName.TryGetValue(tk, out var api))
+        if (TkApiByName.TryGetValue(code, out var api))
         {
             return api;
         }

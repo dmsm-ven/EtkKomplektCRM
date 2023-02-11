@@ -14,7 +14,7 @@ namespace EtkBlazorApp.Components.Controls;
 public partial class PriceListTemplateEditAdditionalSettngs
 {
     [Parameter] public PriceListTemplateItemViewModel sourceTemplate { get; set; }
-    [Inject] public IPriceListTemplateStorage templateStorage { get; set; }
+    [Inject] public IPriceListTemplateAdditionalTabsStorage templateStorage { get; set; }
     [Inject] public UserLogger logger { get; set; }
     [Inject] public IToastService toasts { get; set; }
 
@@ -68,6 +68,32 @@ public partial class PriceListTemplateEditAdditionalSettngs
 
         toasts.ShowSuccess("Выполнено");
         await logger.Write(LogEntryGroupName.TemplateUpdate, "Убрано", $"Наценка для '{data.manufacturer_name}' из шаблона {sourceTemplate.Title}");
+    }
+
+    private async Task AddPurchaseDiscountRecord()
+    {
+        await templateStorage.AddPurchaseDiscountMapRecord(sourceTemplate.Guid, newDiscountMapRecordItem.manufacturer_id, newDiscountMapValue);
+
+        sourceTemplate.ManufacturerPurchaseDiscountMap.Add(new ManufacturerDiscountItemViewModel()
+        {
+            manufacturer_id = newDiscountMapRecordItem.manufacturer_id,
+            manufacturer_name = newDiscountMapRecordItem.name,
+            discount = newDiscountMapValue
+        });
+        StateHasChanged();
+
+        toasts.ShowSuccess("Выполнено");
+        await logger.Write(LogEntryGroupName.TemplateUpdate, "Добавлено", $"Закупочная скидка у бренда в прайс-листе'{newDiscountMapRecordItem.name}' --> '{newDiscountMapValue}' для шаблона {sourceTemplate.Title}");
+    }
+
+    private async Task RemovePurchaseDiscountRecord(ManufacturerDiscountItemViewModel data)
+    {
+        await templateStorage.RemovePurchaseDiscountMapRecord(sourceTemplate.Guid, data.manufacturer_id);
+        sourceTemplate.ManufacturerPurchaseDiscountMap.Remove(data);
+        StateHasChanged();
+
+        toasts.ShowSuccess("Выполнено");
+        await logger.Write(LogEntryGroupName.TemplateUpdate, "Убрано", $"Закупочная скидка для '{data.manufacturer_name}' из шаблона {sourceTemplate.Title}");
     }
 
     private async Task AddManufacturerMapRecord()

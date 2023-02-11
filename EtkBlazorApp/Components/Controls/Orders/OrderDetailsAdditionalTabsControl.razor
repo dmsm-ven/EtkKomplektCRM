@@ -12,9 +12,13 @@
 
 <div class="row">
     <div class="order-details-tabs w-100" style="margin: 20px 0px;">
-        @if (selectedTab == "Статус СДЭК")
+        @if (selectedTab == "Статус ТК СДЭК")
         {
             <CdekOrderInfoControl CdekOrderNumber="@Order.TkOrderNumber" />
+        }
+        else if (selectedTab == "Статус ТК Деловые Линии")
+        {
+            <h2>Не реализовано</h2>
         }
         else if (selectedTab == "Другие заказы клиента")
         {
@@ -30,7 +34,33 @@
 @code {
     [Parameter] public Order Order { get; set; }
 
-    private string selectedTab = "Статус СДЭК";
-    private readonly string[] tabData = new string[] { "Статус СДЭК", "Другие заказы клиента", "Информация по ИНН" };
+    string selectedTab = "";
+    private IReadOnlyList<string> tabData = new List<string>();
+
+    protected override void OnParametersSet()
+    {
+        var list = new List<string>()
+        {
+             "Другие заказы клиента",
+             "Информация по ИНН"
+        };
+
+        if (Order.TkCode != TransportDeliveryCompany.None)
+        {
+            if (Order.TkCode == TransportDeliveryCompany.Cdek)
+            {
+                list.Insert(0, "Статус ТК СДЭК");
+            }
+            if (Order.TkCode == TransportDeliveryCompany.Dellin)
+            {
+                list.Insert(0, "Статус ТК Деловые Линии");
+            }
+
+            selectedTab = list[0];
+        }
+
+        tabData = list;
+
+    }
 
 }

@@ -11,8 +11,10 @@
         <td>
             @if (tkApi is not null)
             {
-                <a class="btn btn-sm btn-outline-secondary tk-order-icon-small" href=@tkApi.GetOrderDetailsLink(OrderData.TkOrderNumber) target="_blank">
-                    <img src="/image/logotips/delivery_companies/@($"{OrderData.TkCode}-logo-small.png")" />
+                <a class="btn btn-sm btn-outline-secondary tk-order-icon-small"
+           title="Номер заказа: @OrderData.TkOrderNumber"
+           href=@tkApi.GetOrderDetailsLink(OrderData.TkOrderNumber) target="_blank">
+                    <img src=@OrderData.TkLogoImagePath />
                     <div class="tk-icon-overlay">
                         <span class="oi oi-magnifying-glass m-auto"></span>
                     </div>
@@ -36,6 +38,6 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        tkApi = DeliveryApiManager.GetTkApiForOrder(OrderData.TkOrderNumber);
+        tkApi = DeliveryApiManager.GetTkApiByCode(OrderData.TkCode);
     }
 }

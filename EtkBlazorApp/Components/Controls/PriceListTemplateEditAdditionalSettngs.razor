@@ -29,9 +29,9 @@
 
     <ContentButtonExpander Title="Закупочные цены для брендов">
         <div>
-            <p class="pl-template-add-settings-desc">Название бренда в прайс-листе должно точно соответствовать названию на сайте</p>
+            <p class="pl-template-add-settings-desc">Сопоставление наценок для отображение маржи на сайте</p>
             <button type="button" class="btn btn-success"
-                    @onclick="AddDiscountMapRecord">
+                    @onclick="AddPurchaseDiscountRecord">
                 <span class="oi oi-plus"></span>
             </button>
             <input type="number" class="form-control price-list-template-map-control" placeholder="Наценка" @bind="newDiscountMapValue" />
@@ -40,10 +40,10 @@
                                         @bind-Manufacturer="newDiscountMapRecordItem" />
         </div>
         <hr />
-        @foreach (var mitem in sourceTemplate.ManufacturerDiscountMap)
+        @foreach (var mitem in sourceTemplate.ManufacturerPurchaseDiscountMap)
         {
             <div style="margin-top: 8px;">
-                <button type="button" class="btn btn-outline-danger" @onclick="@(e => RemoveDiscountMapRecord(mitem))">
+                <button type="button" class="btn btn-outline-danger" @onclick="@(e => RemovePurchaseDiscountRecord(mitem))">
                     <span class="oi oi-minus"></span>
                 </button>
                 <input type="text" class="form-control price-list-template-map-control" readonly value="@mitem.manufacturer_name" />

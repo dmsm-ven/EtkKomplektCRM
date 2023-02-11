@@ -18,23 +18,8 @@ namespace EtkBlazorApp.DataAccess
         Task<PriceListTemplateEntity> GetPriceListTemplateById(string guid);
         Task<List<PriceListTemplateRemoteUriMethodEntity>> GetPricelistTemplateRemoteLoadMethods();
         Task<List<string>> GetPriceListTemplatGroupNames();
-
-        //quantity map
-        Task AddQuantityMapRecord(string guid, string newQuantityMapRecordWord, int newQuantityMapRecordValue);
-        Task RemoveQuantityMapRecord(string guid, string word);
-
-        //name map
-        Task AddManufacturerMapRecord(string guid, string newManufacturerMapRecordWord, int manufacturer_id);
-        Task RemoveManufacturerMapRecord(string guid, string word);
-
-        //white/black list
-        Task RemoveSkipManufacturerRecord(string guid, int manufacturer_id, string listType);
-        Task AddSkipManufacturerRecord(string guid, int manufacturer_id, string newSkipManufacturerListType);
-
-        //discount map
-        Task RemoveDiscountMapRecord(string guid, int manufacturer_id);
-        Task AddDiscountMapRecord(string guid, int manufacturer_id, decimal discount);
     }
+
 
     public class PriceListTemplateStorage : IPriceListTemplateStorage
     {
@@ -54,11 +39,13 @@ namespace EtkBlazorApp.DataAccess
                                     esc.sender as email_criteria_sender, 
                                     esc.file_name_pattern as email_criteria_file_name_pattern,
                                     esc.max_age_in_days as email_criteria_max_age_in_days
+
                           FROM etk_app_price_list_template t
-                          LEFT JOIN etk_app_price_list_template_load_method lm ON t.remote_uri_method_id = lm.id 
-                          LEFT JOIN etk_app_price_list_template_email_search_criteria esc ON t.id = esc.template_guid 
-                          LEFT JOIN etk_app_price_list_template_credentials cred ON t.id = cred.template_guid 
-                          WHERE t.id = @guid LIMIT 1";
+                              LEFT JOIN etk_app_price_list_template_load_method lm ON t.remote_uri_method_id = lm.id 
+                              LEFT JOIN etk_app_price_list_template_email_search_criteria esc ON t.id = esc.template_guid 
+                              LEFT JOIN etk_app_price_list_template_credentials cred ON t.id = cred.template_guid 
+                          WHERE t.id = @guid 
+                          LIMIT 1";
 
             var templateInfo = await database.GetFirstOrDefault<PriceListTemplateEntity, dynamic>(sql, new { guid });
 
@@ -67,6 +54,7 @@ namespace EtkBlazorApp.DataAccess
             templateInfo.manufacturer_name_map = await GetManufacturerNameMapRecordsForTemplate(guid);
             templateInfo.manufacturer_skip_list = await GetManufacturerSkipRecordsForTemplate(guid);
             templateInfo.manufacturer_discount_map = await GetDiscountMapRecordsForTemplate(guid);
+            templateInfo.manufacturer_purchase_map = await GetPurchaseMapRecordsForTemplate(guid);
 
             return templateInfo;
         }
@@ -97,6 +85,17 @@ namespace EtkBlazorApp.DataAccess
             var data = await database.GetList<ManufacturerDiscountMapEntity, dynamic>(sql, new { guid });
             return data;
         }
+
+        private async Task<List<ManufacturerDiscountMapEntity>> GetPurchaseMapRecordsForTemplate(string guid)
+        {
+            string sql = @"SELECT t.*, m.name
+                           FROM etk_app_price_list_template_purchase_discount t
+                           LEFT JOIN oc_manufacturer m ON (t.manufacturer_id = m.manufacturer_id)
+                           WHERE template_guid = @guid";
+            var data = await database.GetList<ManufacturerDiscountMapEntity, dynamic>(sql, new { guid });
+            return data;
+        }
+
 
         private async Task<List<ManufacturerMapRecordEntity>> GetManufacturerNameMapRecordsForTemplate(string guid)
         {
@@ -220,84 +219,5 @@ namespace EtkBlazorApp.DataAccess
             await database.ExecuteQuery("DELETE FROM etk_app_price_list_discount_map WHERE price_list_guid = @guid", new { guid });
         }
 
-        public async Task AddQuantityMapRecord(string guid, string newQuantityMapRecordWord, int newQuantityMapRecordValue)
-        {
-            string sql = @"INSERT INTO etk_app_price_list_template_quantity_map 
-                            (price_list_guid, text, quantity) VALUES
-                            (@guid, @text, @quantity)
-                          ON DUPLICATE KEY UPDATE
-                            price_list_guid = @guid,                            
-                            text = @text, 
-                            quantity = @quantity";
-
-            await database.ExecuteQuery(sql, new { guid, text = newQuantityMapRecordWord, quantity = newQuantityMapRecordValue });
-        }
-
-        public async Task RemoveQuantityMapRecord(string guid, string word)
-        {
-            await database.ExecuteQuery(
-                "DELETE FROM etk_app_price_list_template_quantity_map WHERE price_list_guid = @guid AND text = @word",
-                new { guid, word });
-        }
-
-        public async Task AddManufacturerMapRecord(string guid, string text, int manufacturer_id)
-        {
-            string sql = @"INSERT INTO etk_app_price_list_template_manufacturer_map 
-                            (price_list_guid, text, manufacturer_id) VALUES
-                            (@guid, @text, @manufacturer_id)
-                          ON DUPLICATE KEY UPDATE
-                            price_list_guid = @guid,                            
-                            text = @text, 
-                            manufacturer_id = @manufacturer_id";
-
-            await database.ExecuteQuery(sql, new { guid, text, manufacturer_id });
-        }
-
-        public async Task RemoveManufacturerMapRecord(string guid, string word)
-        {
-            await database.ExecuteQuery(
-                "DELETE FROM etk_app_price_list_template_manufacturer_map WHERE price_list_guid = @guid AND text = @word",
-                new { guid, word });
-        }
-
-        public async Task RemoveSkipManufacturerRecord(string guid, int manufacturer_id, string list_type)
-        {
-            string sql = @"DELETE FROM etk_app_price_list_template_manufacturer_list
-                           WHERE price_list_guid = @guid AND manufacturer_id = @manufacturer_id AND list_type = @list_type";
-            await database.ExecuteQuery(sql, new { guid, manufacturer_id, list_type });
-        }
-
-        public async Task AddSkipManufacturerRecord(string guid, int manufacturer_id, string list_type)
-        {
-            string sql = @"INSERT INTO etk_app_price_list_template_manufacturer_list
-                            (price_list_guid, manufacturer_id, list_type) VALUES
-                            (@guid, @manufacturer_id, @list_type)
-                          ON DUPLICATE KEY UPDATE
-                            price_list_guid = @guid,                            
-                            manufacturer_id = @manufacturer_id, 
-                            list_type = @list_type";
-
-            await database.ExecuteQuery(sql, new { guid, manufacturer_id, list_type });
-        }
-
-        public async Task RemoveDiscountMapRecord(string guid, int manufacturer_id)
-        {
-            string sql = @"DELETE FROM etk_app_price_list_template_discount_map
-                           WHERE price_list_guid = @guid AND manufacturer_id = @manufacturer_id";
-            await database.ExecuteQuery(sql, new { guid, manufacturer_id });
-        }
-
-        public async Task AddDiscountMapRecord(string guid, int manufacturer_id, decimal discount)
-        {
-            string sql = @"INSERT INTO etk_app_price_list_template_discount_map
-                            (price_list_guid, manufacturer_id, discount) VALUES
-                            (@guid, @manufacturer_id, @discount)
-                          ON DUPLICATE KEY UPDATE
-                            price_list_guid = @guid,                            
-                            manufacturer_id = @manufacturer_id, 
-                            discount = @discount";
-
-            await database.ExecuteQuery(sql, new { guid, manufacturer_id, discount });
-        }
     }
 }

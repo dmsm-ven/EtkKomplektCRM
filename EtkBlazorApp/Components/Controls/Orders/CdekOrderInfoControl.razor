@@ -177,7 +177,7 @@
 
     protected override void OnInitialized()
     {
-        cdekApi = TkApis.TkApiByName[TransportDeliveryCompany.Cdek];
+        cdekApi = TkApis.GetTkApiByCode(TransportDeliveryCompany.Cdek);
     }
 
     protected override async Task OnParametersSetAsync()

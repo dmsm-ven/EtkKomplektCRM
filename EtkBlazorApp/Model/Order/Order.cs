@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtkBlazorApp.Core.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -20,11 +21,6 @@ public class Order
     public string OrderStatusName { get; set; }
     public string Inn { get; set; }
 
-    public string TkOrderNumber { get; set; }
-    public string TkCode { get; set; }
-
-
-
     //TODO: проверить, возможно есть какие-то другие скрытые суммы при расчете
     public decimal ShipmentCost => TotalPrice - OrderDetails.Sum(od => od.Sum);
     public int ProductsTotalQuantity => OrderDetails.Sum(od => od.Quantity);
@@ -33,5 +29,12 @@ public class Order
     public OrderStatus Status { get; set; }
     public List<OrderDetails> OrderDetails { get; set; } = new();
     public List<OrderStatusHistoryEntry> StatusChangesHistory { get; set; } = new();
+
+    public string TkOrderNumber { get; set; }
+    public TransportDeliveryCompany TkCode { get; set; }
+    public string TkLogoImagePath
+    {
+        get => $"/image/logotips/delivery_companies/{TkCode.ToString().ToLower()}-logo-small.png";
+    }
 }
 

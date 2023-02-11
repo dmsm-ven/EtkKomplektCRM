@@ -33,6 +33,7 @@ namespace EtkBlazorApp.DataAccess.Entity
         public List<QuantityMapRecordEntity> quantity_map { get; set; }
         public List<ManufacturerMapRecordEntity> manufacturer_name_map { get; set; }
         public List<ManufacturerDiscountMapEntity> manufacturer_discount_map { get; set; }
+        public List<ManufacturerDiscountMapEntity> manufacturer_purchase_map { get; set; }
         public List<ManufacturerSkipRecordEntity> manufacturer_skip_list { get; set; }
     }
 }

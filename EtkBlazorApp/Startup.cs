@@ -6,6 +6,7 @@ using EtkBlazorApp.CdekApi;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Repositories;
+using EtkBlazorApp.DellinApi;
 using EtkBlazorApp.Services;
 using EtkBlazorApp.TelegramBotLib;
 using EtkBlazorAppi.DadataApi;
@@ -128,7 +129,7 @@ public class Startup
 
         services.AddSingleton<ITransportCompanyApi, CdekApiMemoryCachedClient>(x =>
         {
-            var section = Configuration.GetSection("CdekConfiguration");
+            var section = Configuration.GetSection("DeliveryCompanies:CdekConfiguration");
             var client = new HttpClient()
             {
                 BaseAddress = new Uri("https://api.cdek.ru")
@@ -138,6 +139,18 @@ public class Startup
 
 
             return new CdekApiMemoryCachedClient(section["Account"], section["SecurePassword"], cache, client);
+        });
+
+        services.AddSingleton<ITransportCompanyApi, DellinApiClient>(x =>
+        {
+            var section = Configuration.GetSection("DeliveryCompanies:DellinConfiguration");
+            var client = new HttpClient()
+            {
+                BaseAddress = new Uri("https://api.dellin.ru")
+            };
+            client.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "application/json");
+
+            return new DellinApiClient(section["API_KEY"], client);
         });
 
         services.AddSingleton<DeliveryServiceApiManager>();
@@ -153,6 +166,7 @@ public class Startup
         services.AddTransient<IProductStorage, ProductStorage>();
         services.AddTransient<ICategoryStorage, CategoryStorage>();
         services.AddTransient<IProductUpdateService, ProductUpdateService>();
+        services.AddTransient<IPriceListTemplateAdditionalTabsStorage, PriceListTemplateAdditionalTabsStorage>();
         services.AddTransient<IPriceListTemplateStorage, PriceListTemplateStorage>();
         services.AddTransient<IPrikatTemplateStorage, PrikatTemplateStorage>();
         services.AddTransient<IOrderStorage, OrderStorage>();

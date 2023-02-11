@@ -1,4 +1,5 @@
-﻿using Blazored.Toast.Services;
+﻿using AutoMapper;
+using Blazored.Toast.Services;
 using EtkBlazorApp.BL;
 using EtkBlazorApp.Components.Dialogs;
 using EtkBlazorApp.DataAccess;
@@ -19,6 +20,7 @@ public partial class TemplateEditPage : ComponentBase
     [Inject] public IStockStorage stockStorage { get; set; }
     [Inject] public ISettingStorage settings { get; set; }
     [Inject] public IToastService toasts { get; set; }
+    [Inject] public IMapper mapper { get; set; }
     [Inject] public UserLogger logger { get; set; }
     [Inject] public NavigationManager navManager { get; set; }
 
@@ -54,43 +56,7 @@ public partial class TemplateEditPage : ComponentBase
             var entity = await templateStorage.GetPriceListTemplateById(TemplateGuid);
 
             //TODO: переделать на инициализацию через AutoMapper
-            sourceTemplate = new PriceListTemplateItemViewModel()
-            {
-                Guid = entity.id,
-                Title = entity.title,
-                Description = entity.description,
-                Discount = entity.discount,
-                GroupName = entity.group_name,
-                Image = entity.image,
-                Nds = entity.nds,
-                RemoteUrl = entity.remote_uri,
-                RemoteUrlMethodId = entity.remote_uri_method_id,
-                RemoteUrlMethodName = entity.remote_uri_method_name,
-                EmailSearchCriteria_FileNamePattern = entity.email_criteria_file_name_pattern,
-                EmailSearchCriteria_Sender = entity.email_criteria_sender,
-                EmailSearchCriteria_MaxAgeInDays = entity.email_criteria_max_age_in_days,
-                EmailSearchCriteria_Subject = entity.email_criteria_subject,
-                Cridentials_Login = entity.credentials_login,
-                Cridentials_Password = entity.credentials_password,
-                LinkedStockId = entity.stock_partner_id,
-                QuantityMap = entity.quantity_map.ToDictionary(i => i.text, i => i.quantity),
-                ManufacturerNameMap = entity.manufacturer_name_map.ToDictionary(i => i.text, i => i.name),
-                ManufacturerDiscountMap = entity.manufacturer_discount_map
-                    .Select(i => new ManufacturerDiscountItemViewModel()
-                    {
-                        manufacturer_id = i.manufacturer_id,
-                        manufacturer_name = i.name,
-                        discount = i.discount
-                    }).ToList()
-                ,
-                ManufacturerSkipList = entity.manufacturer_skip_list
-                    .Select(e => new ManufacturerSkipItemViewModel()
-                    {
-                        ListType = Enum.Parse<SkipManufacturerListType>(e.list_type),
-                        manufacturer_id = e.manufacturer_id,
-                        Name = e.name
-                    }).ToList()
-            };
+            sourceTemplate = mapper.Map<PriceListTemplateItemViewModel>(entity);
         }
         else
         {
