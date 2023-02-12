@@ -10,7 +10,7 @@
     <h1>Загрузка данных</h1>
     <LoadingSpinner />
 }
-else if (historyData.Data.Count == 0)
+else if (historyData?.Data == null || historyData.Data.Count == 0)
 {
     <h2>Нет данных по изменению цен</h2>
 }
@@ -44,6 +44,11 @@ else
                    target="_blank"
                    class="btn btn-sm btn-outline-@(item.DateTime.Date == DateTime.Now.Date ? "light" : "primary") small-external-link-button">
                             <span class="oi oi-external-link"></span>
+                        </a>
+                        <a href="/price-list/product-price-change-chart/@item.ProductId"
+                   target="_blank"
+                   class="btn btn-sm btn-outline-@(item.DateTime.Date == DateTime.Now.Date ? "light" : "primary") small-external-link-button">
+                            <span class="oi oi-bar-chart"></span>
                         </a>
                         <span>@item.ProductName</span>
                     </td>

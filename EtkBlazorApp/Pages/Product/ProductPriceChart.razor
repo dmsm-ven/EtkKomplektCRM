@@ -22,7 +22,7 @@ else if (product != null)
         </div>
     </div>
     <div class="row">
-        <div class="col-md-12">
+        <div class="offset-md-1 col-md-10 col-xl-8 col-sm-12">
             @if (inProgress)
             {
                 <p>Загрузка данных ...</p>
@@ -51,9 +51,6 @@ else if (product != null)
 
             product = mapper.Map<ProductModel>(await productService.GetProductById(product_id));
 
-
-
-
             await GenerateChart();
             StateHasChanged();
         }
@@ -61,29 +58,21 @@ else if (product != null)
 
     private async Task GenerateChart()
     {
-        //inProgress = true;
-        //StateHasChanged();
-        //try
-        //{
-        //    var data = await dataExtractor.GetDataSourceForProductPriceDynamic(product_id);
-
-        //    if (data.ByPriceListTitle.Count == 0) { return; }
-
-        //    string chartTitle = $"Динамика цен товара '{product.Name}'";
-
-        //    var points = data
-        //        .ByPriceListTitle[0]
-        //        .PriceByDate
-        //        .Select(i => new { x = i.Key.ToShortDateString(), y = i.Value })
-        //        .ToArray();
-        //  <script async src="https://cdn.jsdelivr.net/npm/chart.js@3.3.0/dist/chart.min.js"></script>
-        //   <script src="/script/chart.js"></script>
-        //    await js.InvokeVoidAsync("GenerateChart", chartTitle, points.Select(i => i.);
-        //    StateHasChanged();
-        //}
-        //finally
-        //{
-        //    inProgress = false;
-        //}
+        inProgress = true;
+        StateHasChanged();
+        try
+        {
+            var chartData = await dataExtractor.GetDataSourceForProductPriceDynamic(product_id);
+            if (chartData != null)
+            {
+                await js.InvokeVoidAsync("GenerateChart", chartData.XAxisLabels, chartData.SeriesData);
+                StateHasChanged();
+            }
+        }
+        finally
+        {
+            inProgress = false;
+        }
     }
+
 }

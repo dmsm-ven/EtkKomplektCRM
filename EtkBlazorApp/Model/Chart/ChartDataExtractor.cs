@@ -13,6 +13,8 @@ namespace EtkBlazorApp.Model.Chart
     {
         private readonly IOrderStorage ordersStorage;
         private readonly IPriceListUpdateHistoryRepository productPriceHistoryRepo;
+        const int MAX_HISTORY_AGE = 20;
+
 
         public ChartDataExtractor(IOrderStorage ordersStorage, IPriceListUpdateHistoryRepository productPriceHistoryRepo)
         {
@@ -24,6 +26,11 @@ namespace EtkBlazorApp.Model.Chart
         {
             var data = await productPriceHistoryRepo.GetPriceDynamicForProduct(product_id);
 
+            if (data.Count == 0)
+            {
+                return null;
+            }
+
             var grouped = data.GroupBy(i => i.price_list_title)
                 .Select(i => new ProductPriceDynamicChartDataEntry()
                 {
@@ -32,10 +39,66 @@ namespace EtkBlazorApp.Model.Chart
                 })
                 .ToList();
 
+            if (grouped.Count == 0)
+            {
+                return null;
+            }
+
+
+            var colors = new string[3] { "#ff0000", "#0000ff", "#000000" };
+
+            var seriesData = new List<ChartSeriesData>();
+            var xAxisLabels = grouped
+                .SelectMany(i => i.PriceByDate.Keys)
+                .OrderByDescending(date => date)
+                .Select(i => i.ToString("dd.MM.yyyy"))
+                .Distinct()
+                .Take(MAX_HISTORY_AGE)
+                .ToArray();
+
+            int i = 0;
+            foreach (var kvp in grouped)
+            {
+                List<decimal> values = new List<decimal>();
+                Dictionary<string, decimal> stringDates = kvp
+                    .PriceByDate
+                    .GroupBy(kvp => kvp.Key.ToString("dd.MM.yyyy"))
+                    .ToDictionary(j => j.Key, j => j.First().Value);
+
+                foreach (var d in xAxisLabels)
+                {
+                    if (stringDates.TryGetValue(d, out var price))
+                    {
+                        values.Add(price);
+                    }
+                    else if (values.Any())
+                    {
+                        values.Add(values.Last());
+                    }
+                    else
+                    {
+                        values.Add(0);
+                    }
+
+                }
+
+                var priceListSeries = new ChartSeriesData
+                {
+                    label = kvp.PriceListTitle,
+                    data = values.ToArray(),
+                    fill = false,
+                    borderColor = colors[i++],
+                    tension = 0.1
+                };
+
+                seriesData.Add(priceListSeries);
+            }
+
 
             return new ProductPriceDynamicChartData()
             {
-                ByPriceListTitle = grouped
+                XAxisLabels = xAxisLabels,
+                SeriesData = seriesData.ToArray()
             };
         }
 
@@ -129,9 +192,21 @@ namespace EtkBlazorApp.Model.Chart
         }
     }
 
+
+
     public class ProductPriceDynamicChartData
     {
-        public List<ProductPriceDynamicChartDataEntry> ByPriceListTitle { get; set; }
+        public ChartSeriesData[] SeriesData { get; set; }
+        public string[] XAxisLabels { get; set; }
+    }
+
+    public class ChartSeriesData
+    {
+        public string label { get; set; }
+        public decimal[] data { get; set; }
+        public bool fill { get; set; }
+        public string borderColor { get; set; }
+        public double tension { get; set; }
     }
 
     public class ProductPriceDynamicChartDataEntry
