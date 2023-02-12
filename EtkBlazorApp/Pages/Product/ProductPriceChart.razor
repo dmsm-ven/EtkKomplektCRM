@@ -27,7 +27,9 @@ else if (product != null)
             {
                 <p>Загрузка данных ...</p>
             }
-            <canvas id="myChart" />
+            <div>
+                <canvas id="myChart" />
+            </div>
         </div>
     </div>
 }
@@ -52,7 +54,7 @@ else if (product != null)
             product = mapper.Map<ProductModel>(await productService.GetProductById(product_id));
 
             await GenerateChart();
-            StateHasChanged();
+
         }
     }
 
@@ -72,6 +74,7 @@ else if (product != null)
         finally
         {
             inProgress = false;
+            StateHasChanged();
         }
     }
 
