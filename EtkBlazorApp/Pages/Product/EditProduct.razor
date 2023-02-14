@@ -76,7 +76,7 @@
                 <div class="form-group col-md-6">
                     <label for="product-base-currency-code">Валюта</label>
                     <select class="form-control" id="base-currency-code" @bind="editedProduct.BasePriceCurrency">
-                        @foreach (var currency in basePriceCurrencyNames)
+                        @foreach (var currency in Enum.GetNames(typeof(CurrencyType)))
                         {
                             <option value="@currency" selected="@(currency == editedProduct.BasePriceCurrency)">@currency</option>
                         }

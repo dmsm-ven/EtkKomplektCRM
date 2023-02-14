@@ -316,8 +316,8 @@ label {
 .brand-template-logo {
     width: 100%;
     height: auto;
-    margin: 4px auto;
     border: 1px dashed rgba(255,255,255,0.25);
+    margin: 4px 8px 4px 2px !important;
 }
 
 tr.selected-user {

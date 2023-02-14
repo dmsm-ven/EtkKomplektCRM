@@ -63,6 +63,11 @@ namespace EtkBlazorApp.DataAccess
             }
 
 
+            var stocksToUpdate = string.Join(",", groupedByPartner.Keys);
+            //Очищаем все склады которые будем обновлять
+            await database.ExecuteQuery($"UPDATE oc_product_to_stock SET quantity = 0 WHERE stock_partner_id IN ({stocksToUpdate})");
+
+            //Вставляем если нет, либо обновляем если уже есть склад с остатками (или ценами) для определенного товара
             var sb = new StringBuilder("INSERT INTO oc_product_to_stock (stock_partner_id, product_id, quantity) VALUES\n");
             foreach (var group in groupedByPartner)
             {
@@ -139,15 +144,21 @@ namespace EtkBlazorApp.DataAccess
             var pidArray = string.Join(",", idsToUpdate);
 
             string sql = $@"UPDATE oc_product
-				INNER JOIN (SELECT pts.product_id, pts.price, pts.currency_code, curr.value_official                              	
+				INNER JOIN (SELECT pts.product_id, 
+								MIN(pts.price) as price, 
+								pts.currency_code, 
+								curr.value_official, 
+								MIN(pts.price * curr.value_official) as min_price                        	
 							FROM oc_product_to_stock as pts
-							JOIN oc_currency as curr ON (`pts`.`currency_code` = `curr`.`code`)
+								JOIN oc_currency as curr ON (`pts`.`currency_code` = `curr`.`code`)
 							WHERE (NOT pts.currency_code IS NULL) AND 
-                                    (NOT pts.price IS NULL) AND
-                                    pts.product_id IN ({pidArray})
-							ORDER BY (pts.price != 0), (pts.price * curr.value_official) ASC            
+                                (NOT pts.price IS NULL) AND 
+                                (pts.price != 0) AND
+                                pts.product_id IN ({pidArray})
+							GROUP BY pts.product_id 
+							ORDER BY pts.product_id, (pts.price * curr.value_official) ASC
 							) as inner_tbl
-				SET oc_product.price = ROUND(inner_tbl.price * inner_tbl.value_official, 0),
+				SET oc_product.price = ROUND(min_price, 0),
 					oc_product.base_price = inner_tbl.price,
 					oc_product.base_currency_code = inner_tbl.currency_code,
 					oc_product.date_modified = NOW()

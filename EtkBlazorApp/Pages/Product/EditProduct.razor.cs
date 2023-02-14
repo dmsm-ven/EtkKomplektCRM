@@ -39,7 +39,6 @@ namespace EtkBlazorApp.Pages.Product
 
         ProductModel editedProduct = null;
         ProductEntity replacementProduct;
-        string[] basePriceCurrencyNames = Enum.GetNames(typeof(CurrencyType));
         string[] stockStatusNames = null;
         string enteredUri = null;
         [Parameter]

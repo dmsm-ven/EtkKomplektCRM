@@ -45,7 +45,7 @@ namespace EtkBlazorApp.Model.Chart
             }
 
 
-            var colors = new string[3] { "#ff0000", "#0000ff", "#000000" };
+            var colors = new string[4] { "#ff0000", "#0000ff", "#000000", "#ffff00" };
 
             var seriesData = new List<ChartSeriesData>();
             var xAxisLabels = grouped
@@ -77,7 +77,7 @@ namespace EtkBlazorApp.Model.Chart
                     }
                     else
                     {
-                        values.Add(0);
+                        values.Add(kvp.PriceByDate.Values.First());
                     }
 
                 }

@@ -15,6 +15,8 @@ namespace EtkBlazorApp.DataAccess
         Task<List<StockPartnerLinkedManufacturerInfoEntity>> GetStockManufacturers(int stock_partner_id);
         Task<List<StockPartnerManufacturerInfoEntity>> GetManufacturerStockPartners(int manufacturer_id);
         Task<List<ManufacturerAvaibleStocksEntity>> GetManufacturersAvailableStocks();
+
+        Task<List<ProductToStockEntity>> GetStockDataForProduct(int product_id);
     }
 
 
@@ -133,6 +135,15 @@ namespace EtkBlazorApp.DataAccess
             var cities = await database.GetList<StockCityEntity>(sql);
 
             return cities;
+        }
+
+        public async Task<List<ProductToStockEntity>> GetStockDataForProduct(int product_id)
+        {
+            string sql = @"SELECT * FROM oc_product_to_stock WHERE product_id = @product_id";
+
+            var list = await database.GetList<ProductToStockEntity, dynamic>(sql, new { product_id });
+
+            return list;
         }
     }
 

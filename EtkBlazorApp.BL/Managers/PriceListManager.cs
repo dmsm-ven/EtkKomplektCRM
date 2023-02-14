@@ -127,45 +127,62 @@ namespace EtkBlazorApp.BL
 
 
             bool emptyDiscountGeneralDiscount = templateInfo.discount == decimal.Zero;
-            bool emptyDiscountMap = templateInfo.manufacturer_discount_map.Count == 0;
+            bool emptySellDiscountMap = templateInfo.manufacturer_discount_map.Count == 0;
+            bool emptyPurchaseDiscountMap = templateInfo.manufacturer_purchase_map.Count == 0;
 
             // берем цену из прайс-листа как есть. Т.к. нет ни наценки, ни НДС
-            if (emptyDiscountGeneralDiscount && emptyDiscountMap && !templateInfo.nds)
+            if (emptyDiscountGeneralDiscount && emptySellDiscountMap && emptyPurchaseDiscountMap && !templateInfo.nds)
             {
                 return;
             }
 
-            // словарь Бренд/Скидка
-            Dictionary<string, decimal> discountsByBrand = templateInfo
-                .manufacturer_discount_map
-                .ToDictionary(i => i.name, i => i.discount);
+            // Наценка продажи Бренд/Скидка
+            Dictionary<string, decimal> sellDiscounts = templateInfo.manufacturer_discount_map.ToDictionary(i => i.name, i => i.discount);
+
+            // Наценка закупки Бренд/Скидка
+            Dictionary<string, decimal> purchaseDiscounts = templateInfo.manufacturer_purchase_map.ToDictionary(i => i.name, i => i.discount);
 
             //Загружаем НДС
             NDS = (100m + (await settings.GetValue<int>("nds"))) / 100;
 
             foreach (var line in source)
             {
-                //Сначала добавляет к цене NDS, если нужно
-                if (templateInfo.nds)
-                {
-                    line.Price = AddNds(line.Price.Value, line.Currency);
-                    line.OriginalPrice = AddNds(line.OriginalPrice.Value, line.Currency);
-                }
+                CaclDiscount(templateInfo, emptyDiscountGeneralDiscount, emptySellDiscountMap, emptyPurchaseDiscountMap, sellDiscounts, purchaseDiscounts, line);
+            }
+        }
 
-                decimal discountValue = emptyDiscountGeneralDiscount ? 0m : templateInfo.discount;
-                // Если бренд есть в словаре, то берем скидку для него в первую очередь (заменяя стандартную от прайс-листа)
-                if (!emptyDiscountMap && discountsByBrand.ContainsKey(line.Manufacturer))
-                {
-                    discountValue = discountsByBrand[line.Manufacturer];
-                }
+        private void CaclDiscount(PriceListTemplateEntity templateInfo,
+                bool emptyDiscountGeneralDiscount,
+                bool emptySellDiscountMap,
+                bool emptyPurchaseDiscountMap,
+                IReadOnlyDictionary<string, decimal> sellDiscounts,
+                IReadOnlyDictionary<string, decimal> purchaseDiscounts,
+                PriceLine line)
+        {
+            //Сначала добавляет к цене NDS, если нужно
+            if (templateInfo.nds)
+            {
+                line.Price = AddNds(line.Price.Value, line.Currency);
+                line.OriginalPrice = AddNds(line.OriginalPrice.Value, line.Currency);
+            }
 
-                //Высчитываем множитель
-                decimal discountRatio = 1m + (discountValue / 100m);
+            decimal discountValue = emptyDiscountGeneralDiscount ? 0m : templateInfo.discount;
+            // Если бренд есть в словаре, то берем скидку для него в первую очередь (заменяя стандартную от прайс-листа)
+            if (!emptySellDiscountMap && sellDiscounts.ContainsKey(line.Manufacturer))
+            {
+                discountValue = sellDiscounts[line.Manufacturer];
+            }
 
-                if (discountRatio != 1)
-                {
-                    line.Price = Math.Round(line.Price.Value * discountRatio, line.Currency == CurrencyType.RUB ? 0 : 2);
-                }
+            if (!emptyPurchaseDiscountMap && discountValue != 0 && purchaseDiscounts.TryGetValue(line.Manufacturer, out var pdv))
+            {
+                line.Price *= (1m - (pdv / 100m));
+            }
+
+            //Высчитываем множитель
+            decimal discountRatio = 1m + (discountValue / 100m);
+            if (discountRatio != 1)
+            {
+                line.Price = Math.Round(line.Price.Value * discountRatio, line.Currency == CurrencyType.RUB ? 0 : 2, MidpointRounding.ToZero);
             }
         }
 
