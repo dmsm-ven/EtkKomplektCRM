@@ -144,25 +144,27 @@ namespace EtkBlazorApp.DataAccess
             var pidArray = string.Join(",", idsToUpdate);
 
             string sql = $@"UPDATE oc_product
-				INNER JOIN (SELECT pts.product_id, 
-								MIN(pts.price) as price, 
-								pts.currency_code, 
-								curr.value_official, 
-								MIN(pts.price * curr.value_official) as min_price                        	
-							FROM oc_product_to_stock as pts
-								JOIN oc_currency as curr ON (`pts`.`currency_code` = `curr`.`code`)
-							WHERE (NOT pts.currency_code IS NULL) AND 
-                                (NOT pts.price IS NULL) AND 
-                                (pts.price != 0) AND
-                                pts.product_id IN ({pidArray})
-							GROUP BY pts.product_id 
-							ORDER BY pts.product_id, (pts.price * curr.value_official) ASC
-							) as inner_tbl
-				SET oc_product.price = ROUND(min_price, 0),
-					oc_product.base_price = inner_tbl.price,
-					oc_product.base_currency_code = inner_tbl.currency_code,
-					oc_product.date_modified = NOW()
-				WHERE oc_product.product_id = inner_tbl.product_id";
+				            INNER JOIN (SELECT pts.product_id, 
+								            MIN(pts.price) as price, 
+								            pts.currency_code, 
+								            curr.value_official, 
+								            MIN(pts.price * curr.value_official) as min_price  
+                                
+							            FROM oc_product_to_stock as pts
+								            JOIN oc_currency as curr ON (`pts`.`currency_code` = `curr`.`code`)
+							            WHERE (NOT pts.currency_code IS NULL) AND 
+								            (NOT pts.price IS NULL) AND 
+								            (pts.price > 0) AND
+								            (pts.quantity > 0) AND 
+                                            (pts.product_id IN ({pidArray}))
+							            GROUP BY pts.product_id 
+							            ORDER BY pts.product_id, (pts.price * curr.value_official) ASC
+							            ) as inner_tbl
+				            SET oc_product.price = ROUND(min_price, 0),
+					            oc_product.base_price = inner_tbl.price,
+					            oc_product.base_currency_code = inner_tbl.currency_code,
+					            oc_product.date_modified = NOW()
+				            WHERE oc_product.product_id = inner_tbl.product_id";
             await database.ExecuteQuery(sql);
         }
 
