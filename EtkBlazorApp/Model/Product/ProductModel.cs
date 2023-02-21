@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace EtkBlazorApp
@@ -39,5 +40,7 @@ namespace EtkBlazorApp
             }
         }
         public string ProductIdUri => $"https://etk-komplekt.ru/index.php?route=product/product&product_id={Id}";
+
+        public List<ProductToStockDataModel> StocksData { get; set; } = new();
     }
 }

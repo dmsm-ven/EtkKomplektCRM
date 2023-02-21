@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorApp.DadataApi", ".
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorApp.TelegramBotLib", "..\EtkBlazorApp.TelegramBotLib\EtkBlazorApp.TelegramBotLib.csproj", "{6DAADE80-1548-4808-B316-91FD7EFD1FF4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtkBlazorApp.DellinApi", "..\EtkBlazorApp.DellinApi\EtkBlazorApp.DellinApi.csproj", "{2B33344D-FD87-4C24-91AC-A85C698081FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtkBlazorApp.DellinApi", "..\EtkBlazorApp.DellinApi\EtkBlazorApp.DellinApi.csproj", "{2B33344D-FD87-4C24-91AC-A85C698081FB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

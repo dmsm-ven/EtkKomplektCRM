@@ -139,7 +139,10 @@ namespace EtkBlazorApp.DataAccess
 
         public async Task<List<ProductToStockEntity>> GetStockDataForProduct(int product_id)
         {
-            string sql = @"SELECT * FROM oc_product_to_stock WHERE product_id = @product_id";
+            string sql = @"SELECT pts.*, sp.name as stock_name
+                           FROM oc_product_to_stock pts
+                           JOIN oc_stock_partner sp ON (pts.stock_partner_id = sp.stock_partner_id)
+                           WHERE pts.product_id = @product_id";
 
             var list = await database.GetList<ProductToStockEntity, dynamic>(sql, new { product_id });
 

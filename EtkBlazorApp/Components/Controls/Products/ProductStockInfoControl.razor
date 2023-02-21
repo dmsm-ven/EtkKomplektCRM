@@ -1,0 +1,78 @@
+﻿<div class="product-stock-info-container m-4">
+    <div class="product-stock-info-item product-stock-info-header">
+        <div class="stock-name">Склад</div>
+        <div class="stock-quantity">Кол-во</div>
+        <div class="stock-price">Цена</div>
+        <div class="stock-currency">Валюта</div>
+    </div>
+    <hr />
+    @if (Product.StocksData != null && Product.StocksData.Count > 0)
+    {
+        @foreach (var stock in Product.StocksData)
+        {
+            <div class="product-stock-info-item" id="stock_id_@stock.StockId">
+                <div class="stock-name">@stock.StockName</div>
+                <div class="stock-quantity">@(stock.Quantity.HasValue ? stock.Quantity.Value.ToString() : "-")</div>
+                <div class="stock-price">@(stock.Price.HasValue ? stock.Price.Value.ToString("F2") : "-")</div>
+                <div class="stock-currency">@(stock.PriceCurrency.HasValue ? stock.PriceCurrency.Value.ToString() : "-")</div>
+            </div>
+        }
+        if (Product.StocksData.Count > 1)
+        {
+            <div class="product-stock-info-item">
+                <div class="stock-name">Итого</div>
+                <div class="stock-quantity">@Product.StocksData.Sum(s => s.Quantity ?? 0)</div>
+                <div class="stock-price"></div>
+                <div class="stock-currency"></div>
+            </div>
+        }
+
+    }
+</div>
+
+<style>
+    .product-stock-info-container {
+        display: flex;
+        justify-content: start;
+        flex-direction: column;
+        width: 100%;
+        padding: 6px 0px;
+        border: 1px solid lightgray;
+        border-radius: 4px;
+    }
+
+    .product-stock-info-header {
+        font-weight: bold;
+        font-size: 15px;
+    }
+
+    .product-stock-info-item {
+        display: flex;
+        justify-content: start;
+        flex-direction: row;
+        align-items: center;
+        font-size: 13px;
+        border-bottom: 1px solid lightgray;
+        margin-bottom: 12px;
+    }
+
+        .product-stock-info-item .stock-name {
+            flex: 1 1 55%;
+            font-weight: bold;
+            font-size: 14px;
+            color: #333;
+            margin-left: 4px;
+        }
+
+        .product-stock-info-item .stock-quantity,
+        .product-stock-info-item .stock-currency,
+        .product-stock-info-item .stock-price {
+            flex: 1 1 15%;
+        }
+
+</style>
+
+@code {
+    [Parameter] public ProductModel Product { get; set; }
+
+}

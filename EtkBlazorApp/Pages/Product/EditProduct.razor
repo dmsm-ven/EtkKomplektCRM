@@ -8,7 +8,7 @@
 
 <h3>Редактирование товара</h3>
 <div class="row">
-    <div class="col-lg-6 col-md-8 col-sm-12 m-auto" style="max-width: 640px;">
+    <div class="col-lg-6 col-md-8 col-sm-12 m-auto" style="max-width: 720px;">
 
         <div class="form-row" style="margin-bottom: 20px;">
             <div class="form-group col-md-10">
@@ -55,7 +55,7 @@
             </div>
             <div class="form-row">
                 <div class="form-group col-md-6">
-                    <label for="product-quantity">Количество</label>
+                    <label for="product-quantity">Количество <span class="oi oi-info px-1" title=@TooltipText></span></label>
                     <input type="number" min="0" max="99999" class="form-control" id="product-quantity" @bind="@editedProduct.Quantity">
                 </div>
                 <div class="form-group col-md-6">
@@ -70,7 +70,7 @@
             </div>
             <div class="form-row">
                 <div class="form-group col-md-6">
-                    <label for="product-price">Цена товара</label>
+                    <label for="product-price">Цена товара <span class="oi oi-info px-1" title=@TooltipText></span></label>
                     <input type="number" min="0" class="form-control" id="product-price" @bind="editedProduct.BasePrice">
                 </div>
                 <div class="form-group col-md-6">
@@ -93,6 +93,10 @@
 
             <button class="btn btn-success" style="width: 100%;" @onclick="SaveChanges" disabled=@(!hasChanges)>Сохранить изменения</button>
 
+            <div class="form-row">
+                <ProductStockInfoControl Product=@editedProduct />
+            </div>
+
             <ProductMainImage Product=@editedProduct Size="ProductImageSize.Large" />
         }
         else
@@ -101,3 +105,4 @@
         }
     </div>
 </div>
+

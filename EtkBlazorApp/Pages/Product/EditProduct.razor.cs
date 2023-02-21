@@ -8,7 +8,9 @@ using EtkBlazorApp.DataAccess.Entity;
 using EtkBlazorApp.Services;
 using Microsoft.AspNetCore.Components;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -16,26 +18,14 @@ namespace EtkBlazorApp.Pages.Product
 {
     public partial class EditProduct
     {
-        [Inject]
-        public IProductStorage productStorage { get; set; }
-
-        [Inject]
-        public IProductUpdateService productUpdateService { get; set; }
-
-        [Inject]
-        public ISettingStorage settingStorage { get; set; }
-
-        [Inject]
-        public ICurrencyChecker currencyChecker { get; set; }
-
-        [Inject]
-        public IToastService toasts { get; set; }
-
-        [Inject]
-        public IMapper mapper { get; set; }
-
-        [Inject]
-        public UserLogger log { get; set; }
+        [Inject] public IProductStorage productStorage { get; set; }
+        [Inject] public IProductUpdateService productUpdateService { get; set; }
+        [Inject] public ISettingStorage settingStorage { get; set; }
+        [Inject] public ICurrencyChecker currencyChecker { get; set; }
+        [Inject] public IToastService toasts { get; set; }
+        [Inject] public IMapper mapper { get; set; }
+        [Inject] public IStockStorage stockStorage { get; set; }
+        [Inject] public UserLogger log { get; set; }
 
         ProductModel editedProduct = null;
         ProductEntity replacementProduct;
@@ -46,6 +36,13 @@ namespace EtkBlazorApp.Pages.Product
 
         int currentStateCode = 0;
         bool hasChanges => currentStateCode != 0 && currentStateCode != GetCurrentStateCode();
+
+        private string TooltipText { get; } = new StringBuilder()
+                   .AppendLine("Изменение цены товара/остатка напрямую (через поля выше) - меняет его цену/количество только на ближайшее время")
+                   .AppendLine("На сайте работает автоматический триггер который срабатывает каждые пол часа (и сразу, при загрузке прайс-листа через LK)")
+                   .Append("Он автоматически проставляет цену на товар из складов (по определенному алгритму), а остаток расчитывает как сумму всех остатков на всех складах")
+                .ToString();
+
         protected override async Task OnInitializedAsync()
         {
             if (!string.IsNullOrWhiteSpace(Keyword))
@@ -79,9 +76,14 @@ namespace EtkBlazorApp.Pages.Product
 
             string keyword = new Uri(enteredUri).AbsolutePath.Trim('/', '?', '&');
             var entity = await productStorage.GetProductByKeyword(keyword);
+
             if (entity != null)
             {
                 editedProduct = mapper.Map<ProductModel>(entity);
+
+                var stocksData = await stockStorage.GetStockDataForProduct(entity.product_id);
+                editedProduct.StocksData = mapper.Map<List<ProductToStockDataModel>>(stocksData);
+
                 if (editedProduct.ReplacementProductId.HasValue)
                 {
                     replacementProduct = await productStorage.GetProductById(editedProduct.ReplacementProductId.Value);
