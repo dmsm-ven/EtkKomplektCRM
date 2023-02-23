@@ -10,6 +10,8 @@ namespace EtkBlazorApp.TelegramBotLib;
 
 public class EtkTelegramBotNotifier : IEtkUpdatesNotifier
 {
+    private readonly string ETK_LK_HOST = "https://lk.etk-komplekt.ru";
+    private readonly string CDEK_LK_HOST = "https://lk.cdek.ru";
     private readonly ITelegramBotClient bot;
     private readonly IEtkUpdatesNotifierMessageFormatter messageFormatter;
     private readonly long ChannelId;
@@ -41,7 +43,7 @@ public class EtkTelegramBotNotifier : IEtkUpdatesNotifier
     {
         string message = messageFormatter.GetPriceListChangedMessage(data.PriceListName, data.MinimumOverpricePercent, data.Data.Count);
 
-        var replyMarkup = GetSimpleMarkupWithUri($"https://lk.etk-komplekt.ru/price-list/products-price-history/{data.PriceListGuid}");
+        var replyMarkup = GetSimpleMarkupWithUri($"{ETK_LK_HOST}/price-list/products-price-history/{data.PriceListGuid}");
 
         await bot.SendTextMessageAsync(ChannelId, message, ParseMode.Html, replyMarkup: replyMarkup);
     }
@@ -55,7 +57,7 @@ public class EtkTelegramBotNotifier : IEtkUpdatesNotifier
     {
         string message = messageFormatter.GetTaskLoadErrorMessage(taskName);
 
-        var replyMarkup = GetSimpleMarkupWithUri("https://lk.etk-komplekt.ru/cron-task-history");
+        var replyMarkup = GetSimpleMarkupWithUri($"{ETK_LK_HOST}/cron-task-history");
 
         await bot.SendTextMessageAsync(ChannelId, message, ParseMode.Html, replyMarkup: replyMarkup);
     }
@@ -71,8 +73,8 @@ public class EtkTelegramBotNotifier : IEtkUpdatesNotifier
         string message = messageFormatter.GetOrderStatusChangedMessage(etkOrderId, cdekOrderId, statusName);
 
         string buttonUrl = etkOrderId.HasValue ?
-            $"https://lk.etk-komplekt.ru/order/{etkOrderId.Value}" :
-            $"https://lk.cdek.ru/order-history/{cdekOrderId}/view";
+            $"{ETK_LK_HOST}/order/{etkOrderId.Value}" :
+            $"{CDEK_LK_HOST}/order-history/{cdekOrderId}/view";
 
         InlineKeyboardMarkup replyMarkup = GetSimpleMarkupWithUri(buttonUrl);
 

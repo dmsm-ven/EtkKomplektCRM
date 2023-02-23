@@ -29,4 +29,7 @@ public enum CdekOrderStatusCode
 
     [Description("Принят")]
     RECEIVED_AT_SHIPMENT_WAREHOUSE, //Оформлен приход на склад СДЭК в городе-отправителе.
+
+    [Description("Прибыл в пункт")]
+    ACCEPTED_AT_PICK_UP_POINT, //Оформлен приход на склад СДЭК в городе-отправителе.
 }

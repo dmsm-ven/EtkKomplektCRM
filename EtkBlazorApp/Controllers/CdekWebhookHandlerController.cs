@@ -63,6 +63,7 @@ namespace EtkBlazorApp.Controllers
                 CdekOrderStatusCode.RECEIVED_AT_SHIPMENT_WAREHOUSE => EtkOrderStatusCode.InDelivery,
                 CdekOrderStatusCode.DELIVERED => EtkOrderStatusCode.Completed,
                 CdekOrderStatusCode.NOT_DELIVERED => EtkOrderStatusCode.Canceled,
+                CdekOrderStatusCode.ACCEPTED_AT_PICK_UP_POINT => EtkOrderStatusCode.WaitingToPickup,
                 _ => EtkOrderStatusCode.None
             };
 
@@ -72,14 +73,17 @@ namespace EtkBlazorApp.Controllers
                 await orderUpdateService.ChangeOrderStatus(shopOrder.order_id, (int)orderStatus);
             }
 
-            if (cdekStatus == CdekOrderStatusCode.DELIVERED || cdekStatus == CdekOrderStatusCode.NOT_DELIVERED)
+            bool isNeedNotify = new[] { 
+                CdekOrderStatusCode.NOT_DELIVERED,
+                CdekOrderStatusCode.DELIVERED,
+                CdekOrderStatusCode.ACCEPTED_AT_PICK_UP_POINT 
+            }.Any(status => status == cdekStatus);
+            bool generalStatus = await settings.GetValue<bool>("telegram_notification_enabled");
+            bool cdekOrderStatusChangedEnabled = await settings.GetValue<bool>("telegram_notification_cdek_enabled");
+
+            if (isNeedNotify && generalStatus && cdekOrderStatusChangedEnabled)
             {
-                var generalStatus = await settings.GetValue<bool>("telegram_notification_enabled");
-                var cdekOrderStatusChangedEnabled = await settings.GetValue<bool>("telegram_notification_cdek_enabled");
-                if (generalStatus && cdekOrderStatusChangedEnabled)
-                {
-                    await notifier.NotifOrderStatusChanged(shopOrder?.order_id, cdekOrderNumber, cdekStatus.GetDescriptionAttribute());
-                }
+                await notifier.NotifOrderStatusChanged(shopOrder?.order_id, cdekOrderNumber, cdekStatus.GetDescriptionAttribute());
             }
 
             return Ok();

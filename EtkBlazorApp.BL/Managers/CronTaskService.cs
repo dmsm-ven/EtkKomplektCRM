@@ -63,9 +63,7 @@ namespace EtkBlazorApp.BL
             tasks = new Dictionary<CronTaskBase, CronTaskEntity>();
             inProgress = new List<CronTaskBase>();
 
-            //TODO: Убрать хардкод таймера
             checkTimer = new Timer(TimeSpan.FromSeconds(60).TotalMilliseconds);
-
             if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
             {
                 checkTimer.Elapsed += CheckTimer_Elapsed;
@@ -167,7 +165,7 @@ namespace EtkBlazorApp.BL
             }
             catch (Exception ex)
             {
-                await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Ошибка", $"Ошибка выполнения задания '{taskInfo.name}'. {ex.Message} {ex.InnerException?.Message ?? string.Empty}".Trim());
+                await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Ошибка", $"Ошибка выполнения задания '{taskInfo.name}'. {ex.Message} {ex.StackTrace ?? ""}".Trim());
             }
             finally
             {
