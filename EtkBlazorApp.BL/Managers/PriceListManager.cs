@@ -22,9 +22,9 @@ namespace EtkBlazorApp.BL
         public decimal NDS { get; private set; }
         private readonly IPriceLineLoadCorrelator correlator;
         private readonly IPriceListTemplateStorage templateStorage;
-        private readonly ISettingStorage settings;
+        private readonly ISettingStorageReader settings;
 
-        public PriceListManager(IPriceLineLoadCorrelator correlator, IPriceListTemplateStorage templateStorage, ISettingStorage settings)
+        public PriceListManager(IPriceLineLoadCorrelator correlator, IPriceListTemplateStorage templateStorage, ISettingStorageReader settings)
         {
             PriceLines = new List<PriceLine>();
             LoadedFiles = new List<LoadedPriceListTemplateData>();

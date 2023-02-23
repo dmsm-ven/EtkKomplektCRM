@@ -15,7 +15,7 @@ namespace EtkBlazorApp.BL.Managers;
 public class PriceListPriceHistoryManager
 {
     private readonly IPriceListUpdateHistoryRepository repo;
-    private readonly ISettingStorage settings;
+    private readonly ISettingStorageReader settings;
     private readonly IProductStorage productStorage;
     private readonly IPriceListTemplateStorage priceListRepo;
     private readonly IEtkUpdatesNotifier notifier;
@@ -23,7 +23,7 @@ public class PriceListPriceHistoryManager
     const int MAX_ITEMS = 500;
 
     public PriceListPriceHistoryManager(IPriceListUpdateHistoryRepository repo,
-        ISettingStorage settings,
+        ISettingStorageReader settings,
         IProductStorage productStorage,
         IPriceListTemplateStorage priceListRepo,
         IEtkUpdatesNotifier notifier)
@@ -77,20 +77,15 @@ public class PriceListPriceHistoryManager
         // Шаг 4. Сохраняем
         await repo.SavePriceListUpdateProductsPriceData(guid, linesData);
 
-        // Шаг 5. Уведомляем клиентов если есть изменения
-        await NotifyIfHasNewData(guid, linesData.Count > 0);
+        // Шаг 5. Уведомляем если есть изменения
+        if (linesData.Count > 0 && await notifier.IsActive())
+        {
+            await NotifyAboutPriceListChanges(guid);
+        }
     }
 
-    private async Task NotifyIfHasNewData(string guid, bool hasNewLines)
+    private async Task NotifyAboutPriceListChanges(string guid)
     {
-        var isNotifyEnabled = await settings.GetValue<bool>("telegram_notification_enabled");
-        var isNotiyfyPriceChangedEnabled = await settings.GetValue<bool>("telegram_notification_price_enabled");
-
-        if (!isNotifyEnabled || !isNotiyfyPriceChangedEnabled || !hasNewLines)
-        {
-            return;
-        }
-
         var newData = await GetProductsPriceChangeHistoryForPriceList(guid, getOnlyLast: true);
 
         if (newData.Data.Count > 0)

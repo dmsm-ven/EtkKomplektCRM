@@ -19,13 +19,13 @@ namespace EtkBlazorApp.Controllers
     {
         private readonly IEtkUpdatesNotifier notifier;
         private readonly IOrderStorage orderStorage;
-        private readonly ISettingStorage settings;
+        private readonly ISettingStorageReader settings;
         private readonly IOrderUpdateService orderUpdateService;
         private readonly SystemEventsLogger eventsLogger;
 
         public CdekWebhookHandlerController(IEtkUpdatesNotifier notifier,
             IOrderStorage orderStorage,
-            ISettingStorage settings,
+            ISettingStorageReader settings,
             IOrderUpdateService orderUpdateService,
             SystemEventsLogger eventsLogger)
         {
@@ -73,15 +73,13 @@ namespace EtkBlazorApp.Controllers
                 await orderUpdateService.ChangeOrderStatus(shopOrder.order_id, (int)orderStatus);
             }
 
-            bool isNeedNotify = new[] { 
+            bool isNeedNotify = new[] {
                 CdekOrderStatusCode.NOT_DELIVERED,
                 CdekOrderStatusCode.DELIVERED,
-                CdekOrderStatusCode.ACCEPTED_AT_PICK_UP_POINT 
+                CdekOrderStatusCode.ACCEPTED_AT_PICK_UP_POINT
             }.Any(status => status == cdekStatus);
-            bool generalStatus = await settings.GetValue<bool>("telegram_notification_enabled");
-            bool cdekOrderStatusChangedEnabled = await settings.GetValue<bool>("telegram_notification_cdek_enabled");
 
-            if (isNeedNotify && generalStatus && cdekOrderStatusChangedEnabled)
+            if (isNeedNotify)
             {
                 await notifier.NotifOrderStatusChanged(shopOrder?.order_id, cdekOrderNumber, cdekStatus.GetDescriptionAttribute());
             }

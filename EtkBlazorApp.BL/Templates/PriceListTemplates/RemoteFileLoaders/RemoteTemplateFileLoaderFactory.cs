@@ -10,15 +10,15 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
     public class RemoteTemplateFileLoaderFactory
     {
-        private readonly ISettingStorage settings;
+        private readonly ISettingStorageReader settings;
         private readonly ICompressedFileExtractor zipExtractor;
         private readonly IPriceListTemplateStorage templateStorage;
 
-        public RemoteTemplateFileLoaderFactory(ISettingStorage storage,
+        public RemoteTemplateFileLoaderFactory(ISettingStorageReader settings,
             ICompressedFileExtractor zipExtractor,
             IPriceListTemplateStorage templateStorage)
         {
-            this.settings = storage;
+            this.settings = settings;
             this.zipExtractor = zipExtractor;
             this.templateStorage = templateStorage;
         }

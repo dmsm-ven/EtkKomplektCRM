@@ -49,7 +49,8 @@
 </style>
 
 @code {
-    [Inject] public ISettingStorage settings { get; set; }
+    [Inject] public ISettingStorageReader settingsReader { get; set; }
+    [Inject] public ISettingStorageWriter settingsWriter { get; set; }
     [CascadingParameter] public SettingsTabData tabData { get; set; }
 
     bool isDisabled => !generalStatus;
@@ -62,20 +63,20 @@
 
     protected override async Task OnInitializedAsync()
     {
-        generalStatus = await settings.GetValue<bool>("telegram_notification_enabled");
-        priceChangedEnabled = await settings.GetValue<bool>("telegram_notification_price_enabled");
-        taskErrorEbaled = await settings.GetValue<bool>("telegram_notification_task_enabled");
-        cdekOrderStatusChangedEnabled = await settings.GetValue<bool>("telegram_notification_cdek_enabled");
-        priceHistoryMinPercent = await settings.GetValue<int>("price_list_product_price_change_percent_to_notify");
+        generalStatus = await settingsReader.GetValue<bool>("telegram_notification_enabled");
+        priceChangedEnabled = await settingsReader.GetValue<bool>("telegram_notification_price_enabled");
+        taskErrorEbaled = await settingsReader.GetValue<bool>("telegram_notification_task_enabled");
+        cdekOrderStatusChangedEnabled = await settingsReader.GetValue<bool>("telegram_notification_cdek_enabled");
+        priceHistoryMinPercent = await settingsReader.GetValue<int>("price_list_product_price_change_percent_to_notify");
 
 
         tabData.SaveButtonClicked = new Action(async () =>
         {
-            await settings.SetValue("telegram_notification_enabled", generalStatus);
-            await settings.SetValue("telegram_notification_price_enabled", priceChangedEnabled);
-            await settings.SetValue("telegram_notification_task_enabled", taskErrorEbaled);
-            await settings.SetValue("telegram_notification_cdek_enabled", cdekOrderStatusChangedEnabled);
-            await settings.SetValue<int>("price_list_product_price_change_percent_to_notify", priceHistoryMinPercent);
+            await settingsWriter.SetValue("telegram_notification_enabled", generalStatus);
+            await settingsWriter.SetValue("telegram_notification_price_enabled", priceChangedEnabled);
+            await settingsWriter.SetValue("telegram_notification_task_enabled", taskErrorEbaled);
+            await settingsWriter.SetValue("telegram_notification_cdek_enabled", cdekOrderStatusChangedEnabled);
+            await settingsWriter.SetValue<int>("price_list_product_price_change_percent_to_notify", priceHistoryMinPercent);
         });
     }
 }

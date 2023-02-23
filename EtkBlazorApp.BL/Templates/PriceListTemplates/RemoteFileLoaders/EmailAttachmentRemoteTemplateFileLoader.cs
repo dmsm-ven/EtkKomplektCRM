@@ -8,13 +8,13 @@ namespace EtkBlazorApp.BL
 {
     public class EmailAttachmentRemoteTemplateFileLoader : IRemoteTemplateFileLoader
     {
-        private readonly ISettingStorage settingStorage;
+        private readonly ISettingStorageReader settingStorage;
         private readonly ICompressedFileExtractor zipExtractor;
         private readonly IPriceListTemplateStorage templateStorage;
         private readonly string guid;
 
         internal EmailAttachmentRemoteTemplateFileLoader(
-            ISettingStorage settingStorage,
+            ISettingStorageReader settingStorage,
             ICompressedFileExtractor zipExtractor,
             IPriceListTemplateStorage templateStorage,
             string guid)

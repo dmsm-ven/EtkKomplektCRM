@@ -96,14 +96,8 @@ public class Startup
         ConfigureCorrelators(services);
         ConfigureDatabaseServices(services);
         ConfigureExteralApiClients(services);
+        ConfigureNotifiers(services);
 
-
-        services.AddSingleton<IEtkUpdatesNotifier>((x) =>
-        {
-            var section = Configuration.GetSection("TelegramBotNotifierConfiguration");
-            IEtkUpdatesNotifierMessageFormatter messageFormatter = new TelegramNotifierMessageFormatter();
-            return new EtkTelegramBotNotifier(messageFormatter, section["Token"], long.Parse(section["ChannelId"]));
-        });
         services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
         services.AddSingleton<CashPlusPlusLinkGenerator>();
         services.AddSingleton<RemoteTemplateFileLoaderFactory>();
@@ -119,6 +113,19 @@ public class Startup
         services.AddScoped<UserLogger>();
         services.AddScoped<ReportManager>();
         services.AddScoped<ChartDataExtractor>();
+    }
+
+    private void ConfigureNotifiers(IServiceCollection services)
+    {
+        services.AddSingleton<IEtkUpdatesNotifierMessageFormatter, TelegramNotifierMessageFormatter>();
+
+        services.AddSingleton<IEtkUpdatesNotifier, EtkTelegramBotNotifier>((x) =>
+        {
+            var section = Configuration.GetSection("TelegramBotNotifierConfiguration");
+            IEtkUpdatesNotifierMessageFormatter formatter = x.GetService<IEtkUpdatesNotifierMessageFormatter>();
+            ISettingStorageReader settings = x.GetService<ISettingStorageReader>();
+            return new EtkTelegramBotNotifier(formatter, settings, section["Token"], long.Parse(section["ChannelId"]));
+        });
     }
 
     private void ConfigureExteralApiClients(IServiceCollection services)
@@ -177,7 +184,8 @@ public class Startup
         services.AddTransient<IStockStorage, StockStorage>();
         services.AddTransient<IMonobrandStorage, MonobrandStorage>();
         services.AddTransient<ILogStorage, LogStorage>();
-        services.AddTransient<ISettingStorage, SettingStorage>();
+        services.AddTransient<ISettingStorageReader, SettingStorageReader>();
+        services.AddTransient<ISettingStorageWriter, SettingStorageWriter>();
         services.AddTransient<ICronTaskStorage, CronTaskStorage>();
         services.AddTransient<IWebsiteCurrencyService, WebsiteCurrencyService>();
     }

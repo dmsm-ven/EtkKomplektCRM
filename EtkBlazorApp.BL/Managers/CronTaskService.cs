@@ -33,7 +33,7 @@ namespace EtkBlazorApp.BL
         private readonly ICronTaskStorage cronTaskStorage;
         internal readonly IPriceListTemplateStorage templates;
         internal readonly IEtkUpdatesNotifier notifier;
-        internal readonly ISettingStorage settings;
+        internal readonly ISettingStorageReader settings;
         internal readonly SystemEventsLogger logger;
         internal readonly ProductsPriceAndStockUpdateManager updateManager;
         internal readonly PriceListManager priceListManager;
@@ -46,7 +46,7 @@ namespace EtkBlazorApp.BL
             ICronTaskStorage cronTaskStorage,
             IPriceListTemplateStorage templates,
             IEtkUpdatesNotifier notifier,
-            ISettingStorage settings,
+            ISettingStorageReader settings,
             SystemEventsLogger logger,
             ProductsPriceAndStockUpdateManager updateManager,
             PriceListManager priceListManager,
@@ -184,13 +184,7 @@ namespace EtkBlazorApp.BL
                 else if (exec_result == CronTaskExecResult.Failed)
                 {
                     OnTaskExecutionError?.Invoke(taskInfo);
-
-                    var generalStatus = await settings.GetValue<bool>("telegram_notification_enabled");
-                    var taskErrorEbaled = await settings.GetValue<bool>("telegram_notification_task_enabled");
-                    if (generalStatus && taskErrorEbaled)
-                    {
-                        notifier.NotifyPriceListLoadingError(taskInfo.name);
-                    }
+                    notifier.NotifyPriceListLoadingError(taskInfo.name);
                 }
             }
         }

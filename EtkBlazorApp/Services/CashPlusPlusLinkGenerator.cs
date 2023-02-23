@@ -6,9 +6,9 @@ namespace EtkBlazorApp.Services;
 
 public class CashPlusPlusLinkGenerator
 {
-    private readonly ISettingStorage settingStorage;
+    private readonly ISettingStorageReader settingStorage;
 
-    public CashPlusPlusLinkGenerator(ISettingStorage settingStorage)
+    public CashPlusPlusLinkGenerator(ISettingStorageReader settingStorage)
     {
         this.settingStorage = settingStorage;
     }

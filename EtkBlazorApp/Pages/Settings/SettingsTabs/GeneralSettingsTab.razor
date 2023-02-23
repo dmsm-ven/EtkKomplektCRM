@@ -11,7 +11,8 @@
 
 
 @code {
-    [Inject] public ISettingStorage settings { get; set; }
+    [Inject] public ISettingStorageReader settingsReader { get; set; }
+    [Inject] public ISettingStorageWriter settingsWriter { get; set; }
     [CascadingParameter] public SettingsTabData tabData { get; set; }
 
     int nds;
@@ -20,13 +21,13 @@
     protected override async Task OnInitializedAsync()
     {
 
-        nds = await settings.GetValue<int>("nds");
-        ordersDisplayCount = await settings.GetValue<int>("orders_display_count");
+        nds = await settingsReader.GetValue<int>("nds");
+        ordersDisplayCount = await settingsReader.GetValue<int>("orders_display_count");
 
         tabData.SaveButtonClicked = new Action(async () =>
         {
-            await settings.SetValue<int>("nds", nds);
-            await settings.SetValue<int>("orders_display_count", ordersDisplayCount);
+            await settingsWriter.SetValue<int>("nds", nds);
+            await settingsWriter.SetValue<int>("orders_display_count", ordersDisplayCount);
         });
     }
 }

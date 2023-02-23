@@ -28,24 +28,26 @@
 </div>
 
 @code {
-    [Inject] public ISettingStorage settings { get; set; }
+    [Inject] public ISettingStorageReader settingsReader { get; set; }
+    [Inject] public ISettingStorageWriter settingsWriter { get; set; }
+
     [CascadingParameter] public SettingsTabData tabData { get; set; }
 
     string imapServer, imapPort, password, email;
 
     protected override async Task OnInitializedAsync()
     {
-        imapServer = await settings.GetValue("general_email_imap_server");
-        imapPort = (await settings.GetValue("general_email_imap_port")) ?? "143";
-        email = await settings.GetValue("general_email_login");
-        password = EncryptHelper.Decrypt(await settings.GetValue("general_email_password"));
+        imapServer = await settingsReader.GetValue("general_email_imap_server");
+        imapPort = (await settingsReader.GetValue("general_email_imap_port")) ?? "143";
+        email = await settingsReader.GetValue("general_email_login");
+        password = EncryptHelper.Decrypt(await settingsReader.GetValue("general_email_password"));
 
         tabData.SaveButtonClicked = new Action(async () =>
         {
-            await settings.SetValue("general_email_imap_server", imapServer);
-            await settings.SetValue("general_email_imap_port", imapPort);
-            await settings.SetValue("general_email_login", email);
-            await settings.SetValue("general_email_password", EncryptHelper.Encrypt(password));
+            await settingsWriter.SetValue("general_email_imap_server", imapServer);
+            await settingsWriter.SetValue("general_email_imap_port", imapPort);
+            await settingsWriter.SetValue("general_email_login", email);
+            await settingsWriter.SetValue("general_email_password", EncryptHelper.Encrypt(password));
         });
     }
 }

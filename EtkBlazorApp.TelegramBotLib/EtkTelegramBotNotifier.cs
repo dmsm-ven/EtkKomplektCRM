@@ -1,5 +1,6 @@
 ﻿using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.Core.Interfaces;
+using EtkBlazorApp.DataAccess;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -14,11 +15,17 @@ public class EtkTelegramBotNotifier : IEtkUpdatesNotifier
     private readonly string CDEK_LK_HOST = "https://lk.cdek.ru";
     private readonly ITelegramBotClient bot;
     private readonly IEtkUpdatesNotifierMessageFormatter messageFormatter;
+    private readonly ISettingStorageReader settings;
     private readonly long ChannelId;
 
-    public EtkTelegramBotNotifier(IEtkUpdatesNotifierMessageFormatter messageFormatter, string token, long channelId)
+    public async Task<bool> IsActive() => await settings.GetValue<bool>("telegram_notification_enabled");
+
+    public EtkTelegramBotNotifier(IEtkUpdatesNotifierMessageFormatter messageFormatter,
+        ISettingStorageReader settings,
+        string token, long channelId)
     {
         this.messageFormatter = messageFormatter ?? throw new ArgumentNullException(nameof(messageFormatter));
+        this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
         if (channelId == 0)
         {
@@ -41,6 +48,14 @@ public class EtkTelegramBotNotifier : IEtkUpdatesNotifier
     /// <returns></returns>
     public async Task NotifyPriceListProductPriceChanged(PriceListProductPriceChangeHistory data)
     {
+        bool generalStatus = await IsActive();
+        bool isNotiyfyPriceChangedEnabled = await settings.GetValue<bool>("telegram_notification_price_enabled");
+
+        if (!generalStatus || !isNotiyfyPriceChangedEnabled)
+        {
+            return;
+        }
+
         string message = messageFormatter.GetPriceListChangedMessage(data.PriceListName, data.MinimumOverpricePercent, data.Data.Count);
 
         var replyMarkup = GetSimpleMarkupWithUri($"{ETK_LK_HOST}/price-list/products-price-history/{data.PriceListGuid}");
@@ -55,6 +70,14 @@ public class EtkTelegramBotNotifier : IEtkUpdatesNotifier
     /// <returns></returns>
     public async Task NotifyPriceListLoadingError(string taskName)
     {
+        bool generalStatus = await IsActive();
+        var taskErrorEbaled = await settings.GetValue<bool>("telegram_notification_task_enabled");
+
+        if (!generalStatus || !taskErrorEbaled)
+        {
+            return;
+        }
+
         string message = messageFormatter.GetTaskLoadErrorMessage(taskName);
 
         var replyMarkup = GetSimpleMarkupWithUri($"{ETK_LK_HOST}/cron-task-history");
@@ -70,8 +93,15 @@ public class EtkTelegramBotNotifier : IEtkUpdatesNotifier
     /// <returns></returns>
     public async Task NotifOrderStatusChanged(int? etkOrderId, string cdekOrderId, string statusName)
     {
-        string message = messageFormatter.GetOrderStatusChangedMessage(etkOrderId, cdekOrderId, statusName);
+        bool generalStatus = await IsActive();
+        bool cdekOrderStatusChangedEnabled = await settings.GetValue<bool>("telegram_notification_cdek_enabled");
 
+        if (!generalStatus || !cdekOrderStatusChangedEnabled)
+        {
+            return;
+        }
+
+        string message = messageFormatter.GetOrderStatusChangedMessage(etkOrderId, cdekOrderId, statusName);
         string buttonUrl = etkOrderId.HasValue ?
             $"{ETK_LK_HOST}/order/{etkOrderId.Value}" :
             $"{CDEK_LK_HOST}/order-history/{cdekOrderId}/view";

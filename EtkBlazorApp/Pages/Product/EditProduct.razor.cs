@@ -20,7 +20,8 @@ namespace EtkBlazorApp.Pages.Product
     {
         [Inject] public IProductStorage productStorage { get; set; }
         [Inject] public IProductUpdateService productUpdateService { get; set; }
-        [Inject] public ISettingStorage settingStorage { get; set; }
+        [Inject] public ISettingStorageReader settingsReader { get; set; }
+        [Inject] public ISettingStorageWriter settingWriter { get; set; }
         [Inject] public ICurrencyChecker currencyChecker { get; set; }
         [Inject] public IToastService toasts { get; set; }
         [Inject] public IMapper mapper { get; set; }
@@ -51,7 +52,7 @@ namespace EtkBlazorApp.Pages.Product
             }
             else
             {
-                enteredUri = await settingStorage.GetValue("edit-product-page-last-uri");
+                enteredUri = await settingsReader.GetValue("edit-product-page-last-uri");
             }
         }
 
@@ -89,7 +90,7 @@ namespace EtkBlazorApp.Pages.Product
                     replacementProduct = await productStorage.GetProductById(editedProduct.ReplacementProductId.Value);
                 }
 
-                await settingStorage.SetValue("edit-product-page-last-uri", editedProduct.Uri);
+                await settingWriter.SetValue("edit-product-page-last-uri", editedProduct.Uri);
                 currentStateCode = GetCurrentStateCode();
                 StateHasChanged();
             }

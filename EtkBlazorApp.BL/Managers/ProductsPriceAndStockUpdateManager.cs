@@ -19,7 +19,7 @@ namespace EtkBlazorApp.BL
 
         private readonly IProductStorage productsStorage;
         private readonly IProductUpdateService productUpdateService;
-        private readonly ISettingStorage settingStorage;
+        private readonly ISettingStorageReader settingStorage;
         private readonly IManufacturerStorage manufacturerStorage;
         private readonly IMonobrandStorage monobrandStorage;
         private readonly IDatabaseProductCorrelator correlator;
@@ -27,7 +27,7 @@ namespace EtkBlazorApp.BL
 
         public ProductsPriceAndStockUpdateManager(IProductStorage productsStorage,
             IProductUpdateService productUpdateService,
-            ISettingStorage settingStorage,
+            ISettingStorageReader settingStorage,
             IManufacturerStorage manufacturerStorage,
             IMonobrandStorage monobrandStorage,
             IDatabaseProductCorrelator correlator,

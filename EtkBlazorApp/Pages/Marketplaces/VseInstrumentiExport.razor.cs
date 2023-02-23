@@ -17,7 +17,8 @@ namespace EtkBlazorApp.Pages.Marketplaces;
 public partial class VseInstrumentiExport : ComponentBase
 {
     [Inject] public IPrikatTemplateStorage templateStorage { get; set; }
-    [Inject] public ISettingStorage settingStorage { get; set; }
+    [Inject] public ISettingStorageReader settingsReader { get; set; }
+    [Inject] public ISettingStorageWriter settingsWriter { get; set; }
     [Inject] public IToastService toasts { get; set; }
     [Inject] public IManufacturerStorage manufacturerStorage { get; set; }
     [Inject] public IJSRuntime js { get; set; }
@@ -59,9 +60,9 @@ public partial class VseInstrumentiExport : ComponentBase
                     })
                     .ToList();
 
-            reportOptionsHasStock = await settingStorage.GetValue<bool>("vse_instrumenti_export_options_stock");
-            reportOptionsHasEan = await settingStorage.GetValue<bool>("vse_instrumenti_export_options_ean");
-            reportOptionsGln = await settingStorage.GetValue("vse_instrumenti_gln");
+            reportOptionsHasStock = await settingsReader.GetValue<bool>("vse_instrumenti_export_options_stock");
+            reportOptionsHasEan = await settingsReader.GetValue<bool>("vse_instrumenti_export_options_ean");
+            reportOptionsGln = await settingsReader.GetValue("vse_instrumenti_gln");
 
             StateHasChanged();
         }
@@ -116,8 +117,8 @@ public partial class VseInstrumentiExport : ComponentBase
 
     private async Task ExportOptionsChanged()
     {
-        await settingStorage.SetValue("vse_instrumenti_export_options_stock", reportOptionsHasStock);
-        await settingStorage.SetValue("vse_instrumenti_export_options_ean", reportOptionsHasEan);
+        await settingsWriter.SetValue("vse_instrumenti_export_options_stock", reportOptionsHasStock);
+        await settingsWriter.SetValue("vse_instrumenti_export_options_ean", reportOptionsHasEan);
     }
 
     private void HeaderCheckAll(ChangeEventArgs e)
