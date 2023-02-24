@@ -27,8 +27,8 @@ namespace EtkBlazorApp.Pages.Settings.SettingsTabs
         [Inject]
         public IMapper mapper { get; set; }
 
-        [Inject]
-        public ISettingStorage settings { get; set; }
+        [Inject] public ISettingStorageReader settingsReader { get; set; }
+        [Inject] public ISettingStorageWriter settingsWriter { get; set; }
 
         [Inject]
         public NavigationManager navigationManager { get; set; }
@@ -50,13 +50,13 @@ namespace EtkBlazorApp.Pages.Settings.SettingsTabs
             await RefreshMonobrandList();
 
             manufacturers = await manufacturerStorage.GetManufacturers();
-            isMonobrandUpdateEnabled = await settings.GetValue<bool>("update-monobrand-websites");
-            monobrandKey = await settings.GetValue("monobrand_updater_key");
+            isMonobrandUpdateEnabled = await settingsReader.GetValue<bool>("update-monobrand-websites");
+            monobrandKey = await settingsReader.GetValue("monobrand_updater_key");
 
             tabData.SaveButtonClicked = new Action(async () =>
             {
-                await settings.SetValue("update-monobrand-websites", isMonobrandUpdateEnabled);
-                await settings.SetValue("monobrand_updater_key", monobrandKey);
+                await settingsWriter.SetValue("update-monobrand-websites", isMonobrandUpdateEnabled);
+                await settingsWriter.SetValue("monobrand_updater_key", monobrandKey);
             });
         }
 

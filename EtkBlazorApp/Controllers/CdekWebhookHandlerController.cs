@@ -19,19 +19,22 @@ namespace EtkBlazorApp.Controllers
     {
         private readonly IEtkUpdatesNotifier notifier;
         private readonly IOrderStorage orderStorage;
-        private readonly ISettingStorage settings;
+        private readonly ISettingStorageReader settings;
         private readonly IOrderUpdateService orderUpdateService;
+        private readonly ICustomerOrderNotificator customerNotificator;
         private readonly SystemEventsLogger eventsLogger;
 
         public CdekWebhookHandlerController(IEtkUpdatesNotifier notifier,
             IOrderStorage orderStorage,
-            ISettingStorage settings,
+            ISettingStorageReader settings,
             IOrderUpdateService orderUpdateService,
+            ICustomerOrderNotificator customerNotificator,
             SystemEventsLogger eventsLogger)
         {
             this.orderStorage = orderStorage ?? throw new ArgumentNullException(nameof(orderStorage));
-            this.settings = settings;
             this.orderUpdateService = orderUpdateService ?? throw new ArgumentNullException(nameof(orderStorage));
+            this.settings = settings;
+            this.customerNotificator = customerNotificator;
             this.eventsLogger = eventsLogger;
             this.notifier = notifier;
         }
@@ -63,6 +66,7 @@ namespace EtkBlazorApp.Controllers
                 CdekOrderStatusCode.RECEIVED_AT_SHIPMENT_WAREHOUSE => EtkOrderStatusCode.InDelivery,
                 CdekOrderStatusCode.DELIVERED => EtkOrderStatusCode.Completed,
                 CdekOrderStatusCode.NOT_DELIVERED => EtkOrderStatusCode.Canceled,
+                CdekOrderStatusCode.ACCEPTED_AT_PICK_UP_POINT => EtkOrderStatusCode.WaitingToPickup,
                 _ => EtkOrderStatusCode.None
             };
 
@@ -72,14 +76,22 @@ namespace EtkBlazorApp.Controllers
                 await orderUpdateService.ChangeOrderStatus(shopOrder.order_id, (int)orderStatus);
             }
 
-            if (cdekStatus == CdekOrderStatusCode.DELIVERED || cdekStatus == CdekOrderStatusCode.NOT_DELIVERED)
+            bool etkNotify = new[] {
+                CdekOrderStatusCode.NOT_DELIVERED,
+                CdekOrderStatusCode.DELIVERED,
+                CdekOrderStatusCode.ACCEPTED_AT_PICK_UP_POINT
+            }.Any(status => status == cdekStatus);
+
+            if (etkNotify)
             {
-                var generalStatus = await settings.GetValue<bool>("telegram_notification_enabled");
-                var cdekOrderStatusChangedEnabled = await settings.GetValue<bool>("telegram_notification_cdek_enabled");
-                if (generalStatus && cdekOrderStatusChangedEnabled)
-                {
-                    await notifier.NotifOrderStatusChanged(shopOrder?.order_id, cdekOrderNumber, cdekStatus.GetDescriptionAttribute());
-                }
+                await notifier.NotifOrderStatusChanged(shopOrder?.order_id, cdekOrderNumber, cdekStatus.GetDescriptionAttribute());
+            }
+
+            //if(shopOrder != null && cdekStatus == CdekOrderStatusCode.ACCEPTED_AT_PICK_UP_POINT)
+            //проверка
+            if (true)
+            {
+                await customerNotificator?.NotifyCustomer(shopOrder.order_id, "painven@gmail.com");
             }
 
             return Ok();

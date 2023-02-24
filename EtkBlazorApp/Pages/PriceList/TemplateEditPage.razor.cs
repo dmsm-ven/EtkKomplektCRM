@@ -18,7 +18,7 @@ public partial class TemplateEditPage : ComponentBase
 {
     [Inject] public IPriceListTemplateStorage templateStorage { get; set; }
     [Inject] public IStockStorage stockStorage { get; set; }
-    [Inject] public ISettingStorage settings { get; set; }
+    [Inject] public ISettingStorageReader settings { get; set; }
     [Inject] public IToastService toasts { get; set; }
     [Inject] public IMapper mapper { get; set; }
     [Inject] public UserLogger logger { get; set; }

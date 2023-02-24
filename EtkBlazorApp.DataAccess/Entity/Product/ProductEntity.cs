@@ -30,5 +30,7 @@ namespace EtkBlazorApp.DataAccess.Entity
         public decimal weight { get; set; }
 
         public DateTime? date_modified { get; set; }
+
+        public ProductToStockEntity[] stock_data { get; set; } = null;
     }
 }

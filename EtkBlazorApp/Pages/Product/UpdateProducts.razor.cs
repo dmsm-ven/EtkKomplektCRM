@@ -14,7 +14,7 @@ namespace EtkBlazorApp.Pages.Product;
 public partial class UpdateProducts : ComponentBase, IDisposable
 {
     [Inject] public IToastService toastService { get; set; }
-    [Inject] public ISettingStorage setting { get; set; }
+    [Inject] public ISettingStorageReader setting { get; set; }
     [Inject] public IManufacturerStorage manufacturers { get; set; }
     [Inject] public PriceListManager priceListManager { get; set; }
     [Inject] public ProductsPriceAndStockUpdateManager databaseManager { get; set; }

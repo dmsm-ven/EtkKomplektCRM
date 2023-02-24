@@ -1,7 +1,13 @@
-﻿using EtkBlazorApp.BL;
+﻿using AutoMapper;
+using Blazored.Toast.Services;
+using EtkBlazorApp.BL;
 using EtkBlazorApp.Components.Dialogs;
+using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
+using EtkBlazorApp.Services;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +19,15 @@ namespace EtkBlazorApp.Pages
     //TODO: разбиться класс на более простые блоки, стоит подключить Mapper вместо ручного создания сущ.
     public partial class Partners
     {
+        [Inject] public IToastService toasts { get; set; }
+        [Inject] public IJSRuntime js { get; set; }
+        [Inject] public IManufacturerStorage manufacturerStorage { get; set; }
+        [Inject] public ISettingStorageReader settingsStorageReader { get; set; }
+        [Inject] public ISettingStorageWriter settingsStorageWriter { get; set; }
+        [Inject] public IPartnersInformationService partnerService { get; set; }
+        [Inject] public IMapper mapper { get; set; }
+        [Inject] public UserLogger logger { get; set; }
+
         ConfirmDialog deleteDialog;
         ConfirmDialog changePasswordDialog;
         CustomDataDialog historyRequestDialog;
@@ -35,24 +50,7 @@ namespace EtkBlazorApp.Pages
         {
             if (!firstRender) { return; }
 
-            partners = (await partnerService.GetAllPartners())
-                .Select(p => new PartnerViewModel()
-                {
-                    Id = Guid.Parse(p.id),
-                    Address = p.address,
-                    ContactPerson = p.contact_person,
-                    Created = p.created,
-                    Description = p.description,
-                    Discount = p.discount,
-                    Email = p.email,
-                    Name = p.name,
-                    Password = p.price_list_password,
-                    PhoneNumber = p.phone_number,
-                    PriceListLastAccessDateTime = p.price_list_last_access,
-                    Priority = p.priority,
-                    Updated = p.updated,
-                    Website = p.website
-                })
+            partners = mapper.Map<IEnumerable<PartnerViewModel>>(await partnerService.GetAllPartners())
                 .OrderByDescending(p => p.Priority)
                 .ThenByDescending(p => p.Discount)
                 .ToList();
@@ -61,7 +59,7 @@ namespace EtkBlazorApp.Pages
                 .Select(m => new ManufacturerViewModel() { name = m.name, Id = m.manufacturer_id })
                 .ToList();
 
-            if (Guid.TryParse(await settingsStorage.GetValue("last_viewed_partner_id"), out var lastViewerPartnerId))
+            if (Guid.TryParse(await settingsStorageReader.GetValue("last_viewed_partner_id"), out var lastViewerPartnerId))
             {
                 await OnPartnerChanged(partners.FirstOrDefault(p => p.Id == lastViewerPartnerId));
             }
@@ -73,7 +71,7 @@ namespace EtkBlazorApp.Pages
         {
             if (newPartner?.Id.ToString() == null) { return; }
 
-            await settingsStorage.SetValue("last_viewed_partner_id", newPartner.Id.ToString());
+            await settingsStorageWriter.SetValue("last_viewed_partner_id", newPartner.Id.ToString());
 
             newPartner.DiscountBrandsInfo = (await partnerService.GetPartnerManufacturers(newPartner.Id.ToString()))
                 .Select(m => new PartnerManufacturerDiscountItemViewModel()

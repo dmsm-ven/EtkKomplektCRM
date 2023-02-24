@@ -1,16 +1,16 @@
 ﻿<div class="price-list-template-outer col-xl-2 col-lg-3 col-md-4 col-sm-6 col-xs-12 @outerDivCss"
      @onclick="BoxClicked">
     <div class="price-list-template-inner @innerDivCss">
-        <img class="brand-template-logo" src="@GroupImage" style="margin: 4px 8px 4px 2px;" />
+        <img class="brand-template-logo" src=@GroupImage />
         <ul class="price-list-template-group">
             @foreach (var item in Items)
             {
                 <li>
                     <input type="radio" name="selected-price-list-group"
-                           id="@item.Guid"
-                           disabled="@IsTemplateAlreadyLoaded(item)"
-                           checked="@(GlobalSelectedTemplate == item)"
-                           @onchange="@(e => RadioButtonClicked(item))" />
+                       id="@item.Guid"
+                       disabled="@IsTemplateAlreadyLoaded(item)"
+                       checked="@(GlobalSelectedTemplate == item)"
+                       @onchange="@(e => RadioButtonClicked(item))" />
                     <label for="@item.Guid" class="price-list-template-title">@item.Title</label>
                 </li>
             }

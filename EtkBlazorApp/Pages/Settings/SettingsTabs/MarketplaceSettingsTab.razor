@@ -32,7 +32,8 @@
 
 @code {
 
-    [Inject] public ISettingStorage settings { get; set; }
+    [Inject] public ISettingStorageReader settingsReader { get; set; }
+    [Inject] public ISettingStorageWriter settingsWriter { get; set; }
     [CascadingParameter] public SettingsTabData tabData { get; set; }
 
     decimal ozon_seller_minimumPrice;
@@ -43,19 +44,19 @@
 
     protected override async Task OnInitializedAsync()
     {
-        ozon_seller_minimumPrice = await settings.GetValue<decimal>("ozon_seller_export_minimum_price");
-        sbermegamarket_minimumPrice = await settings.GetValue<decimal>("sbermegamarket_export_minimum_price");
-        yandex_market_minimumPrice = await settings.GetValue<decimal>("yandex_market_export_minimum_price");
-        yandex_market_underRatio = await settings.GetValue<decimal>("yandex_market_export_under_minimum_ratio");
-        vse_instrumenty_gln = await settings.GetValue<string>("vse_instrumenti_gln");
+        ozon_seller_minimumPrice = await settingsReader.GetValue<decimal>("ozon_seller_export_minimum_price");
+        sbermegamarket_minimumPrice = await settingsReader.GetValue<decimal>("sbermegamarket_export_minimum_price");
+        yandex_market_minimumPrice = await settingsReader.GetValue<decimal>("yandex_market_export_minimum_price");
+        yandex_market_underRatio = await settingsReader.GetValue<decimal>("yandex_market_export_under_minimum_ratio");
+        vse_instrumenty_gln = await settingsReader.GetValue<string>("vse_instrumenti_gln");
 
         tabData.SaveButtonClicked = new Action(async () =>
         {
-            await settings.SetValue("ozon_seller_export_minimum_price", ozon_seller_minimumPrice);
-            await settings.SetValue("sbermegamarket_export_minimum_price", sbermegamarket_minimumPrice);
-            await settings.SetValue("yandex_market_export_minimum_price", yandex_market_minimumPrice);
-            await settings.SetValue("yandex_market_export_under_minimum_ratio", yandex_market_underRatio);
-            await settings.SetValue("vse_instrumenti_gln", vse_instrumenty_gln);
+            await settingsWriter.SetValue("ozon_seller_export_minimum_price", ozon_seller_minimumPrice);
+            await settingsWriter.SetValue("sbermegamarket_export_minimum_price", sbermegamarket_minimumPrice);
+            await settingsWriter.SetValue("yandex_market_export_minimum_price", yandex_market_minimumPrice);
+            await settingsWriter.SetValue("yandex_market_export_under_minimum_ratio", yandex_market_underRatio);
+            await settingsWriter.SetValue("vse_instrumenti_gln", vse_instrumenty_gln);
         });
     }
 }

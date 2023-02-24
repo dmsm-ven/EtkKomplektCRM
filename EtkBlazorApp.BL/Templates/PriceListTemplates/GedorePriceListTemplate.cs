@@ -17,7 +17,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 string sku = tab.GetValue<string>(row, 1);
                 string name = tab.GetValue<string>(row, 2);
-                int? quantity = ParseQuantity(tab.GetValue<string>(row, 3));
+                int? quantity = ParseQuantity(tab.GetValue<string>(row, 4));
 
                 var priceLine = new PriceLine(this)
                 {
@@ -47,13 +47,11 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
-
-                if (tab.GetValue<string>(row, 5) != "GED") { continue; }
-
                 string sku = "GE-" + tab.GetValue<string>(row, 1);
-                string name = tab.GetValue<string>(row, 4);
+                string name = tab.GetValue<string>(row, 2);
+                string ean = tab.GetValue<string>(row, 3);
 
-                var price = ParsePrice(tab.GetValue<string>(row, 8), false, 0);
+                var price = ParsePrice(tab.GetValue<string>(row, 4));
 
                 var priceLine = new PriceLine(this)
                 {
@@ -62,7 +60,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Model = sku,
                     Sku = sku,
                     Price = price,
-                    Currency = CurrencyType.RUB
+                    Currency = CurrencyType.EUR
                     //Stock = StockName.GedoreTools
                 };
 

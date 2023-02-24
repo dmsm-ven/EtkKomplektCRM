@@ -1,5 +1,5 @@
 ﻿@inject IStockStorage stockStorage
-@inject ISettingStorage settingStorage
+@inject ISettingStorageReader settingsReader
 @inject IMarketplaceExportService marketplaceService
 
 <div>
@@ -91,7 +91,7 @@
         string settings_key = Regex.Replace(Marketplace, "([A-Z])", "_$1").ToLower().TrimStart('_') + "_last_request";
         //будет вида ozon_seller_last_request
 
-        feedFileLastRequestDateTime = (await settingStorage.GetValue<DateTime>(settings_key)).ToString("dd.MM.yyyy HH:mm");
+        feedFileLastRequestDateTime = (await settingsReader.GetValue<DateTime>(settings_key)).ToString("dd.MM.yyyy HH:mm");
 
         allStocks = await stockStorage.GetStocks();
         exportInfo = await marketplaceService.GetAllForMarketplace(Marketplace);

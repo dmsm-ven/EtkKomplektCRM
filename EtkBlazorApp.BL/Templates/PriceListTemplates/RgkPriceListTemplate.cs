@@ -24,9 +24,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string sku = tab.GetValue<string>(row, 6);
 
                 decimal? priceRrc = ParsePrice(tab.GetValue<string>(row, 8));
-                decimal? priceOpt = ParsePrice(tab.GetValue<string>(row, 9));
-                //TODO: тут игнорируется стандартный механизм добавления скидок
-                decimal price = manufacturer.Equals("Fluke") ? Math.Floor(priceOpt.Value * 1.15m) : priceRrc.Value;
+                //decimal? priceOpt = ParsePrice(tab.GetValue<string>(row, 9));
 
                 int? quantity = ParseQuantity(tab.GetValue<string>(row, 16));
 
@@ -37,7 +35,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Manufacturer = manufacturer,
                     Model = sku,
                     Sku = sku,
-                    Price = price,
+                    Price = priceRrc,
                     Quantity = quantity,
                     //Stock = StockName.RGK
                 };

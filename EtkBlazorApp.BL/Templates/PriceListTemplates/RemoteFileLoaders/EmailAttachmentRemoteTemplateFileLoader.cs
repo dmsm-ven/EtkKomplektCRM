@@ -8,20 +8,23 @@ namespace EtkBlazorApp.BL
 {
     public class EmailAttachmentRemoteTemplateFileLoader : IRemoteTemplateFileLoader
     {
-        private readonly ISettingStorage settingStorage;
+        private readonly ISettingStorageReader settingStorage;
         private readonly ICompressedFileExtractor zipExtractor;
         private readonly IPriceListTemplateStorage templateStorage;
+        private readonly EncryptHelper encryptHelper;
         private readonly string guid;
 
         internal EmailAttachmentRemoteTemplateFileLoader(
-            ISettingStorage settingStorage,
+            ISettingStorageReader settingStorage,
             ICompressedFileExtractor zipExtractor,
             IPriceListTemplateStorage templateStorage,
+            EncryptHelper encryptHelper,
             string guid)
         {
             this.settingStorage = settingStorage;
             this.zipExtractor = zipExtractor;
             this.templateStorage = templateStorage;
+            this.encryptHelper = encryptHelper;
             this.guid = guid;
         }
 
@@ -76,7 +79,7 @@ namespace EtkBlazorApp.BL
                 imapPort = "143";
             }
             var email = await settingStorage.GetValue("general_email_login");
-            var password = EncryptHelper.Decrypt(await settingStorage.GetValue("general_email_password"));
+            var password = encryptHelper.Decrypt(await settingStorage.GetValue("general_email_password"));
 
             ImapConnectionData connectionData = new ImapConnectionData(email, password, imapServer, imapPort);
 
