@@ -32,10 +32,10 @@ public class MailkitOrderEmailNotificator : ICustomerOrderNotificator
         {
             var configuration = new EmailNotificatorConfiguration()
             {
-                Host = await settings.GetValue($"{settings_key}_{nameof(EmailNotificatorConfiguration.Host)}"),
-                Login = await settings.GetValue($"{settings_key}_{nameof(EmailNotificatorConfiguration.Login)}"),
-                Password = encryptHelper.Decrypt(await settings.GetValue($"{settings_key}_{nameof(EmailNotificatorConfiguration.Password)}")),
-                Port = await settings.GetValue<int>($"{settings_key}_{nameof(EmailNotificatorConfiguration.Port)}"),
+                Host = await settings.GetValue($"{settings_key}_smtp_server"),
+                Port = await settings.GetValue<int>($"{settings_key}_smtp_port"),
+                Login = await settings.GetValue($"{settings_key}_login"),
+                Password = encryptHelper.Decrypt(await settings.GetValue($"{settings_key}_password")),
             };
 
             if (string.IsNullOrWhiteSpace(customerEmail) || order_id == 0 || !configuration.IsValid)
