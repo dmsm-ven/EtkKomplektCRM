@@ -30,6 +30,7 @@
 @code {
     [Inject] public ISettingStorageReader settingsReader { get; set; }
     [Inject] public ISettingStorageWriter settingsWriter { get; set; }
+    [Inject] public EncryptHelper encryptHelper { get; set; }
 
     [CascadingParameter] public SettingsTabData tabData { get; set; }
 
@@ -40,14 +41,14 @@
         imapServer = await settingsReader.GetValue("general_email_imap_server");
         imapPort = (await settingsReader.GetValue("general_email_imap_port")) ?? "143";
         email = await settingsReader.GetValue("general_email_login");
-        password = EncryptHelper.Decrypt(await settingsReader.GetValue("general_email_password"));
+        password = encryptHelper.Decrypt(await settingsReader.GetValue("general_email_password"));
 
         tabData.SaveButtonClicked = new Action(async () =>
         {
             await settingsWriter.SetValue("general_email_imap_server", imapServer);
             await settingsWriter.SetValue("general_email_imap_port", imapPort);
             await settingsWriter.SetValue("general_email_login", email);
-            await settingsWriter.SetValue("general_email_password", EncryptHelper.Encrypt(password));
+            await settingsWriter.SetValue("general_email_password", encryptHelper.Encrypt(password));
         });
     }
 }

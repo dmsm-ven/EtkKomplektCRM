@@ -14,28 +14,30 @@ namespace EtkBlazorApp.BL.Notifiers;
 
 public class MailkitOrderEmailNotificator : ICustomerOrderNotificator
 {
+    private readonly string settings_key = "customer_email_notificator";
     private readonly ISettingStorageReader settings;
     private readonly SystemEventsLogger logger;
+    private readonly EncryptHelper encryptHelper;
 
-    public MailkitOrderEmailNotificator(ISettingStorageReader settings, SystemEventsLogger logger)
+    public MailkitOrderEmailNotificator(ISettingStorageReader settings, SystemEventsLogger logger, EncryptHelper encryptHelper)
     {
         this.settings = settings;
         this.logger = logger;
+        this.encryptHelper = encryptHelper;
     }
 
     public async Task NotifyCustomer(long order_id, string customerEmail)
     {
-        string settings_key = "customer_email_notificator";
-        var configuration = new EmailNotificatorConfiguration()
-        {
-            Host = await settings.GetValue($"{settings_key}_{nameof(EmailNotificatorConfiguration.Host)}"),
-            Login = await settings.GetValue($"{settings_key}_{nameof(EmailNotificatorConfiguration.Login)}"),
-            Password = await settings.GetValue($"{settings_key}_{nameof(EmailNotificatorConfiguration.Password)}"),
-            Port = await settings.GetValue<int>($"{settings_key}_{nameof(EmailNotificatorConfiguration.Port)}"),
-        };
-
         try
         {
+            var configuration = new EmailNotificatorConfiguration()
+            {
+                Host = await settings.GetValue($"{settings_key}_{nameof(EmailNotificatorConfiguration.Host)}"),
+                Login = await settings.GetValue($"{settings_key}_{nameof(EmailNotificatorConfiguration.Login)}"),
+                Password = encryptHelper.Decrypt(await settings.GetValue($"{settings_key}_{nameof(EmailNotificatorConfiguration.Password)}")),
+                Port = await settings.GetValue<int>($"{settings_key}_{nameof(EmailNotificatorConfiguration.Port)}"),
+            };
+
             if (string.IsNullOrWhiteSpace(customerEmail) || order_id == 0 || !configuration.IsValid)
             {
                 throw new FormatException();

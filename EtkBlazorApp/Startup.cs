@@ -90,6 +90,7 @@ public class Startup
         services.AddScoped<ProtectedLocalStorage>();
 
         //Приложение       
+        services.AddSingleton<EncryptHelper>((x) => new EncryptHelper(Configuration["EncryptHelper:Phrase"]));
         services.AddTransient<IUserInfoChecker, UserInfoChecker>();
         services.AddTransient<ICompressedFileExtractor, SharpCompressFileExtractor>();
 
