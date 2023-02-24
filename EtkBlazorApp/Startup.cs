@@ -1,6 +1,7 @@
 using Blazored.Toast;
 using EtkBlazorApp.BL;
 using EtkBlazorApp.BL.Managers;
+using EtkBlazorApp.BL.Notifiers;
 using EtkBlazorApp.BL.Templates.PriceListTemplates;
 using EtkBlazorApp.CdekApi;
 using EtkBlazorApp.Core.Interfaces;
@@ -117,6 +118,8 @@ public class Startup
 
     private void ConfigureNotifiers(IServiceCollection services)
     {
+        services.AddTransient<ICustomerOrderNotificator, MailkitOrderEmailNotificator>();
+
         services.AddSingleton<IEtkUpdatesNotifierMessageFormatter, TelegramNotifierMessageFormatter>();
 
         services.AddSingleton<IEtkUpdatesNotifier, EtkTelegramBotNotifier>((x) =>

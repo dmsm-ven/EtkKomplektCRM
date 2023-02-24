@@ -21,17 +21,20 @@ namespace EtkBlazorApp.Controllers
         private readonly IOrderStorage orderStorage;
         private readonly ISettingStorageReader settings;
         private readonly IOrderUpdateService orderUpdateService;
+        private readonly ICustomerOrderNotificator customerNotificator;
         private readonly SystemEventsLogger eventsLogger;
 
         public CdekWebhookHandlerController(IEtkUpdatesNotifier notifier,
             IOrderStorage orderStorage,
             ISettingStorageReader settings,
             IOrderUpdateService orderUpdateService,
+            ICustomerOrderNotificator customerNotificator,
             SystemEventsLogger eventsLogger)
         {
             this.orderStorage = orderStorage ?? throw new ArgumentNullException(nameof(orderStorage));
-            this.settings = settings;
             this.orderUpdateService = orderUpdateService ?? throw new ArgumentNullException(nameof(orderStorage));
+            this.settings = settings;
+            this.customerNotificator = customerNotificator;
             this.eventsLogger = eventsLogger;
             this.notifier = notifier;
         }
@@ -73,15 +76,22 @@ namespace EtkBlazorApp.Controllers
                 await orderUpdateService.ChangeOrderStatus(shopOrder.order_id, (int)orderStatus);
             }
 
-            bool isNeedNotify = new[] {
+            bool etkNotify = new[] {
                 CdekOrderStatusCode.NOT_DELIVERED,
                 CdekOrderStatusCode.DELIVERED,
                 CdekOrderStatusCode.ACCEPTED_AT_PICK_UP_POINT
             }.Any(status => status == cdekStatus);
 
-            if (isNeedNotify)
+            if (etkNotify)
             {
                 await notifier.NotifOrderStatusChanged(shopOrder?.order_id, cdekOrderNumber, cdekStatus.GetDescriptionAttribute());
+            }
+
+            //if(shopOrder != null && cdekStatus == CdekOrderStatusCode.ACCEPTED_AT_PICK_UP_POINT)
+            //проверка
+            if (true)
+            {
+                await customerNotificator?.NotifyCustomer(shopOrder.order_id, "painven@gmail.com");
             }
 
             return Ok();
