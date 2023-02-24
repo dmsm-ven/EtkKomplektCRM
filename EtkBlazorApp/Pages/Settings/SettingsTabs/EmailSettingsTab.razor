@@ -24,7 +24,31 @@
             </div>
         </form>
     </ContentButtonExpander>
-
+    
+    <ContentButtonExpander Title="Почтовый ящик отправляющий уведомления о заказах">
+        <form>
+            <div class="form-group">
+                <label for="notifier_smtp_server">Сервер</label>
+                <input type="text" class="form-control" id="notifier_smtp_server" placeholder="SMTP сервер" @bind="customerNotificatorServer">
+            </div>
+            <div class="form-group">
+                <label for="notifier_smtp_port">Порт</label>
+                <select class="form-control" id="notifier_smtp_port" @bind="@customerNotificatorPort">
+                    <option value="25">25</option>
+                    <option value="587">587</option>
+                    <option value="465">465</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="notifier_email">Email</label>
+                <input type="email" class="form-control" id="notifier_email" aria-describedby="emailHelp" placeholder="Почтовый ящик" @bind="customerNotificatorLogin">
+            </div>
+            <div class="form-group">
+                <label for="notifier_password">Пароль</label>
+                <input type="password" class="form-control" id="notifier_password" placeholder="Пароль от почтового ящика" @bind="customerNotificatorPassword">
+            </div>
+        </form>
+    </ContentButtonExpander>
 </div>
 
 @code {
@@ -35,20 +59,33 @@
     [CascadingParameter] public SettingsTabData tabData { get; set; }
 
     string imapServer, imapPort, password, email;
+    string customerNotificatorServer, customerNotificatorPort, customerNotificatorPassword, customerNotificatorLogin;
 
     protected override async Task OnInitializedAsync()
     {
-        imapServer = await settingsReader.GetValue("general_email_imap_server");
-        imapPort = (await settingsReader.GetValue("general_email_imap_port")) ?? "143";
-        email = await settingsReader.GetValue("general_email_login");
-        password = encryptHelper.Decrypt(await settingsReader.GetValue("general_email_password"));
+        const string general_email_key = "general_email";
+        imapServer = await settingsReader.GetValue($"{general_email_key}_imap_server");
+        imapPort = (await settingsReader.GetValue($"{general_email_key}_imap_port")) ?? "143";
+        email = await settingsReader.GetValue($"{general_email_key}_login");
+        password = encryptHelper.Decrypt(await settingsReader.GetValue($"{general_email_key}_password"));
+
+        const string customer_notificator_key = "customer_email_notificator";
+        customerNotificatorServer = await settingsReader.GetValue($"{customer_notificator_key}_smtp_server");
+        customerNotificatorPort = (await settingsReader.GetValue($"{customer_notificator_key}_smtp_port")) ?? "993";
+        customerNotificatorLogin = await settingsReader.GetValue($"{customer_notificator_key}_login");
+        customerNotificatorPassword = encryptHelper.Decrypt(await settingsReader.GetValue($"{customer_notificator_key}_password"));
 
         tabData.SaveButtonClicked = new Action(async () =>
         {
-            await settingsWriter.SetValue("general_email_imap_server", imapServer);
-            await settingsWriter.SetValue("general_email_imap_port", imapPort);
-            await settingsWriter.SetValue("general_email_login", email);
-            await settingsWriter.SetValue("general_email_password", encryptHelper.Encrypt(password));
+            await settingsWriter.SetValue($"{general_email_key}_imap_server", imapServer);
+            await settingsWriter.SetValue($"{general_email_key}_imap_port", imapPort);
+            await settingsWriter.SetValue($"{general_email_key}_login", email);
+            await settingsWriter.SetValue($"{general_email_key}_password", encryptHelper.Encrypt(password));
+
+            await settingsWriter.SetValue($"{customer_notificator_key}_smtp_server", customerNotificatorServer);
+            await settingsWriter.SetValue($"{customer_notificator_key}_smtp_port", customerNotificatorPort);
+            await settingsWriter.SetValue($"{customer_notificator_key}_login", customerNotificatorLogin);
+            await settingsWriter.SetValue($"{customer_notificator_key}_password", encryptHelper.Encrypt(customerNotificatorPassword));
         });
     }
 }

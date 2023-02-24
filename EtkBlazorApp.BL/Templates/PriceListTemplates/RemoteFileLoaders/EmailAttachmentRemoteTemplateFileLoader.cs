@@ -18,7 +18,7 @@ namespace EtkBlazorApp.BL
             ISettingStorageReader settingStorage,
             ICompressedFileExtractor zipExtractor,
             IPriceListTemplateStorage templateStorage,
-            EncryptHelper encryptHelper
+            EncryptHelper encryptHelper,
             string guid)
         {
             this.settingStorage = settingStorage;
