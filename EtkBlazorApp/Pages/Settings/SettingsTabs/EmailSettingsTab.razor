@@ -24,7 +24,7 @@
             </div>
         </form>
     </ContentButtonExpander>
-    
+
     <ContentButtonExpander Title="Почтовый ящик отправляющий уведомления о заказах">
         <form>
             <div class="form-group">
@@ -48,15 +48,32 @@
                 <input type="password" class="form-control" id="notifier_password" placeholder="Пароль от почтового ящика" @bind="customerNotificatorPassword">
             </div>
         </form>
+        <button type="button"
+                disabled=@(isCheckingInProgress || string.IsNullOrWhiteSpace(testEmail))
+                @onclick="TestNotifierSender"
+                class="btn btn-primary d-inline-block">
+            @if (isCheckingInProgress)
+            {
+                <LoadingSpinner IsSmall=true />
+            }
+            Протестировать
+        </button>
+
+        <input type="text" class="form-control d-inline-block w-auto" @bind="testEmail" placeholder="Email кому отослать" />
     </ContentButtonExpander>
 </div>
 
 @code {
     [Inject] public ISettingStorageReader settingsReader { get; set; }
     [Inject] public ISettingStorageWriter settingsWriter { get; set; }
+    [Inject] public ICustomerOrderNotificator notificatorChecker { get; set; }
+    [Inject] public IToastService toasts { get; set; }
     [Inject] public EncryptHelper encryptHelper { get; set; }
 
     [CascadingParameter] public SettingsTabData tabData { get; set; }
+
+    bool isCheckingInProgress = false;
+    string testEmail = string.Empty;
 
     string imapServer, imapPort, password, email;
     string customerNotificatorServer, customerNotificatorPort, customerNotificatorPassword, customerNotificatorLogin;
@@ -87,5 +104,23 @@
             await settingsWriter.SetValue($"{customer_notificator_key}_login", customerNotificatorLogin);
             await settingsWriter.SetValue($"{customer_notificator_key}_password", encryptHelper.Encrypt(customerNotificatorPassword));
         });
+    }
+
+    private async Task TestNotifierSender()
+    {
+        isCheckingInProgress = true;
+
+        var sendResult = await notificatorChecker.NotifyCustomer(999999, testEmail);
+
+        if (sendResult)
+        {
+            toasts.ShowSuccess("Проверка прошла успешно");
+        }
+        else
+        {
+            toasts.ShowError("Проверка не удалась");
+        }
+
+        isCheckingInProgress = false;
     }
 }
