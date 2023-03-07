@@ -59,7 +59,8 @@ public class PriceListPriceHistoryManager
         if (entries.Any())
         {
             // Шаг 2. Берем товары из истории, если за прошлую загрузку данных нет, значит должна идти максимально близкая записить где были какие-то данные о цене
-            var previuosUpdateData = (await repo.GetPriceListUpdateHistory(guid))
+            var items = await repo.GetPriceListUpdateHistory(guid);
+            var previuosUpdateData = items
                 .OrderByDescending(i => i.Key.update_id)
                 .SelectMany(i => i.Value.Select(j => new
                 {
@@ -176,9 +177,10 @@ public class PriceListPriceHistoryManager
                 Data = list,
                 PriceListGuid = guid,
                 PriceListName = priceListName,
-                MinimumOverpricePercent = minmumChangePercent
+                MinimumOverpricePercent = minmumChangePercent,
+                MaxItems = list.Count == MAX_ITEMS
             };
         }
-        return new PriceListProductPriceChangeHistory();
+        return new();
     }
 }

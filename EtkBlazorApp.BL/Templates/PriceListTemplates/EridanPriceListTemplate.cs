@@ -60,23 +60,17 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
-                string manufacturer = tab.GetValue<string>(row, 6).Trim();
+                string manufacturer = tab.GetValue<string>(row, 3).Trim();
 
                 if (SkipThisBrand(manufacturer)) { continue; }
 
-                string sku = tab.GetValue<string>(row, 4);
-                string name = tab.GetValue<string>(row, 5);
-                string ean = tab.GetValue<string>(row, 16);
+                string sku = tab.GetValue<string>(row, 1);
+                string name = tab.GetValue<string>(row, 2);
+                string ean = tab.GetValue<string>(row, 13);
 
-                var quantity = ParseQuantity(tab.GetValue<string>(row, 11));
+                var quantity = ParseQuantity(tab.GetValue<string>(row, 7));
 
-                var rrcPrice = ParsePrice(tab.GetValue<string>(row, 14));
-
-                if (rrcPrice == decimal.Zero)
-                {
-                    var base_price = ParsePrice(tab.GetValue<string>(row, 13));
-                    rrcPrice = (int)(base_price.Value * 1.25m);
-                }
+                var rrcPrice = ParsePrice(tab.GetValue<string>(row, 11));
 
                 var priceLine = new PriceLine(this)
                 {
