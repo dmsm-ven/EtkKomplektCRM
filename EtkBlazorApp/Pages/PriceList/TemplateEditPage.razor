@@ -57,6 +57,7 @@ else
                         }
                     </datalist>
                 </div>
+
                 <div class="form-group">
                     <label for="stock_name">Связанный склад поставщика</label>
                     <SelectStockDropdown @bind-Stock="@linkedStock" />
@@ -127,11 +128,11 @@ else
                             <div class="form-row">
                                 <div class="form-group col-md-6">
                                     <label for="remote-method-login">Логин</label>
-                                    <input type="text" class="form-control" id="remote-method-login" @bind="sourceTemplate.Cridentials_Login" />
+                                    <input type="text" autocomplete="off" class="form-control" id="remote-method-login" @bind="sourceTemplate.Cridentials_Login" />
                                 </div>
                                 <div class="form-group col-md-6">
                                     <label for="remote-method-password">Пароль</label>
-                                    <input type="password" class="form-control" id="remote-method-password" @bind="sourceTemplate.Cridentials_Password" />
+                                    <input type="password" autocomplete="off" class="form-control" id="remote-method-password" @bind="sourceTemplate.Cridentials_Password" />
                                 </div>
                             </div>
                         }

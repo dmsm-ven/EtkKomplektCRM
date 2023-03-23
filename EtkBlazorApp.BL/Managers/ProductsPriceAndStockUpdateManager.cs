@@ -24,6 +24,7 @@ namespace EtkBlazorApp.BL
         private readonly IMonobrandStorage monobrandStorage;
         private readonly IDatabaseProductCorrelator correlator;
         private readonly PriceListPriceHistoryManager priceHistoryManager;
+        private readonly HttpClient httpClient;
 
         public ProductsPriceAndStockUpdateManager(IProductStorage productsStorage,
             IProductUpdateService productUpdateService,
@@ -40,6 +41,7 @@ namespace EtkBlazorApp.BL
             this.monobrandStorage = monobrandStorage;
             this.correlator = correlator;
             this.priceHistoryManager = priceHistoryManager;
+            this.httpClient = new HttpClient();
         }
 
         public async Task UpdatePriceAndStock(
@@ -76,7 +78,7 @@ namespace EtkBlazorApp.BL
             if (data.Any(line => line.price.HasValue))
             {
                 progress?.Report("Пересчет цен товаров");
-                await (new WebClient().DownloadStringTaskAsync(CurrencyCustomUri));
+                await httpClient.GetStringAsync(CurrencyCustomUri);
             }
 
             if ((await settingStorage.GetValue<bool>("update-monobrand-websites")))

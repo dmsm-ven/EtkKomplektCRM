@@ -150,7 +150,7 @@ namespace EtkBlazorApp.BL
 
             try
             {
-                await Task.Run(async () => await task.Run(taskInfo));
+                await task.Run(taskInfo);
 
                 exec_result = CronTaskExecResult.Success;
 
@@ -184,7 +184,7 @@ namespace EtkBlazorApp.BL
                 else if (exec_result == CronTaskExecResult.Failed)
                 {
                     OnTaskExecutionError?.Invoke(taskInfo);
-                    notifier.NotifyPriceListLoadingError(taskInfo.name);
+                    await notifier.NotifyPriceListLoadingError(taskInfo.name);
                 }
             }
         }
