@@ -12,18 +12,21 @@ using System.Xml;
 
 namespace EtkBlazorApp.Services;
 
+[Obsolete]
 public class CurrencyCheckerCbRf : ICurrencyChecker
 {
     Dictionary<CurrencyType, decimal> rates;
     public DateTime LastUpdate { get; private set; }
     private readonly IMemoryCache cache;
+    private readonly HttpClient httpClient;
     private readonly SystemEventsLogger logger;
 
     private readonly string currency_source_uri = "http://www.cbr.ru/scripts/XML_daily.asp";
 
-    public CurrencyCheckerCbRf(IMemoryCache cache, SystemEventsLogger logger)
+    public CurrencyCheckerCbRf(IMemoryCache cache, HttpClient httpClient, SystemEventsLogger logger)
     {
         this.cache = cache;
+        this.httpClient = httpClient;
         this.logger = logger;
     }
 
@@ -51,8 +54,6 @@ public class CurrencyCheckerCbRf : ICurrencyChecker
         var dic = new Dictionary<CurrencyType, decimal>();
         //Инициализируем объекта типа XmlTextReader и
         //загружаем XML документ с сайта центрального банка
-        var httpClient = new HttpClient();
-        httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
 
         var xmlStreamTask = httpClient.GetStreamAsync(currency_source_uri);
         var delayTask = Task.Delay(TimeSpan.FromSeconds(10));

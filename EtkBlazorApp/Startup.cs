@@ -100,7 +100,7 @@ public class Startup
         ConfigureExteralApiClients(services);
         ConfigureNotifiers(services);
 
-        services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
+        services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf_V2>();
         services.AddSingleton<CashPlusPlusLinkGenerator>();
         services.AddSingleton<RemoteTemplateFileLoaderFactory>();
         services.AddSingleton<SystemEventsLogger>();
