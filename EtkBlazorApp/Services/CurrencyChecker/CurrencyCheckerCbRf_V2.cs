@@ -18,24 +18,14 @@ public class CurrencyCheckerCbRf_V2 : ICurrencyChecker
     Dictionary<CurrencyType, decimal> rates;
     public DateTime LastUpdate { get; private set; }
     private readonly IMemoryCache cache;
-    private readonly HttpClient httpClient;
     private readonly SystemEventsLogger logger;
 
-    private readonly string currency_source_uri = "/scripts/XML_daily.asp";
+    private readonly string currency_source_uri = "https://www.cbr-xml-daily.ru/daily_utf8.xml";
 
     public CurrencyCheckerCbRf_V2(IMemoryCache cache, SystemEventsLogger logger)
     {
         this.cache = cache;
         this.logger = logger;
-
-        httpClient = new HttpClient(new HttpClientHandler()
-        {
-            AllowAutoRedirect = true,
-            CookieContainer = new System.Net.CookieContainer(),
-            AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
-        });
-        httpClient.BaseAddress = new Uri("http://www.cbr.ru");
-        httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "*/*");
     }
 
     public async ValueTask<decimal> GetCurrencyRate(CurrencyType type)
@@ -64,9 +54,8 @@ public class CurrencyCheckerCbRf_V2 : ICurrencyChecker
             [CurrencyType.RUB] = 1
         };
 
-        var xmlData = await httpClient.GetStringAsync(currency_source_uri);
 
-        var doc = XDocument.Parse(xmlData);
+        var doc = await Task.Run(() => XDocument.Load(currency_source_uri));
 
         var currencies = doc.Descendants("Valute");
 
