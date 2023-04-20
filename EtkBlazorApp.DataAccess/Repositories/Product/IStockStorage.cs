@@ -17,8 +17,9 @@ namespace EtkBlazorApp.DataAccess
         Task<List<ManufacturerAvaibleStocksEntity>> GetManufacturersAvailableStocks();
 
         Task<List<ProductToStockEntity>> GetStockDataForProduct(int product_id);
+        Task AddOrUpdateStockDataForProduct(ProductToStockEntity data);
+        Task DeleteStockDataForProduct(ProductToStockEntity data);
     }
-
 
     public class StockStorage : IStockStorage
     {
@@ -148,10 +149,25 @@ namespace EtkBlazorApp.DataAccess
 
             return list;
         }
+
+        public async Task AddOrUpdateStockDataForProduct(ProductToStockEntity data)
+        {
+
+            string sql = @"INSERT INTO oc_product_to_stock (product_id, stock_partner_id, price, original_price, quantity, currency_code) 
+                           VALUES (@product_id, @stock_partner_id, @price, @original_price, @quantity, @currency_code)
+                           ON DUPLICATE KEY 
+                                UPDATE price = @price,
+                                original_price = @original_price,
+                                quantity = @quantity,
+                                currency_code = " + (data.currency_code.HasValue ? $"'{data.currency_code}'" : "NULL") + ";";
+
+            await database.ExecuteQuery(sql, data);
+        }
+
+        public async Task DeleteStockDataForProduct(ProductToStockEntity data)
+        {
+            string sql = "DELETE FROM oc_product_to_stock WHERE product_id = @product_id AND stock_partner_id = @stock_partner_id";
+            await database.ExecuteQuery(sql, data);
+        }
     }
-
-
-
-
-
 }

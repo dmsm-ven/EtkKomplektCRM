@@ -1,0 +1,21 @@
+﻿<select class="form-control" @onchange="Changed">
+    @foreach (var currencyCode in CurrencyList)
+    {
+        <option value="@currencyCode"
+            selected="@(selectedCurrency == currencyCode)">
+            @currencyCode
+        </option>
+    }
+</select>
+@code {
+    [Parameter] public EventCallback<CurrencyType> OnChange { get; set; }
+
+    CurrencyType[] CurrencyList => Enum.GetValues<CurrencyType>();
+    CurrencyType selectedCurrency;
+
+    private void Changed(ChangeEventArgs e)
+    {
+        selectedCurrency = Enum.Parse<CurrencyType>(e.Value.ToString());
+        OnChange.InvokeAsync(selectedCurrency);
+    }
+}

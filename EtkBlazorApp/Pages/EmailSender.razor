@@ -1,0 +1,158 @@
+﻿@page "/email-sender-task-scheduler"
+@attribute [Authorize(Roles = "Administrator, Manager")]
+
+<div class="email-sender-container">
+    <div class="email-sender-left">
+        <h2>Создание новой рассылки</h2>
+        <div>
+            <label>Тема письма рассылки</label>
+            <input type="text" class="form-control" placeholder="Тема письма" @bind="subject" />
+        </div>
+        <div>
+            <label>Текст письма рассылки</label>
+            <textarea type="text" placeholder="Текст письма писать сюда" @bind="bodyText" />
+        </div>
+        <div>
+            <label>Дата рассылки</label>
+            <input type="datetime" @bind="sendDateTime" class="form-control" />
+            @if (sendDateTime.HasValue)
+            {
+                <p>Указано: <span class="send-dt">@sendDateTime.Value</span></p>
+            }
+        </div>
+        <div class="email-sender-target-container">
+            <h3>Кому отправлять расслку</h3>
+            <div>
+                <input type="checkbox" id="subscribers-cb" @bind="sendToSubscribers">
+                <p for="subscribers-cb">Разослать всем подписавшимся</p>
+            </div>
+            <div>
+                <input type="checkbox" id="customers-cb" @bind="sendToShopCustomers">
+                <p for="customers-cb">Ошибка загрузки прайс-листа</p>
+            </div>
+            <div>
+                <input type="checkbox" id="custom-cb" @bind="sendToCustomEmails">
+                <p for="custom-cb">Изменение статуса заказа СДЭК</p>
+            </div>
+            @if (sendToCustomEmails)
+            {
+                <p>Укажите список email'ов кому отправить эту рассылку дополнительно. Каждый адрес с новой строки</p>
+                <textarea @bind="additionalEmails" />
+            }
+        </div>
+        <button class="btn btn-outline-success" @onclick="CreateSenderTask">
+            <span class="oi oi-check"></span>
+            Создать задание на рассылку
+        </button>
+    </div>
+    <div class="email-sender-right">
+        <h2>Очередь и история рассылок</h2>
+        <div class="email-sender-history-container">
+            @foreach (var senderTask in schedulerTaskList)
+            {
+                <div class="email-sender-history-item">
+                    <p>@senderTask.DateTime</p>
+                    <p>@senderTask.Subject</p>
+                    <p>
+                        @if (senderTask.IsCompleted)
+                        {
+                            <span class="oi oi-circle-check"></span>
+                        }
+                        else
+                        {
+                            <span class="oi oi-circle-x"></span>
+                        }
+                    </p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .email-sender-history-item .oi {
+        font-size: 18px;
+        padding: 3px;
+        margin: 2px 4px;
+    }
+
+    .email-sender-history-item .oi-circle-check {
+        color: lawngreen;
+    }
+
+    .email-sender-history-item .oi-circle-x {
+        color: orangered;
+    }
+
+
+    .email-sender-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: stretch;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+        .email-sender-container > div {
+            border: 1px solid lightgray;
+            border-radius: 4px;
+        }
+
+    .email-sender-container-left {
+        flex: 1 0 calc(75% - 12px);
+    }
+
+    .email-sender-container-right {
+        flex: 1 1 auto;
+    }
+
+    .email-sender-container textarea {
+        min-height: 120px;
+    }
+
+    .email-sender-container .send-dt {
+        color: royalblue;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .email-sender-history-container {
+        display: flex;
+    }
+
+    .email-sender-history-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 6px;
+    }
+</style>
+
+@code {
+    [Inject] public IToastService toasts { get; set; }
+
+    string subject = "";
+    string bodyText = "";
+    string additionalEmails = "";
+    DateTime? sendDateTime = null;
+    bool sendToSubscribers = false;
+    bool sendToShopCustomers = false;
+    bool sendToCustomEmails = false;
+
+    readonly List<dynamic> schedulerTaskList = new List<dynamic>()
+    {
+        new { DateTime = DateTime.Now.AddDays(2), Subject = "Тема 1", IsCompleted = false, UniqueRecipientCount = 99 },
+        new { DateTime = DateTime.Now.AddDays(1), Subject = "Тема 2", IsCompleted = false, UniqueRecipientCount = 98 },
+        new { DateTime = DateTime.Now.AddDays(-3), Subject = "Тема 3", IsCompleted = true, UniqueRecipientCount = 97 },
+        new { DateTime = DateTime.Now.AddDays(-4), Subject = "Тема 4", IsCompleted = true, UniqueRecipientCount = 96 },
+        new { DateTime = DateTime.Now.AddDays(-5), Subject = "Тема 5", IsCompleted = true, UniqueRecipientCount = 95 },
+    };
+
+    private async Task CreateSenderTask()
+    {
+        if (true)
+        {
+            toasts.ShowSuccess("Задание на email рассылку создано.");
+        }
+    }
+
+}

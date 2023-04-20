@@ -28,7 +28,10 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string productName = tab.GetValue<string>(row, 2);
                 int? quantity = ParseQuantity(tab.GetValue<string>(row, 4));
                 decimal? price = ParsePrice(tab.GetValue<string>(row, 5));
-                string model = Regex.Match(productName, "^(.*?), ").Groups[1].Value;
+
+                string separator = productName.Contains(",") ? "," : " ";
+
+                string model = Regex.Match(productName, "^(.*?)" + separator).Groups[1].Value.Trim();
                 string currencyTypeString = tab.GetValue<string>(row, 6);
 
                 CurrencyType priceCurreny = CurrencyType.RUB;
