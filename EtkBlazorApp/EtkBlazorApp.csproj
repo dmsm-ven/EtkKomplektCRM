@@ -59,8 +59,4 @@
     </Content>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Model\Attribute\" />
-  </ItemGroup>
-
 </Project>
