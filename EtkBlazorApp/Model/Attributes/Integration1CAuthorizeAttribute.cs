@@ -17,6 +17,7 @@ namespace EtkBlazorApp.Model.Attributes
             if (!context.HttpContext.Request.Headers.TryGetValue("Authorize", out var auth))
             {
                 context.Result = new BadRequestResult();
+                return;
             }
 
             string senderToken = auth.ToString()
