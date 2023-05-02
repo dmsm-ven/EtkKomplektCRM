@@ -9,6 +9,7 @@ using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Repositories;
 using EtkBlazorApp.DellinApi;
 using EtkBlazorApp.Model.Chart;
+using EtkBlazorApp.Model.IOptionProfiles;
 using EtkBlazorApp.Services;
 using EtkBlazorApp.TelegramBotLib;
 using EtkBlazorAppi.DadataApi;
@@ -73,6 +74,8 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
+
+
         //Сторонние
         services.AddBlazoredToast();
         services.AddAutoMapper(this.GetType().Assembly);
@@ -99,6 +102,7 @@ public class Startup
         ConfigureDatabaseServices(services);
         ConfigureExteralApiClients(services);
         ConfigureNotifiers(services);
+        ConfigureOptions(services);
 
         services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf_V2>();
         services.AddSingleton<CashPlusPlusLinkGenerator>();
@@ -117,6 +121,10 @@ public class Startup
         services.AddScoped<ChartDataExtractor>();
     }
 
+    private void ConfigureOptions(IServiceCollection services)
+    {
+        services.Configure<Integration1C_Configuration>(Configuration.GetSection(nameof(Integration1C_Configuration)));
+    }
     private void ConfigureNotifiers(IServiceCollection services)
     {
         services.AddTransient<ICustomerOrderNotificator, MailkitOrderEmailNotificator>();
