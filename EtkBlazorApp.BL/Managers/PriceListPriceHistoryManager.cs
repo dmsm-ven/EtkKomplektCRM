@@ -128,7 +128,12 @@ public class PriceListPriceHistoryManager
         var entiresDictionary = await repo.GetPriceListUpdateHistory(guid);
         int lastUpdateId = entiresDictionary.Max(i => i.Key.update_id);
 
-        int[] productIds = entiresDictionary.Values.SelectMany(i => i).Select(i => i.product_id).Distinct().OrderBy(i => i).ToArray();
+        int[] productIds = entiresDictionary.Values
+            .SelectMany(i => i)
+            .Select(i => i.product_id)
+            .Distinct()
+            .OrderBy(i => i)
+            .ToArray();
         Dictionary<int, string> productNames = await productStorage.GetProductNames(productIds);
 
         var items = new Dictionary<int, List<ProductPriceChangeHistoryItem>>();

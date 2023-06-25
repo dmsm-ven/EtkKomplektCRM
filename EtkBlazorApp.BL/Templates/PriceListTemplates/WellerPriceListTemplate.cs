@@ -13,7 +13,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         {
             var list = new List<PriceLine>();
 
-            for (int i = 18; i < tab.Dimension.Rows; i++)
+            for (int i = 12; i < tab.Dimension.Rows; i++)
             {
                 string skuNumber = ReplaceSkuInvalidCharacters(tab.GetValue<string>(i, 1));
                 string partNumber = ReplaceSkuInvalidCharacters(tab.GetValue<string>(i, 2));
@@ -48,10 +48,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 return null;
             }
 
-            if (Regex.IsMatch(skuNumber, @"^(\d){6,}N$"))
-            {
-                skuNumber = skuNumber.TrimEnd('N');
-            }
             if (Regex.IsMatch(skuNumber, @"^T00(\d+)$"))
             {
                 skuNumber = skuNumber.Substring(3);

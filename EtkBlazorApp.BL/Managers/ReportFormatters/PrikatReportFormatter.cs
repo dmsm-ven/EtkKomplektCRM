@@ -115,13 +115,13 @@ namespace EtkBlazorApp.BL
         private async Task ApplyCustomProductsHandler(List<ProductEntity> products, int manufacturer_id)
         {
             int PROSKIT_MANUFACTURER_ID = 1;
-            int MEAN_WELL_MANUFACTURER_ID = 37;
-            int MEAN_WELL_MINIMUM_QUANTITY = 40;
+            //int MEAN_WELL_MANUFACTURER_ID = 37;
+            //int MEAN_WELL_MINIMUM_QUANTITY = 40;
 
-            if (manufacturer_id == MEAN_WELL_MANUFACTURER_ID)
-            {
-                products.RemoveAll(product => product.quantity < MEAN_WELL_MINIMUM_QUANTITY);
-            }
+            //if (manufacturer_id == MEAN_WELL_MANUFACTURER_ID)
+            //{
+            //    products.RemoveAll(product => product.quantity < MEAN_WELL_MINIMUM_QUANTITY);
+            //}
 
             if (manufacturer_id == PROSKIT_MANUFACTURER_ID)
             {
