@@ -2,25 +2,21 @@
 using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.Core.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Xml;
 using System.Xml.Linq;
 
-namespace EtkBlazorApp.Services;
+namespace EtkBlazorApp.Services.CurrencyChecker;
 
 public class CurrencyCheckerCbRf_V2 : ICurrencyChecker
 {
-    Dictionary<CurrencyType, decimal> rates;
     public DateTime LastUpdate { get; private set; }
     private readonly IMemoryCache cache;
     private readonly SystemEventsLogger logger;
 
-    private readonly string currency_source_uri = "https://www.cbr-xml-daily.ru/daily_utf8.xml";
+    private readonly string currencyXmlFeed = "http://www.cbr.ru/scripts/XML_daily.asp";
+    private readonly string cacheKey = "currency_rates";
 
     public CurrencyCheckerCbRf_V2(IMemoryCache cache, SystemEventsLogger logger)
     {
@@ -30,17 +26,17 @@ public class CurrencyCheckerCbRf_V2 : ICurrencyChecker
 
     public async ValueTask<decimal> GetCurrencyRate(CurrencyType type)
     {
-        if (!cache.TryGetValue(nameof(rates), out rates))
+        if (!cache.TryGetValue<Dictionary<CurrencyType, decimal>>(cacheKey, out var rates))
         {
             try
             {
                 rates = await ReadCurrenciesFromCbRf();
                 LastUpdate = DateTime.Now;
-                cache.Set(nameof(rates), rates, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(10)));
+                cache.Set(cacheKey, rates, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(10)));
             }
             catch (Exception ex)
             {
-                await logger.WriteSystemEvent(LogEntryGroupName.Auth, "Ошибка курса валют", $"Не удалось загрузить курс валют из источника: {currency_source_uri} Детали: {ex.Message}");
+                await logger.WriteSystemEvent(LogEntryGroupName.Auth, "Ошибка курса валют", $"Не удалось загрузить курс валют из источника: {currencyXmlFeed} Детали: {ex.Message}");
             }
         }
 
@@ -54,8 +50,7 @@ public class CurrencyCheckerCbRf_V2 : ICurrencyChecker
             [CurrencyType.RUB] = 1
         };
 
-
-        var doc = await Task.Run(() => XDocument.Load(currency_source_uri));
+        var doc = await Task.Run(() => XDocument.Load(currencyXmlFeed));
 
         var currencies = doc.Descendants("Valute");
 

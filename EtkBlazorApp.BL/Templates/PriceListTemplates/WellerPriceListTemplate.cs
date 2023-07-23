@@ -72,7 +72,10 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string ean = tab.GetValue<string>(row, 4);
                 int? quantity = ParseQuantity(tab.GetValue<string>(row, 5));
 
-                if (string.IsNullOrWhiteSpace(skuNumber)) { continue; }
+                if (string.IsNullOrWhiteSpace(skuNumber)) 
+                { 
+                    continue; 
+                }
 
                 if (Regex.IsMatch(skuNumber, @"^(\d){6,}N$"))
                 {
@@ -89,7 +92,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Sku = skuNumber,
                     Model = skuNumber,
                     Quantity = quantity,
-                    Ean = ean,
                     Manufacturer = "Weller",
                     //Stock = StockName.SpringE
                 };
