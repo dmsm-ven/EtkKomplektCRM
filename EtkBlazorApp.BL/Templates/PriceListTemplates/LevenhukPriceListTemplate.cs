@@ -11,16 +11,22 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         {
             var list = new List<PriceLine>();
 
-            for (int row = 1; row < tab.Dimension.Rows; row++)
+            for (int row = 17; row < tab.Dimension.Rows; row++)
             {
                 string sku = tab.GetValue<string>(row, 1);
+
+                if (string.IsNullOrWhiteSpace(sku))
+                {
+                    continue;
+                }
+
                 string name = tab.GetValue<string>(row, 2);
                 var rrcPrice = ParsePrice(tab.GetValue<string>(row, 3));
 
                 var quantityMsk = ParseQuantity(tab.GetValue<string>(row, 6));
                 var quantitySpb = ParseQuantity(tab.GetValue<string>(row, 8));
 
-                var ean = ParseQuantity(tab.GetValue<string>(row, 11));
+                var ean = tab.GetValue<string>(row, 11);
 
                 var priceLine = new MultistockPriceLine(this)
                 {
@@ -29,7 +35,9 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Sku = sku,
                     Model = sku,
                     Name = name,
+                    Currency = Core.Data.CurrencyType.RUB,
                     Price = rrcPrice,
+                    Ean = ean,
                     Manufacturer = "Ermenrich",
                 };
 

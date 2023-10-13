@@ -1,8 +1,9 @@
 ﻿using EtkBlazorApp.Core.Data;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
-namespace EtkBlazorApp.BL
+namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
     [PriceListTemplateGuid("3853B988-DB37-4B6E-861F-3000B643FAC4")]
     public class SymmetronPriceListTemplate : ExcelPriceListTemplateBase
@@ -38,7 +39,7 @@ namespace EtkBlazorApp.BL
                     Sku = sku,
                     Model = model,
                     Manufacturer = manufacturer,
-                    Price = (priceInCurrency.HasValue && priceCurreny != CurrencyType.RUB) ? priceInCurrency : priceInRub,
+                    Price = priceInCurrency.HasValue && priceCurreny != CurrencyType.RUB ? priceInCurrency : priceInRub,
                     Currency = priceCurreny,
                     Quantity = quantity,
                     //Stock = StockName.Symmetron
@@ -89,7 +90,22 @@ namespace EtkBlazorApp.BL
                 list.Add(priceLine);
             }
 
+            FixSkuDuplicate(list);
+
             return list;
+        }
+
+        //TODO: доделать в функционал, убрать костыль
+        //Есть товары которые у разных поставщиков находятся по одним и темже кодом (их личный код, разный у каждого поставщика)
+        //Надо подумать как сделать функционал проверки копий, скорее всего после чтения шаблона нужно проверять в отдельной таблице,
+        private void FixSkuDuplicate(List<PriceLine> list)
+        {
+            var bugProgduct = list.FirstOrDefault(i => i.Sku == "00030823");
+            if (bugProgduct != null)
+            {
+                bugProgduct.Sku = "";
+                bugProgduct.Model = "0212WD";
+            }
         }
     }
 }
