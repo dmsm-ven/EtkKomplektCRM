@@ -2,14 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace EtkBlazorApp.BL
+namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
     [PriceListTemplateGuid("438B5182-62DD-42C4-846F-4901C3B38B14")]
     public class PristPriceListTemplate : PriceListTemplateReaderBase, IPriceListTemplate
@@ -41,8 +39,8 @@ namespace EtkBlazorApp.BL
                     Name = offer.Name,
                     Currency = offer.Currency,
                     Manufacturer = manufacturer,
-                    Model = offer.Model,
-                    Sku = offer.Model,
+                    Model = offer.Model.Trim(),
+                    Sku = offer.Model.Trim(),
                     Price = price,
                     Quantity = offer.Amount,
                     //Stock = StockName.Prist
@@ -114,8 +112,21 @@ namespace EtkBlazorApp.BL
                     list.Add(offer);
                 }
 
+                RenameInvalidModels(list);
 
                 return list;
+            }
+
+            private void RenameInvalidModels(List<PristOffer> list)
+            {
+                KeyValuePair<string, string> invalidProductData = new("003B", "0003B");
+
+                var invalidProduct = list.FirstOrDefault(p => p.Model == invalidProductData.Key);
+
+                if (invalidProduct != null)
+                {
+                    invalidProduct.Model = invalidProductData.Value;
+                }
             }
         }
 

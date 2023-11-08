@@ -1,9 +1,5 @@
 ﻿using EtkBlazorApp.Core.Data;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
@@ -18,10 +14,10 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
-                string skuNumber = tab.Cells[row, 0].ToString();
-                string productName = tab.Cells[row, 1].ToString();
-                string model = tab.Cells[row, 2].ToString();
-                string priceString = tab.Cells[row, 4].ToString();
+                string skuNumber = tab.GetValue<string>(row, 1);
+                string productName = tab.GetValue<string>(row, 2);
+                string model = tab.GetValue<string>(row, 3);
+                var price = ParsePrice(tab.GetValue<string>(row, 5));
 
                 var priceLine = new PriceLine(this)
                 {
@@ -30,7 +26,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Model = model,
                     Sku = skuNumber,
                     Name = productName,
-                    Price = ParsePrice(priceString)
+                    Price = price
                 };
                 list.Add(priceLine);
             }
