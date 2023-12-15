@@ -3,6 +3,7 @@ using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity.PriceList;
 using EtkBlazorApp.DataAccess.Repositories;
+using EtkBlazorApp.DataAccess.Repositories.PriceList;
 using System;
 using System.Collections;
 using System.Collections.Generic;

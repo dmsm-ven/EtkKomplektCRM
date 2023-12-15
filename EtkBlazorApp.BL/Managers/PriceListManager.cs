@@ -1,8 +1,9 @@
 ﻿using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.DataAccess;
-using EtkBlazorApp.DataAccess.Entity;
-using Microsoft.AspNetCore.StaticFiles;
+using EtkBlazorApp.DataAccess.Entity.PriceList;
+using EtkBlazorApp.DataAccess.Repositories.PriceList;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,8 +12,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.BL
+namespace EtkBlazorApp.BL.Managers
 {
+    //TODO: разбить/упростить класс
     public class PriceListManager
     {
         public event Action OnPriceListLoaded;
@@ -24,14 +26,19 @@ namespace EtkBlazorApp.BL
         private readonly IPriceLineLoadCorrelator correlator;
         private readonly IPriceListTemplateStorage templateStorage;
         private readonly ISettingStorageReader settings;
+        private readonly ILogger<PriceListManager> logger;
 
-        public PriceListManager(IPriceLineLoadCorrelator correlator, IPriceListTemplateStorage templateStorage, ISettingStorageReader settings)
+        public PriceListManager(IPriceLineLoadCorrelator correlator,
+            IPriceListTemplateStorage templateStorage,
+            ISettingStorageReader settings,
+            ILogger<PriceListManager> logger)
         {
             PriceLines = new List<PriceLine>();
             LoadedFiles = new List<LoadedPriceListTemplateData>();
             this.correlator = correlator;
             this.templateStorage = templateStorage;
             this.settings = settings;
+            this.logger = logger;
         }
 
         public void RemovePriceListAll()
@@ -62,7 +69,10 @@ namespace EtkBlazorApp.BL
         /// <returns></returns>
         public async Task<List<PriceLine>> ReadTemplateLines(Type templateType, Stream stream, string fileName, bool addFileData = false)
         {
-            if (templateType == null) { throw new ArgumentNullException(nameof(templateType)); }
+            if (templateType == null)
+            {
+                throw new ArgumentNullException(nameof(templateType));
+            }
 
             string filePath = Path.Combine(Path.GetTempPath(), fileName);
             using (var fs = File.Create(filePath))
@@ -80,9 +90,11 @@ namespace EtkBlazorApp.BL
                     pb.FillTemplateInfo(templateInfo);
                 }
 
-                var list = await templateInstance.ReadPriceLines(null);
+                var list = await templateInstance.ReadPriceLines(CancellationToken.None);
 
                 FillLinkedStock(list, templateInfo.stock_partner_id);
+
+                ApplyModelMap(list, templateInfo);
 
                 await ApplyDiscounts(list, templateInfo);
 
@@ -115,6 +127,40 @@ namespace EtkBlazorApp.BL
             }
         }
 
+        //Заменяем модели из прайс-листа (если есть данные на замену)
+        private void ApplyModelMap(IEnumerable<PriceLine> priceLines, PriceListTemplateEntity templateInfo)
+        {
+            if (templateInfo.model_map == null || templateInfo.model_map.Count == 0)
+            {
+                return;
+            }
+
+            var modelMap = templateInfo.model_map.ToDictionary(i => i.old_text, i => i.new_text);
+
+            logger.LogInformation($"Запуск преобразования моделей/артикулов для прайс-листа '{templateInfo?.title ?? "<Пусто>"}'");
+            var sw = new Stopwatch();
+
+            var linesToReplace = priceLines
+                .Where(line =>
+                    line.Model != null && modelMap.ContainsKey(line.Model) ||
+                    line.Sku != null && modelMap.ContainsKey(line.Sku))
+                .ToList();
+
+            foreach (var line in linesToReplace)
+            {
+                if (modelMap.ContainsKey(line.Model))
+                {
+                    line.Model = modelMap[line.Model];
+                }
+                if (modelMap.ContainsKey(line.Sku))
+                {
+                    line.Sku = modelMap[line.Sku];
+                }
+            }
+
+            logger.LogInformation($"Конец преобразования моделей/артикулов для прайс-листа '{templateInfo?.title ?? "<Пусто>"}'. Длительность выполнения: {sw.Elapsed.TotalMilliseconds:N} ms");
+        }
+
         /// <summary>
         /// Применить наценки/скидки/НДС к загруженным ценам
         /// </summary>
@@ -144,7 +190,7 @@ namespace EtkBlazorApp.BL
             Dictionary<string, decimal> purchaseDiscounts = templateInfo.manufacturer_purchase_map.ToDictionary(i => i.name, i => i.discount);
 
             //Загружаем НДС
-            NDS = (100m + (await settings.GetValue<int>("nds"))) / 100;
+            NDS = (100m + await settings.GetValue<int>("nds")) / 100;
 
             foreach (var line in source)
             {
@@ -176,11 +222,11 @@ namespace EtkBlazorApp.BL
 
             if (!emptyPurchaseDiscountMap && discountValue != 0 && purchaseDiscounts.TryGetValue(line.Manufacturer, out var pdv))
             {
-                line.Price *= (1m - (pdv / 100m));
+                line.Price *= 1m - pdv / 100m;
             }
 
             //Высчитываем множитель
-            decimal discountRatio = 1m + (discountValue / 100m);
+            decimal discountRatio = 1m + discountValue / 100m;
             if (discountRatio != 1)
             {
                 line.Price = Math.Round(line.Price.Value * discountRatio, line.Currency == CurrencyType.RUB ? 0 : 2, MidpointRounding.ToZero);

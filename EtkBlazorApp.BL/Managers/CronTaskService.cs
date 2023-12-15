@@ -1,8 +1,10 @@
 ﻿using EtkBlazorApp.BL.CronTask;
+using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.BL.Templates.PriceListTemplates;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
+using EtkBlazorApp.DataAccess.Repositories.PriceList;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;

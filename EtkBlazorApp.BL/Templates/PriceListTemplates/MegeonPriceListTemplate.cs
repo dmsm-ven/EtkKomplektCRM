@@ -1,7 +1,6 @@
 ﻿using EtkBlazorApp.Core.Data;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -66,7 +65,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
         public async Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)
         {
-            var doc = XDocument.Load(fileName);
+            var doc = await Task.Run(() => XDocument.Load(fileName));
+
             var offers = doc.Descendants("shop").Elements("offers").Elements("offer");
 
             var list = new List<PriceLine>();

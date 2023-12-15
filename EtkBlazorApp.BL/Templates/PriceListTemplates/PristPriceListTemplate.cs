@@ -23,7 +23,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         public async Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)
         {
             var loader = new PristXmlReader();
-            var offers = await loader.LoadPristProducts(FileName);
+            var offers = await Task.Run(() => loader.LoadPristProducts(FileName));
 
             var list = new List<PriceLine>();
 
@@ -54,7 +54,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
         private class PristXmlReader
         {
-            public async Task<List<PristOffer>> LoadPristProducts(string fileUri)
+            public List<PristOffer> LoadPristProducts(string fileUri)
             {
                 var file = new XmlDocument();
                 file.Load(fileUri);

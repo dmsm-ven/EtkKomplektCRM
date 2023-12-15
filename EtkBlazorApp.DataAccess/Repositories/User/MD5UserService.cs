@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.DataAccess
+namespace EtkBlazorApp.DataAccess.Repositories.User
 {
     public class MD5UserService : IUserService
     {
@@ -45,7 +45,7 @@ namespace EtkBlazorApp.DataAccess
             return users;
         }
 
-        public async Task<AppUserEntity> GetUser(string login, string password)
+        public Task<AppUserEntity> GetUser(string login, string password)
         {
             throw new NotImplementedException();
         }
@@ -58,7 +58,7 @@ namespace EtkBlazorApp.DataAccess
                 .AppendLine("ip = @ip,")
                 .AppendLine("status = @status");
 
-            if(user.password != null)
+            if (user.password != null)
             {
                 sb.AppendLine(", password = MD5(@password)");
             }

@@ -1,11 +1,9 @@
 ﻿using EtkBlazorApp.DataAccess.Entity;
-using System;
+using EtkBlazorApp.DataAccess.Entity.PriceList;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.DataAccess
+namespace EtkBlazorApp.DataAccess.Repositories.PriceList
 {
     //TODO: разбить на мелкие интерфейсы
     public interface IPriceListTemplateStorage
@@ -51,12 +49,20 @@ namespace EtkBlazorApp.DataAccess
 
             //Дополнительные данные шаблона
             templateInfo.quantity_map = await GetQuantityMapRecordsForTemplate(guid);
+            templateInfo.model_map = await GetModelMapRecordsForTemplate(guid);
             templateInfo.manufacturer_name_map = await GetManufacturerNameMapRecordsForTemplate(guid);
             templateInfo.manufacturer_skip_list = await GetManufacturerSkipRecordsForTemplate(guid);
             templateInfo.manufacturer_discount_map = await GetDiscountMapRecordsForTemplate(guid);
             templateInfo.manufacturer_purchase_map = await GetPurchaseMapRecordsForTemplate(guid);
 
             return templateInfo;
+        }
+
+        private async Task<List<ModelMapRecordEntity>> GetModelMapRecordsForTemplate(string guid)
+        {
+            string sql = "SELECT * FROM etk_app_price_list_template_model_map WHERE price_list_guid = @guid";
+            var data = await database.GetList<ModelMapRecordEntity, dynamic>(sql, new { guid });
+            return data;
         }
 
         private async Task<List<QuantityMapRecordEntity>> GetQuantityMapRecordsForTemplate(string guid)
@@ -72,7 +78,7 @@ namespace EtkBlazorApp.DataAccess
                            FROM etk_app_price_list_template_manufacturer_list t
                            LEFT JOIN oc_manufacturer m ON (t.manufacturer_id = m.manufacturer_id)
                            WHERE price_list_guid = @guid";
-            var data = await database.GetList<ManufacturerSkipRecordEntity, dynamic>(sql, new { guid = guid });
+            var data = await database.GetList<ManufacturerSkipRecordEntity, dynamic>(sql, new { guid });
             return data;
         }
 
@@ -215,6 +221,7 @@ namespace EtkBlazorApp.DataAccess
             await database.ExecuteQuery("DELETE FROM etk_app_price_list_manufacturer_list WHERE price_list_guid = @guid", new { guid });
             await database.ExecuteQuery("DELETE FROM etk_app_price_list_manufacturer_map WHERE price_list_guid = @guid", new { guid });
             await database.ExecuteQuery("DELETE FROM etk_app_price_list_quantity_map WHERE price_list_guid = @guid", new { guid });
+            await database.ExecuteQuery("DELETE FROM etk_app_price_list_model_map WHERE price_list_guid = @guid", new { guid });
             await database.ExecuteQuery("DELETE FROM etk_app_price_list_discount_map WHERE price_list_guid = @guid", new { guid });
             await database.ExecuteQuery("DELETE FROM etk_app_price_list_template_purchase_discount WHERE price_list_guid = @guid", new { guid });
         }

@@ -1,4 +1,4 @@
-﻿using EtkBlazorApp.DataAccess;
+﻿using EtkBlazorApp.DataAccess.Repositories.PriceList;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
