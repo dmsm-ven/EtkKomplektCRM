@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.BL.Data;
+using EtkBlazorApp.BL.Templates.PriceListTemplates.Base;
 using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity.PriceList;

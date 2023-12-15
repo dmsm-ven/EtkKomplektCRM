@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.Core.Data;
+﻿using EtkBlazorApp.BL.Templates.PriceListTemplates.Base;
+using EtkBlazorApp.Core.Data;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
