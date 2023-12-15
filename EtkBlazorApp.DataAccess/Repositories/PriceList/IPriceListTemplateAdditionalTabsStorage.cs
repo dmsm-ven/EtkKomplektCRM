@@ -66,14 +66,14 @@ namespace EtkBlazorApp.DataAccess.Repositories.PriceList
                           ON DUPLICATE KEY UPDATE
                             price_list_guid = @guid,                            
                             old_text = @oldText, 
-                            newText = @newText";
+                            new_text = @newText";
             await database.ExecuteQuery(sql, new { guid, oldText, newText });
         }
 
         public async Task RemoveModelMapRecord(string guid, string oldText)
         {
             await database.ExecuteQuery(
-                "DELETE FROM etk_app_price_list_template_model_map WHERE price_list_guid = @guid AND oldText = @oldText",
+                "DELETE FROM etk_app_price_list_template_model_map WHERE price_list_guid = @guid AND old_text = @oldText",
                 new { guid, oldText });
         }
 

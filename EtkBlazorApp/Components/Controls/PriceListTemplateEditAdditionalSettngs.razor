@@ -113,27 +113,27 @@
             <p class="pl-template-add-settings-desc">Заменяет значения модели/артикула из прайс-листа в новое значение (что бы оно совпадало с моделью на сайте). Позволяет сопоставлять товар даже если в источнике указано неточное значение</p>
             <div>
                 <button type="button" class="btn btn-success"
-                        disabled="addNewModelMapRecordDisabled"
+                        disabled="@addNewModelMapRecordDisabled"
                         @onclick="AddNewModelMapRecord">
                     <span class="oi oi-plus"></span>
                 </button>
                 <input type="text" class="form-control price-list-template-map-control"
-                       placeholder="Неверная модель в прайс-листе" @bind="newModelMapKey" />
+                       placeholder="Модель/артикул в прайс-листе" @bind="newModelMapKey" />
                 <strong style="margin: 0px 12px;">=</strong>
                 <input type="text" class="form-control price-list-template-map-control"
-                       placeholder="Верная модель на сайте" @bind="newModelMapValue" />
+                       placeholder="Модель/артикул на сайте" @bind="newModelMapValue" />
             </div>
         </div>
         <hr />
-        @foreach (var item in sourceTemplate.ModelMap)
+        @foreach (var modelKvp in sourceTemplate.ModelMap)
         {
             <div style="margin-top: 8px;">
-                <button type="button" class="btn btn-outline-danger" @onclick="@(e => RemoveModelMapRecord(item.Key))">
+                <button type="button" class="btn btn-outline-danger" @onclick="@(e => RemoveModelMapRecord(modelKvp.Key))">
                     <span class="oi oi-minus"></span>
                 </button>
-                <input type="text" class="form-control price-list-template-map-control" readonly value="@item.Key" />
+                <input type="text" class="form-control price-list-template-map-control" readonly value="@modelKvp.Key" />
                 <strong style="margin: 0px 12px;">=</strong>
-                <input type="number" class="form-control price-list-template-map-control" readonly value="@item.Value" />
+                <input type="text" class="form-control price-list-template-map-control" readonly value="@modelKvp.Value" />
             </div>
         }
     </ContentButtonExpander>

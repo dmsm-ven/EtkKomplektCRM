@@ -22,7 +22,6 @@ public class PriceListProfile : Profile
             .ForMember(x => x.manufacturer_name, x => x.MapFrom(m => m.name))
             .ForMember(x => x.discount, x => x.MapFrom(m => m.discount));
 
-
         CreateMap<PriceListTemplateEntity, PriceListTemplateItemViewModel>()
             .ForMember(o => o.Guid, o => o.MapFrom(x => x.id))
             .ForMember(o => o.Title, o => o.MapFrom(x => x.title))

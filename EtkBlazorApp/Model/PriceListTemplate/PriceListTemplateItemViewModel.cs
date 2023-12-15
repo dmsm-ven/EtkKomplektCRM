@@ -43,6 +43,7 @@ namespace EtkBlazorApp.Model.PriceListTemplate
         public Dictionary<string, int> QuantityMap { get; set; } = new();
         public Dictionary<string, string> ManufacturerNameMap { get; set; } = new();
         public Dictionary<string, string> ModelMap { get; set; } = new();
+
         public List<ManufacturerDiscountItemViewModel> ManufacturerDiscountMap { get; set; } = new();
         public List<ManufacturerDiscountItemViewModel> ManufacturerPurchaseDiscountMap { get; set; } = new();
         public List<ManufacturerSkipItemViewModel> ManufacturerSkipList { get; set; } = new();

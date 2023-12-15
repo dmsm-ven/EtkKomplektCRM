@@ -56,9 +56,7 @@ public partial class PriceListTemplateEditAdditionalSettngs
     {
         get
         {
-            return string.IsNullOrWhiteSpace(newModelMapKey) ||
-                string.IsNullOrWhiteSpace(newModelMapValue) ||
-                (newModelMapKey.Equals(newModelMapValue, StringComparison.OrdinalIgnoreCase));
+            return string.IsNullOrWhiteSpace(newModelMapKey) || string.IsNullOrWhiteSpace(newModelMapValue);
         }
     }
 
