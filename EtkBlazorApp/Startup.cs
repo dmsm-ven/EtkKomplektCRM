@@ -7,6 +7,7 @@ using EtkBlazorApp.CdekApi;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Repositories;
+using EtkBlazorApp.DataAccess.Repositories.PriceList;
 using EtkBlazorApp.DellinApi;
 using EtkBlazorApp.Model.Chart;
 using EtkBlazorApp.Model.IOptionProfiles;

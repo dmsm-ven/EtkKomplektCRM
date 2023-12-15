@@ -1,4 +1,6 @@
-﻿@inject IPriceListTemplateStorage templateStorage
+﻿@using EtkBlazorApp.DataAccess.Entity.PriceList
+@using EtkBlazorApp.DataAccess.Repositories.PriceList
+@inject IPriceListTemplateStorage templateStorage
 
 <select id="price-list-template-guid" @bind="Guid" class="form-control">
     <option value="">Выбрать шаблон прайс-листа</option>

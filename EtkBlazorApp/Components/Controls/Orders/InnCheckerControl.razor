@@ -4,7 +4,7 @@
 
 <div class="inn-finder-box">
     <input type="text" @bind="@Inn" placeholder="Введите ИНН" class="form-control w-auto" />
-    <button class="btn btn-primary" @onclick="Find" disabled=@(!isValidInn)>
+    <button class="btn btn-primary" @onclick="Find" disabled="isInvalidInn">
         Поиск по ИНН
     </button>
 </div>
@@ -149,8 +149,8 @@
     [Parameter] public string Inn { get; set; }
     [Inject] public ICompanyInfoChecker InnChecker { get; set; }
 
-    string? innCheckerError;
-    bool isValidInn => Regex.IsMatch(Inn, @"^\d{10,12}$");
+    string innCheckerError;
+    bool isInvalidInn => !Regex.IsMatch(Inn, @"^\d{10,12}$");
     CompanyInformation companyInfo = null;
 
     protected override async Task OnParametersSetAsync()
@@ -162,7 +162,7 @@
     {
         innCheckerError = null;
 
-        if (!isValidInn)
+        if (isInvalidInn)
         {
             innCheckerError = "ИНН пуст или указан неверно (только цифры, длина от 10 до 12)";
             return;

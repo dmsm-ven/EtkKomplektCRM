@@ -1,12 +1,9 @@
 ﻿using EtkBlazorApp.BL;
-using EtkBlazorApp.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Reflection;
 
-namespace EtkBlazorApp
+namespace EtkBlazorApp.Model.PriceListTemplate
 {
     public class PriceListTemplateItemViewModel
     {
@@ -42,8 +39,10 @@ namespace EtkBlazorApp
         public string Cridentials_Login { get; set; }
         public string Cridentials_Password { get; set; }
 
+        //Данные вкладки дополнительные настройки
         public Dictionary<string, int> QuantityMap { get; set; } = new();
         public Dictionary<string, string> ManufacturerNameMap { get; set; } = new();
+        public Dictionary<string, string> ModelMap { get; set; } = new();
         public List<ManufacturerDiscountItemViewModel> ManufacturerDiscountMap { get; set; } = new();
         public List<ManufacturerDiscountItemViewModel> ManufacturerPurchaseDiscountMap { get; set; } = new();
         public List<ManufacturerSkipItemViewModel> ManufacturerSkipList { get; set; } = new();

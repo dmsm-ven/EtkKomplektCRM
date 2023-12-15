@@ -1,16 +1,17 @@
 using Blazored.Toast.Services;
 using EtkBlazorApp.BL;
-using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
+using EtkBlazorApp.DataAccess.Repositories.PriceList;
+using EtkBlazorApp.Model.PriceListTemplate;
 using EtkBlazorApp.Services;
 using Microsoft.AspNetCore.Components;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.Components.Controls;
 
+//TODO: Нужно разбить настройки на отдельные файлы
 public partial class PriceListTemplateEditAdditionalSettngs
 {
     [Parameter] public PriceListTemplateItemViewModel sourceTemplate { get; set; }
@@ -18,16 +19,22 @@ public partial class PriceListTemplateEditAdditionalSettngs
     [Inject] public UserLogger logger { get; set; }
     [Inject] public IToastService toasts { get; set; }
 
-    SkipManufacturerListType newSkipManufacturerListType = SkipManufacturerListType.black_list;
-    ManufacturerEntity newSkipManufacturerItem;
-    ManufacturerEntity newManufacturerMapRecordItem;
-    ManufacturerEntity newDiscountMapRecordItem;
-    string newManufacturerMapRecordWord;
-    string newQuantityMapRecordWord;
-    decimal newDiscountMapValue;
-    int newQuantityMapRecordValue;
+    private SkipManufacturerListType newSkipManufacturerListType = SkipManufacturerListType.black_list;
+    private ManufacturerEntity newSkipManufacturerItem;
 
-    bool addNewManufacturerMapButtonDisabled
+    private string newManufacturerMapRecordWord;
+    private ManufacturerEntity newManufacturerMapRecordItem;
+
+    private ManufacturerEntity newDiscountMapRecordItem;
+    private decimal newDiscountMapValue;
+
+    private string newModelMapKey;
+    private string newModelMapValue;
+
+    private string newQuantityMapRecordWord;
+    private int newQuantityMapRecordValue;
+
+    private bool addNewManufacturerMapButtonDisabled
     {
         get
         {
@@ -35,12 +42,23 @@ public partial class PriceListTemplateEditAdditionalSettngs
                 newManufacturerMapRecordItem == null || newManufacturerMapRecordItem.name.Equals(newManufacturerMapRecordWord, StringComparison.OrdinalIgnoreCase);
         }
     }
-    bool skipManufacturerAddNewRecordButtonDisabled
+
+    private bool skipManufacturerAddNewRecordButtonDisabled
     {
         get
         {
             return newSkipManufacturerItem == null ||
                 sourceTemplate.ManufacturerSkipList.Any(i => i.manufacturer_id == newSkipManufacturerItem.manufacturer_id || i.ListType != newSkipManufacturerListType);
+        }
+    }
+
+    private bool addNewModelMapRecordDisabled
+    {
+        get
+        {
+            return string.IsNullOrWhiteSpace(newModelMapKey) ||
+                string.IsNullOrWhiteSpace(newModelMapValue) ||
+                (newModelMapKey.Equals(newModelMapValue, StringComparison.OrdinalIgnoreCase));
         }
     }
 
@@ -110,7 +128,10 @@ public partial class PriceListTemplateEditAdditionalSettngs
     private async Task RemoveManufacturerMapRecord(string word)
     {
         await templateStorage.RemoveManufacturerMapRecord(sourceTemplate.Guid, word);
-        sourceTemplate.ManufacturerNameMap.Remove(word);
+        if (sourceTemplate.ManufacturerNameMap.ContainsKey(word))
+        {
+            sourceTemplate.ManufacturerNameMap.Remove(word);
+        }
         StateHasChanged();
 
         toasts.ShowSuccess("Выполнено");
@@ -130,7 +151,10 @@ public partial class PriceListTemplateEditAdditionalSettngs
     private async Task RemoveQuantityMapRecord(string word)
     {
         await templateStorage.RemoveQuantityMapRecord(sourceTemplate.Guid, word);
-        sourceTemplate.QuantityMap.Remove(word);
+        if (sourceTemplate.QuantityMap.ContainsKey(word))
+        {
+            sourceTemplate.QuantityMap.Remove(word);
+        }
         StateHasChanged();
 
         toasts.ShowSuccess("Выполнено");
@@ -164,4 +188,27 @@ public partial class PriceListTemplateEditAdditionalSettngs
         await logger.Write(LogEntryGroupName.TemplateUpdate, "Удалено", $"Исключение бренда '{skipInfo.Name}' ({skipInfo.ListTypeDescription}) из шаблона {sourceTemplate.Title}");
     }
 
+    private async Task AddNewModelMapRecord()
+    {
+        await templateStorage.AddModelMapRecord(sourceTemplate.Guid, newModelMapKey, newModelMapValue);
+
+        sourceTemplate.ModelMap[newModelMapKey] = newModelMapValue;
+        StateHasChanged();
+
+        toasts.ShowSuccess("Выполнено");
+        await logger.Write(LogEntryGroupName.TemplateUpdate, "Добавлено", $"Преобразование модели/артикула '{newModelMapKey}' --> '{newModelMapValue}' для шаблона {sourceTemplate.Title}");
+    }
+
+    private async Task RemoveModelMapRecord(string word)
+    {
+        await templateStorage.RemoveModelMapRecord(sourceTemplate.Guid, word);
+        if (sourceTemplate.ModelMap.ContainsKey(word))
+        {
+            sourceTemplate.ModelMap.Remove(word);
+        }
+        StateHasChanged();
+
+        toasts.ShowSuccess("Выполнено");
+        await logger.Write(LogEntryGroupName.TemplateUpdate, "Удалено", $"Преобразование модели/артикула '{word}' из шаблона {sourceTemplate.Title}");
+    }
 }

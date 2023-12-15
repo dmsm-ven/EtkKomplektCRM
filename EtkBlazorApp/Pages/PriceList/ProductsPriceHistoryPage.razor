@@ -1,4 +1,6 @@
 ﻿@page "/price-list/products-price-history/{TemplateGuid}"
+@using EtkBlazorApp.DataAccess.Repositories.PriceList
+@using EtkBlazorApp.Model.PriceListTemplate
 @using EtkBlazorApp.BL.Managers
 @using System.Globalization
 @attribute [Authorize(Roles = "Manager, Administrator")]

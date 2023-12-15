@@ -1,6 +1,9 @@
 ﻿using EtkBlazorApp.BL;
+using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
+using EtkBlazorApp.DataAccess.Entity.PriceList;
+using EtkBlazorApp.DataAccess.Repositories.PriceList;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System;
