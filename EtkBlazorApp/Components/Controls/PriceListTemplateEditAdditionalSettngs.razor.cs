@@ -194,6 +194,7 @@ public partial class PriceListTemplateEditAdditionalSettngs
         StateHasChanged();
 
         toasts.ShowSuccess("Выполнено");
+
         await logger.Write(LogEntryGroupName.TemplateUpdate, "Добавлено", $"Преобразование модели/артикула '{newModelMapKey}' --> '{newModelMapValue}' для шаблона {sourceTemplate.Title}");
     }
 
