@@ -1,6 +1,21 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /*----------------------------------------------------------------------------------------*/
+.marketplace-tab-group {
+    border: 1px solid lightgray;
+    border-radius: 6px;
+    padding: 8px 25%;
+    margin-bottom: 20px;
+    background: whitesmoke;
+    box-shadow: rgba(0, 0, 0, 0.15) 2.4px 2.4px 3.2px;
+}
+
+    .marketplace-tab-group h3 {
+        font-size: 20px;
+        color: steelblue;
+        text-shadow: 1px 1px 1px #2f7589;
+    }
+
 .tk-order-icon-small {
     margin: 2px;
     padding: 0px;

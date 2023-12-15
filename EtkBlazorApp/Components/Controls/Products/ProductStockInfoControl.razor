@@ -4,6 +4,7 @@
         <div class="stock-quantity">Кол-во</div>
         <div class="stock-price">Цена</div>
         <div class="stock-currency">Валюта</div>
+        <div></div>
     </div>
     <hr />
     @if (Product.StocksData != null && Product.StocksData.Count > 0)
@@ -12,21 +13,63 @@
         {
             <div class="product-stock-info-item" id="stock_id_@stock.StockId">
                 <div class="stock-name">@stock.StockName</div>
-                <div class="stock-quantity">@(stock.Quantity.HasValue ? stock.Quantity.Value.ToString() : "-")</div>
-                <div class="stock-price">@(stock.Price.HasValue ? stock.Price.Value.ToString("F2") : "-")</div>
-                <div class="stock-currency">@(stock.PriceCurrency.HasValue ? stock.PriceCurrency.Value.ToString() : "-")</div>
-            </div>
-        }
-        if (Product.StocksData.Count > 1)
-        {
-            <div class="product-stock-info-item">
-                <div class="stock-name">Итого</div>
-                <div class="stock-quantity">@Product.StocksData.Sum(s => s.Quantity ?? 0)</div>
-                <div class="stock-price"></div>
-                <div class="stock-currency"></div>
-            </div>
-        }
+                @if (editingStock == stock)
+                {
+                    <div class="stock-quantity">
+                        <input type="number" step="1" min="0" class="form-control" @bind="stock.Quantity" />
+                    </div>
 
+                    <div class="stock-price">
+                        <input type="number" step=".01" min="0" class="form-control" @bind="stock.Price" />
+                    </div>
+                    <div class="stock-currency">
+                        <CurrencySelectControl OnChange="@(e => editingStock.PriceCurrency = e)" />
+                    </div>
+                    <div class="d-flex">
+                        @if (stockActionInProgress)
+                        {
+                            <LoadingSpinner />
+                        }
+                        else
+                        {
+
+                            <button class="btn btn-sm btn-danger m-1" title="Удалить информация цен/остатков для этого склада/товара" @onclick="(e => DeleteSelectedStockDataForProduct(stock))">
+                                <i class="oi oi-trash"></i>
+                            </button>
+
+                            <button class="btn btn-sm btn-success m-1" title="Сохранить изменения для этого товара/склада" @onclick="SaveProductStockInfo">
+                                <i class="oi oi-check"></i>
+                            </button>
+
+                            <button class="btn btn-sm btn-primary m-1" title="Отменить изменения для этого товара/склада" @onclick="(e => ChangeEditingStock(null))">
+                                <i class="oi oi-action-undo"></i>
+                            </button>
+                        }
+                    </div>
+
+                }
+                else
+                {
+
+                    <div class="stock-quantity">@(stock.Quantity.HasValue ? stock.Quantity.Value.ToString() : "-")</div>
+                    <div class="stock-price">@(stock.Price.HasValue ? stock.Price.Value.ToString("F2") : "-")</div>
+                    <div class="stock-currency">@(stock.PriceCurrency.HasValue ? stock.PriceCurrency.Value.ToString() : "-")</div>
+                    <div class="d-flex">
+                        <button class="btn btn-sm btn-secondary m-1" @onclick="(e => ChangeEditingStock(stock))">
+                            <i class="oi oi-pencil"></i>
+                        </button>
+                    </div>
+                }
+            </div>
+        }
+        if (editingStock != null)
+        {
+            <button class="btn btn-success" disabled="@(newStock == null)" @onclick="AddStockDataToProduct">
+                <i class="oi oi-plus"></i>
+                Добавить склад в товар
+            </button>
+            <SelectStockDropdown StockChanged="@(e => newStock = e)" />
+        }
     }
 </div>
 
@@ -52,27 +95,84 @@
         flex-direction: row;
         align-items: center;
         font-size: 13px;
-        border-bottom: 1px solid lightgray;
         margin-bottom: 12px;
     }
 
+        .product-stock-info-item > * {
+            flex: 1 1 15%;
+        }
+
         .product-stock-info-item .stock-name {
-            flex: 1 1 55%;
+            flex: 1 1 40%;
             font-weight: bold;
             font-size: 14px;
             color: #333;
             margin-left: 4px;
         }
 
-        .product-stock-info-item .stock-quantity,
-        .product-stock-info-item .stock-currency,
-        .product-stock-info-item .stock-price {
-            flex: 1 1 15%;
-        }
-
 </style>
 
 @code {
     [Parameter] public ProductModel Product { get; set; }
+    [Inject] public IStockStorage stockStorage { get; set; }
+    [Inject] public IMapper mapper { get; set; }
+
+    ProductToStockDataModel editingStock = null;
+    StockPartnerEntity newStock;
+    bool stockActionInProgress = false;
+
+    private async Task SaveProductStockInfo()
+    {
+
+        try
+        {
+            stockActionInProgress = true;
+            await Task.Delay(TimeSpan.FromSeconds(1));
+
+            await stockStorage.AddOrUpdateStockDataForProduct(mapper.Map<ProductToStockEntity>(editingStock));
+            stockActionInProgress = false;
+            editingStock = null;
+        }
+        finally
+        {
+            stockActionInProgress = false;
+        }
+    }
+
+    private async Task DeleteSelectedStockDataForProduct(ProductToStockDataModel stock)
+    {
+        try
+        {
+            stockActionInProgress = true;
+            Product.StocksData.Remove(stock);
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            await stockStorage.DeleteStockDataForProduct(mapper.Map<ProductToStockEntity>(editingStock));
+        }
+        finally
+        {
+            stockActionInProgress = false;
+        }
+    }
+
+    private void AddStockDataToProduct()
+    {
+        var item = new ProductToStockDataModel
+            {
+                StockId = newStock.stock_partner_id,
+                ProductId = Product.Id,
+                StockName = newStock.name,
+                Quantity = 0
+            };
+
+        Product.StocksData.Add(item);
+
+        newStock = null;
+        editingStock = item;
+    }
+
+    private void ChangeEditingStock(ProductToStockDataModel stock)
+    {
+        editingStock = stock;
+    }
 
 }

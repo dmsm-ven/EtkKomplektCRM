@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
+using EtkBlazorApp.DataAccess.Entity.PriceList;
+using EtkBlazorApp.Model.PriceListTemplate;
 using System;
 using System.Linq;
 
@@ -19,7 +21,6 @@ public class PriceListProfile : Profile
             .ForMember(x => x.manufacturer_id, x => x.MapFrom(m => m.manufacturer_id))
             .ForMember(x => x.manufacturer_name, x => x.MapFrom(m => m.name))
             .ForMember(x => x.discount, x => x.MapFrom(m => m.discount));
-
 
         CreateMap<PriceListTemplateEntity, PriceListTemplateItemViewModel>()
             .ForMember(o => o.Guid, o => o.MapFrom(x => x.id))
@@ -41,6 +42,7 @@ public class PriceListProfile : Profile
             .ForMember(o => o.LinkedStockId, o => o.MapFrom(x => x.stock_partner_id))
             .ForMember(o => o.QuantityMap, o => o.MapFrom(x => x.quantity_map.ToDictionary(i => i.text, i => i.quantity)))
             .ForMember(o => o.ManufacturerNameMap, o => o.MapFrom(x => x.manufacturer_name_map.ToDictionary(i => i.text, i => i.name)))
+            .ForMember(o => o.ModelMap, o => o.MapFrom(x => x.model_map.ToDictionary(i => i.old_text, i => i.new_text)))
             .ForMember(o => o.ManufacturerDiscountMap, o => o.MapFrom(x => x.manufacturer_discount_map))
             .ForMember(o => o.ManufacturerPurchaseDiscountMap, o => o.MapFrom(x => x.manufacturer_purchase_map))
             .ForMember(o => o.ManufacturerSkipList, o => o.MapFrom(x => x.manufacturer_skip_list));

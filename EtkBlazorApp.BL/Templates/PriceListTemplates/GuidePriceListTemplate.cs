@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using EtkBlazorApp.BL.Data;
+using System.Collections.Generic;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {

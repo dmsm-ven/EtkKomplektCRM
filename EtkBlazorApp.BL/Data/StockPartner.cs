@@ -1,4 +1,4 @@
-﻿namespace EtkBlazorApp.BL
+﻿namespace EtkBlazorApp.BL.Data
 {
     // int значение должен соответствовать полю 'stock_partner_id' в таблице 'oc_stock_partner'
     public enum StockName
@@ -40,5 +40,7 @@
         CEM_Msk = 23,
         Guide_Msk = 42,
         Guide_Spb = 41,
+        Levenhuk_Spb = 45,
+        Levenhuk_Msk = 46
     }
 }

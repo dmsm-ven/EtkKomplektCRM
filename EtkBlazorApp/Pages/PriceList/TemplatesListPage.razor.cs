@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using Blazored.Toast.Services;
 using EtkBlazorApp.BL;
+using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.BL.Templates.PriceListTemplates;
 using EtkBlazorApp.Components.Controls;
 using EtkBlazorApp.Components.Dialogs;
-using EtkBlazorApp.DataAccess;
+using EtkBlazorApp.DataAccess.Repositories.PriceList;
+using EtkBlazorApp.Model.PriceListTemplate;
 using EtkBlazorApp.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;

@@ -1,8 +1,10 @@
 ﻿using EtkBlazorApp.BL.CronTask;
+using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.BL.Templates.PriceListTemplates;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
+using EtkBlazorApp.DataAccess.Repositories.PriceList;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -150,7 +152,7 @@ namespace EtkBlazorApp.BL
 
             try
             {
-                await Task.Run(async () => await task.Run(taskInfo));
+                await task.Run(taskInfo);
 
                 exec_result = CronTaskExecResult.Success;
 
@@ -184,7 +186,7 @@ namespace EtkBlazorApp.BL
                 else if (exec_result == CronTaskExecResult.Failed)
                 {
                     OnTaskExecutionError?.Invoke(taskInfo);
-                    notifier.NotifyPriceListLoadingError(taskInfo.name);
+                    await notifier.NotifyPriceListLoadingError(taskInfo.name);
                 }
             }
         }

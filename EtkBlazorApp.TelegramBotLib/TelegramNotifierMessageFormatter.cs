@@ -12,22 +12,22 @@ public class TelegramNotifierMessageFormatter : IEtkUpdatesNotifierMessageFormat
 
         if (etkOrderId.HasValue)
         {
-            message = $"🚚📦 Статус заказа ЕТК №<b>{etkOrderId.Value}</b> (СДЭК №<b>{cdekOrderId}</b>) измен на <b>{statusName}</b>";
+            message = $"🚚📦 Статус заказа ЕТК №<b>{etkOrderId.Value}</b> (СДЭК №<b>{cdekOrderId}</b>) изменен на <b>{statusName}</b>";
         }
         else
         {
-            message = $"🚚📦 Статус заказа СДЭК №<b>{cdekOrderId}</b> измен на <b>{statusName}</b>";
+            message = $"🚚📦 Статус заказа СДЭК №<b>{cdekOrderId}</b> изменен на <b>{statusName}</b>";
         }
 
         return message;
     }
 
-    public string GetPriceListChangedMessage(string priceListName, double percent, int totalProducts)
+    public string GetPriceListChangedMessage(string priceListName, double percent, int totalProducts, bool isMaxItems)
     {
         var message = new StringBuilder()
             .Append($"🔎 При загрузке прайс-листа <b>{priceListName}</b>\n")
             .Append($"Обнаружено повышение цен 📈, более чем на <b>{percent:P0}</b>\n")
-            .Append($"В <b>{totalProducts}</b> 📦 товарах ")
+            .Append($"В <b>{totalProducts}{(isMaxItems ? "+" : "")}</b> 📦 товарах ")
             .ToString();
 
         return message;

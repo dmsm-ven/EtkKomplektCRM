@@ -4,19 +4,22 @@ using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.BL.Notifiers;
 using EtkBlazorApp.BL.Templates.PriceListTemplates;
 using EtkBlazorApp.CdekApi;
+using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Repositories;
+using EtkBlazorApp.DataAccess.Repositories.PriceList;
 using EtkBlazorApp.DellinApi;
 using EtkBlazorApp.Model.Chart;
+using EtkBlazorApp.Model.IOptionProfiles;
 using EtkBlazorApp.Services;
+using EtkBlazorApp.Services.CurrencyChecker;
 using EtkBlazorApp.TelegramBotLib;
 using EtkBlazorAppi.DadataApi;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -73,10 +76,13 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
+
+
         //Сторонние
         services.AddBlazoredToast();
         services.AddAutoMapper(this.GetType().Assembly);
         services.AddMemoryCache();
+        services.AddHttpClient();
         services.AddHttpsRedirection(options =>
         {
             options.RedirectStatusCode = (int)HttpStatusCode.TemporaryRedirect;
@@ -99,8 +105,9 @@ public class Startup
         ConfigureDatabaseServices(services);
         ConfigureExteralApiClients(services);
         ConfigureNotifiers(services);
+        ConfigureOptions(services);
 
-        services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf>();
+        services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf_V2>();
         services.AddSingleton<CashPlusPlusLinkGenerator>();
         services.AddSingleton<RemoteTemplateFileLoaderFactory>();
         services.AddSingleton<SystemEventsLogger>();
@@ -117,6 +124,11 @@ public class Startup
         services.AddScoped<ChartDataExtractor>();
     }
 
+    private void ConfigureOptions(IServiceCollection services)
+    {
+        services.Configure<Integration1C_Configuration>(Configuration.GetSection(nameof(Integration1C_Configuration)));
+        services.Configure<CurrencyUpdaterEndpointOptions>(Configuration.GetSection(nameof(CurrencyUpdaterEndpointOptions)));
+    }
     private void ConfigureNotifiers(IServiceCollection services)
     {
         services.AddTransient<ICustomerOrderNotificator, MailkitOrderEmailNotificator>();

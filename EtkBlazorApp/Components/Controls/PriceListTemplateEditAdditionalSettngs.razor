@@ -83,7 +83,7 @@
 
     <ContentButtonExpander Title="Преобразование названий брендов">
         <div>
-            <p class="pl-template-add-settings-desc">Название бренда в прайс-листе должно точно соответствовать названию на сайте. Если оно отличается то его необходимо добавить в список и выбрать соответствующее название бренда на сайте (в выпадающем списке)</p>
+            <p class="pl-template-add-settings-desc">Название бренда в прайс-листе должно точно соответствовать названию на сайте. Если оно отличается, - то его необходимо добавить в список</p>
             <button type="button" class="btn btn-success"
                     disabled="@addNewManufacturerMapButtonDisabled"
                     @onclick="AddManufacturerMapRecord">
@@ -104,6 +104,36 @@
                 <input type="text" class="form-control price-list-template-map-control" readonly value="@mitem.Key" />
                 <strong style="margin: 0px 12px;">=</strong>
                 <input type="text" class="form-control price-list-template-map-control" readonly value="@mitem.Value" />
+            </div>
+        }
+    </ContentButtonExpander>
+
+    <ContentButtonExpander Title="Преобразование названий модели/артикула">
+        <div>
+            <p class="pl-template-add-settings-desc">Заменяет значения модели/артикула из прайс-листа в новое значение (что бы оно совпадало с моделью на сайте). Позволяет сопоставлять товар даже если в источнике указано неточное значение</p>
+            <div>
+                <button type="button" class="btn btn-success"
+                        disabled="@addNewModelMapRecordDisabled"
+                        @onclick="AddNewModelMapRecord">
+                    <span class="oi oi-plus"></span>
+                </button>
+                <input type="text" class="form-control price-list-template-map-control"
+                       placeholder="Модель/артикул в прайс-листе" @bind="newModelMapKey" />
+                <strong style="margin: 0px 12px;">=</strong>
+                <input type="text" class="form-control price-list-template-map-control"
+                       placeholder="Модель/артикул на сайте" @bind="newModelMapValue" />
+            </div>
+        </div>
+        <hr />
+        @foreach (var modelKvp in sourceTemplate.ModelMap)
+        {
+            <div style="margin-top: 8px;">
+                <button type="button" class="btn btn-outline-danger" @onclick="@(e => RemoveModelMapRecord(modelKvp.Key))">
+                    <span class="oi oi-minus"></span>
+                </button>
+                <input type="text" class="form-control price-list-template-map-control" readonly value="@modelKvp.Key" />
+                <strong style="margin: 0px 12px;">=</strong>
+                <input type="text" class="form-control price-list-template-map-control" readonly value="@modelKvp.Value" />
             </div>
         }
     </ContentButtonExpander>
@@ -141,6 +171,3 @@
         }
     </ContentButtonExpander>
 </div>
-
-
-

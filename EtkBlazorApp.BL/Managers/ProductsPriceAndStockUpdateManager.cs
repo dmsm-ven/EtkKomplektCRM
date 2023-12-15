@@ -1,6 +1,6 @@
-﻿using EtkBlazorApp.BL.Managers;
-using EtkBlazorApp.Core.Data;
+﻿using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.DataAccess;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,14 +8,14 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.BL
+namespace EtkBlazorApp.BL.Managers
 {
     public class ProductsPriceAndStockUpdateManager
     {
         //Запуск пересчета цен товаров в валюте
         //readonly string CurrencyPlusUri = "https://etk-komplekt.ru/cron/currency_plus.php";
         //Запуск пересчета цен товаров в валюте - собственный улучшенный модуль
-        readonly string CurrencyCustomUri = "https://etk-komplekt.ru/index.php?route=tool/price_currency&refresh_token=a875efbc-3724-4451-86b7-0129e5d5b06d";
+        private readonly string CurrencyCustomUri;
 
         private readonly IProductStorage productsStorage;
         private readonly IProductUpdateService productUpdateService;
@@ -24,6 +24,7 @@ namespace EtkBlazorApp.BL
         private readonly IMonobrandStorage monobrandStorage;
         private readonly IDatabaseProductCorrelator correlator;
         private readonly PriceListPriceHistoryManager priceHistoryManager;
+        private readonly HttpClient httpClient;
 
         public ProductsPriceAndStockUpdateManager(IProductStorage productsStorage,
             IProductUpdateService productUpdateService,
@@ -31,7 +32,10 @@ namespace EtkBlazorApp.BL
             IManufacturerStorage manufacturerStorage,
             IMonobrandStorage monobrandStorage,
             IDatabaseProductCorrelator correlator,
-            PriceListPriceHistoryManager priceHistoryManager)
+            IOptions<CurrencyUpdaterEndpointOptions> CurrencyUpdaterEndpoint,
+            IHttpClientFactory httpClientFactory,
+            PriceListPriceHistoryManager priceHistoryManager
+            )
         {
             this.productsStorage = productsStorage;
             this.productUpdateService = productUpdateService;
@@ -40,6 +44,8 @@ namespace EtkBlazorApp.BL
             this.monobrandStorage = monobrandStorage;
             this.correlator = correlator;
             this.priceHistoryManager = priceHistoryManager;
+            this.CurrencyCustomUri = CurrencyUpdaterEndpoint.Value.Uri;
+            this.httpClient = httpClientFactory.CreateClient();
         }
 
         public async Task UpdatePriceAndStock(
@@ -76,10 +82,10 @@ namespace EtkBlazorApp.BL
             if (data.Any(line => line.price.HasValue))
             {
                 progress?.Report("Пересчет цен товаров");
-                await (new WebClient().DownloadStringTaskAsync(CurrencyCustomUri));
+                await httpClient.GetStringAsync(CurrencyCustomUri);
             }
 
-            if ((await settingStorage.GetValue<bool>("update-monobrand-websites")))
+            if (await settingStorage.GetValue<bool>("update-monobrand-websites"))
             {
                 await UpdateMonobrands(affectedBrandsIds, progress);
             }
@@ -118,7 +124,6 @@ namespace EtkBlazorApp.BL
             {
                 affectedBrands.AddRange(new[] { "IEK", "ABB", "Legrand", "Schneider Electric", "DKC", "Wago" });
             }
-
 
             // В производителе Bosch есть подбренд Dremel, но он так же считается и отдельным брендом. 
             // Хотя находится в прайс-листе Bosch и там не указан как отдельный бренд
@@ -169,7 +174,7 @@ namespace EtkBlazorApp.BL
                     progress?.Report($"Обновление сайта {monobrand.website}");
                     await Task.Delay(TimeSpan.FromSeconds(1));
 
-                    await (new WebClient().DownloadStringTaskAsync(apiUri));
+                    await new WebClient().DownloadStringTaskAsync(apiUri);
                 }
                 catch (Exception ex)
                 {

@@ -13,12 +13,17 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         {
             var list = new List<PriceLine>();
 
-            for (int i = 18; i < tab.Dimension.Rows; i++)
+            for (int i = 12; i < tab.Dimension.Rows; i++)
             {
-                string skuNumber = tab.GetValue<string>(i, 1);
-                string partNumber = tab.GetValue<string>(i, 2);
+                string skuNumber = ReplaceSkuInvalidCharacters(tab.GetValue<string>(i, 1));
+                string partNumber = ReplaceSkuInvalidCharacters(tab.GetValue<string>(i, 2));
                 string name = tab.GetValue<string>(i, 4);
                 decimal? priceInEuro = ParsePrice(tab.GetValue<string>(i, 7));
+
+                if (string.IsNullOrWhiteSpace(skuNumber) && string.IsNullOrWhiteSpace(partNumber))
+                {
+                    continue;
+                }
 
                 var priceLine = new PriceLine(this)
                 {
@@ -34,6 +39,20 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             }
 
             return list;
+        }
+
+        private string ReplaceSkuInvalidCharacters(string skuNumber)
+        {
+            if (string.IsNullOrWhiteSpace(skuNumber))
+            {
+                return null;
+            }
+
+            if (Regex.IsMatch(skuNumber, @"^T00(\d+)$"))
+            {
+                skuNumber = skuNumber.Substring(3);
+            }
+            return skuNumber;
         }
     }
 
@@ -53,7 +72,10 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string ean = tab.GetValue<string>(row, 4);
                 int? quantity = ParseQuantity(tab.GetValue<string>(row, 5));
 
-                if (string.IsNullOrWhiteSpace(skuNumber)) { continue; }
+                if (string.IsNullOrWhiteSpace(skuNumber)) 
+                { 
+                    continue; 
+                }
 
                 if (Regex.IsMatch(skuNumber, @"^(\d){6,}N$"))
                 {
@@ -70,7 +92,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Sku = skuNumber,
                     Model = skuNumber,
                     Quantity = quantity,
-                    Ean = ean,
                     Manufacturer = "Weller",
                     //Stock = StockName.SpringE
                 };

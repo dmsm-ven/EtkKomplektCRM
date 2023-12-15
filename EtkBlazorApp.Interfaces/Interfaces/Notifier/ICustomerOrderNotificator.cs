@@ -2,5 +2,5 @@
 
 public interface ICustomerOrderNotificator
 {
-    Task NotifyCustomer(long order_id, string customerEmail);
+    Task<bool> NotifyCustomer(long order_id, string customerEmail);
 }

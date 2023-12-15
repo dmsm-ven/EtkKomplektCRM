@@ -1,9 +1,6 @@
 ﻿using EtkBlazorApp.Core.Data;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
@@ -34,6 +31,54 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Sku = skuNumber,
                     Model = skuNumber,
                     Quantity = quantity,
+                    Ean = ean,
+                    Name = name
+                };
+
+                list.Add(priceLine);
+            }
+
+            return list;
+        }
+    }
+
+    [PriceListTemplateGuid("8B2F47DA-A0AB-493D-872E-EC48406C0848")]
+    public class ProfInstrumentListTemplate : ExcelPriceListTemplateBase
+    {
+        public ProfInstrumentListTemplate(string fileName) : base(fileName) { }
+
+        protected override List<PriceLine> ReadDataFromExcel()
+        {
+            var list = new List<PriceLine>();
+
+            var tab = Excel.Workbook.Worksheets.FirstOrDefault(w => w.Name.Contains("Knipex"));
+
+            if (tab is null)
+            {
+                return list;
+            }
+
+            for (int row = 4; row < tab.Dimension.Rows; row++)
+            {
+
+                string skuNumber = tab.GetValue<string>(row, 6);
+                string name = tab.GetValue<string>(row, 8);
+                string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 9));
+                decimal? price = ParsePrice(tab.GetValue<string>(row, 10));
+                string ean = tab.GetValue<string>(row, 13);
+
+                if (SkipThisBrand(manufacturer))
+                {
+                    continue;
+                }
+
+                var priceLine = new PriceLine(this)
+                {
+                    Manufacturer = manufacturer,
+                    Price = price,
+                    Currency = CurrencyType.RUB,
+                    Sku = skuNumber,
+                    Model = skuNumber,
                     Ean = ean,
                     Name = name
                 };

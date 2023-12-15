@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
-namespace EtkBlazorApp.DataAccess.Entity
+namespace EtkBlazorApp.DataAccess.Entity.PriceList
 {
     public class PriceListTemplateEntity
     {
@@ -31,6 +27,7 @@ namespace EtkBlazorApp.DataAccess.Entity
         public string credentials_password { get; set; }
 
         public List<QuantityMapRecordEntity> quantity_map { get; set; }
+        public List<ModelMapRecordEntity> model_map { get; set; }
         public List<ManufacturerMapRecordEntity> manufacturer_name_map { get; set; }
         public List<ManufacturerDiscountMapEntity> manufacturer_discount_map { get; set; }
         public List<ManufacturerDiscountMapEntity> manufacturer_purchase_map { get; set; }

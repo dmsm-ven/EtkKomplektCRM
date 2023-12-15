@@ -56,7 +56,7 @@ public class EtkTelegramBotNotifier : IEtkUpdatesNotifier
             return;
         }
 
-        string message = messageFormatter.GetPriceListChangedMessage(data.PriceListName, data.MinimumOverpricePercent, data.Data.Count);
+        string message = messageFormatter.GetPriceListChangedMessage(data.PriceListName, data.MinimumOverpricePercent, data.Data.Count, data.MaxItems);
 
         var replyMarkup = GetSimpleMarkupWithUri($"{ETK_LK_HOST}/price-list/products-price-history/{data.PriceListGuid}");
 

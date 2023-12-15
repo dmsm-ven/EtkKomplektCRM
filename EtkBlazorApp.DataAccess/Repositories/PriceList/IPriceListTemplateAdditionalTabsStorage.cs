@@ -1,7 +1,6 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
-namespace EtkBlazorApp.DataAccess
+namespace EtkBlazorApp.DataAccess.Repositories.PriceList
 {
     public interface IPriceListTemplateAdditionalTabsStorage
     {
@@ -12,6 +11,10 @@ namespace EtkBlazorApp.DataAccess
         //name map
         Task AddManufacturerMapRecord(string guid, string newManufacturerMapRecordWord, int manufacturer_id);
         Task RemoveManufacturerMapRecord(string guid, string word);
+
+        //model map
+        Task AddModelMapRecord(string guid, string oldText, string newText);
+        Task RemoveModelMapRecord(string guid, string oldText);
 
         //white/black list
         Task RemoveSkipManufacturerRecord(string guid, int manufacturer_id, string listType);
@@ -53,6 +56,25 @@ namespace EtkBlazorApp.DataAccess
             await database.ExecuteQuery(
                 "DELETE FROM etk_app_price_list_template_quantity_map WHERE price_list_guid = @guid AND text = @word",
                 new { guid, word });
+        }
+
+        public async Task AddModelMapRecord(string guid, string oldText, string newText)
+        {
+            string sql = @"INSERT INTO etk_app_price_list_template_model_map 
+                            (price_list_guid, old_text, new_text) VALUES
+                            (@guid, @oldText, @newText)
+                          ON DUPLICATE KEY UPDATE
+                            price_list_guid = @guid,                            
+                            old_text = @oldText, 
+                            new_text = @newText";
+            await database.ExecuteQuery(sql, new { guid, oldText, newText });
+        }
+
+        public async Task RemoveModelMapRecord(string guid, string oldText)
+        {
+            await database.ExecuteQuery(
+                "DELETE FROM etk_app_price_list_template_model_map WHERE price_list_guid = @guid AND old_text = @oldText",
+                new { guid, oldText });
         }
 
         public async Task AddManufacturerMapRecord(string guid, string text, int manufacturer_id)

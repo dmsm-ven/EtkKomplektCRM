@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.Core.Interfaces;
+﻿using EtkBlazorApp.BL.Managers;
+using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 
 namespace EtkBlazorApp.BL

@@ -1,5 +1,6 @@
 ﻿using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
+using EtkBlazorApp.DataAccess.Repositories.PriceList;
 using System;
 using System.IO;
 using System.Threading.Tasks;

@@ -1,14 +1,14 @@
-﻿using EtkBlazorApp.DataAccess.Entity;
+﻿using EtkBlazorApp.DataAccess.Entity.PriceList;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace EtkBlazorApp.BL
+namespace EtkBlazorApp.BL.Templates.PriceListTemplates.Base
 {
     public abstract class PriceListTemplateReaderBase
     {
-        //TODO: Тут стоит поменят словари и списки на ReadOnly версии
+        //TODO: Тут стоит поменят словари и списки на ReadOnly и/или вынести менеджер (что бы обрабатывало за пределами шаблона, там же где ModelMap)
         protected Dictionary<string, string> ManufacturerNameMap { get; private set; }
         protected Dictionary<string, int> QuantityMap { get; private set; }
         protected Dictionary<string, decimal> ManufacturerDiscountMap { get; private set; }
@@ -39,7 +39,7 @@ namespace EtkBlazorApp.BL
             if (!string.IsNullOrWhiteSpace(str))
             {
                 string strValue = str.Replace(",", ".").Replace(" ", string.Empty);
-                if (decimal.TryParse(strValue, System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var parsedPrice))
+                if (decimal.TryParse(strValue, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var parsedPrice))
                 {
                     price = Math.Max(parsedPrice, 0);
                     if (roundDigits.HasValue)
@@ -49,7 +49,7 @@ namespace EtkBlazorApp.BL
                 }
             }
 
-            return canBeNull ? price : (price ?? 0);
+            return canBeNull ? price : price ?? 0;
         }
 
         protected virtual int? ParseQuantity(string str, bool canBeNull = false)
@@ -57,7 +57,7 @@ namespace EtkBlazorApp.BL
             int? quantity = null;
             if (!string.IsNullOrWhiteSpace(str))
             {
-                if (decimal.TryParse(str, System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var parsedQuantity))
+                if (decimal.TryParse(str, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var parsedQuantity))
                 {
                     quantity = Math.Max((int)parsedQuantity, 0);
                 }
@@ -67,9 +67,11 @@ namespace EtkBlazorApp.BL
                 }
             }
 
-            return canBeNull ? quantity : (quantity ?? 0);
+            return canBeNull ? quantity : quantity ?? 0;
         }
 
+        //TODO: убрать вызов метода из шаблонов и оставить только в окончательной выгрузке
+        //но тогда получается что будет тратиться лишняя память для огромных прайс-листов, в которых можно пропустить сразу
         /// <summary>
         /// Проверка на пропуск из загрузки прайс-листа 
         /// </summary>
@@ -78,7 +80,7 @@ namespace EtkBlazorApp.BL
         protected bool SkipThisBrand(string manufacturer)
         {
             bool blackListCondition = BrandsBlackList.Any() && BrandsBlackList.Contains(manufacturer, StringComparer.OrdinalIgnoreCase);
-            bool whiteListCondition = BrandsWhiteList.Any() && (BrandsWhiteList.Contains(manufacturer, StringComparer.OrdinalIgnoreCase) == false);
+            bool whiteListCondition = BrandsWhiteList.Any() && BrandsWhiteList.Contains(manufacturer, StringComparer.OrdinalIgnoreCase) == false;
 
             return blackListCondition || whiteListCondition;
         }

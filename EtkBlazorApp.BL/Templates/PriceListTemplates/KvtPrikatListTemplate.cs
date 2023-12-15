@@ -1,16 +1,14 @@
-﻿using EtkBlazorApp.Core.Data;
-using System;
+﻿using EtkBlazorApp.BL.Data;
+using EtkBlazorApp.Core.Data;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
     [PriceListTemplateGuid("F2272C31-48B7-4350-9C14-9CA44F542E1B")]
     public class KvtSuPriceListTemplate : ExcelPriceListTemplateBase
     {
+        public static readonly string MODEL_PREFIX = "KV-";
+
         public KvtSuPriceListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
@@ -20,8 +18,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             for (int row = 1; row < tab.Dimension.Rows; row++)
             {
                 string name = tab.GetValue<string>(row, 1);
-                string sku = "KV-" + tab.GetValue<string>(row, 2);
-                string model = "KVT-" + tab.GetValue<string>(row, 2);
+                string sku = MODEL_PREFIX + tab.GetValue<string>(row, 2);
+                string model = MODEL_PREFIX + tab.GetValue<string>(row, 2);
                 string ean = tab.GetValue<string>(row, 3);
 
                 var quantityKaluga = ParseQuantity(tab.GetValue<string>(row, 4));
@@ -62,7 +60,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             for (int row = 1; row < tab.Dimension.Rows; row++)
             {
                 string name = tab.GetValue<string>(row, 1);
-                string sku = "KV-" + tab.GetValue<string>(row, 2);
+                string sku = KvtSuPriceListTemplate.MODEL_PREFIX + tab.GetValue<string>(row, 2);
 
                 var quantityKaluga = ParseQuantity(tab.GetValue<string>(row, 4));
                 var quantitySpb = ParseQuantity(tab.GetValue<string>(row, 5));

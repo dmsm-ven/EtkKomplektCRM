@@ -1,4 +1,5 @@
-﻿using HtmlAgilityPack;
+﻿using EtkBlazorApp.BL.Templates.PriceListTemplates.Base;
+using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -13,7 +14,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("4EA34EEA-5407-4807-8E33-D8A8FA71ECBA")]
     public class _1CPriceListTemplate : ExcelPriceListTemplateBase
     {
-        const int START_ROW_NUMBER = 7;
+        private const int START_ROW_NUMBER = 7;
 
         public _1CPriceListTemplate(string fileName) : base(fileName) { }
 
@@ -38,7 +39,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Model = skuNumber,
                     Quantity = quantity,
                     Manufacturer = manufacturer,
-//                    Stock = StockName._1C
+                    //                    Stock = StockName._1C
                 };
 
                 list.Add(priceLine);
@@ -53,21 +54,31 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     {
         public string FileName { get; }
 
+        private static readonly IReadOnlyDictionary<string, string> BrandPrefixMap;
+
+        static _1CHtmlPriceListTemplate()
+        {
+            BrandPrefixMap = new Dictionary<string, string>()
+            {
+                ["КВТ"] = KvtSuPriceListTemplate.MODEL_PREFIX
+            };
+        }
+
         public _1CHtmlPriceListTemplate(string fileName)
         {
             FileName = fileName;
         }
 
-        public Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)
+        public async Task<List<PriceLine>> ReadPriceLines(CancellationToken? token = null)
         {
             var list = new List<PriceLine>();
 
             var doc = new HtmlDocument();
-            doc.LoadHtml(File.ReadAllText(FileName));
+            doc.LoadHtml(await File.ReadAllTextAsync(FileName));
 
             var table = doc.DocumentNode.SelectNodes(".//table").LastOrDefault();
 
-            if(table != null)
+            if (table != null)
             {
                 // содержит дату следующей поставки
                 DateTime[] nextDeliveryDays = table.SelectSingleNode(".//tr")
@@ -90,7 +101,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             }
 
 
-            return Task.FromResult(list);
+            return list;
         }
 
         private PriceLineWithNextDeliveryDate ParseRow(string[] cells, DateTime[] headerColumnsDays)
@@ -102,9 +113,17 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 Model = cells[1],
                 Name = cells[2],
                 Quantity = ParseQuantity(cells[4].Replace(",000", string.Empty)),
-//                Stock = StockName._1C,
+                //Stock = StockName._1C,
             };
 
+            //Некоторые бренды имеют префиксы, иначе товар не подхватиться
+            if (BrandPrefixMap.ContainsKey(line.Manufacturer))
+            {
+                if (!line.Sku.StartsWith(BrandPrefixMap[line.Manufacturer]))
+                {
+                    line.Sku = $"{BrandPrefixMap[line.Manufacturer]}{cells[1]}";
+                }
+            }
 
             for (int i = 0; i < headerColumnsDays.Length; i++)
             {
@@ -120,7 +139,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     break;
                 }
             }
-
 
             return line;
         }

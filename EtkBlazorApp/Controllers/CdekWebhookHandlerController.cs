@@ -81,17 +81,15 @@ namespace EtkBlazorApp.Controllers
                 CdekOrderStatusCode.DELIVERED,
                 CdekOrderStatusCode.ACCEPTED_AT_PICK_UP_POINT
             }.Any(status => status == cdekStatus);
-
             if (etkNotify)
             {
                 await notifier.NotifOrderStatusChanged(shopOrder?.order_id, cdekOrderNumber, cdekStatus.GetDescriptionAttribute());
             }
 
-            //if(shopOrder != null && cdekStatus == CdekOrderStatusCode.ACCEPTED_AT_PICK_UP_POINT)
-            //проверка
-            if (true)
+            bool shouldNotifyCustomer = shopOrder != null && cdekStatus == CdekOrderStatusCode.ACCEPTED_AT_PICK_UP_POINT;
+            if (shouldNotifyCustomer)
             {
-                await customerNotificator?.NotifyCustomer(shopOrder.order_id, "painven@gmail.com");
+                await customerNotificator?.NotifyCustomer(shopOrder.order_id, shopOrder.email);
             }
 
             return Ok();

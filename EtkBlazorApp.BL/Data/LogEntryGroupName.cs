@@ -45,6 +45,5 @@ namespace EtkBlazorApp.BL
 
         [Description("Заказы")]
         Orders
-
     }
 }

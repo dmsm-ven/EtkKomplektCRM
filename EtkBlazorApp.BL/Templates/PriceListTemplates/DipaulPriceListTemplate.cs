@@ -1,17 +1,14 @@
 ﻿using EtkBlazorApp.Core.Data;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
-    [PriceListTemplateGuid("C53B8C85-3115-421F-A579-0B5BFFF6EF48")]
-    public class DipaulPriceListTemplate : ExcelPriceListTemplateBase
+    public abstract class DipaulQuantityTemplateBase : ExcelPriceListTemplateBase
     {
-        public DipaulPriceListTemplate(string fileName) : base(fileName) { }
+
+        public DipaulQuantityTemplateBase(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
         {
@@ -22,13 +19,19 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 3));
 
-                if (SkipThisBrand(manufacturer)) { continue; }
+                if (SkipThisBrand(manufacturer))
+                {
+                    continue;
+                }
 
                 string skuNumber = tab.GetValue<string>(row, 1);
                 string productName = tab.GetValue<string>(row, 2);
                 int? quantity = ParseQuantity(tab.GetValue<string>(row, 4));
                 decimal? price = ParsePrice(tab.GetValue<string>(row, 5));
-                string model = Regex.Match(productName, "^(.*?), ").Groups[1].Value;
+
+                string separator = productName.Contains(",") ? "," : " ";
+
+                string model = Regex.Match(productName, "^(.*?)" + separator).Groups[1].Value.Trim();
                 string currencyTypeString = tab.GetValue<string>(row, 6);
 
                 CurrencyType priceCurreny = CurrencyType.RUB;
@@ -52,37 +55,36 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         }
     }
 
-    [PriceListTemplateGuid("5CFDD5BD-816C-44DC-8AF3-9418F4052BF2")]
-    public class HakkoPriceListTemplate : ExcelPriceListTemplateBase
+    //Т.к. нельзя создать больше одного шаблона для одного и того же [PriceListTemplateGuid()]
+    //Делаем 4 отдельных
+    //TODO: Возможно, стоить сделать возможность создания больше одного шаблона для одного и того же GUID
+    //(тогда отдельные классы не понадобятся, но могут быть другие проблемы)
+
+    //Hakko
+    [PriceListTemplateGuid("A53B8C85-3115-421F-A579-0B5BFFF6EF49")]
+    public class DipaulQuantityHakkoPriceListTemplate : DipaulQuantityTemplateBase
     {
-        public HakkoPriceListTemplate(string fileName) : base(fileName) { }
+        public DipaulQuantityHakkoPriceListTemplate(string fileName) : base(fileName) { }
+    }
 
-        protected override List<PriceLine> ReadDataFromExcel()
-        {
-            var list = new List<PriceLine>();
+    //ITECH
+    [PriceListTemplateGuid("B53B8C85-3115-421F-A579-0B5BFFF6EF49")]
+    public class DipaulQuantityItechPriceListTemplate : DipaulQuantityTemplateBase
+    {
+        public DipaulQuantityItechPriceListTemplate(string fileName) : base(fileName) { }
+    }
 
-            for (int row = 1; row < tab.Dimension.Rows; row++)
-            {
-                string skuNumber = tab.GetValue<string>(row, 1);
-                string name = tab.GetValue<string>(row, 2);
-                string priceString = tab.GetValue<string>(row, 3);
+    //Keysight
+    [PriceListTemplateGuid("C53B8C85-3115-421F-A579-0B5BFFF6EF49")]
+    public class DipaulQuantityKeysightPriceListTemplate : DipaulQuantityTemplateBase
+    {
+        public DipaulQuantityKeysightPriceListTemplate(string fileName) : base(fileName) { }
+    }
 
-                if (decimal.TryParse(priceString, out var price))
-                {
-                    var priceLine = new PriceLine(this)
-                    {
-                        Name = name,
-                        Currency = CurrencyType.RUB,
-                        Manufacturer = "Hakko",
-                        Sku = skuNumber,
-                        Price = price
-                    };
-                    list.Add(priceLine);
-                }
-            }
-
-            return list;
-        }
-
+    //Agilent
+    [PriceListTemplateGuid("D53B8C85-3115-421F-A579-0B5BFFF6EF49")]
+    public class DipaulQuantityAgilentPriceListTemplate : DipaulQuantityTemplateBase
+    {
+        public DipaulQuantityAgilentPriceListTemplate(string fileName) : base(fileName) { }
     }
 }

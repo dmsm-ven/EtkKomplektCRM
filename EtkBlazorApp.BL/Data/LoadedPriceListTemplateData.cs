@@ -1,4 +1,4 @@
-﻿using EtkBlazorApp.DataAccess.Entity;
+﻿using EtkBlazorApp.DataAccess.Entity.PriceList;
 using System;
 using System.Collections.Generic;
 using System.Linq;

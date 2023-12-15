@@ -9,4 +9,5 @@ public class PriceListProductPriceChangeHistory
     public string PriceListGuid { get; init; }
     public string PriceListName { get; init; }
     public double MinimumOverpricePercent { get; init; }
+    public bool MaxItems { get; init; }
 }

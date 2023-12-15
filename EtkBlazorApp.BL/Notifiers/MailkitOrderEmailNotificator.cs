@@ -26,8 +26,10 @@ public class MailkitOrderEmailNotificator : ICustomerOrderNotificator
         this.encryptHelper = encryptHelper;
     }
 
-    public async Task NotifyCustomer(long order_id, string customerEmail)
+    public async Task<bool> NotifyCustomer(long order_id, string customerEmail)
     {
+        bool result = false;
+
         try
         {
             var configuration = new EmailNotificatorConfiguration()
@@ -53,10 +55,13 @@ public class MailkitOrderEmailNotificator : ICustomerOrderNotificator
             };
 
             using var smtp = new SmtpClient();
-            await smtp.ConnectAsync(configuration.Host, configuration.Port, MailKit.Security.SecureSocketOptions.StartTls);
+            smtp.ServerCertificateValidationCallback = (s, c, h, e) => true;
+            await smtp.ConnectAsync(configuration.Host, configuration.Port, MailKit.Security.SecureSocketOptions.Auto);
             await smtp.AuthenticateAsync(configuration.Login, configuration.Password);
             await smtp.SendAsync(email);
             await smtp.DisconnectAsync(quit: true);
+
+            result = true;
 
             await logger.WriteSystemEvent(LogEntryGroupName.Orders, "Оповещение клиента", $"Уведомление о прибытии заказа № {order_id} отправлено на почту клиента: {customerEmail}");
         }
@@ -64,6 +69,8 @@ public class MailkitOrderEmailNotificator : ICustomerOrderNotificator
         {
             await logger.WriteSystemEvent(LogEntryGroupName.Orders, "Ошибка уведомления", "Не удалось уведомить клиента об изменении статуса заказа. " + ex.Message);
         }
+
+        return result;
     }
 
     private string BuildEmailBody(long order_id)

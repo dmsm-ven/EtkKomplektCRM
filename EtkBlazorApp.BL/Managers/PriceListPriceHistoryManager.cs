@@ -3,6 +3,7 @@ using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity.PriceList;
 using EtkBlazorApp.DataAccess.Repositories;
+using EtkBlazorApp.DataAccess.Repositories.PriceList;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -59,7 +60,8 @@ public class PriceListPriceHistoryManager
         if (entries.Any())
         {
             // Шаг 2. Берем товары из истории, если за прошлую загрузку данных нет, значит должна идти максимально близкая записить где были какие-то данные о цене
-            var previuosUpdateData = (await repo.GetPriceListUpdateHistory(guid))
+            var items = await repo.GetPriceListUpdateHistory(guid);
+            var previuosUpdateData = items
                 .OrderByDescending(i => i.Key.update_id)
                 .SelectMany(i => i.Value.Select(j => new
                 {
@@ -127,7 +129,12 @@ public class PriceListPriceHistoryManager
         var entiresDictionary = await repo.GetPriceListUpdateHistory(guid);
         int lastUpdateId = entiresDictionary.Max(i => i.Key.update_id);
 
-        int[] productIds = entiresDictionary.Values.SelectMany(i => i).Select(i => i.product_id).Distinct().OrderBy(i => i).ToArray();
+        int[] productIds = entiresDictionary.Values
+            .SelectMany(i => i)
+            .Select(i => i.product_id)
+            .Distinct()
+            .OrderBy(i => i)
+            .ToArray();
         Dictionary<int, string> productNames = await productStorage.GetProductNames(productIds);
 
         var items = new Dictionary<int, List<ProductPriceChangeHistoryItem>>();
@@ -176,9 +183,10 @@ public class PriceListPriceHistoryManager
                 Data = list,
                 PriceListGuid = guid,
                 PriceListName = priceListName,
-                MinimumOverpricePercent = minmumChangePercent
+                MinimumOverpricePercent = minmumChangePercent,
+                MaxItems = list.Count == MAX_ITEMS
             };
         }
-        return new PriceListProductPriceChangeHistory();
+        return new();
     }
 }

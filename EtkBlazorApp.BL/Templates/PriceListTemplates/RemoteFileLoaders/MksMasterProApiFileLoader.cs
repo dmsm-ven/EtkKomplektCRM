@@ -1,4 +1,4 @@
-﻿using EtkBlazorApp.DataAccess;
+﻿using EtkBlazorApp.DataAccess.Repositories.PriceList;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -21,8 +21,6 @@ namespace EtkBlazorApp.BL
         {
             this.templateStorage = templateStorage;
             this.guid = guid;
-
-
         }
 
         public async Task<RemoteTemplateFileResponse> GetFile()
@@ -35,14 +33,14 @@ namespace EtkBlazorApp.BL
             {
                 CookieContainer = new CookieContainer(),
                 UseCookies = true,
-              
+
                 //AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
             };
 
-            using (var client = new HttpClient(handler) { BaseAddress = new Uri("https://mks.master.pro" ) })
+            using (var client = new HttpClient(handler) { BaseAddress = new Uri("https://mks.master.pro") })
             {
                 client.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "application/json, text/plain, */*");
-               
+
                 //Логинимся
                 var formContent = new FormUrlEncodedContent(new[]
                 {
@@ -50,7 +48,7 @@ namespace EtkBlazorApp.BL
                     new KeyValuePair<string, string>("password", password)
                 });
                 var loginReponse = await client.PostAsync("/login", formContent);
-            
+
                 //Скачиваем прайс-лист
                 var obj = new { contragent = ETK_KOMPLEKT_LK_ID };
                 var jsonContent = new StringContent(JsonConvert.SerializeObject(obj), Encoding.UTF8, "application/json");
@@ -63,7 +61,7 @@ namespace EtkBlazorApp.BL
                     str = str
                         .Substring(str.LastIndexOf(',') + 1)
                         .Trim('"')
-                        .Replace(@"\/","/");
+                        .Replace(@"\/", "/");
 
                     byte[] bytes = Convert.FromBase64String(str);
 

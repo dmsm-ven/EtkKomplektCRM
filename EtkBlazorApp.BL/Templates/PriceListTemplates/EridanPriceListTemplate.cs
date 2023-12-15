@@ -72,12 +72,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
                 var rrcPrice = ParsePrice(tab.GetValue<string>(row, 14));
 
-                if (rrcPrice == decimal.Zero)
-                {
-                    var base_price = ParsePrice(tab.GetValue<string>(row, 13));
-                    rrcPrice = (int)(base_price.Value * 1.25m);
-                }
-
                 var priceLine = new PriceLine(this)
                 {
                     Manufacturer = manufacturer,
