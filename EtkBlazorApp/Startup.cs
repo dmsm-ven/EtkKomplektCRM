@@ -4,6 +4,7 @@ using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.BL.Notifiers;
 using EtkBlazorApp.BL.Templates.PriceListTemplates;
 using EtkBlazorApp.CdekApi;
+using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Repositories;
@@ -81,6 +82,7 @@ public class Startup
         services.AddBlazoredToast();
         services.AddAutoMapper(this.GetType().Assembly);
         services.AddMemoryCache();
+        services.AddHttpClient();
         services.AddHttpsRedirection(options =>
         {
             options.RedirectStatusCode = (int)HttpStatusCode.TemporaryRedirect;
@@ -125,6 +127,7 @@ public class Startup
     private void ConfigureOptions(IServiceCollection services)
     {
         services.Configure<Integration1C_Configuration>(Configuration.GetSection(nameof(Integration1C_Configuration)));
+        services.Configure<CurrencyUpdaterEndpointOptions>(Configuration.GetSection(nameof(CurrencyUpdaterEndpointOptions)));
     }
     private void ConfigureNotifiers(IServiceCollection services)
     {

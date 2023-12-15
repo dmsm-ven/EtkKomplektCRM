@@ -1,4 +1,6 @@
-﻿using EtkBlazorApp.DataAccess;
+﻿using EtkBlazorApp.Core.Data;
+using EtkBlazorApp.DataAccess;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +15,7 @@ namespace EtkBlazorApp.BL.Managers
         //Запуск пересчета цен товаров в валюте
         //readonly string CurrencyPlusUri = "https://etk-komplekt.ru/cron/currency_plus.php";
         //Запуск пересчета цен товаров в валюте - собственный улучшенный модуль
-        private readonly string CurrencyCustomUri = "https://etk-komplekt.ru/index.php?route=tool/price_currency&refresh_token=a875efbc-3724-4451-86b7-0129e5d5b06d";
+        private readonly string CurrencyCustomUri;
 
         private readonly IProductStorage productsStorage;
         private readonly IProductUpdateService productUpdateService;
@@ -30,7 +32,10 @@ namespace EtkBlazorApp.BL.Managers
             IManufacturerStorage manufacturerStorage,
             IMonobrandStorage monobrandStorage,
             IDatabaseProductCorrelator correlator,
-            PriceListPriceHistoryManager priceHistoryManager)
+            IOptions<CurrencyUpdaterEndpointOptions> CurrencyUpdaterEndpoint,
+            IHttpClientFactory httpClientFactory,
+            PriceListPriceHistoryManager priceHistoryManager
+            )
         {
             this.productsStorage = productsStorage;
             this.productUpdateService = productUpdateService;
@@ -39,7 +44,8 @@ namespace EtkBlazorApp.BL.Managers
             this.monobrandStorage = monobrandStorage;
             this.correlator = correlator;
             this.priceHistoryManager = priceHistoryManager;
-            httpClient = new HttpClient();
+            this.CurrencyCustomUri = CurrencyUpdaterEndpoint.Value.Uri;
+            this.httpClient = httpClientFactory.CreateClient();
         }
 
         public async Task UpdatePriceAndStock(
