@@ -77,7 +77,6 @@ public class Startup
     public void ConfigureServices(IServiceCollection services)
     {
 
-
         //Сторонние
         services.AddBlazoredToast();
         services.AddAutoMapper(this.GetType().Assembly);
@@ -99,7 +98,6 @@ public class Startup
         services.AddSingleton<EncryptHelper>((x) => new EncryptHelper(Configuration["EncryptHelper:Phrase"]));
         services.AddTransient<IUserInfoChecker, UserInfoChecker>();
         services.AddTransient<ICompressedFileExtractor, SharpCompressFileExtractor>();
-
 
         ConfigureCorrelators(services);
         ConfigureDatabaseServices(services);

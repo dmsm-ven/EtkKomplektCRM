@@ -8,21 +8,12 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates.Base
 {
     public abstract class PriceListTemplateReaderBase
     {
-        //TODO: Тут стоит поменят словари и списки на ReadOnly и/или вынести менеджер (что бы обрабатывало за пределами шаблона, там же где ModelMap)
-        protected Dictionary<string, string> ManufacturerNameMap { get; private set; }
-        protected Dictionary<string, int> QuantityMap { get; private set; }
-        protected Dictionary<string, decimal> ManufacturerDiscountMap { get; private set; }
-        protected List<string> BrandsWhiteList { get; private set; }
-        protected List<string> BrandsBlackList { get; private set; }
-
-        public PriceListTemplateReaderBase()
-        {
-            ManufacturerNameMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            QuantityMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-            ManufacturerDiscountMap = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
-            BrandsWhiteList = new List<string>();
-            BrandsBlackList = new List<string>();
-        }
+        //TODO: возможно стоит убрать все словари и оставить только Пост-проверки (при считывании всего прайс-листа в целом)
+        protected IReadOnlyDictionary<string, string> ManufacturerNameMap { get; private set; }
+        protected IReadOnlyDictionary<string, int> QuantityMap { get; private set; }
+        protected IReadOnlyDictionary<string, decimal> ManufacturerDiscountMap { get; private set; }
+        protected IReadOnlyList<string> BrandsWhiteList { get; private set; }
+        protected IReadOnlyList<string> BrandsBlackList { get; private set; }
 
         protected string MapManufacturerName(string manufacturerName)
         {
@@ -70,10 +61,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates.Base
             return canBeNull ? quantity : quantity ?? 0;
         }
 
-        //TODO: убрать вызов метода из шаблонов и оставить только в окончательной выгрузке
-        //но тогда получается что будет тратиться лишняя память для огромных прайс-листов, в которых можно пропустить сразу
         /// <summary>
-        /// Проверка на пропуск из загрузки прайс-листа 
+        /// Проверка на белый/черный список производителя. Данный функионал так же дублируется на последнем этапе загрузки прайс-листа. Так что, даже если не добавлять проверку внутри цикла создания PriceLine, производиль который был добавлен в черный/белый список все равно в итоге НЕ будет загружен. Но раняя проверка позволяет не делать кучу ненужных вычислений в огромных прайс-листах и сразу отбросить ненужный бренд и перейти к следующей строке (не загружать их в память) 
         /// </summary>
         /// <param name="manufacturer"></param>
         /// <returns></returns>
@@ -85,27 +74,38 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates.Base
             return blackListCondition || whiteListCondition;
         }
 
+        /// <summary>
+        /// Заполняем словари для шаблона прайс-листа, для того что бы можно было, прямо во время парсинга строки, в прайс-листе, ее изменить/отбросить без загрузки в память
+        /// </summary>
+        /// <param name="templateInfo"></param>
         public void FillTemplateInfo(PriceListTemplateEntity templateInfo)
         {
-            if (templateInfo.quantity_map != null)
-            {
-                foreach (var kvp in templateInfo.quantity_map)
-                {
-                    QuantityMap[kvp.text] = kvp.quantity;
-                }
-            }
+            var manufacturerNameMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var quantityMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var manufacturerDiscountMap = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
+            var brandsBlackList = new List<string>();
+            var brandsWhiteList = new List<string>();
+
+
             if (templateInfo.manufacturer_name_map != null)
             {
                 foreach (var kvp in templateInfo.manufacturer_name_map)
                 {
-                    ManufacturerNameMap[kvp.text] = kvp.name;
+                    manufacturerNameMap[kvp.text] = kvp.name;
+                }
+            }
+            if (templateInfo.quantity_map != null)
+            {
+                foreach (var kvp in templateInfo.quantity_map)
+                {
+                    quantityMap[kvp.text] = kvp.quantity;
                 }
             }
             if (templateInfo.manufacturer_discount_map != null)
             {
                 foreach (var kvp in templateInfo.manufacturer_discount_map)
                 {
-                    ManufacturerDiscountMap[kvp.name] = kvp.discount;
+                    manufacturerDiscountMap[kvp.name] = kvp.discount;
                 }
             }
             if (templateInfo.manufacturer_skip_list != null)
@@ -117,14 +117,20 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates.Base
                 {
                     if (item.list_type == "black_list" && !BrandsBlackList.Contains(item.name))
                     {
-                        BrandsBlackList.Add(item.name);
+                        brandsBlackList.Add(item.name);
                     }
                     if (item.list_type == "white_list" && !BrandsWhiteList.Contains(item.name))
                     {
-                        BrandsWhiteList.Add(item.name);
+                        brandsWhiteList.Add(item.name);
                     }
                 }
             }
+
+            this.ManufacturerNameMap = manufacturerNameMap;
+            this.QuantityMap = quantityMap;
+            this.ManufacturerDiscountMap = manufacturerDiscountMap;
+            this.BrandsWhiteList = brandsWhiteList;
+            this.BrandsBlackList = brandsBlackList;
         }
     }
 }

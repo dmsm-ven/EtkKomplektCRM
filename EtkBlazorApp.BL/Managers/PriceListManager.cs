@@ -19,11 +19,10 @@ namespace EtkBlazorApp.BL.Managers
     public class PriceListManager
     {
         public event Action OnPriceListLoaded;
-
+        public decimal NDS { get; private set; }
         public List<PriceLine> PriceLines { get; }
         public List<LoadedPriceListTemplateData> LoadedFiles { get; }
 
-        public decimal NDS { get; private set; }
         private readonly IPriceLineLoadCorrelator correlator;
         private readonly IPriceListTemplateStorage templateStorage;
         private readonly ISettingStorageReader settings;
@@ -42,18 +41,13 @@ namespace EtkBlazorApp.BL.Managers
             this.logger = logger;
         }
 
-        public void RemovePriceListAll()
-        {
-            LoadedFiles.Clear();
-            PriceLines.Clear();
-        }
-
-        public void RemovePriceList(LoadedPriceListTemplateData data)
-        {
-            LoadedFiles.Remove(data);
-            PriceLines.RemoveAll(line => line.Template == data.TemplateInstance);
-        }
-
+        /// <summary>
+        /// Метод для Blazor вебинтерфейса личного кабинета
+        /// </summary>
+        /// <param name="templateType"></param>
+        /// <param name="stream"></param>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
         public async Task UploadTemplate(Type templateType, Stream stream, string fileName)
         {
             var data = await ReadTemplateLines(templateType, stream, fileName, addFileData: true);
@@ -75,37 +69,12 @@ namespace EtkBlazorApp.BL.Managers
                 throw new ArgumentNullException(nameof(templateType));
             }
 
-            string filePath = Path.Combine(Path.GetTempPath(), fileName);
-            using (var fs = File.Create(filePath))
-            {
-                await stream.CopyToAsync(fs);
-            }
+            string tempFilePath = Path.Combine(Path.GetTempPath(), fileName);
+            List<PriceLine> list = new();
 
             try
             {
-                IPriceListTemplate templateInstance = (IPriceListTemplate)Activator.CreateInstance(templateType, filePath);
-                PriceListTemplateEntity templateInfo = await GetTemplateDescription(templateType);
-                if (templateInstance is PriceListTemplateReaderBase pb)
-                {
-                    //Обязательно должно быть перед считываением, т.к. тут заполняются словари с преобразованиями
-                    pb.FillTemplateInfo(templateInfo);
-                }
-
-                var list = await templateInstance.ReadPriceLines(CancellationToken.None);
-
-                FillLinkedStock(list, templateInfo.stock_partner_id);
-
-                ApplyModelMap(list, templateInfo);
-
-                await ApplyDiscounts(list, templateInfo);
-
-                if (addFileData)
-                {
-                    var loadedFileInfo = new LoadedPriceListTemplateData(templateInstance, templateInfo, list, fileName);
-                    LoadedFiles.Add(loadedFileInfo);
-                }
-
-                return list;
+                list = await ReadPriceLinesAndApplyModifiers(templateType, stream, fileName, addFileData, tempFilePath);
             }
             catch
             {
@@ -113,13 +82,109 @@ namespace EtkBlazorApp.BL.Managers
             }
             finally
             {
-                File.Delete(filePath);
+                File.Delete(tempFilePath);
             }
+
+            return list;
         }
 
+        /// <summary>
+        /// Загрузить строки указанного шаблона и применить все модификаторы
+        /// </summary>
+        /// <param name="templateType"></param>
+        /// <param name="stream"></param>
+        /// <param name="fileName"></param>
+        /// <param name="addFileData"></param>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        private async Task<List<PriceLine>> ReadPriceLinesAndApplyModifiers(Type templateType, Stream stream, string fileName, bool addFileData, string filePath)
+        {
+            using (var fs = File.Create(filePath))
+            {
+                await stream.CopyToAsync(fs);
+            }
+
+            IPriceListTemplate templateInstance = (IPriceListTemplate)Activator.CreateInstance(templateType, filePath);
+            PriceListTemplateEntity templateInfo = await GetTemplateDescription(templateType);
+            if (templateInstance is PriceListTemplateReaderBase pb)
+            {
+                //Обязательно должно быть перед считываением, т.к. тут заполняются словари с преобразованиями
+                pb.FillTemplateInfo(templateInfo);
+            }
+
+            var list = await templateInstance.ReadPriceLines(CancellationToken.None);
+
+            await ApplyModifiers(list, templateInfo);
+
+            if (addFileData)
+            {
+                var loadedFileInfo = new LoadedPriceListTemplateData(templateInstance, templateInfo, list, fileName);
+                LoadedFiles.Add(loadedFileInfo);
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// Применить ПОСТ-подификаторы к считанным строкам прайс-листа
+        /// </summary>
+        /// <param name="templateInfo"></param>
+        /// <param name="list"></param>
+        /// <returns></returns>
+        private async Task ApplyModifiers(List<PriceLine> list, PriceListTemplateEntity templateInfo)
+        {
+            SkipUnnecessaryManufacturers(list, templateInfo);
+
+            FillLinkedStock(list, templateInfo.stock_partner_id);
+
+            ApplyModelMap(list, templateInfo);
+
+            await ApplyDiscounts(list, templateInfo);
+        }
+
+        /// <summary>
+        /// Применяем черный/белый список для производителей в прайс-листе
+        /// </summary>
+        /// <param name="templateInfo"></param>
+        /// <param name="list"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        private void SkipUnnecessaryManufacturers(List<PriceLine> list, PriceListTemplateEntity templateInfo)
+        {
+            if ((templateInfo?.manufacturer_skip_list?.Count ?? 0) == 0)
+            {
+                return;
+            }
+
+            //Применяем черный лист
+            var blackList = templateInfo.manufacturer_skip_list.Where(i => i.list_type == "black_list").ToArray();
+            if (blackList.Length > 0)
+            {
+                var forbiddenManufacturerNames = blackList.Select(m => m.name).ToArray();
+                list.RemoveAll(priceLine => forbiddenManufacturerNames.Contains(priceLine.Manufacturer, StringComparer.OrdinalIgnoreCase));
+            }
+
+            //Применяем белый лист
+            var whiteList = templateInfo.manufacturer_skip_list.Where(i => i.list_type == "white_list").ToArray();
+            if (whiteList.Length > 0)
+            {
+                var allowedManufacturerNames = whiteList.Select(m => m.name).ToArray();
+                list.RemoveAll(priceLine => !allowedManufacturerNames.Contains(priceLine.Name, StringComparer.OrdinalIgnoreCase));
+
+            }
+
+        }
+
+        /// <summary>
+        /// Заполняем связанных склад поставщика для всех считанных строк
+        /// </summary>
+        /// <param name="list"></param>
+        /// <param name="stock_partner_id"></param>
         private void FillLinkedStock(List<PriceLine> list, int? stock_partner_id)
         {
-            if (!stock_partner_id.HasValue) { return; }
+            if (!stock_partner_id.HasValue)
+            {
+                return;
+            }
 
             StockName stock = (StockName)stock_partner_id.Value;
             foreach (var line in list.Where(l => l.Stock == StockName.None))
@@ -128,7 +193,11 @@ namespace EtkBlazorApp.BL.Managers
             }
         }
 
-        //Заменяем модели из прайс-листа (если есть данные на замену)
+        /// <summary>
+        /// Подменяем модели в считанных строках из прайс-листа, если есть добавленные сопоставления
+        /// </summary>
+        /// <param name="priceLines"></param>
+        /// <param name="templateInfo"></param>
         private void ApplyModelMap(IEnumerable<PriceLine> priceLines, PriceListTemplateEntity templateInfo)
         {
             if (templateInfo.model_map == null || templateInfo.model_map.Count == 0)
@@ -139,6 +208,7 @@ namespace EtkBlazorApp.BL.Managers
             var modelMap = templateInfo.model_map.ToDictionary(i => i.old_text, i => i.new_text);
 
             logger.LogInformation($"Запуск преобразования моделей/артикулов для прайс-листа '{templateInfo?.title ?? "<Пусто>"}'");
+
             var sw = new Stopwatch();
 
             var linesToReplace = priceLines
@@ -190,7 +260,7 @@ namespace EtkBlazorApp.BL.Managers
             // Наценка закупки Бренд/Скидка
             Dictionary<string, decimal> purchaseDiscounts = templateInfo.manufacturer_purchase_map.ToDictionary(i => i.name, i => i.discount);
 
-            //Загружаем НДС
+            //Загружаем размер НДС из настроек
             NDS = (100m + await settings.GetValue<int>("nds")) / 100;
 
             foreach (var line in source)
@@ -199,6 +269,16 @@ namespace EtkBlazorApp.BL.Managers
             }
         }
 
+        /// <summary>
+        /// Расчитать скидку для определенной строки из прайс-листа
+        /// </summary>
+        /// <param name="templateInfo"></param>
+        /// <param name="emptyDiscountGeneralDiscount"></param>
+        /// <param name="emptySellDiscountMap"></param>
+        /// <param name="emptyPurchaseDiscountMap"></param>
+        /// <param name="sellDiscounts"></param>
+        /// <param name="purchaseDiscounts"></param>
+        /// <param name="line"></param>
         private void CaclDiscount(PriceListTemplateEntity templateInfo,
                 bool emptyDiscountGeneralDiscount,
                 bool emptySellDiscountMap,
@@ -253,6 +333,11 @@ namespace EtkBlazorApp.BL.Managers
             }
         }
 
+        /// <summary>
+        /// Загружаем описание шаблонапо указанному типа
+        /// </summary>
+        /// <param name="templateType"></param>
+        /// <returns></returns>
         private async Task<PriceListTemplateEntity> GetTemplateDescription(Type templateType)
         {
             var guid = templateType.GetPriceListGuidByType();
@@ -287,11 +372,32 @@ namespace EtkBlazorApp.BL.Managers
                     {
                         linkedLine.Quantity = line.Quantity;
                     }
+
+                    //Если товар уже загружен - то прибавляем остаток от новой загруженно строки прайс-листа (без добавления)
                     continue;
                 }
 
                 PriceLines.Add(line);
             }
+        }
+
+        /// <summary>
+        /// Удаляем из памяти все ранее загруженные прайс-листы
+        /// </summary>
+        public void RemovePriceListAll()
+        {
+            LoadedFiles.Clear();
+            PriceLines.Clear();
+        }
+
+        /// <summary>
+        /// Удаляем из памяти данные загруженного прайс-листа определенного типа
+        /// </summary>
+        /// <param name="data"></param>
+        public void RemovePriceList(LoadedPriceListTemplateData data)
+        {
+            LoadedFiles.Remove(data);
+            PriceLines.RemoveAll(line => line.Template == data.TemplateInstance);
         }
     }
 }
