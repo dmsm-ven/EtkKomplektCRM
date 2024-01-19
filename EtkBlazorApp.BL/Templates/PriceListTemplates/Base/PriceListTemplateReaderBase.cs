@@ -80,57 +80,72 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates.Base
         /// <param name="templateInfo"></param>
         public void FillTemplateInfo(PriceListTemplateEntity templateInfo)
         {
-            var manufacturerNameMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            var quantityMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-            var manufacturerDiscountMap = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
-            var brandsBlackList = new List<string>();
-            var brandsWhiteList = new List<string>();
+            if (templateInfo == null)
+            {
+                return;
+            }
 
-
+            Dictionary<string, string> manufacturerNameMap = new(StringComparer.OrdinalIgnoreCase);
             if (templateInfo.manufacturer_name_map != null)
             {
-                foreach (var kvp in templateInfo.manufacturer_name_map)
+                foreach (var kvp in templateInfo.manufacturer_name_map.Where(i => i != null))
                 {
-                    manufacturerNameMap[kvp.text] = kvp.name;
+                    if (!string.IsNullOrWhiteSpace(kvp.text) && !string.IsNullOrWhiteSpace(kvp.name) && !manufacturerNameMap.ContainsKey(kvp.text))
+                    {
+                        manufacturerNameMap[kvp.text] = kvp.name;
+                    }
                 }
             }
+            ManufacturerNameMap = manufacturerNameMap;
+
+            Dictionary<string, int> quantityMap = new(StringComparer.OrdinalIgnoreCase);
             if (templateInfo.quantity_map != null)
             {
-                foreach (var kvp in templateInfo.quantity_map)
+                foreach (var kvp in templateInfo.quantity_map.Where(i => i != null))
                 {
-                    quantityMap[kvp.text] = kvp.quantity;
+                    if (!string.IsNullOrWhiteSpace(kvp.text) && !quantityMap.ContainsKey(kvp.text))
+                    {
+                        quantityMap[kvp.text] = kvp.quantity;
+                    }
                 }
             }
+            QuantityMap = quantityMap;
+
+            Dictionary<string, decimal> manufacturerDiscountMap = new(StringComparer.OrdinalIgnoreCase);
             if (templateInfo.manufacturer_discount_map != null)
             {
-                foreach (var kvp in templateInfo.manufacturer_discount_map)
+                foreach (var kvp in templateInfo.manufacturer_discount_map.Where(i => i != null))
                 {
-                    manufacturerDiscountMap[kvp.name] = kvp.discount;
+                    if (!string.IsNullOrWhiteSpace(kvp.name) && !manufacturerDiscountMap.ContainsKey(kvp.name))
+                    {
+                        manufacturerDiscountMap[kvp.name] = kvp.discount;
+                    }
                 }
             }
-            if (templateInfo.manufacturer_skip_list != null)
+            ManufacturerDiscountMap = manufacturerDiscountMap;
+
+            HashSet<string> brandsWhiteList = new();
+            HashSet<string> brandsBlackList = new();
+            if (templateInfo.manufacturer_skip_list != null && templateInfo.manufacturer_skip_list.Any())
             {
                 var listsSource = templateInfo.manufacturer_skip_list
-                    .Where(i => !string.IsNullOrWhiteSpace(i.name) && !string.IsNullOrWhiteSpace(i.list_type));
+                    .Where(i => !string.IsNullOrWhiteSpace(i.name) && !string.IsNullOrWhiteSpace(i.list_type))
+                    .Where(i => new[] { "black_list", "white_list" }.Contains(i.list_type));
 
                 foreach (var item in listsSource)
                 {
-                    if (item.list_type == "black_list" && !BrandsBlackList.Contains(item.name))
+                    if (item.list_type == "black_list")
                     {
                         brandsBlackList.Add(item.name);
                     }
-                    if (item.list_type == "white_list" && !BrandsWhiteList.Contains(item.name))
+                    if (item.list_type == "white_list")
                     {
                         brandsWhiteList.Add(item.name);
                     }
                 }
             }
-
-            this.ManufacturerNameMap = manufacturerNameMap;
-            this.QuantityMap = quantityMap;
-            this.ManufacturerDiscountMap = manufacturerDiscountMap;
-            this.BrandsWhiteList = brandsWhiteList;
-            this.BrandsBlackList = brandsBlackList;
+            BrandsWhiteList = brandsWhiteList.ToList();
+            BrandsBlackList = brandsBlackList.ToList();
         }
     }
 }

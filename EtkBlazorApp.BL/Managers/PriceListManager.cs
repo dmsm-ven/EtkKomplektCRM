@@ -106,10 +106,23 @@ namespace EtkBlazorApp.BL.Managers
 
             IPriceListTemplate templateInstance = (IPriceListTemplate)Activator.CreateInstance(templateType, filePath);
             PriceListTemplateEntity templateInfo = await GetTemplateDescription(templateType);
+
+            if (templateInfo == null)
+            {
+                throw new ArgumentNullException($"'{nameof(templateInfo)}' не может быть null");
+            }
+
             if (templateInstance is PriceListTemplateReaderBase pb)
             {
                 //Обязательно должно быть перед считываением, т.к. тут заполняются словари с преобразованиями
-                pb.FillTemplateInfo(templateInfo);
+                try
+                {
+                    pb.FillTemplateInfo(templateInfo);
+                }
+                catch
+                {
+                    throw;
+                }
             }
 
             var list = await templateInstance.ReadPriceLines(CancellationToken.None);

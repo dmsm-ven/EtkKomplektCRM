@@ -61,12 +61,12 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 string name = tab.GetValue<string>(row, 1);
                 string sku = KvtSuPriceListTemplate.MODEL_PREFIX + tab.GetValue<string>(row, 2);
-                string ean = tab.GetValue<string>(row, 3);
+                string ean = tab.GetValue<string>(row, 9);
 
-                var quantityKaluga = ParseQuantity(tab.GetValue<string>(row, 4));
-                var quantitySpb = ParseQuantity(tab.GetValue<string>(row, 5));
+                var quantityKaluga = ParseQuantity(tab.GetValue<string>(row, 5));
+                var quantitySpb = ParseQuantity(tab.GetValue<string>(row, 6));
 
-                var price = ParsePrice(tab.GetValue<string>(row, 6));
+                var price = ParsePrice(tab.GetValue<string>(row, 3));
                 var manufacturer = ParsePrice(tab.GetValue<string>(row, 10));
 
                 var priceLine = new MultistockPriceLine(this)

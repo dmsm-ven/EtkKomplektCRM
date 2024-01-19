@@ -141,7 +141,7 @@ public partial class TemplatesListPage
         }
         catch (Exception ex)
         {
-            await logger.Write(LogEntryGroupName.PriceListTemplateLoad, "Ошибка загрузки", $"Ошибка загрузки файла с шаблоном {selectedTemplate.Title}. Ошибка: {ex.Message}");
+            await logger.Write(LogEntryGroupName.PriceListTemplateLoad, "Ошибка загрузки", $"Ошибка загрузки файла с шаблоном {selectedTemplate.Title}. Ошибка: {ex.Message}. Детали ошибки: {ex.StackTrace}");
             toast.ShowError($"{selectedTemplate.Title} ошибка: {ex.Message}");
         }
         finally
