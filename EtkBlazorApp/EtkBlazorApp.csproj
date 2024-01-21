@@ -34,6 +34,12 @@
     <PackageReference Include="Blazored.Toast" Version="4.1.0" />
     
     <PackageReference Include="Blazored.Typeahead" Version="4.7.0" />
+    
+    <PackageReference Include="NLog" Version="5.2.8" />
+    
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.8" />
+    
+    <PackageReference Include="NLog.Schema" Version="5.2.8" />
     <PackageReference Include="SSH.NET" Version="2023.0.0" />
     
   </ItemGroup>
@@ -48,6 +54,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Update="nlog.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Update="wwwroot\image\logotips\marketplaces\OzonSeller-logo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

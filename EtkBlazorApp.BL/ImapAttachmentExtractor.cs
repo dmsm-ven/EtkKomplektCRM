@@ -1,8 +1,10 @@
-﻿using EtkBlazorApp.Core.Interfaces;
+﻿using EtkBlazorApp.Core;
+using EtkBlazorApp.Core.Interfaces;
 using MailKit;
 using MailKit.Net.Imap;
 using MailKit.Search;
 using MimeKit;
+using NLog;
 using System;
 using System.IO;
 using System.Linq;
@@ -10,15 +12,17 @@ using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
 {
     public class EmailAttachmentExtractor
     {
+        private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
+
         private readonly ICompressedFileExtractor extractor;
         private readonly ImapConnectionData connectionData;
+        private ImapEmailSearchCriteria? lastSearchCriteria;
 
         public EmailAttachmentExtractor(ImapConnectionData connectionData, ICompressedFileExtractor extractor)
         {
@@ -55,7 +59,7 @@ namespace EtkBlazorApp.BL
                 var cap = connection.Capabilities;
 
                 SearchQuery searchQuery = BuildSearchQuery(searchCriteria);
-                var fileName = await DownloadAttachmentFileWithCriteria(searchQuery, searchCriteria.FileNamePattern, connection);
+                var fileName = await DownloadAttachmentFileWithCriteria(searchQuery, connection);
 
                 await connection.Inbox.CloseAsync();
                 await connection.DisconnectAsync(true);
@@ -68,6 +72,8 @@ namespace EtkBlazorApp.BL
 
         private SearchQuery BuildSearchQuery(ImapEmailSearchCriteria searchCriteria)
         {
+            this.lastSearchCriteria = searchCriteria;
+
             var searchQuery = SearchQuery
                     .FromContains(searchCriteria.Sender)
                     .And(SearchQuery.DeliveredAfter(DateTime.Now.AddDays(-searchCriteria.MaxOldInDays).Date));
@@ -75,19 +81,21 @@ namespace EtkBlazorApp.BL
             if (!string.IsNullOrWhiteSpace(searchCriteria.Subject))
             {
                 searchQuery = searchQuery.And(SearchQuery.SubjectContains(searchCriteria.Subject));
-
             }
 
             return searchQuery;
         }
 
-        private async Task<string> DownloadAttachmentFileWithCriteria(SearchQuery searchQuery, string fileNamePattern, ImapClient connection)
+        private async Task<string> DownloadAttachmentFileWithCriteria(SearchQuery searchQuery, ImapClient connection)
         {
             var searchResult = await connection.Inbox.SearchAsync(searchQuery);
 
             if (searchResult.Count() == 0)
             {
-                throw new Exception("Письмо по заданным характеристикам не найдено");
+                nlog.Warn("Письмо с прайс-листом от {sender} с темой {subject} (не старее чем {ageInDays} дней) не найдено",
+                   lastSearchCriteria?.Sender, lastSearchCriteria?.Subject, lastSearchCriteria?.MaxOldInDays);
+
+                throw new EmailNotFoundException();
             }
             var id = searchResult.Max();
 

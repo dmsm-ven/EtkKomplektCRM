@@ -1,5 +1,4 @@
 ﻿using EtkBlazorApp.Core.Data;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -17,27 +16,17 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             for (int row = 8; row < tab.Dimension.Rows; row++)
             {
                 string name = tab.GetValue<string>(row, 1);
-                string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 4));
-
-                if (SkipThisBrand(manufacturer)) { continue; }
-
+                string manufacturer = tab.GetValue<string>(row, 4);
                 string sku = tab.GetValue<string>(row, 6);
-
-                decimal? priceRrc = ParsePrice(tab.GetValue<string>(row, 8));
-                //decimal? priceOpt = ParsePrice(tab.GetValue<string>(row, 9));
-
-                int? quantity = ParseQuantity(tab.GetValue<string>(row, 16));
+                int? quantitySpb = ParseQuantity(tab.GetValue<string>(row, 8));
 
                 var priceLine = new PriceLine(this)
                 {
                     Name = name,
-                    Currency = CurrencyType.RUB,
                     Manufacturer = manufacturer,
                     Model = sku,
                     Sku = sku,
-                    Price = priceRrc,
-                    Quantity = quantity,
-                    //Stock = StockName.RGK
+                    Quantity = quantitySpb,
                 };
 
                 list.Add(priceLine);

@@ -1,18 +1,22 @@
-﻿using EtkBlazorApp.BL;
+﻿using EtkBlazorApp.BL.CronTask;
+using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.DataAccess.Entity;
+using NLog;
 using System;
-using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.BL.CronTask
+namespace EtkBlazorApp.BL.Templates.CronTask
 {
     /// <summary>
     /// Тип задачи - Загрузка прайс-листа из его удаленного источника (email, URL, FTP или др. как он настроен)
     /// </summary>
     public class LoadRemotePriceListCronTask : CronTaskBase
     {
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+
         private readonly Type templateType;
 
         public LoadRemotePriceListCronTask(Type templateType, CronTaskService service, int taskId) : base(service, taskId)
@@ -22,8 +26,12 @@ namespace EtkBlazorApp.BL.CronTask
 
         public override async Task Run(CronTaskEntity taskInfo)
         {
+            Stopwatch sw = Stopwatch.StartNew();
+
             try
             {
+                logger.Info("Запуск выполнения задачи {taskName}", taskInfo?.name);
+
                 var templateGuid = templateType.GetPriceListGuidByType();
                 var templateInfo = await service.templates.GetPriceListTemplateById(templateGuid);
 
@@ -43,9 +51,14 @@ namespace EtkBlazorApp.BL.CronTask
 
                     taskInfo.last_exec_file_size = response.Bytes.Length;
                 }
+
+                logger.Info("Конец выполнения задачи {taskName}. Длительность выполнения: {elapsed} сек.",
+                    taskInfo?.name, sw.Elapsed.TotalSeconds.ToString("F2", new CultureInfo("en-EN")));
             }
             catch
             {
+                logger.Warn("Ошибка выполнения задачи {taskName}. Выполнение длилось: {elapsed}",
+                    taskInfo?.name, sw.Elapsed.TotalSeconds.ToString("F2", new CultureInfo("en-EN")));
                 throw;
             }
         }

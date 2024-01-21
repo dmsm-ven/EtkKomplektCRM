@@ -1,11 +1,12 @@
 ﻿using EtkBlazorApp.BL.CronTask;
-using EtkBlazorApp.BL.Managers;
+using EtkBlazorApp.BL.Templates.CronTask;
 using EtkBlazorApp.BL.Templates.PriceListTemplates;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using EtkBlazorApp.DataAccess.Repositories.PriceList;
 using Newtonsoft.Json;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,7 +14,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 
-namespace EtkBlazorApp.BL
+namespace EtkBlazorApp.BL.Managers
 {
     //TODO: Переделать - заместо ручного выполнения по таймеру на библиотеку Hangfire
 
@@ -24,6 +25,7 @@ namespace EtkBlazorApp.BL
     {
         // event'ы для привязки на страницах, что бы можно было в любом месте приложения получить уведомление, например через Toasts
         // TODO: переделать из event в какой-то другой вариант
+        private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
 
         public event Action<CronTaskEntity> OnTaskExecutionStart;
         public event Action<CronTaskEntity> OnTaskExecutionEnd;
@@ -71,6 +73,8 @@ namespace EtkBlazorApp.BL
                 checkTimer.Elapsed += CheckTimer_Elapsed;
                 checkTimer.Start();
             }
+
+            nlog.Info("Запуск службы выполнения задач загрузки прайс-листов по расписанию");
         }
 
 
@@ -243,7 +247,7 @@ namespace EtkBlazorApp.BL
             switch (taskType)
             {
                 case CronTaskType.RemotePriceList:
-                    return new BL.CronTask.LoadRemotePriceListCronTask(linkedPriceListType, this, taskId);
+                    return new LoadRemotePriceListCronTask(linkedPriceListType, this, taskId);
             }
 
             throw new ArgumentException(taskType + " не реализован");

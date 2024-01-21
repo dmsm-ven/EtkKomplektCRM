@@ -1,4 +1,4 @@
-﻿using EtkBlazorApp.BL;
+﻿using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.DataAccess.Entity;
 using System;
 using System.Linq;

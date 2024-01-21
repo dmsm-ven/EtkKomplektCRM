@@ -6,6 +6,7 @@
 @attribute [Authorize(Roles = "Administrator, Manager")]
 @implements IDisposable
 @using System.Timers
+@using EtkBlazorApp.BL.Managers
 
     <h3>Переодические задачи</h3>
     @if (cronTaskList == null)

@@ -61,6 +61,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         {
             var list = new List<PriceLine>();
 
+
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
                 string sku = tab.GetValue<string>(row, 3);

@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.DataAccess.Entity.PriceList;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -8,6 +9,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates.Base
 {
     public abstract class PriceListTemplateReaderBase
     {
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+
         //TODO: возможно стоит убрать все словари и оставить только Пост-проверки (при считывании всего прайс-листа в целом)
         protected IReadOnlyDictionary<string, string> ManufacturerNameMap { get; private set; }
         protected IReadOnlyDictionary<string, int> QuantityMap { get; private set; }
@@ -80,11 +83,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates.Base
         /// <param name="templateInfo"></param>
         public void FillTemplateInfo(PriceListTemplateEntity templateInfo)
         {
-            if (templateInfo == null)
-            {
-                return;
-            }
-
             Dictionary<string, string> manufacturerNameMap = new(StringComparer.OrdinalIgnoreCase);
             if (templateInfo.manufacturer_name_map != null)
             {
