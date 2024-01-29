@@ -30,7 +30,7 @@ namespace EtkBlazorApp.BL.Templates.CronTask
 
             try
             {
-                logger.Info("Запуск выполнения задачи {taskName}", taskInfo?.name);
+                logger.Trace("Запуск выполнения задачи {taskName}", taskInfo?.name);
 
                 var templateGuid = templateType.GetPriceListGuidByType();
                 var templateInfo = await service.templates.GetPriceListTemplateById(templateGuid);
@@ -55,10 +55,10 @@ namespace EtkBlazorApp.BL.Templates.CronTask
                 logger.Info("Конец выполнения задачи {taskName}. Длительность выполнения: {elapsed} сек.",
                     taskInfo?.name, sw.Elapsed.TotalSeconds.ToString("F2", new CultureInfo("en-EN")));
             }
-            catch
+            catch (Exception ex)
             {
-                logger.Warn("Ошибка выполнения задачи {taskName}. Выполнение длилось: {elapsed}",
-                    taskInfo?.name, sw.Elapsed.TotalSeconds.ToString("F2", new CultureInfo("en-EN")));
+                logger.Warn("Ошибка выполнения задачи {taskName}. Выполнение длилось: {elapsed}. Message: {msg}",
+                    taskInfo?.name, sw.Elapsed.TotalSeconds.ToString("F2", new CultureInfo("en-EN")), ex.Message);
                 throw;
             }
         }

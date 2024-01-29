@@ -18,7 +18,9 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string name = tab.GetValue<string>(row, 1);
                 string manufacturer = tab.GetValue<string>(row, 4);
                 string sku = tab.GetValue<string>(row, 6);
-                int? quantitySpb = ParseQuantity(tab.GetValue<string>(row, 8));
+
+                var price = ParsePrice(tab.GetValue<string>(row, 8));
+                int? quantitySpb = ParseQuantity(tab.GetValue<string>(row, 15));
 
                 var priceLine = new PriceLine(this)
                 {
@@ -26,6 +28,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Manufacturer = manufacturer,
                     Model = sku,
                     Sku = sku,
+                    Price = price,
                     Quantity = quantitySpb,
                 };
 

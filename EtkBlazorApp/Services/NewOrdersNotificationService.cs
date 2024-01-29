@@ -1,10 +1,8 @@
 ﻿using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using System;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Timers;
-using System.Web;
 
 namespace EtkBlazorApp.Services
 {
@@ -13,8 +11,8 @@ namespace EtkBlazorApp.Services
     /// </summary>
     public class NewOrdersNotificationService
     {
-        readonly Timer timer;
-        readonly IOrderStorage orderStorage;
+        private readonly Timer timer;
+        private readonly IOrderStorage orderStorage;
 
         private event Action<OrderEntity> onNewOrderFound;
         public event Action<OrderEntity> OnNewOrderFound
@@ -33,14 +31,14 @@ namespace EtkBlazorApp.Services
             remove
             {
                 onNewOrderFound = (Action<OrderEntity>)Delegate.Remove(onNewOrderFound, value);
-                if(timer.Enabled && onNewOrderFound == null)
+                if (timer.Enabled && onNewOrderFound == null)
                 {
                     timer.Stop();
                 }
             }
         }
-      
-        TimeSpan refreshInterval = TimeSpan.FromSeconds(30);
+
+        private TimeSpan refreshInterval = TimeSpan.FromSeconds(30);
         public TimeSpan RefreshInterval
         {
             get => refreshInterval;
@@ -58,22 +56,26 @@ namespace EtkBlazorApp.Services
             }
         }
 
-        OrderEntity _lastOrder = null;
-        bool _isFirstCheck = true;
+        private OrderEntity _lastOrder = null;
+        private bool _isFirstCheck = true;
 
         public NewOrdersNotificationService(IOrderStorage orderStorage)
         {
             timer = new Timer();
+            this.orderStorage = orderStorage ?? throw new ArgumentNullException(nameof(orderStorage));
+        }
+
+        public void Start()
+        {
             timer.Elapsed += RefreshTimer_Elapsed;
             timer.Enabled = false;
-            this.orderStorage = orderStorage ?? throw new ArgumentNullException(nameof(orderStorage));
         }
 
         private async void RefreshTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            if(onNewOrderFound == null) 
-            { 
-                return; 
+            if (onNewOrderFound == null)
+            {
+                return;
             }
 
             var currentLastOrder = await orderStorage.GetLastOrder();

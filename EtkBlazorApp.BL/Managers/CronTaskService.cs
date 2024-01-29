@@ -66,8 +66,11 @@ namespace EtkBlazorApp.BL.Managers
             this.remoteTemplateLoaderFactory = remoteTemplateLoaderFactory;
             tasks = new Dictionary<CronTaskBase, CronTaskEntity>();
             inProgress = new List<CronTaskBase>();
-
             checkTimer = new Timer(TimeSpan.FromSeconds(60).TotalMilliseconds);
+        }
+
+        public void Start()
+        {
             if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
             {
                 checkTimer.Elapsed += CheckTimer_Elapsed;

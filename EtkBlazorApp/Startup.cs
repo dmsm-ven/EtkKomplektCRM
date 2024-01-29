@@ -24,6 +24,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NLog;
 using System;
 using System.Globalization;
 using System.Net;
@@ -33,6 +34,7 @@ namespace EtkBlazorApp;
 
 public class Startup
 {
+    private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
     public IConfiguration Configuration { get; }
 
     public Startup(IConfiguration configuration)
@@ -40,7 +42,7 @@ public class Startup
         Configuration = configuration;
     }
 
-    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime hostApplicationLifetime)
     {
         if (env.IsDevelopment())
         {
@@ -68,10 +70,23 @@ public class Startup
             endpoints.MapControllers();
         });
 
-        app.ApplicationServices.GetService<CronTaskService>();
-        app.ApplicationServices.GetService<NewOrdersNotificationService>().RefreshInterval = TimeSpan.FromSeconds(5);
-
         CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("ru-RU");
+
+        var sysLogger = app.ApplicationServices.GetRequiredService<SystemEventsLogger>();
+
+        hostApplicationLifetime.ApplicationStarted.Register(async () =>
+        {
+            app.ApplicationServices.GetRequiredService<CronTaskService>().Start();
+            app.ApplicationServices.GetRequiredService<NewOrdersNotificationService>().Start();
+
+            nlog.Info("Запуск приложения личного кабинета");
+            await sysLogger.WriteSystemEvent(LogEntryGroupName.Auth, "Запуск", "Запуск приложения личного кабинета");
+        });
+        hostApplicationLifetime.ApplicationStopping.Register(async () =>
+        {
+            nlog.Info("Остановка приложения личного кабинета");
+            await sysLogger.WriteSystemEvent(LogEntryGroupName.Auth, "Закрытие", "Остановка приложения личного кабинета");
+        });
     }
 
     public void ConfigureServices(IServiceCollection services)
@@ -127,6 +142,7 @@ public class Startup
         services.Configure<Integration1C_Configuration>(Configuration.GetSection(nameof(Integration1C_Configuration)));
         services.Configure<CurrencyUpdaterEndpointOptions>(Configuration.GetSection(nameof(CurrencyUpdaterEndpointOptions)));
     }
+
     private void ConfigureNotifiers(IServiceCollection services)
     {
         services.AddTransient<ICustomerOrderNotificator, MailkitOrderEmailNotificator>();

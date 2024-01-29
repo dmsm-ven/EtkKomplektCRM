@@ -1,22 +1,25 @@
 ﻿using EtkBlazorApp.BL.Data;
-using EtkBlazorApp.BL.Managers;
-using EtkBlazorApp.BL.Templates;
 using EtkBlazorApp.BL.Templates.PrikatTemplates;
 using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
+using Humanizer;
+using NLog;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.BL
+namespace EtkBlazorApp.BL.Managers.ReportFormatters
 {
     public class VseInstrumentiReportGenerator
     {
+        private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
+
         private readonly ICurrencyChecker currencyChecker;
         private readonly IPrikatTemplateStorage templateStorage;
         private readonly IProductStorage productStorage;
@@ -42,10 +45,18 @@ namespace EtkBlazorApp.BL
         /// <returns>Ссылку на созданный файле на сервере</returns>
         public async Task<string> Create(IEnumerable<int> selectedTemplateIds, VseInstrumentiReportOptions options)
         {
+            Stopwatch sw = Stopwatch.StartNew();
+
             var templateSource = (await templateStorage.GetPrikatTemplates())
                 .Where(t => selectedTemplateIds.Contains(t.manufacturer_id));
 
             string fileName = Path.GetTempPath() + $"prikat_{DateTime.Now.ToShortDateString().Replace(".", "_")}.csv";
+
+            var fi = new FileInfo(fileName);
+            string logBrands = string.Join(" | ", templateSource.Select(i => $"{i.manufacturer_name} [{i.discount1}] [{i.discount2}]"));
+            nlog.Trace("Начало создания выгрузки ВИ (ПРИКАТ) с именем файла {fileName} и следующими брендами ({brands})",
+                fileName, logBrands);
+
             await Task.Run(async () =>
             {
                 using (var fs = new FileStream(fileName, FileMode.Create))
@@ -58,11 +69,17 @@ namespace EtkBlazorApp.BL
                 }
             });
 
+
+            nlog.Info("Выгрузка ВИ (ПРИКАТ) создана. Файл для загрузки {fileName} ({fileSize}). Длительность выполнения: {elapsed}",
+                fileName, fi.Length.Bytes().Humanize(), sw.Elapsed.Humanize());
+
             return fileName;
         }
 
         private async Task InsertTemplateInfo(StreamWriter sw, PrikatReportTemplateEntity data, VseInstrumentiReportOptions options)
         {
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
             var currency = Enum.Parse<CurrencyType>(data.currency_code);
             decimal currentCurrencyRate = await currencyChecker.GetCurrencyRate(currency);
 
@@ -79,6 +96,9 @@ namespace EtkBlazorApp.BL
             var priceLines = priceListManager.PriceLines
                 .Where(line => line.Manufacturer.Equals(data.manufacturer_name, StringComparison.OrdinalIgnoreCase))
                 .ToList();
+
+            nlog.Trace("Выгрузка товаров для бренда {brandName} ({productsCount}). Длительность загрузки для этого бренда: {elapsed}",
+                data.manufacturer_name, products.Count, stopwatch.Elapsed.Humanize());
 
             template.AppendLines(products, priceLines, sw);
         }

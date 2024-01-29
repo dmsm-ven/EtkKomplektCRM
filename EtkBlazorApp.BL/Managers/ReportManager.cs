@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.BL.Managers;
+using EtkBlazorApp.BL.Managers.ReportFormatters;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 
