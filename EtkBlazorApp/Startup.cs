@@ -35,6 +35,7 @@ namespace EtkBlazorApp;
 public class Startup
 {
     private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
+
     public IConfiguration Configuration { get; }
 
     public Startup(IConfiguration configuration)
@@ -85,7 +86,7 @@ public class Startup
         hostApplicationLifetime.ApplicationStopping.Register(async () =>
         {
             nlog.Info("Остановка приложения личного кабинета");
-            await sysLogger.WriteSystemEvent(LogEntryGroupName.Auth, "Закрытие", "Остановка приложения личного кабинета");
+            await sysLogger.WriteSystemEvent(LogEntryGroupName.Auth, "Остановка", "Остановка приложения личного кабинета");
         });
     }
 

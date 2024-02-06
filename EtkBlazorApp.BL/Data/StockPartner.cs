@@ -8,7 +8,7 @@
         _1C = 2,
         Eltech = 3,
         Symmetron = 4,
-        RGK = 5,
+        RGK_Spb = 5,
         Eridan = 6,
         UMP = 7,
         TexElektro = 8,
@@ -41,6 +41,11 @@
         Guide_Msk = 42,
         Guide_Spb = 41,
         Levenhuk_Spb = 45,
-        Levenhuk_Msk = 46
+        Levenhuk_Msk = 46,
+        Felder = 47,
+        RGK_Moscow = 48,
+        RGK_Rostov = 49,
+        RGK_Novosibirsk = 50,
+        RGK_Ekaterinburg = 51,
     }
 }
