@@ -25,6 +25,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         {
             var loader = new PristXmlReader();
             var offers = await Task.Run(() => loader.LoadPristProducts(FileName));
+            FixOffers(offers);
 
             var list = new List<PriceLine>();
 
@@ -51,6 +52,18 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             }
 
             return list;
+        }
+
+        private void FixOffers(List<PristOffer> offers)
+        {
+            var offerWithError = offers
+                .Where(name => name != null)
+                .FirstOrDefault(o => o.Name == "Источник питания GPP-72323 (GPIB)");
+
+            if (offerWithError != null)
+            {
+                offerWithError.Model = "GPP-72323 (GPIB)";
+            }
         }
 
         private class PristXmlReader
