@@ -1,5 +1,4 @@
 ﻿using EtkBlazorApp.Core.Data;
-using System;
 using System.Collections.Generic;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
@@ -7,6 +6,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("8AD201D0-C12F-4B07-BAA0-AA6624AD01CC")]
     public class GedoreQuantityListTemplate : ExcelPriceListTemplateBase
     {
+        public static readonly string GEDORE_PREFIX = "GE-";
+
         public GedoreQuantityListTemplate(string fileName) : base(fileName) { }
 
         protected override List<PriceLine> ReadDataFromExcel()
@@ -15,9 +16,9 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
-                string sku = tab.GetValue<string>(row, 1);
-                string name = tab.GetValue<string>(row, 2);
-                int? quantity = ParseQuantity(tab.GetValue<string>(row, 4));
+                string sku = GEDORE_PREFIX + tab.GetValue<string>(row, 1);
+                string name = tab.GetValue<string>(row, 3);
+                int? quantity = ParseQuantity(tab.GetValue<string>(row, 7));
 
                 var priceLine = new PriceLine(this)
                 {
@@ -47,7 +48,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
-                string sku = "GE-" + tab.GetValue<string>(row, 1);
+                string sku = GedoreQuantityListTemplate.GEDORE_PREFIX + tab.GetValue<string>(row, 1);
                 string name = tab.GetValue<string>(row, 2);
                 string ean = tab.GetValue<string>(row, 3);
 

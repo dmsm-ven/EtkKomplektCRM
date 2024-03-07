@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.Core.Data;
+﻿using EtkBlazorApp.BL.Templates.PrikatTemplates.Base;
+using EtkBlazorApp.Core.Data;
 
 namespace EtkBlazorApp.BL.Templates.PrikatTemplates
 {

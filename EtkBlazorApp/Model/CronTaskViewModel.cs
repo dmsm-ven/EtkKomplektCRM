@@ -5,17 +5,17 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
-namespace EtkBlazorApp
+namespace EtkBlazorApp.Model
 {
     public class CronTaskViewModel
     {
         [Required(ErrorMessage = "Необходимо указать тип задачи")]
         public string TypeName { get; set; }
-        
+
         [StringLength(64, ErrorMessage = "Необходимо ввести заголовок задачи", MinimumLength = 2)]
         [Required]
         public string Title { get; set; }
-     
+
         public string PriceListGuid { get; set; }
 
         [Range(typeof(TimeSpan), "00:00:00", "23:59:59", ErrorMessage = "Время должно быть в диапазоне 00:00:00 - 23:59:59")]
@@ -31,14 +31,14 @@ namespace EtkBlazorApp
 
         public List<TimeSpan> AdditionalExecTime { get; set; } = new List<TimeSpan>();
 
-        private DateTime executionDateTime = new DateTime();
+        private DateTime executionDateTime = new();
         public DateTime ExecutionDateTime
         {
             get => executionDateTime;
             set
             {
                 ExecTime = value.TimeOfDay;
-                executionDateTime = value;               
+                executionDateTime = value;
             }
         }
 
@@ -51,13 +51,13 @@ namespace EtkBlazorApp
 
                 if (AdditionalExecTime != null && AdditionalExecTime.Count > 0)
                 {
-                    var closestTime = Enumerable.Concat(new TimeSpan[] { ExecTime }, AdditionalExecTime.ToArray())
+                    var closestTime = (new TimeSpan[] { ExecTime }).Concat(AdditionalExecTime.ToArray())
                         .Select(t => new
                         {
                             diff = Math.Abs(curTime.Ticks - t.Ticks),
                             time = t < curTime ?
-                                     (DateTime.Now.AddDays(1).Date.AddTicks(t.Ticks) - DateTime.Now) :
-                                     (t - curTime)
+                                     DateTime.Now.AddDays(1).Date.AddTicks(t.Ticks) - DateTime.Now :
+                                     t - curTime
                         })
                         .OrderBy(t => t.time)
                         .ToArray();
@@ -67,13 +67,13 @@ namespace EtkBlazorApp
                 else
                 {
                     return ExecTime < curTime ?
-                         (DateTime.Now.AddDays(1).Date.AddTicks(ExecTime.Ticks) - DateTime.Now) :
-                         (ExecTime - curTime);
+                         DateTime.Now.AddDays(1).Date.AddTicks(ExecTime.Ticks) - DateTime.Now :
+                         ExecTime - curTime;
                 }
-                
+
             }
         }
 
-    
+        public bool IsEmailAttachmentTask { get; init; }
     }
 }

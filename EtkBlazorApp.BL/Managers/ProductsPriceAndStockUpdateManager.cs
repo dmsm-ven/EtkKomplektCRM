@@ -1,5 +1,6 @@
 ﻿using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.DataAccess;
+using EtkBlazorApp.DataAccess.Repositories.Product;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;

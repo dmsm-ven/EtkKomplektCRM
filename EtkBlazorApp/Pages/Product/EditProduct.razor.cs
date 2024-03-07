@@ -5,6 +5,7 @@ using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
+using EtkBlazorApp.DataAccess.Repositories.Product;
 using EtkBlazorApp.Services;
 using Microsoft.AspNetCore.Components;
 using System;

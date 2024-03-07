@@ -1,44 +1,37 @@
-﻿using EtkBlazorApp.Core.Interfaces;
-using EtkBlazorApp.DataAccess;
+﻿using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Repositories.PriceList;
-using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.BL
+namespace EtkBlazorApp.BL.Templates.PriceListTemplates.RemoteFileLoaders
 {
     public class EmailAttachmentRemoteTemplateFileLoader : IRemoteTemplateFileLoader
     {
         private readonly ISettingStorageReader settingStorage;
-        private readonly ICompressedFileExtractor zipExtractor;
         private readonly IPriceListTemplateStorage templateStorage;
-        private readonly EncryptHelper encryptHelper;
+        private readonly EmailAttachmentExtractorInitializer extractorInitializer;
         private readonly string guid;
 
         internal EmailAttachmentRemoteTemplateFileLoader(
-            ISettingStorageReader settingStorage,
-            ICompressedFileExtractor zipExtractor,
             IPriceListTemplateStorage templateStorage,
-            EncryptHelper encryptHelper,
+            EmailAttachmentExtractorInitializer extractorInitializer,
             string guid)
         {
-            this.settingStorage = settingStorage;
-            this.zipExtractor = zipExtractor;
+            this.extractorInitializer = extractorInitializer;
             this.templateStorage = templateStorage;
-            this.encryptHelper = encryptHelper;
             this.guid = guid;
         }
 
         public async Task<RemoteTemplateFileResponse> GetFile()
         {
-            var extractor = await GetExtractor();
+            var extractor = await extractorInitializer.GetExtractor();
 
             string attachmentFilePath = "";
             try
             {
                 var templateInfo = await templateStorage.GetPriceListTemplateById(guid);
 
-                ImapEmailSearchCriteria criteria = new ImapEmailSearchCriteria()
+                ImapEmailSearchCriteria criteria = new()
                 {
                     Subject = templateInfo.email_criteria_subject,
                     Sender = templateInfo.email_criteria_sender,
@@ -69,24 +62,6 @@ namespace EtkBlazorApp.BL
                     File.Delete(attachmentFilePath);
                 }
             }
-        }
-
-        private async Task<EmailAttachmentExtractor> GetExtractor()
-        {
-            var imapServer = await settingStorage.GetValue("general_email_imap_server");
-            var imapPort = await settingStorage.GetValue("general_email_imap_port");
-            if (string.IsNullOrWhiteSpace(imapPort))
-            {
-                imapPort = "143";
-            }
-            var email = await settingStorage.GetValue("general_email_login");
-            var password = encryptHelper.Decrypt(await settingStorage.GetValue("general_email_password"));
-
-            ImapConnectionData connectionData = new ImapConnectionData(email, password, imapServer, imapPort);
-
-            var attachmentExtractor = new EmailAttachmentExtractor(connectionData, zipExtractor);
-
-            return attachmentExtractor;
         }
     }
 }

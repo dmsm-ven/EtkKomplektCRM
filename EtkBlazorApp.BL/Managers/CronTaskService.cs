@@ -1,6 +1,6 @@
 ﻿using EtkBlazorApp.BL.CronTask;
 using EtkBlazorApp.BL.Templates.CronTask;
-using EtkBlazorApp.BL.Templates.PriceListTemplates;
+using EtkBlazorApp.BL.Templates.PriceListTemplates.RemoteFileLoaders;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 
@@ -26,6 +27,8 @@ namespace EtkBlazorApp.BL.Managers
         // event'ы для привязки на страницах, что бы можно было в любом месте приложения получить уведомление, например через Toasts
         // TODO: переделать из event в какой-то другой вариант
         private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
+        private readonly System.Timers.Timer checkTimer;
+        private readonly System.Timers.Timer queueWorkerTimer;
 
         public event Action<CronTaskEntity> OnTaskExecutionStart;
         public event Action<CronTaskEntity> OnTaskExecutionEnd;
@@ -33,6 +36,15 @@ namespace EtkBlazorApp.BL.Managers
         public event Action<CronTaskEntity> OnTaskExecutionError;
 
         public CronTaskEntity TaskInProgress { get; private set; }
+
+        //Минимальное время через которое выполняется следующая задача из очереди
+        public TimeSpan QueueWorkerInterval { get; } = TimeSpan.FromMinutes(3);
+        //Время через которое проверяется не нужно ли добавить задание в список на выполнение
+        public TimeSpan CheckTimerInterval { get; } = TimeSpan.FromMinutes(1);
+
+        public string[] EmailOnlyPriceListsIds { get; private set; }
+
+
 
         private readonly ICronTaskStorage cronTaskStorage;
         internal readonly IPriceListTemplateStorage templates;
@@ -42,9 +54,19 @@ namespace EtkBlazorApp.BL.Managers
         internal readonly ProductsPriceAndStockUpdateManager updateManager;
         internal readonly PriceListManager priceListManager;
         internal readonly RemoteTemplateFileLoaderFactory remoteTemplateLoaderFactory;
-        private readonly Timer checkTimer;
+
         private readonly Dictionary<CronTaskBase, CronTaskEntity> tasks;
-        private readonly List<CronTaskBase> inProgress;
+        private readonly Dictionary<int, DateTime?> tasksLastExecutionTime;
+        private readonly SemaphoreSlim semaphore;
+        private readonly List<CronTaskBase> tasksQueue;
+
+
+        public IEnumerable<CronTaskEntity> GetLoadedTasks() => tasks.Select(kvp => kvp.Value).ToArray();
+        public IReadOnlyDictionary<int, DateTime?> TasksLastExecutionTime => tasksLastExecutionTime;
+        public IEnumerable<CronTaskEntity> TasksQueue => tasksQueue
+            .Select(i => tasks.FirstOrDefault(t => t.Key.TaskId == i.TaskId).Value)
+            .ToArray();
+
 
         public CronTaskService(
             ICronTaskStorage cronTaskStorage,
@@ -65,8 +87,13 @@ namespace EtkBlazorApp.BL.Managers
             this.priceListManager = priceListManager;
             this.remoteTemplateLoaderFactory = remoteTemplateLoaderFactory;
             tasks = new Dictionary<CronTaskBase, CronTaskEntity>();
-            inProgress = new List<CronTaskBase>();
-            checkTimer = new Timer(TimeSpan.FromSeconds(60).TotalMilliseconds);
+            tasksLastExecutionTime = new Dictionary<int, DateTime?>();
+            tasksQueue = new List<CronTaskBase>();
+
+            checkTimer = new System.Timers.Timer(CheckTimerInterval.TotalMilliseconds);
+            queueWorkerTimer = new System.Timers.Timer(QueueWorkerInterval.TotalMilliseconds);
+
+            semaphore = new SemaphoreSlim(1);
         }
 
         public void Start()
@@ -75,11 +102,12 @@ namespace EtkBlazorApp.BL.Managers
             {
                 checkTimer.Elapsed += CheckTimer_Elapsed;
                 checkTimer.Start();
+
+                queueWorkerTimer.Elapsed += QueueWorker_Elapsed;
+                queueWorkerTimer.Start();
             }
 
-            nlog.Info("Запуск службы выполнения задач загрузки прайс-листов по расписанию");
         }
-
 
         /// <summary>
         /// Ручной запуск задачи вне таймера
@@ -89,13 +117,37 @@ namespace EtkBlazorApp.BL.Managers
         public async Task ExecuteForced(int task_id)
         {
             await RefreshTaskList(force: true);
-            var kvp = tasks.FirstOrDefault(t => t.Key.TaskId == task_id);
 
-            if (kvp.Equals(default(KeyValuePair<CronTaskBase, CronTaskEntity>))) { return; }
+            AddTaskToQueue(task_id, forced: true);
+        }
 
-            if (!inProgress.Contains(kvp.Key))
+        public void AddTaskToQueue(int taskId, bool forced = false)
+        {
+            nlog.Trace("Добавление задачи #{taskId} в очередь", taskId);
+            var task = tasks.FirstOrDefault(t => t.Value.task_id == taskId).Key;
+            if (task != null)
             {
-                await ExecuteTask(kvp.Key, kvp.Value, forced: true);
+                AddTaskToQueue(task, forced);
+            }
+        }
+
+        public void AddTaskToQueue(CronTaskBase task, bool forced = false)
+        {
+            if (tasksQueue.FirstOrDefault(t => t.TaskId == task.TaskId) != null)
+            {
+                nlog.Warn("Пропуск. Задача #{taskId} уже добавлена.", task.TaskId, tasksQueue.Count);
+                return;
+            }
+
+            if (forced)
+            {
+                tasksQueue.Insert(0, task);
+                nlog.Trace("Задача #{taskId} добавлена на первое место. Теперь в очереди: {total}", task.TaskId, tasksQueue.Count);
+            }
+            else
+            {
+                tasksQueue.Add(task);
+                nlog.Trace("Задача #{taskId} добавлена (в конец очереди). Теперь в очереди: {total}", task.TaskId, tasksQueue.Count);
             }
         }
 
@@ -105,13 +157,52 @@ namespace EtkBlazorApp.BL.Managers
 
             TimeSpan currentTime = DateTime.Now.TimeOfDay;
 
-            foreach (var kvp in tasks.Where(t => t.Value.enabled))
+            var source = tasks.Where(t => t.Value.enabled);
+
+            foreach (var kvp in source)
             {
-                if (IsTimeToRun(kvp.Value, currentTime) && !inProgress.Contains(kvp.Key))
+                bool isEmailTask = EmailOnlyPriceListsIds.Contains(kvp.Value.linked_price_list_guid);
+
+                //Email Task добавляет в очередь отдельный worker класс
+                if (IsTimeToRun(kvp.Value, currentTime) && !isEmailTask)
                 {
-                    await ExecuteTask(kvp.Key, kvp.Value);
+                    AddTaskToQueue(kvp.Key.TaskId);
                 }
             }
+        }
+
+        private async void QueueWorker_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            if (tasksQueue.Count == 0)
+            {
+                return;
+            }
+
+            if (semaphore.CurrentCount == 0)
+            {
+                nlog.Trace("QueueWorker ВЫХОД - уже есть активная задача в процессе выполнения");
+            }
+
+            var headTask = tasksQueue[0];
+
+            try
+            {
+                var taskEntity = tasks.FirstOrDefault(t => t.Value.task_id == headTask.TaskId).Value;
+
+                await ExecuteTask(headTask, taskEntity, false);
+            }
+            catch (Exception ex)
+            {
+                nlog.Warn("Ошибка выполнения задачи с ID:{taskId} из очереди. {errorMessage}",
+                    headTask.TaskId, ex.Message);
+                throw;
+            }
+            finally
+            {
+                tasksLastExecutionTime[headTask.TaskId] = DateTime.Now;
+                tasksQueue.Remove(headTask);
+            }
+
         }
 
         /// <summary>
@@ -124,13 +215,23 @@ namespace EtkBlazorApp.BL.Managers
             if (force || tasks.Count == 0)
             {
                 tasks.Clear();
-                inProgress.Clear();
-
                 var items = await cronTaskStorage.GetCronTasks();
                 foreach (var entity in items)
                 {
                     var taskObject = CreateTask((CronTaskType)entity.task_type_id, entity.linked_price_list_guid, entity.task_id);
                     tasks.Add(taskObject, entity);
+                }
+
+                var allPriceLists = await templates.GetPriceListTemplates();
+
+                EmailOnlyPriceListsIds = allPriceLists
+                    .Where(pl => pl.remote_uri_method_name == "EmailAttachment")
+                    .Select(pl => pl.id)
+                    .ToArray();
+
+                foreach (var t in tasks)
+                {
+                    tasksLastExecutionTime[t.Value.task_id] = t.Value.last_exec_date_time;
                 }
             }
         }
@@ -145,7 +246,8 @@ namespace EtkBlazorApp.BL.Managers
         /// <returns></returns>
         private async Task ExecuteTask(CronTaskBase task, CronTaskEntity taskInfo, bool forced = false)
         {
-            inProgress.Add(task);
+            await semaphore.WaitAsync();
+
             OnTaskExecutionStart?.Invoke(taskInfo);
             TaskInProgress = taskInfo;
 
@@ -178,11 +280,11 @@ namespace EtkBlazorApp.BL.Managers
             }
             finally
             {
-                inProgress.Remove(task);
                 taskInfo.last_exec_date_time = DateTime.Now;
                 taskInfo.last_exec_result = exec_result;
                 await cronTaskStorage.SaveCronTaskExecResult(taskInfo);
                 TaskInProgress = null;
+                semaphore.Release();
 
                 OnTaskExecutionEnd?.Invoke(taskInfo);
 
@@ -195,6 +297,7 @@ namespace EtkBlazorApp.BL.Managers
                     OnTaskExecutionError?.Invoke(taskInfo);
                     await notifier.NotifyPriceListLoadingError(taskInfo.name);
                 }
+
             }
         }
 

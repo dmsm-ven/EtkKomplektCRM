@@ -54,6 +54,7 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
 
             var fi = new FileInfo(fileName);
             string logBrands = string.Join(" | ", templateSource.Select(i => $"{i.manufacturer_name} [{i.discount1}] [{i.discount2}]"));
+
             nlog.Trace("Начало создания выгрузки ВИ (ПРИКАТ) с именем файла {fileName} и следующими брендами ({brands})",
                 fileName, logBrands);
 

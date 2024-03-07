@@ -1,11 +1,13 @@
 ﻿using EtkBlazorApp.Core;
 using EtkBlazorApp.Core.Interfaces;
+using EtkBlazorApp.DataAccess.Entity.PriceList;
 using MailKit;
 using MailKit.Net.Imap;
 using MailKit.Search;
 using MimeKit;
 using NLog;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -41,6 +43,55 @@ namespace EtkBlazorApp.BL
 
                 return connection.IsConnected;
             }
+        }
+
+        /// <summary>
+        /// Возращает список ID прайс-листов с статусом, найдено ли письмо от поставщика для этого шаблона или нет. С настройками поиска которые для каждого шаблона указаны в его настройках
+        /// </summary>
+        /// <param name="priceListTemplates"></param>
+        /// <returns></returns>
+        public async Task<IReadOnlyDictionary<string, bool>> IsAttachmentsExist(IEnumerable<PriceListTemplateEntity> priceListTemplates)
+        {
+            var dic = new Dictionary<string, bool>();
+
+            using (var connection = new MailKit.Net.Imap.ImapClient())
+            {
+
+                connection.Timeout = (int)TimeSpan.FromMinutes(3).TotalMilliseconds;
+                connection.AuthenticationMechanisms.Remove("XOAUTH2");
+                connection.ServerCertificateValidationCallback = MySslCertificateValidationCallback;
+
+                await connection.ConnectAsync(connectionData.Host, int.Parse(connectionData.Port));
+                await connection.AuthenticateAsync(Encoding.UTF8, new NetworkCredential(connectionData.Email, connectionData.Password));
+                await connection.Inbox.OpenAsync(FolderAccess.ReadOnly);
+
+                foreach (var templateInfo in priceListTemplates)
+                {
+                    ImapEmailSearchCriteria criteria = new()
+                    {
+                        Subject = templateInfo.email_criteria_subject,
+                        Sender = templateInfo.email_criteria_sender,
+                        FileNamePattern = templateInfo.email_criteria_file_name_pattern,
+                        MaxOldInDays = templateInfo.email_criteria_max_age_in_days
+                    };
+
+                    try
+                    {
+                        dic[templateInfo.id] = await IsAttachmentWithCriteriaExists(criteria, connection);
+                    }
+                    catch
+                    {
+                        nlog.Warn("Ошибка поиска письма для шаблона {templateName}", templateInfo.title);
+                        dic[templateInfo.id] = false;
+                    }
+                }
+
+                await connection.Inbox.CloseAsync();
+                await connection.DisconnectAsync(true);
+            }
+
+            return dic;
+
         }
 
         public async Task<string> GetLastAttachment(ImapEmailSearchCriteria searchCriteria)
@@ -84,6 +135,13 @@ namespace EtkBlazorApp.BL
             }
 
             return searchQuery;
+        }
+
+        private async Task<bool> IsAttachmentWithCriteriaExists(ImapEmailSearchCriteria searchCriteria, ImapClient connection)
+        {
+            SearchQuery searchQuery = BuildSearchQuery(searchCriteria);
+            var searchResult = await connection.Inbox.SearchAsync(searchQuery);
+            return searchResult.Count() > 0;
         }
 
         private async Task<string> DownloadAttachmentFileWithCriteria(SearchQuery searchQuery, ImapClient connection)

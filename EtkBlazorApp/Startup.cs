@@ -2,13 +2,14 @@ using Blazored.Toast;
 using EtkBlazorApp.BL;
 using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.BL.Notifiers;
-using EtkBlazorApp.BL.Templates.PriceListTemplates;
+using EtkBlazorApp.BL.Templates.PriceListTemplates.RemoteFileLoaders;
 using EtkBlazorApp.CdekApi;
 using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Repositories;
 using EtkBlazorApp.DataAccess.Repositories.PriceList;
+using EtkBlazorApp.DataAccess.Repositories.Product;
 using EtkBlazorApp.DellinApi;
 using EtkBlazorApp.Model.Chart;
 using EtkBlazorApp.Model.IOptionProfiles;
@@ -79,6 +80,7 @@ public class Startup
         {
             app.ApplicationServices.GetRequiredService<CronTaskService>().Start();
             app.ApplicationServices.GetRequiredService<NewOrdersNotificationService>().Start();
+            app.ApplicationServices.GetRequiredService<EmailPriceListCheckingService>().Start();
 
             nlog.Info("Запуск приложения личного кабинета");
             await sysLogger.WriteSystemEvent(LogEntryGroupName.Auth, "Запуск", "Запуск приложения личного кабинета");
@@ -122,6 +124,7 @@ public class Startup
         ConfigureOptions(services);
 
         services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf_V2>();
+        services.AddSingleton<EmailAttachmentExtractorInitializer>();
         services.AddSingleton<CashPlusPlusLinkGenerator>();
         services.AddSingleton<RemoteTemplateFileLoaderFactory>();
         services.AddSingleton<SystemEventsLogger>();
@@ -130,6 +133,7 @@ public class Startup
         services.AddSingleton<ProductsPriceAndStockUpdateManager>();
         services.AddSingleton<PriceListManager>();
         services.AddSingleton<CronTaskService>();
+        services.AddSingleton<EmailPriceListCheckingService>();
 
         services.AddTransient<IUserService, BCryptUserService>();
         services.AddScoped<AuthenticationStateProvider, CustomAuthProvider>();

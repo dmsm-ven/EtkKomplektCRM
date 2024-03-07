@@ -1,15 +1,18 @@
 using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.DataAccess.Entity;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 
-namespace EtkBlazorApp.BL.Templates
+namespace EtkBlazorApp.BL.Templates.PrikatTemplates.Base
 {
     public abstract class PrikatReportTemplateBase
     {
+        private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
+
         public decimal CurrencyRatio { get; set; }
         public decimal Discount1 { get; set; }
         public decimal Discount2 { get; set; }
@@ -27,7 +30,7 @@ namespace EtkBlazorApp.BL.Templates
         {
             Manufacturer = manufacturer;
             Currency = currency;
-            Precission = (Currency == CurrencyType.RUB ? 0 : 2);
+            Precission = Currency == CurrencyType.RUB ? 0 : 2;
         }
 
         public void AppendLines(List<ProductEntity> products, List<PriceLine> priceLines, StreamWriter writer)
@@ -41,7 +44,7 @@ namespace EtkBlazorApp.BL.Templates
                 foreach (var product in products)
                 {
                     var linkedPriceLine = priceLines
-                        .FirstOrDefault(line => line.Sku.Equals(product.sku, StringComparison.OrdinalIgnoreCase) || (!string.IsNullOrEmpty(line.Model) && (line.Model.Equals(product.model, StringComparison.OrdinalIgnoreCase))));
+                        .FirstOrDefault(line => line.Sku.Equals(product.sku, StringComparison.OrdinalIgnoreCase) || !string.IsNullOrEmpty(line.Model) && line.Model.Equals(product.model, StringComparison.OrdinalIgnoreCase));
 
                     if (linkedPriceLine != null)
                     {
@@ -72,13 +75,13 @@ namespace EtkBlazorApp.BL.Templates
             decimal priceInCurrency = (int)product.price;
             if (Currency != CurrencyType.RUB)
             {
-                priceInCurrency = (product.base_currency_code == Currency.ToString() && product.base_price != decimal.Zero) ?
+                priceInCurrency = product.base_currency_code == Currency.ToString() && product.base_price != decimal.Zero ?
                     product.base_price :
                     Math.Round(product.price / CurrencyRatio, 2);
             }
 
             decimal price1 = Math.Round(priceInCurrency * ((100m + Discount2) / 100m), Precission);
-            decimal price2 = Math.Round((price1 * (100m + Discount1)) / 100m, Precission);
+            decimal price2 = Math.Round(price1 * (100m + Discount1) / 100m, Precission);
 
             string vi_price_rrc = price1.ToString($"F{Precission}", new CultureInfo("en-EN"));
             string vi_price = price2.ToString($"F{Precission}", new CultureInfo("en-EN"));
@@ -120,6 +123,16 @@ namespace EtkBlazorApp.BL.Templates
             WriteCell(sw, Currency.ToString().ToLower()); //Закупчная валюта
             sw.WriteLine();
 
+
+            const string testSku = "00207539";
+            if (product.sku == testSku)
+            {
+                nlog.Trace("Генерация выгрузки прикат для тестового товара с артикулом: {sku}", testSku);
+                nlog.Trace("Валюта: {currency}", Currency.ToString().ToLower());
+                nlog.Trace("product.base_currency_code: {baseCurrency}", product.base_currency_code);
+                nlog.Trace("product.base_price: {basePrice}", product.base_price);
+                nlog.Trace("priceInCurrency: {translatedPrice}", priceInCurrency);
+            }
         }
 
         private void WriteCell(StreamWriter sw, string value = null)

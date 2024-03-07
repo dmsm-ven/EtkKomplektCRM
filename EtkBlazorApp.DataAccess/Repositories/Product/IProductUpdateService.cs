@@ -1,5 +1,4 @@
-﻿using EtkBlazorApp.Core.Data;
-using EtkBlazorApp.DataAccess.Entity;
+﻿using EtkBlazorApp.DataAccess.Entity;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -8,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.DataAccess
+namespace EtkBlazorApp.DataAccess.Repositories.Product
 {
     public interface IProductUpdateService
     {
@@ -143,6 +142,7 @@ namespace EtkBlazorApp.DataAccess
 
             var pidArray = string.Join(",", idsToUpdate);
 
+            //Пересчет всех цен на товары исходя из складких (oc_product_to_stock) записей у товара
             string sql = $@"UPDATE oc_product
 				            INNER JOIN (SELECT pts.product_id, 
 									            IF(SUM(pts.quantity)  = 0, MAX(pts.price), (SELECT MIN(price) FROM oc_product_to_stock WHERE quantity > 0 AND product_id = pts.product_id)) as price, 
