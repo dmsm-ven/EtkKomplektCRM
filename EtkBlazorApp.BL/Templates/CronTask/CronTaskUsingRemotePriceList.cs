@@ -55,6 +55,10 @@ namespace EtkBlazorApp.BL.Templates.CronTask
                 logger.Info("Конец выполнения задачи {taskName}. Длительность выполнения: {elapsed} сек.",
                     taskInfo?.name, sw.Elapsed.TotalSeconds.ToString("F2", new CultureInfo("en-EN")));
             }
+            catch (CronTaskSkipException)
+            {
+                logger.Info("Задача {taskName} пропущена, т.к. данный файл уже был загружен прежде", taskInfo.name);
+            }
             catch (Exception ex)
             {
                 logger.Warn("Ошибка выполнения задачи {taskName}. Выполнение длилось: {elapsed}. Message: {msg}",

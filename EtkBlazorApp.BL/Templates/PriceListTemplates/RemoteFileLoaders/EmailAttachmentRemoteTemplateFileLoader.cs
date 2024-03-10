@@ -36,7 +36,6 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates.RemoteFileLoaders
                     Subject = templateInfo.email_criteria_subject,
                     Sender = templateInfo.email_criteria_sender,
                     FileNamePattern = templateInfo.email_criteria_file_name_pattern,
-                    MaxOldInDays = templateInfo.email_criteria_max_age_in_days
                 };
 
                 attachmentFilePath = await extractor.GetLastAttachment(criteria);

@@ -1,6 +1,5 @@
 ﻿using EtkBlazorApp.Core;
 using EtkBlazorApp.Core.Interfaces;
-using EtkBlazorApp.DataAccess.Entity.PriceList;
 using MailKit;
 using MailKit.Net.Imap;
 using MailKit.Search;
@@ -14,6 +13,7 @@ using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL
@@ -24,7 +24,6 @@ namespace EtkBlazorApp.BL
 
         private readonly ICompressedFileExtractor extractor;
         private readonly ImapConnectionData connectionData;
-        private ImapEmailSearchCriteria? lastSearchCriteria;
 
         public EmailAttachmentExtractor(ImapConnectionData connectionData, ICompressedFileExtractor extractor)
         {
@@ -45,18 +44,14 @@ namespace EtkBlazorApp.BL
             }
         }
 
-        /// <summary>
-        /// Возращает список ID прайс-листов с статусом, найдено ли письмо от поставщика для этого шаблона или нет. С настройками поиска которые для каждого шаблона указаны в его настройках
-        /// </summary>
-        /// <param name="priceListTemplates"></param>
-        /// <returns></returns>
-        public async Task<IReadOnlyDictionary<string, bool>> IsAttachmentsExist(IEnumerable<PriceListTemplateEntity> priceListTemplates)
+        public async Task<NewEmailsData> GetPriceListIdsWithNewEmail(
+            IReadOnlyDictionary<string, ImapEmailSearchCriteria> criterias, DateTimeOffset? previousLastMessageDateTime)
         {
-            var dic = new Dictionary<string, bool>();
+            var list = new List<string>();
+            DateTimeOffset? currentLastMessageDateTime = null;
 
             using (var connection = new MailKit.Net.Imap.ImapClient())
             {
-
                 connection.Timeout = (int)TimeSpan.FromMinutes(3).TotalMilliseconds;
                 connection.AuthenticationMechanisms.Remove("XOAUTH2");
                 connection.ServerCertificateValidationCallback = MySslCertificateValidationCallback;
@@ -65,24 +60,24 @@ namespace EtkBlazorApp.BL
                 await connection.AuthenticateAsync(Encoding.UTF8, new NetworkCredential(connectionData.Email, connectionData.Password));
                 await connection.Inbox.OpenAsync(FolderAccess.ReadOnly);
 
-                foreach (var templateInfo in priceListTemplates)
+                if (connection.Inbox.Count > 0)
                 {
-                    ImapEmailSearchCriteria criteria = new()
-                    {
-                        Subject = templateInfo.email_criteria_subject,
-                        Sender = templateInfo.email_criteria_sender,
-                        FileNamePattern = templateInfo.email_criteria_file_name_pattern,
-                        MaxOldInDays = templateInfo.email_criteria_max_age_in_days
-                    };
+                    var last = connection.Inbox.GetMessage(connection.Inbox.Count - 1);
 
-                    try
+                    if (last != null && (previousLastMessageDateTime == null || last.Date != previousLastMessageDateTime))
                     {
-                        dic[templateInfo.id] = await IsAttachmentWithCriteriaExists(criteria, connection);
-                    }
-                    catch
-                    {
-                        nlog.Warn("Ошибка поиска письма для шаблона {templateName}", templateInfo.title);
-                        dic[templateInfo.id] = false;
+                        var dt = previousLastMessageDateTime.HasValue ? previousLastMessageDateTime.Value.DateTime : DateTime.Now.Date;
+                        foreach (var cr in criterias)
+                        {
+                            var query = BuildSearchQuery(cr.Value, dt);
+                            var found = await connection.Inbox.SearchAsync(query);
+                            if (found.Count > 0)
+                            {
+                                list.Add(cr.Key);
+                            }
+                        }
+
+                        currentLastMessageDateTime = last.Date;
                     }
                 }
 
@@ -90,11 +85,14 @@ namespace EtkBlazorApp.BL
                 await connection.DisconnectAsync(true);
             }
 
-            return dic;
-
+            return new NewEmailsData()
+            {
+                PriceListIds = list.ToArray(),
+                CurrentLastMessageDateTime = currentLastMessageDateTime
+            };
         }
 
-        public async Task<string> GetLastAttachment(ImapEmailSearchCriteria searchCriteria)
+        public async Task<string> GetLastAttachment(ImapEmailSearchCriteria searchCriteria, DateTime? deliveredAfter = null)
         {
             //var imapLogger = new ProtocolLogger("imap_extactor.log");//, new MailKit.Net.Imap.ImapClient(imapLogger)
             using (var connection = new MailKit.Net.Imap.ImapClient())
@@ -108,9 +106,8 @@ namespace EtkBlazorApp.BL
                 await connection.Inbox.OpenAsync(FolderAccess.ReadOnly);
 
                 var cap = connection.Capabilities;
-
-                SearchQuery searchQuery = BuildSearchQuery(searchCriteria);
-                var fileName = await DownloadAttachmentFileWithCriteria(searchQuery, connection);
+                SearchQuery searchQuery = BuildSearchQuery(searchCriteria, deliveredAfter ?? DateTime.Now.Date);
+                var fileName = await DownloadAttachmentFileWithCriteria(searchCriteria, searchQuery, connection);
 
                 await connection.Inbox.CloseAsync();
                 await connection.DisconnectAsync(true);
@@ -121,13 +118,11 @@ namespace EtkBlazorApp.BL
             throw new NotSupportedException();
         }
 
-        private SearchQuery BuildSearchQuery(ImapEmailSearchCriteria searchCriteria)
+        private SearchQuery BuildSearchQuery(ImapEmailSearchCriteria searchCriteria, DateTime deliveredAfter)
         {
-            this.lastSearchCriteria = searchCriteria;
-
             var searchQuery = SearchQuery
                     .FromContains(searchCriteria.Sender)
-                    .And(SearchQuery.DeliveredAfter(DateTime.Now.AddDays(-searchCriteria.MaxOldInDays).Date));
+                    .And(SearchQuery.DeliveredAfter(deliveredAfter));
 
             if (!string.IsNullOrWhiteSpace(searchCriteria.Subject))
             {
@@ -137,28 +132,38 @@ namespace EtkBlazorApp.BL
             return searchQuery;
         }
 
-        private async Task<bool> IsAttachmentWithCriteriaExists(ImapEmailSearchCriteria searchCriteria, ImapClient connection)
-        {
-            SearchQuery searchQuery = BuildSearchQuery(searchCriteria);
-            var searchResult = await connection.Inbox.SearchAsync(searchQuery);
-            return searchResult.Count() > 0;
-        }
-
-        private async Task<string> DownloadAttachmentFileWithCriteria(SearchQuery searchQuery, ImapClient connection)
+        private async Task<string> DownloadAttachmentFileWithCriteria(ImapEmailSearchCriteria searchCriteria, SearchQuery searchQuery, ImapClient connection)
         {
             var searchResult = await connection.Inbox.SearchAsync(searchQuery);
 
             if (searchResult.Count() == 0)
             {
-                nlog.Warn("Письмо с прайс-листом от {sender} с темой {subject} (не старее чем {ageInDays} дней) не найдено",
-                   lastSearchCriteria?.Sender, lastSearchCriteria?.Subject, lastSearchCriteria?.MaxOldInDays);
+                nlog.Warn("Письмо с прайс-листом от {sender} с темой {subject} не найдено",
+                   searchCriteria?.Sender, searchCriteria?.Subject);
 
                 throw new EmailNotFoundException();
             }
-            var id = searchResult.Max();
+            UniqueId id = searchResult.Max();
 
             var email = await connection.Inbox.GetMessageAsync(id);
-            var attachment = (MimePart)email.Attachments.First();
+            var attachments = email.Attachments;
+
+            MimePart attachment = null;
+            if (attachments.Count() == 1)
+            {
+                attachment = (MimePart)attachments.First();
+            }
+            else
+            {
+                attachment = email.Attachments
+                    .Select(i => (MimePart)i)
+                    .Where(file => Regex.IsMatch(file.FileName, searchCriteria.FileNamePattern))
+                    .FirstOrDefault();
+            }
+            if (attachment == null)
+            {
+                throw new ArgumentException("Не найдено вложение с прайс-листом в этом письме");
+            }
 
             var tempPath = Path.Combine(Path.GetTempPath() + attachment.FileName);
             using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write))
@@ -181,5 +186,11 @@ namespace EtkBlazorApp.BL
         {
             return true;
         }
+    }
+
+    public class NewEmailsData
+    {
+        public string[] PriceListIds { get; init; }
+        public DateTimeOffset? CurrentLastMessageDateTime { get; init; }
     }
 }

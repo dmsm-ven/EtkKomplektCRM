@@ -4,6 +4,7 @@ using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Timers;
 
 namespace EtkBlazorApp.BL.Managers;
@@ -13,6 +14,7 @@ public class EmailPriceListCheckingService
     private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
 
     public TimeSpan TimerInterval => TimeSpan.FromMinutes(10);
+    private DateTimeOffset? lastCheckLastEmailDateTime = null;
 
     private readonly Timer timer;
     private readonly CronTaskService cronTaskService;
@@ -40,65 +42,71 @@ public class EmailPriceListCheckingService
     /// <param name="e"></param>
     private async void Timer_Elapsed(object sender, ElapsedEventArgs e)
     {
-        nlog.Trace("Timer_Elapsed START");
-
         await cronTaskService.RefreshTaskList();
 
         var tasks = cronTaskService.GetLoadedTasks();
-
         var templates = await templatesRepository.GetPriceListTemplates();
 
-        var emailTemplatesStep1 = templates
+        var emailTemplates = templates
             .Where(pl => cronTaskService.EmailOnlyPriceListsIds.Contains(pl.id))
             .Where(pl => tasks.FirstOrDefault(t => t.linked_price_list_guid == pl.id) != null)
-            .Select(pl => new
-            {
-                PriceListTemplate = pl,
-                LinkedTaskId = tasks.FirstOrDefault(t => t.linked_price_list_guid == pl.id).task_id
-            })
-            .Where(d => cronTaskService.TasksQueue.FirstOrDefault(i => i.task_id == d.LinkedTaskId) == null)
-            .ToList();
+            .ToDictionary(pl => tasks.FirstOrDefault(t => t.linked_price_list_guid == pl.id), pl => pl);
 
-        var emailTemplatesStep2 = emailTemplatesStep1
-            .Where(data => !IsExecutedToday(data.LinkedTaskId))
-            .Select(data => data)
-            .ToArray();
+        var args = await BuildSearchArgs(emailTemplates);
 
-
-        //Нашли список emailов от поставщиков
+        //nlog.Trace("args ({total}): {argsData}", args.Count, string.Join("|", args.Select(a => $"{a.Key}={a.Value.Sender}")));
         var extractor = await emailExtractor.GetExtractor();
 
-        if (emailTemplatesStep2 == null || emailTemplatesStep2.Length == 0)
-        {
-            return;
-        }
+        var foundEmailsData = await extractor.GetPriceListIdsWithNewEmail(args, lastCheckLastEmailDateTime);
+        lastCheckLastEmailDateTime = foundEmailsData.CurrentLastMessageDateTime;
+        nlog.Trace("Проверка почтового ящика на новые письма - найдено: {total}", foundEmailsData.PriceListIds.Length);
+        nlog.Trace("Обновление переменной lastCheckLastEmailDateTime - {dt}", lastCheckLastEmailDateTime);
 
-        IReadOnlyDictionary<string, bool> foundEmails = await extractor.IsAttachmentsExist(emailTemplatesStep2.Select(i => i.PriceListTemplate));
-
-        foreach (var email in foundEmails.Where(em => em.Value == true))
+        foreach (var emailTemplate in emailTemplates)
         {
-            var templateTaskId = emailTemplatesStep2.FirstOrDefault(sp => sp.PriceListTemplate?.id == email.Key)?.LinkedTaskId;
-            if (templateTaskId.HasValue)
+            if (foundEmailsData.PriceListIds.Contains(emailTemplate.Value.id))
             {
-                cronTaskService.AddTaskToQueue(templateTaskId.Value, forced: false);
+                cronTaskService.AddTaskToQueue(emailTemplate.Key.task_id, forced: false);
             }
         }
-
-        nlog.Trace("Timer_Elapsed END");
     }
 
-    private bool IsExecutedToday(int taskId)
+    private async Task<IReadOnlyDictionary<string, ImapEmailSearchCriteria>> BuildSearchArgs(
+        IReadOnlyDictionary<DataAccess.Entity.CronTaskEntity, DataAccess.Entity.PriceList.PriceListTemplateEntity> emailTemplates)
     {
-        if (!cronTaskService.TasksLastExecutionTime.ContainsKey(taskId))
+        var args = new Dictionary<string, ImapEmailSearchCriteria>();
+
+        foreach (var i in emailTemplates)
         {
-            return false;
-        }
-        return IsExecutedToday(cronTaskService.TasksLastExecutionTime[taskId]);
-    }
+            var fullTemplateInfo = await templatesRepository.GetPriceListTemplateById(i.Value.id);
+            if (cronTaskService.TasksQueue.FirstOrDefault(t => t.task_id == i.Key.task_id) != null)
+            {
+                //Пропускаем, т.к. задача уже в очереди на выполнение
+                continue;
+            }
+            if (i.Key.last_exec_date_time.HasValue &&
+                i.Key.last_exec_date_time.Value.Date == DateTime.Now.Date &&
+                i.Key.last_exec_result == DataAccess.CronTaskExecResult.Success)
+            {
+                //Пропускаем, т.к. сегодня уже выполняли эту задачу и выполнение было успешно
+                continue;
+            }
 
-    private bool IsExecutedToday(DateTime? taskLastExecTime)
-    {
-        return taskLastExecTime.HasValue && taskLastExecTime.Value.Date == DateTime.Now.Date;
+            if (string.IsNullOrWhiteSpace(fullTemplateInfo?.email_criteria_sender))
+            {
+                //Пропускаем, т.к. не заполнено поле from
+                continue;
+            }
+
+            //OK - добавляем в поиск письма
+            args.Add(i.Value.id, new ImapEmailSearchCriteria()
+            {
+                Subject = fullTemplateInfo.email_criteria_subject,
+                Sender = fullTemplateInfo.email_criteria_sender
+            });
+        }
+
+        return args;
     }
 
     public void Start()
