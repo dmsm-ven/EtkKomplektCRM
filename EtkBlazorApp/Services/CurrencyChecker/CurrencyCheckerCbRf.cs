@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.BL;
+using EtkBlazorApp.BL.Loggers;
 using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.Core.Interfaces;
 using Microsoft.Extensions.Caching.Memory;

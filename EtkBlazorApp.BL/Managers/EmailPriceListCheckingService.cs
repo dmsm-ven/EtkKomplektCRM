@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.BL.Templates.PriceListTemplates.RemoteFileLoaders;
+﻿using EtkBlazorApp.BL.Data;
+using EtkBlazorApp.BL.Templates.PriceListTemplates.RemoteFileLoaders;
 using EtkBlazorApp.DataAccess.Repositories.PriceList;
 using NLog;
 using System;
@@ -14,7 +15,19 @@ public class EmailPriceListCheckingService
     private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
 
     public TimeSpan TimerInterval => TimeSpan.FromMinutes(10);
-    private DateTimeOffset? lastCheckLastEmailDateTime = null;
+    public DateTimeOffset? LastEmailDateTime
+    {
+        get => lastEmailDateTime;
+        private set
+        {
+            if (lastEmailDateTime != value)
+            {
+                lastEmailDateTime = value;
+                nlog.Trace("Обновление переменной LastEmailDateTime - {dt}", lastEmailDateTime);
+            }
+        }
+    }
+    private DateTimeOffset? lastEmailDateTime = null;
 
     private readonly Timer timer;
     private readonly CronTaskService cronTaskService;
@@ -33,8 +46,7 @@ public class EmailPriceListCheckingService
         this.emailExtractor = emailExtractor;
         timer = new Timer();
     }
-
-    //TODO: переделать заход в ящик на проверку новых писем с сопоставление
+    //TODO: переделать таймер на BackgroundService
     /// <summary>
     /// Каждый тик заходит на почтовый ящик и ищет письма по условию из шаблонов прайс-листов
     /// </summary>
@@ -53,14 +65,12 @@ public class EmailPriceListCheckingService
             .ToDictionary(pl => tasks.FirstOrDefault(t => t.linked_price_list_guid == pl.id), pl => pl);
 
         var args = await BuildSearchArgs(emailTemplates);
-
-        //nlog.Trace("args ({total}): {argsData}", args.Count, string.Join("|", args.Select(a => $"{a.Key}={a.Value.Sender}")));
         var extractor = await emailExtractor.GetExtractor();
 
-        var foundEmailsData = await extractor.GetPriceListIdsWithNewEmail(args, lastCheckLastEmailDateTime);
-        lastCheckLastEmailDateTime = foundEmailsData.CurrentLastMessageDateTime;
+        var foundEmailsData = await extractor.GetPriceListIdsWithNewEmail(args, LastEmailDateTime);
+        LastEmailDateTime = foundEmailsData.CurrentLastMessageDateTime;
+
         nlog.Trace("Проверка почтового ящика на новые письма - найдено: {total}", foundEmailsData.PriceListIds.Length);
-        nlog.Trace("Обновление переменной lastCheckLastEmailDateTime - {dt}", lastCheckLastEmailDateTime);
 
         foreach (var emailTemplate in emailTemplates)
         {

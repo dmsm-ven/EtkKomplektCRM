@@ -10,6 +10,7 @@ using System;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authorization;
 using System.Linq;
+using EtkBlazorApp.BL.Loggers;
 
 namespace EtkBlazorApp.Controllers
 {

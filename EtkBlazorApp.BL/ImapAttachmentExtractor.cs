@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.Core;
+﻿using EtkBlazorApp.BL.Data;
+using EtkBlazorApp.Core;
 using EtkBlazorApp.Core.Interfaces;
 using MailKit;
 using MailKit.Net.Imap;
@@ -67,13 +68,20 @@ namespace EtkBlazorApp.BL
                     if (last != null && (previousLastMessageDateTime == null || last.Date != previousLastMessageDateTime))
                     {
                         var dt = previousLastMessageDateTime.HasValue ? previousLastMessageDateTime.Value.DateTime : DateTime.Now.Date;
+
+                        nlog.Trace("Сборщик писем - dt = {dt}", dt);
                         foreach (var cr in criterias)
                         {
                             var query = BuildSearchQuery(cr.Value, dt);
                             var found = await connection.Inbox.SearchAsync(query);
                             if (found.Count > 0)
                             {
+                                nlog.Trace("Сборщик писем - Найдены результаты для шаблона с отправителем {sender}", cr.Value.Sender);
                                 list.Add(cr.Key);
+                            }
+                            else
+                            {
+                                nlog.Trace("Сборщик писем - Для шаблона с отправителем {sender} результатов не найдено", cr.Value.Sender);
                             }
                         }
 
@@ -88,7 +96,7 @@ namespace EtkBlazorApp.BL
             return new NewEmailsData()
             {
                 PriceListIds = list.ToArray(),
-                CurrentLastMessageDateTime = currentLastMessageDateTime
+                CurrentLastMessageDateTime = currentLastMessageDateTime ?? previousLastMessageDateTime
             };
         }
 

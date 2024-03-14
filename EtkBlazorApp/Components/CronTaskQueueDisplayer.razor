@@ -25,11 +25,11 @@
 </div>
 
 @code {
-    private System.Threading.Timer? timer;
+    private System.Threading.Timer timer;
 
     protected override void OnInitialized()
     {
-        timer = new System.Threading.Timer(async (object? stateInfo) =>
+        timer = new System.Threading.Timer((object stateInfo) =>
         {
             StateHasChanged(); 
         }, new System.Threading.AutoResetEvent(false), 

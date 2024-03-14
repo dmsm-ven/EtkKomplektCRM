@@ -1,5 +1,6 @@
 using Blazored.Toast;
 using EtkBlazorApp.BL;
+using EtkBlazorApp.BL.Loggers;
 using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.BL.Notifiers;
 using EtkBlazorApp.BL.Templates.PriceListTemplates.RemoteFileLoaders;

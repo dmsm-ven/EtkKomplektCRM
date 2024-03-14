@@ -39,5 +39,6 @@
     protected override async Task OnParametersSetAsync()
     {
         tkApi = DeliveryApiManager.GetTkApiByCode(OrderData.TkCode);
+        await Task.Yield();
     }
 }
