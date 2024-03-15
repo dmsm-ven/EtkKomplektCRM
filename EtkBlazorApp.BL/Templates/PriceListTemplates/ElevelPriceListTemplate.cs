@@ -33,7 +33,11 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string model = tab.GetValue<string>(row, 1).Trim();
                 string sku = tab.GetValue<string>(row, 2).Trim();
                 var price = ParsePrice(tab.GetValue<string>(row, 4));
-                CurrencyType currency = Enum.Parse<CurrencyType>(tab.GetValue<string>(row, 5));
+
+                if (!Enum.TryParse<CurrencyType>(tab.GetValue<string>(row, 5), out var currency))
+                {
+                    continue;
+                }
 
                 var quantitySpbSelf = ParseQuantity(tab.GetValue<string>(row, stock_spb_self_index));
                 var quantitySpbProducer = ParseQuantity(tab.GetValue<string>(row, stock_spb_producer_index));
