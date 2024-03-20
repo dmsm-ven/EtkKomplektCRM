@@ -46,52 +46,52 @@ namespace EtkBlazorApp.BL
         }
 
         public async Task<NewEmailsData> GetPriceListIdsWithNewEmail(
-            IReadOnlyDictionary<string, ImapEmailSearchCriteria> criterias, DateTimeOffset? previousLastMessageDateTime)
+            IReadOnlyDictionary<string, ImapEmailSearchCriteria> criterias, DateTimeOffset? previousLastMessageDateTime, TimeSpan delay)
         {
             var list = new List<string>();
             DateTimeOffset? currentLastMessageDateTime = null;
 
-            using (var connection = new MailKit.Net.Imap.ImapClient())
+            var action = new Action<ImapClient>(async (connection) =>
             {
-                connection.Timeout = (int)TimeSpan.FromMinutes(3).TotalMilliseconds;
-                connection.AuthenticationMechanisms.Remove("XOAUTH2");
-                connection.ServerCertificateValidationCallback = MySslCertificateValidationCallback;
-
-                await connection.ConnectAsync(connectionData.Host, int.Parse(connectionData.Port));
-                await connection.AuthenticateAsync(Encoding.UTF8, new NetworkCredential(connectionData.Email, connectionData.Password));
-                await connection.Inbox.OpenAsync(FolderAccess.ReadOnly);
-
-                if (connection.Inbox.Count > 0)
+                //Делаем проверку что в ящике есть письма
+                if (connection.Inbox.Count == 0)
                 {
-                    var last = connection.Inbox.GetMessage(connection.Inbox.Count - 1);
+                    return;
+                }
 
-                    if (last != null && (previousLastMessageDateTime == null || last.Date != previousLastMessageDateTime))
+                //Берем последнее письмо
+                var last = connection.Inbox.GetMessage(connection.Inbox.Count - 1);
+
+                //Делаем проверку с поиском писем, только если были новые письма с момента последней проверки
+                if (last.Date == previousLastMessageDateTime)
+                {
+                    return;
+                }
+
+                DateTime deliveredAfter = DateTime.Now.Subtract(delay);
+                nlog.Trace("Сборщик писем - searchAfter = {dt}", deliveredAfter);
+
+                foreach (var cr in criterias)
+                {
+                    //Ищем письмо за последний тик интервала
+                    var query = BuildSearchQuery(cr.Value, deliveredAfter);
+                    var found = await connection.Inbox.SearchAsync(query);
+                    if (found.Count > 0)
                     {
-                        var dt = previousLastMessageDateTime.HasValue ? previousLastMessageDateTime.Value.DateTime : DateTime.Now.Date;
-
-                        nlog.Trace("Сборщик писем - dt = {dt}", dt);
-                        foreach (var cr in criterias)
-                        {
-                            var query = BuildSearchQuery(cr.Value, dt);
-                            var found = await connection.Inbox.SearchAsync(query);
-                            if (found.Count > 0)
-                            {
-                                nlog.Trace("Сборщик писем - Найдены результаты для шаблона с отправителем {sender}", cr.Value.Sender);
-                                list.Add(cr.Key);
-                            }
-                            else
-                            {
-                                nlog.Trace("Сборщик писем - Для шаблона с отправителем {sender} результатов не найдено", cr.Value.Sender);
-                            }
-                        }
-
-                        currentLastMessageDateTime = last.Date;
+                        nlog.Trace("[+] {sender}", cr.Value.Sender);
+                        list.Add(cr.Key);
+                    }
+                    else
+                    {
+                        nlog.Trace("[-] {sender}", cr.Value.Sender);
                     }
                 }
 
-                await connection.Inbox.CloseAsync();
-                await connection.DisconnectAsync(true);
-            }
+                //Меняем дату последнего сообщения если дошли до этого шага
+                currentLastMessageDateTime = last.Date;
+            });
+
+            await OpenConnectionWitchAction(action);
 
             return new NewEmailsData()
             {
@@ -100,9 +100,9 @@ namespace EtkBlazorApp.BL
             };
         }
 
-        public async Task<string> GetLastAttachment(ImapEmailSearchCriteria searchCriteria, DateTime? deliveredAfter = null)
+        //Открываем коннект к почтовому ящику, выполняем действие, закрываем коннект
+        private async Task OpenConnectionWitchAction(Action<ImapClient> action)
         {
-            //var imapLogger = new ProtocolLogger("imap_extactor.log");//, new MailKit.Net.Imap.ImapClient(imapLogger)
             using (var connection = new MailKit.Net.Imap.ImapClient())
             {
                 connection.Timeout = (int)TimeSpan.FromMinutes(3).TotalMilliseconds;
@@ -113,17 +113,23 @@ namespace EtkBlazorApp.BL
                 await connection.AuthenticateAsync(Encoding.UTF8, new NetworkCredential(connectionData.Email, connectionData.Password));
                 await connection.Inbox.OpenAsync(FolderAccess.ReadOnly);
 
-                var cap = connection.Capabilities;
-                SearchQuery searchQuery = BuildSearchQuery(searchCriteria, deliveredAfter ?? DateTime.Now.Date);
-                var fileName = await DownloadAttachmentFileWithCriteria(searchCriteria, searchQuery, connection);
+                action(connection);
 
                 await connection.Inbox.CloseAsync();
                 await connection.DisconnectAsync(true);
-
-                return fileName;
             }
+        }
 
-            throw new NotSupportedException();
+        public async Task<string> GetLastAttachment(ImapEmailSearchCriteria searchCriteria, DateTime? deliveredAfter = null)
+        {
+            string fileName = string.Empty;
+            await OpenConnectionWitchAction(async (connection) =>
+            {
+                var cap = connection.Capabilities;
+                SearchQuery searchQuery = BuildSearchQuery(searchCriteria, deliveredAfter ?? DateTime.Now.Date);
+                fileName = await DownloadAttachmentFileWithCriteria(searchCriteria, searchQuery, connection);
+            });
+            return fileName;
         }
 
         private SearchQuery BuildSearchQuery(ImapEmailSearchCriteria searchCriteria, DateTime deliveredAfter)

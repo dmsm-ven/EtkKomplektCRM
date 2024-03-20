@@ -83,12 +83,10 @@ public class Startup
             app.ApplicationServices.GetRequiredService<NewOrdersNotificationService>().Start();
             app.ApplicationServices.GetRequiredService<EmailPriceListCheckingService>().Start();
 
-            nlog.Info("Запуск приложения личного кабинета");
             await sysLogger.WriteSystemEvent(LogEntryGroupName.Auth, "Запуск", "Запуск приложения личного кабинета");
         });
         hostApplicationLifetime.ApplicationStopping.Register(async () =>
         {
-            nlog.Info("Остановка приложения личного кабинета");
             await sysLogger.WriteSystemEvent(LogEntryGroupName.Auth, "Остановка", "Остановка приложения личного кабинета");
         });
     }

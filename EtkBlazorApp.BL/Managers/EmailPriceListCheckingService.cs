@@ -67,7 +67,7 @@ public class EmailPriceListCheckingService
         var args = await BuildSearchArgs(emailTemplates);
         var extractor = await emailExtractor.GetExtractor();
 
-        var foundEmailsData = await extractor.GetPriceListIdsWithNewEmail(args, LastEmailDateTime);
+        var foundEmailsData = await extractor.GetPriceListIdsWithNewEmail(args, LastEmailDateTime, TimerInterval);
         LastEmailDateTime = foundEmailsData.CurrentLastMessageDateTime;
 
         nlog.Trace("Проверка почтового ящика на новые письма - найдено: {total}", foundEmailsData.PriceListIds.Length);

@@ -58,6 +58,7 @@ namespace EtkBlazorApp.BL.Templates.CronTask
             catch (CronTaskSkipException)
             {
                 logger.Info("Задача {taskName} пропущена, т.к. данный файл уже был загружен прежде", taskInfo.name);
+                throw;
             }
             catch (Exception ex)
             {
