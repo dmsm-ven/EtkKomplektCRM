@@ -65,6 +65,11 @@ public class EmailPriceListCheckingService
             .ToDictionary(pl => tasks.FirstOrDefault(t => t.linked_price_list_guid == pl.id), pl => pl);
 
         var args = await BuildSearchArgs(emailTemplates);
+        if (args.Count == 0)
+        {
+            return;
+        }
+
         var extractor = await emailExtractor.GetExtractor();
 
         var foundEmailsData = await extractor.GetPriceListIdsWithNewEmail(args, LastEmailDateTime, TimerInterval);
@@ -79,6 +84,7 @@ public class EmailPriceListCheckingService
                 cronTaskService.AddTaskToQueue(emailTemplate.Key.task_id, forced: false);
             }
         }
+
     }
 
     private async Task<IReadOnlyDictionary<string, ImapEmailSearchCriteria>> BuildSearchArgs(

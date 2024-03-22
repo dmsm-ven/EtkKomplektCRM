@@ -4,7 +4,6 @@ using EtkBlazorApp.DataAccess.Entity;
 using NLog;
 using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -30,8 +29,6 @@ namespace EtkBlazorApp.BL.Templates.CronTask
 
             try
             {
-                logger.Trace("Запуск выполнения задачи {taskName}", taskInfo?.name);
-
                 var templateGuid = templateType.GetPriceListGuidByType();
                 var templateInfo = await service.templates.GetPriceListTemplateById(templateGuid);
 
@@ -51,19 +48,13 @@ namespace EtkBlazorApp.BL.Templates.CronTask
 
                     taskInfo.last_exec_file_size = response.Bytes.Length;
                 }
-
-                logger.Info("Конец выполнения задачи {taskName}. Длительность выполнения: {elapsed} сек.",
-                    taskInfo?.name, sw.Elapsed.TotalSeconds.ToString("F2", new CultureInfo("en-EN")));
             }
             catch (CronTaskSkipException)
             {
-                logger.Info("Задача {taskName} пропущена, т.к. данный файл уже был загружен прежде", taskInfo.name);
                 throw;
             }
-            catch (Exception ex)
+            catch
             {
-                logger.Warn("Ошибка выполнения задачи {taskName}. Выполнение длилось: {elapsed}. Message: {msg}",
-                    taskInfo?.name, sw.Elapsed.TotalSeconds.ToString("F2", new CultureInfo("en-EN")), ex.Message);
                 throw;
             }
         }

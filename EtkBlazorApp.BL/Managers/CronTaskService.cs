@@ -176,26 +176,25 @@ namespace EtkBlazorApp.BL.Managers
 
             var headTask = tasksQueue[0];
             var taskInfo = await cronTaskStorage.GetCronTaskById(headTask.TaskId);
+            var taskEntity = tasks.FirstOrDefault(t => t.Value.task_id == headTask.TaskId).Value;
 
             try
             {
-                var taskEntity = tasks.FirstOrDefault(t => t.Value.task_id == headTask.TaskId).Value;
-
                 await ExecuteTask(headTask, taskEntity, false);
             }
             catch (Exception ex)
             {
                 nlog.Warn("Ошибка выполнения задачи '{taskName}'. {errorMessage}",
                     taskInfo.name, ex.Message);
-                throw;
+                //Ничего не делаем, просто пропускаем задачу
             }
             finally
             {
                 tasksQueue.Remove(headTask);
                 semaphore.Release();
-                nlog.Trace("Задача {taskName} извлечена из списка. Теперь в очереди: {count} задач", taskInfo.name, tasksQueue.Count);
+                nlog.Trace("Задача {taskName} удалена из очереди. Теперь в очереди: {count} задач",
+                    taskInfo.name, tasksQueue.Count);
             }
-
         }
 
         /// <summary>
@@ -242,16 +241,19 @@ namespace EtkBlazorApp.BL.Managers
 
             if (forced)
             {
+                //Очищаем размер последнего загруженного файла для этого задания
+                //в следствии чего, задание выполнится, даже если загружаем этот же самый файл
                 taskInfo.last_exec_file_size = null;
             }
 
             try
             {
-                await task.Run(taskInfo);
+                nlog.Trace("Запуск выполнения задачи {taskName}", taskInfo?.name);
 
+                await task.Run(taskInfo);
                 exec_result = CronTaskExecResult.Success;
-                sw.Stop();
-                await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {taskInfo.name} выполнено. Длительность выполнения {(int)sw.Elapsed.TotalSeconds} сек.");
+
+                await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {taskInfo.name} выполнено. Длительность выполнения {sw.Elapsed:g} сек.");
             }
             catch (CronTaskSkipException)
             {
@@ -261,6 +263,7 @@ namespace EtkBlazorApp.BL.Managers
             catch (Exception ex)
             {
                 await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Ошибка", $"Ошибка выполнения задания '{taskInfo.name}'. {ex.Message} {ex.StackTrace ?? ""}".Trim());
+                exec_result = CronTaskExecResult.Failed;
             }
             finally
             {
@@ -278,7 +281,7 @@ namespace EtkBlazorApp.BL.Managers
                 else if (exec_result == CronTaskExecResult.Failed)
                 {
                     OnTaskExecutionError?.Invoke(taskInfo);
-                    await notifier.NotifyPriceListLoadingError(taskInfo.name);
+                    notifier.NotifyPriceListLoadingError(taskInfo.name);
                 }
 
             }
