@@ -25,23 +25,23 @@ public partial class VseInstrumentiExport : ComponentBase
     [Inject] public UserLogger logger { get; set; }
     [Inject] public ReportManager ReportManager { get; set; }
 
-    List<PrikatManufacturerDiscountViewModel> itemsSource;
-    List<PrikatManufacturerDiscountViewModel> orderedSource => itemsSource.OrderByDescending(t => t.IsChecked).ToList();
+    private List<PrikatManufacturerDiscountViewModel> itemsSource;
 
-    StocksCheckListBox selectedStocksCheckListBox;
+    private List<PrikatManufacturerDiscountViewModel> orderedSource => itemsSource.OrderByDescending(t => t.IsChecked).ToList();
+
+    private StocksCheckListBox selectedStocksCheckListBox;
 
     public bool ShowPriceExample { get; set; } = false;
     public decimal ExamplePrice { get; set; } = 1000;
 
-    bool reportOptionsHasStock = false;
-    bool reportOptionsHasEan = false;
-    string reportOptionsGln;
+    private bool reportOptionsHasStock = false;
+    private bool reportOptionsHasEan = false;
+    private string reportOptionsGln;
+    private bool uncheckAllState = false;
+    private bool showSettingsBox = false;
+    private bool inProgress = false;
 
-    bool uncheckAllState = false;
-    bool showSettingsBox = false;
-
-    bool inProgress = false;
-    bool reportButtonDisabled => itemsSource == null || itemsSource.All(m => m.IsChecked == false);
+    private bool reportButtonDisabled => itemsSource == null || itemsSource.All(m => m.IsChecked == false);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -84,7 +84,7 @@ public partial class VseInstrumentiExport : ComponentBase
         }
         catch (Exception ex)
         {
-            await logger.Write(LogEntryGroupName.Prikat, "Ошибка", $"Ошибка создания выгрузки для ВсеИнструменты: {ex.Message}. {ex.StackTrace}");
+            await logger.Write(LogEntryGroupName.Prikat, "Ошибка", $"Ошибка создания выгрузки для ВсеИнструменты: {ex.Message}");
             toasts.ShowError($"Ошибка создания отчета: {ex.Message}");
         }
         finally

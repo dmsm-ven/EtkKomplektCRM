@@ -52,27 +52,35 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
 
             string fileName = Path.GetTempPath() + $"prikat_{DateTime.Now.ToShortDateString().Replace(".", "_")}.csv";
 
-            var fi = new FileInfo(fileName);
-            string logBrands = string.Join(" | ", templateSource.Select(i => $"{i.manufacturer_name} [{i.discount1}] [{i.discount2}]"));
-
-            nlog.Trace("Начало создания выгрузки ВИ (ПРИКАТ) с именем файла {fileName} и следующими брендами ({brands})",
-                fileName, logBrands);
-
-            await Task.Run(async () =>
+            try
             {
-                using (var fs = new FileStream(fileName, FileMode.Create))
-                using (var sw = new StreamWriter(fs, Encoding.UTF8))
+                var fi = new FileInfo(fileName);
+                string logBrands = string.Join(" | ", templateSource.Select(i => $"{i.manufacturer_name} [{i.discount1}] [{i.discount2}]"));
+
+                nlog.Trace("Начало создания выгрузки ВИ (ПРИКАТ) с именем файла {fileName} и следующими брендами ({brands})",
+                    fileName, logBrands);
+
+                await Task.Run(async () =>
                 {
-                    foreach (var data in templateSource)
+                    using (var fs = new FileStream(fileName, FileMode.Create))
+                    using (var sw = new StreamWriter(fs, Encoding.UTF8))
                     {
-                        await InsertTemplateInfo(sw, data, options);
+                        foreach (var data in templateSource)
+                        {
+                            await InsertTemplateInfo(sw, data, options);
+                        }
                     }
-                }
-            });
+                });
 
 
-            nlog.Info("Выгрузка ВИ (ПРИКАТ) создана. Файл для загрузки {fileName} ({fileSize}). Длительность выполнения: {elapsed}",
-                fileName, fi.Length.Bytes().Humanize(), sw.Elapsed.Humanize());
+                nlog.Info("Выгрузка ВИ (ПРИКАТ) создана. Файл для загрузки {fileName} ({fileSize}). Длительность выполнения: {elapsed}",
+                    fileName, fi.Length.Bytes().Humanize(), sw.Elapsed.Humanize());
+            }
+            catch (Exception ex)
+            {
+                nlog.Error("Ошибка создаения выгрузки для ВсеИнструменты. Детали: {stack}", ex.StackTrace);
+                throw;
+            }
 
             return fileName;
         }

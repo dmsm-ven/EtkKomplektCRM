@@ -23,8 +23,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string name = tab.GetValue<string>(row, 2);
                 var rrcPrice = ParsePrice(tab.GetValue<string>(row, 3));
 
-                var quantityMsk = ParseQuantity(tab.GetValue<string>(row, 6));
-                var quantitySpb = ParseQuantity(tab.GetValue<string>(row, 8));
+                var quantityMsk = ParseQuantity(tab.GetValue<string>(row, 7).Replace("+", string.Empty));
+                var quantitySpb = ParseQuantity(tab.GetValue<string>(row, 9).Replace("+", string.Empty));
 
                 var ean = tab.GetValue<string>(row, 11);
 

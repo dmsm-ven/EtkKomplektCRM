@@ -4,6 +4,7 @@ using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity.PriceList;
 using EtkBlazorApp.DataAccess.Repositories.PriceList;
+using Humanizer;
 using NLog;
 using System;
 using System.Collections.Generic;
@@ -304,8 +305,8 @@ namespace EtkBlazorApp.BL.Managers
                 }
             }
 
-            nlog.Trace("Конец преобразования моделей/артикулов для прайс-листа '{templateTitle}'. Длительность выполнения: {elapsedMs} ms",
-                templateInfo?.title, (int)sw.Elapsed.TotalMilliseconds);
+            nlog.Trace("Конец преобразования моделей/артикулов для прайс-листа '{templateTitle}'. Длительность выполнения: {elapsedMs}",
+                templateInfo?.title, sw.Elapsed.Humanize());
         }
 
         /// <summary>

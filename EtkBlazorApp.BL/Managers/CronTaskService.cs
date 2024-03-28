@@ -6,6 +6,7 @@ using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using EtkBlazorApp.DataAccess.Repositories.PriceList;
+using Humanizer;
 using Newtonsoft.Json;
 using NLog;
 using System;
@@ -253,7 +254,7 @@ namespace EtkBlazorApp.BL.Managers
                 await task.Run(taskInfo);
                 exec_result = CronTaskExecResult.Success;
 
-                await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {taskInfo.name} выполнено. Длительность выполнения {sw.Elapsed:g} сек.");
+                await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {taskInfo.name} выполнено. Длительность выполнения {sw.Elapsed.Humanize()}");
             }
             catch (CronTaskSkipException)
             {
