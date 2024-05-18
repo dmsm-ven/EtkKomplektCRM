@@ -50,6 +50,7 @@
     <ProjectReference Include="..\EtkBlazorApp.DataAccess\EtkBlazorApp.DataAccess.csproj" />
     <ProjectReference Include="..\EtkBlazorApp.DellinApi\EtkBlazorApp.DellinApi.csproj" />
     <ProjectReference Include="..\EtkBlazorApp.TelegramBotLib\EtkBlazorApp.TelegramBotLib.csproj" />
+    <ProjectReference Include="..\EtkBlazorApp.WildberriesApi\EtkBlazorApp.WildberriesApi.csproj" />
     <ProjectReference Include="..\EtkBlazorAppi.DadataApi\EtkBlazorApp.DadataApi.csproj" />
   </ItemGroup>
 

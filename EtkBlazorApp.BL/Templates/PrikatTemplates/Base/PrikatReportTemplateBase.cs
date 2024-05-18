@@ -95,7 +95,11 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates.Base
             WriteCell(sw); //Позиция
             WriteCell(sw, product.ean); //Штрихкод
             WriteCell(sw); //Артикул товара покупателя
-            WriteCell(sw, product.sku); //Артикул товара поставщика
+
+            //TODO: ИЗМЕНИТЬ, изначально сделано неправильно - тут должен быть артикул поставщика (НАШ SKU), 
+            //А не артикул поставщика у того которого мы покупаем товар
+            //Правильный вариант, у всех товаров должен быть вида: ETK-123456
+            WriteCell(sw, product.sku ?? $"ETK-{product.product_id}"); //Артикул товара поставщика 
             WriteCell(sw, product.name); //Наименование
             WriteCell(sw, "1"); //Кол-во
             WriteCell(sw, "шт."); //Единицы измерения
