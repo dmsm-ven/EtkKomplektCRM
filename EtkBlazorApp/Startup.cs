@@ -12,12 +12,14 @@ using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Repositories;
 using EtkBlazorApp.DataAccess.Repositories.PriceList;
 using EtkBlazorApp.DataAccess.Repositories.Product;
+using EtkBlazorApp.DataAccess.Repositories.Wildberries;
 using EtkBlazorApp.DellinApi;
 using EtkBlazorApp.Model.Chart;
 using EtkBlazorApp.Model.IOptionProfiles;
 using EtkBlazorApp.Services;
 using EtkBlazorApp.Services.CurrencyChecker;
 using EtkBlazorApp.TelegramBotLib;
+using EtkBlazorApp.WildberriesApi;
 using EtkBlazorAppi.DadataApi;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -200,11 +202,18 @@ public class Startup
         });
 
         services.AddSingleton<DeliveryServiceApiManager>();
+
+        services.AddHttpClient<WildberriesApiClient>(x =>
+        {
+            x.DefaultRequestHeaders.Add("Accept", "application/json");
+        });
+        services.AddTransient<WildberriesApiClient>();
     }
 
     private void ConfigureDatabaseServices(IServiceCollection services)
     {
         services.AddTransient<IDatabaseAccess, EtkDatabaseDapperAccess>();
+        services.AddTransient<IWildberriesProductRepository, WildberriesProductRepository>();
         services.AddTransient<IPriceListUpdateHistoryRepository, PriceListUpdateHistoryRepository>();
         services.AddTransient<IPartnersInformationService, PartnersInformationService>();
         services.AddTransient<IProductDiscountStorage, ProductDiscountStorage>();

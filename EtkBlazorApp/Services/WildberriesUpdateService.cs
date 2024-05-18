@@ -1,11 +1,10 @@
 ﻿using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.BL.Loggers;
-using EtkBlazorApp.Core.Data.Wildberries;
 using EtkBlazorApp.DataAccess;
+using EtkBlazorApp.DataAccess.Repositories.Wildberries;
 using EtkBlazorApp.WildberriesApi;
 using Humanizer;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using NLog;
 using System;
 using System.Diagnostics;
@@ -21,36 +20,36 @@ public class WildberriesUpdateService : BackgroundService
     public readonly TimeSpan UpdateInterval = TimeSpan.FromHours(2);
 
     private readonly WildberriesApiClient wbApiClient;
+    private readonly IWildberriesProductRepository productRepository;
     private readonly ISettingStorageReader settingStorageReader;
-    private readonly IProductStorage productStorage;
     private readonly SystemEventsLogger sysLogger;
 
     public WildberriesUpdateService(WildberriesApiClient wbApiClient,
+        IWildberriesProductRepository productRepository,
         ISettingStorageReader settingStorageReader,
-        IProductStorage productStorage,
         SystemEventsLogger sysLogger)
     {
         this.wbApiClient = wbApiClient;
+        this.productRepository = productRepository;
         this.settingStorageReader = settingStorageReader;
-        this.productStorage = productStorage;
         this.sysLogger = sysLogger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using PeriodicTimer timer = new(UpdateInterval);
-        nlog.LogInformation("Служба обновление товаров на Wildberries запущена");
+        nlog.Info("Служба обновление товаров на Wildberries запущена");
 
         try
         {
             while (await timer.WaitForNextTickAsync(stoppingToken))
             {
-                await DoWork();
+                await UpdateWildberriesProducts();
             }
         }
         catch (OperationCanceledException)
         {
-            nlog.LogTrace("Служба обновление товаров на Wildberries остановлен");
+            nlog.Trace("Служба обновление товаров на Wildberries остановлен");
         }
         catch (Exception ex)
         {
@@ -60,16 +59,16 @@ public class WildberriesUpdateService : BackgroundService
         }
     }
 
-    private async Task DoWork()
+    private async Task UpdateWildberriesProducts()
     {
-        nlog.LogInformation("Запуск обновление товаров на Wildberries");
+        nlog.Info("Запуск обновление товаров на Wildberries");
 
         var sw = Stopwatch.StartNew();
 
         var progress = new Progress<WildberriesUpdateProgress>(v =>
         {
             string msgTemplate = "Wildberries API: {desc} [{step} | {totalSteps}]. Длительность выполнения: {elapsed}";
-            nlog.LogTrace("Служба обновление товаров на Wildberries запущена", msgTemplate, v.CurrentStepDescription, v.CurrentStep, v.TotalSteps, v.CurrentStep == 1 ? TimeSpan.Zero.Humanize() : sw.Elapsed.Humanize());
+            nlog.Trace("Служба обновление товаров на Wildberries запущена", msgTemplate, v.CurrentStepDescription, v.CurrentStep, v.TotalSteps, v.CurrentStep == 1 ? TimeSpan.Zero.Humanize() : sw.Elapsed.Humanize());
         });
 
         //Токен, судя по описанию API, должен меняться каждые 180 дн. (на 18.05.2024).
@@ -78,16 +77,12 @@ public class WildberriesUpdateService : BackgroundService
 
         if (string.IsNullOrWhiteSpace(secureToken))
         {
+            nlog.Error("WB API secure token was empty");
             throw new ArgumentNullException(nameof(secureToken) + " не предоставлен");
         }
 
-        await wbApiClient.UpdateProducts(secureToken, ReadWildberriesProductsData, progress);
+        //Наценки считаются прямо в SQL запросе
+        var products = await productRepository.ReadProducts();
+        await wbApiClient.UpdateProducts(secureToken, products, progress);
     }
-
-    private async Task<WildberriesEtkProductUpdateEntry[]> ReadWildberriesProductsData()
-    {
-        await Task.Yield();
-        return new WildberriesEtkProductUpdateEntry[];
-    }
-
 }

@@ -5,17 +5,20 @@ using System.Net.Http.Json;
 
 namespace EtkBlazorApp.WildberriesApi;
 
+//TODO: Доработать следуюие моменты
+// 1. Пагинация, если товаров больше 1000
+// 2. Не отправлять на обновление, если статус точно такой же как у WB, либо
+// 3. Отправлять только данные на товары которые изменились
 public class WildberriesApiClient
 {
-    private readonly HttpClient httpClient;
     private readonly ILogger<WildberriesApiClient> logger;
-
+    private readonly HttpClient httpClient;
     private readonly int MAX_PRODUCTS_PER_PAGE = 1000;
     private readonly int TOTAL_STEPS = 7;
-    private readonly Dictionary<string, string> etkIdToWbBarcode = new();
-    private readonly Dictionary<string, int> etkIdToWbNMID = new();
-    private Dictionary<string, int> etkIdTopriceMap;
-    private Dictionary<string, int> etkIdToQuantity;
+    private readonly Dictionary<string, string> etkIdToWbBarcode = new();   //ETK-123456 -> 20941237821 (баркод/ean) от WB
+    private readonly Dictionary<string, int> etkIdToWbNMID = new();         //ETK-123456 -> 37372 (внутренний код товара от WB)
+    private Dictionary<string, int> etkIdToPriceMap;                        //ETK-123456 -> 9900 
+    private Dictionary<string, int> etkIdToQuantity;                        //ETK-123456 -> 6 
 
     public WildberriesApiClient(HttpClient httpClient, ILogger<WildberriesApiClient> logger)
     {
@@ -23,15 +26,25 @@ public class WildberriesApiClient
         this.logger = logger;
     }
 
+    /// <summary>
+    /// Обновить все товары (цены и остатки) на маркетплесе Wildberries в соответствии с наценками и выбранными складами в настройках маркетплейса в личном кабинете на странице /marketplace-export
+    /// И токеном доступа на странице /settings вкладки "Маркетплейсы" раздела Wildberries
+    /// </summary>
+    /// <param name="secureToken"></param>
+    /// <param name="productsDataReader"></param>
+    /// <param name="progress"></param>
+    /// <returns></returns>
     public async Task UpdateProducts(string secureToken,
-        Func<Task<WildberriesEtkProductUpdateEntry[]>> productsDataReader,
+        IEnumerable<WildberriesEtkProductUpdateEntry> productsData,
         IProgress<WildberriesUpdateProgress> progress)
     {
+        httpClient.DefaultRequestHeaders.Add("Authorization", secureToken);
+
         progress?.Report(new WildberriesUpdateProgress(1, TOTAL_STEPS, "Получаем список товаров которые есть на WB"));
         await ReceiveWbProductsData();
 
-        progress?.Report(new WildberriesUpdateProgress(2, TOTAL_STEPS, "Получаем список товаров ETK"));
-        await ReceiveEtkProductsData(productsDataReader);
+        progress?.Report(new WildberriesUpdateProgress(2, TOTAL_STEPS, "Преобразование товаров ЕТК в словари остатков и цен"));
+        ConvertEtkProductsToDictionaries(productsData);
 
         progress?.Report(new WildberriesUpdateProgress(3, TOTAL_STEPS, "Получаем список складов WB и берем первый"));
         int warehouseId = await GetWarehouseId();
@@ -45,7 +58,7 @@ public class WildberriesApiClient
         progress?.Report(new WildberriesUpdateProgress(6, TOTAL_STEPS, "Выполнение API запроса к WB на обновление цен"));
         await UpdatePrices();
 
-        progress?.Report(new WildberriesUpdateProgress(7, TOTAL_STEPS, "Конец обновление остатков и цен WB"));
+        progress?.Report(new WildberriesUpdateProgress(TOTAL_STEPS, TOTAL_STEPS, "Конец обновление остатков и цен WB"));
     }
 
     private async Task<int> GetWarehouseId()
@@ -62,12 +75,11 @@ public class WildberriesApiClient
         return list[0].id;
     }
 
-    private async Task ReceiveEtkProductsData(Func<Task<WildberriesEtkProductUpdateEntry[]>> productsDataReader)
+    private void ConvertEtkProductsToDictionaries(IEnumerable<WildberriesEtkProductUpdateEntry> productsData)
     {
         logger.LogTrace("ReceiveEtkProductsData START");
 
-        WildberriesEtkProductUpdateEntry[] productsData = await productsDataReader();
-        etkIdTopriceMap = productsData.ToDictionary(i => i.ProductId, i => i.PriceInRUB);
+        etkIdToPriceMap = productsData.ToDictionary(i => i.ProductId, i => i.PriceInRUB);
         etkIdToQuantity = productsData.ToDictionary(i => i.ProductId, i => i.Quantity);
 
         logger.LogTrace("ReceiveEtkProductsData END");
@@ -165,7 +177,7 @@ public class WildberriesApiClient
             data = etkIdToWbNMID.Select(i => new WBProductPriceUpdate()
             {
                 nmID = i.Value,
-                price = etkIdTopriceMap.ContainsKey(i.Key) ? etkIdTopriceMap[i.Key] : 0
+                price = etkIdToPriceMap.ContainsKey(i.Key) ? etkIdToPriceMap[i.Key] : 0
             }).ToList()
         };
 
