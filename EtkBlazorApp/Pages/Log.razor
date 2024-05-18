@@ -1,6 +1,7 @@
 ﻿@page "/log"
 
-@using System.Threading;
+@    using System.Threading;
+    using EtkBlazorApp.BL.Data;
 @attribute [Authorize(Roles = "Administrator")]
 @inject ILogStorage database
 @inject IUserService usersService

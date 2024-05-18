@@ -40,12 +40,20 @@
                                               FeedURL="https://etk-komplekt.ru/index.php?route=feed/yandex_yml&token=DA000001A17164D2">
                 </MarketplaceBrandsExportTable>
             }
-            else if(SelectedTab == "Sbermegamarket")
+            else if (SelectedTab == "Sbermegamarket")
             {
-                <MarketplaceBrandsExportTable Marketplace="Sbermegamarket" 
+                <MarketplaceBrandsExportTable Marketplace="Sbermegamarket"
                                               Title="Настройки выгрузки Sbermegamarket"
                                               CabinetURL="https://partner.sbermegamarket.ru/home"
-                                              FeedURL="https://etk-komplekt.ru/index.php?route=feed/sbermegamarket_yml&token=D7C6CD2F-94B4-447E-B358-44D2B51787F4">                   
+                                              FeedURL="https://etk-komplekt.ru/index.php?route=feed/sbermegamarket_yml&token=D7C6CD2F-94B4-447E-B358-44D2B51787F4">
+                </MarketplaceBrandsExportTable>
+            }
+            else if (SelectedTab == "Wildberries")
+            {
+                <MarketplaceBrandsExportTable Marketplace="Wildberries"
+                                              Title="Настройки выгрузки Wildberries"
+                                              CabinetURL="https://seller.wildberries.ru"
+                                              FeedURL="https://etk-komplekt.ru">
                 </MarketplaceBrandsExportTable>
             }
         </div>
@@ -59,7 +67,7 @@
 </div>
 
 @code {
-    static string[] tabs = new[] { "OzonSeller", "YandexMarket", "Sbermegamarket", "Сводная таблица" };
+    static string[] tabs = new[] { "Wildberries", "OzonSeller", "YandexMarket", "Sbermegamarket", "Сводная таблица" };
 
     public string SelectedTab { get; set; } = tabs[0];
 

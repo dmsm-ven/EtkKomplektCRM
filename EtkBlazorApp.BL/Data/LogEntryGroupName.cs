@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace EtkBlazorApp.BL
+namespace EtkBlazorApp.BL.Data
 {
     public enum LogEntryGroupName
     {
@@ -44,6 +44,9 @@ namespace EtkBlazorApp.BL
         Partners,
 
         [Description("Заказы")]
-        Orders
+        Orders,
+
+        [Description("Маркетплейс Wildberries")]
+        Wildberries,
     }
 }

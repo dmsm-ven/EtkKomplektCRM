@@ -1,5 +1,6 @@
 using Blazored.Toast;
 using EtkBlazorApp.BL;
+using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.BL.Loggers;
 using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.BL.Notifiers;
@@ -139,6 +140,8 @@ public class Startup
         services.AddScoped<UserLogger>();
         services.AddScoped<ReportManager>();
         services.AddScoped<ChartDataExtractor>();
+
+        services.AddHostedService<WildberriesUpdateService>();
     }
 
     private void ConfigureOptions(IServiceCollection services)

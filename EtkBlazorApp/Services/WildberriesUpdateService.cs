@@ -1,12 +1,14 @@
-﻿using EtkBlazorApp.Core.Data.Wildberries;
+﻿using EtkBlazorApp.BL.Data;
+using EtkBlazorApp.BL.Loggers;
+using EtkBlazorApp.Core.Data.Wildberries;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.WildberriesApi;
 using Humanizer;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using NLog;
 using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,26 +16,30 @@ namespace EtkBlazorApp.Services;
 
 public class WildberriesUpdateService : BackgroundService
 {
+    private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
+
     public readonly TimeSpan UpdateInterval = TimeSpan.FromHours(2);
 
     private readonly WildberriesApiClient wbApiClient;
     private readonly ISettingStorageReader settingStorageReader;
-    private readonly ILogger<WildberriesUpdateService> logger;
+    private readonly IProductStorage productStorage;
+    private readonly SystemEventsLogger sysLogger;
 
     public WildberriesUpdateService(WildberriesApiClient wbApiClient,
         ISettingStorageReader settingStorageReader,
-        ILogger<WildberriesUpdateService> logger)
+        IProductStorage productStorage,
+        SystemEventsLogger sysLogger)
     {
         this.wbApiClient = wbApiClient;
         this.settingStorageReader = settingStorageReader;
-        this.logger = logger;
+        this.productStorage = productStorage;
+        this.sysLogger = sysLogger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        logger.LogInformation("Запуск службы Wildberries API");
-
         using PeriodicTimer timer = new(UpdateInterval);
+        nlog.LogInformation("Служба обновление товаров на Wildberries запущена");
 
         try
         {
@@ -44,35 +50,44 @@ public class WildberriesUpdateService : BackgroundService
         }
         catch (OperationCanceledException)
         {
-            logger.LogInformation("Остановка службы Wildberries API");
+            nlog.LogTrace("Служба обновление товаров на Wildberries остановлен");
+        }
+        catch (Exception ex)
+        {
+            await sysLogger.WriteSystemEvent(LogEntryGroupName.Wildberries,
+                "Обновление остановлено",
+                $"Ошибка в работе службы обновление товаров на Wildberries. Детали {ex.Message}");
         }
     }
 
     private async Task DoWork()
     {
-        var sw = Stopwatch.StartNew();
+        nlog.LogInformation("Запуск обновление товаров на Wildberries");
 
-        logger.LogInformation("Запуск задачи по обновлению товаров на Wildberries");
+        var sw = Stopwatch.StartNew();
 
         var progress = new Progress<WildberriesUpdateProgress>(v =>
         {
-            string msgTemplate = "Wildberries API: \"{desc}\" шаг {step} из {totalSteps}";
-            logger.LogTrace(msgTemplate, v.CurrentStepDescription, v.CurrentStep, v.TotalSteps);
+            string msgTemplate = "Wildberries API: {desc} [{step} | {totalSteps}]. Длительность выполнения: {elapsed}";
+            nlog.LogTrace("Служба обновление товаров на Wildberries запущена", msgTemplate, v.CurrentStepDescription, v.CurrentStep, v.TotalSteps, v.CurrentStep == 1 ? TimeSpan.Zero.Humanize() : sw.Elapsed.Humanize());
         });
 
         //Токен, судя по описанию API, должен меняться каждые 180 дн. (на 18.05.2024).
         //Т.е. его нужно будет перевыпускать и обновлнять в настройках в личном кабинете
         string secureToken = await settingStorageReader.GetValue("wildberries_api_token");
 
-        await wbApiClient.UpdateProducts(secureToken, SkuReader, progress);
+        if (string.IsNullOrWhiteSpace(secureToken))
+        {
+            throw new ArgumentNullException(nameof(secureToken) + " не предоставлен");
+        }
 
-        logger.LogInformation("Конец выполнения задачи по обновлению товаров на Wildberries. Выполнение заняло {elapsed}", sw.Elapsed.Humanize());
+        await wbApiClient.UpdateProducts(secureToken, ReadWildberriesProductsData, progress);
     }
 
-    private async Task<WildberriesEtkProductUpdateEntry[]> SkuReader()
+    private async Task<WildberriesEtkProductUpdateEntry[]> ReadWildberriesProductsData()
     {
         await Task.Yield();
-        return Enumerable.Empty<WildberriesEtkProductUpdateEntry>().ToArray();
+        return new WildberriesEtkProductUpdateEntry[];
     }
 
 }

@@ -6,7 +6,7 @@
 @inject CronTaskService taskManager
 @attribute [Authorize(Roles = "Administrator, Manager")]
 @implements IDisposable
-@using System.Timers
+@    using System.Timers
 
     <h3>Переодические задачи</h3>
     @if (cronTaskList == null)

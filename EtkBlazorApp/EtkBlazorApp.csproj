@@ -64,6 +64,9 @@
     <Content Update="wwwroot\image\logotips\marketplaces\Sbermegamarket-logo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Update="wwwroot\image\logotips\marketplaces\Wildberries-logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Update="wwwroot\image\logotips\marketplaces\YandexMarket-logo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

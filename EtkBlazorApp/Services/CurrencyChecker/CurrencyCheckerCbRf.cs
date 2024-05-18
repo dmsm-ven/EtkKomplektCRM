@@ -1,4 +1,4 @@
-﻿using EtkBlazorApp.BL;
+﻿using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.BL.Loggers;
 using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.Core.Interfaces;

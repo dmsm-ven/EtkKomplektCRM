@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.DataAccess;
+﻿using EtkBlazorApp.BL.Data;
+using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using NLog;
 using System;

@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.BL.CronTask;
+using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.BL.Loggers;
 using EtkBlazorApp.BL.Templates.CronTask;
 using EtkBlazorApp.BL.Templates.PriceListTemplates.RemoteFileLoaders;

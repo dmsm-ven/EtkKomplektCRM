@@ -1,5 +1,5 @@
 ﻿using Blazored.Toast.Services;
-using EtkBlazorApp.BL;
+using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.Services;
