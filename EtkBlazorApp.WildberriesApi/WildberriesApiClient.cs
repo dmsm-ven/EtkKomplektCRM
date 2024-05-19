@@ -1,7 +1,9 @@
 ﻿using EtkBlazorApp.Core.Data.Wildberries;
 using EtkBlazorApp.WildberriesApi.Data;
 using Microsoft.Extensions.Logging;
+using NLog;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace EtkBlazorApp.WildberriesApi;
 
@@ -11,6 +13,8 @@ namespace EtkBlazorApp.WildberriesApi;
 // 3. Отправлять только данные на товары которые изменились
 public class WildberriesApiClient
 {
+    private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
+
     private readonly ILogger<WildberriesApiClient> logger;
     private readonly HttpClient httpClient;
     private readonly int MAX_PRODUCTS_PER_PAGE = 1000;
@@ -38,6 +42,12 @@ public class WildberriesApiClient
         IEnumerable<WildberriesEtkProductUpdateEntry> productsData,
         IProgress<WildberriesUpdateProgress> progress)
     {
+        nlog.Trace("UpdateProducts START");
+
+        if (httpClient.DefaultRequestHeaders.Contains("Authorization"))
+        {
+            httpClient.DefaultRequestHeaders.Remove("Authorization");
+        }
         httpClient.DefaultRequestHeaders.Add("Authorization", secureToken);
 
         progress?.Report(new WildberriesUpdateProgress(1, TOTAL_STEPS, "Получаем список товаров которые есть на WB"));
@@ -59,6 +69,8 @@ public class WildberriesApiClient
         await UpdatePrices();
 
         progress?.Report(new WildberriesUpdateProgress(TOTAL_STEPS, TOTAL_STEPS, "Конец обновление остатков и цен WB"));
+
+        nlog.Trace("UpdateProducts END");
     }
 
     private async Task<int> GetWarehouseId()
@@ -77,16 +89,21 @@ public class WildberriesApiClient
 
     private void ConvertEtkProductsToDictionaries(IEnumerable<WildberriesEtkProductUpdateEntry> productsData)
     {
-        logger.LogTrace("ReceiveEtkProductsData START");
+        nlog.Trace("ConvertEtkProductsToDictionaries START");
 
         etkIdToPriceMap = productsData.ToDictionary(i => i.ProductId, i => i.PriceInRUB);
-        etkIdToQuantity = productsData.ToDictionary(i => i.ProductId, i => i.Quantity);
+        nlog.Trace("etkIdToPriceMap COUNT: {count}", etkIdToPriceMap.Count);
 
-        logger.LogTrace("ReceiveEtkProductsData END");
+        etkIdToQuantity = productsData.ToDictionary(i => i.ProductId, i => i.Quantity);
+        nlog.Trace("etkIdToQuantity COUNT: {count}", etkIdToQuantity.Count);
+
+        nlog.Trace("ConvertEtkProductsToDictionaries END");
     }
 
     private async Task ReceiveWbProductsData()
     {
+        nlog.Trace("ReceiveWbProductsData START");
+
         etkIdToWbBarcode.Clear();
         etkIdToWbNMID.Clear();
 
@@ -97,7 +114,8 @@ public class WildberriesApiClient
         {
             var res = await httpClient.PostAsJsonAsync(uri, WBCardListPayload.Empty);
             var productsData = await res.Content.ReadFromJsonAsync<WBCardListResponse>();
-            logger.LogTrace("ReceiveWbProductsData");
+
+            nlog.Trace("ReceiveWbProductsData COUNT: {productsReaded}", productsData.cards.Count);
 
             if (productsData?.cards?.Count == 0)
             {
@@ -126,10 +144,14 @@ public class WildberriesApiClient
         {
             throw;
         }
+
+        nlog.Trace("ReceiveWbProductsData END");
     }
 
     private async Task ClearStock(int warehouseId)
     {
+        nlog.Trace("ClearStock START");
+
         var uri = $"https://suppliers-api.wildberries.ru/api/v3/stocks/{warehouseId}";
 
         if (etkIdToWbBarcode.Values.Count >= MAX_PRODUCTS_PER_PAGE)
@@ -142,12 +164,14 @@ public class WildberriesApiClient
             skus = etkIdToWbBarcode.Values.ToList()
         };
 
-        logger.LogTrace("ClearStock");
+        nlog.Trace("ClearStock PAYLOAD: {payload}", JsonSerializer.Serialize(payload));
         //var res = await httpClient.DeleteAsJsonAsync(uri, payload);
+        nlog.Trace("ClearStock END");
     }
 
     private async Task UpdateQuantity(int warehouseId)
     {
+        nlog.Trace("UpdateQuantity START");
         string uri = $"https://suppliers-api.wildberries.ru/api/v3/stocks/{warehouseId}";
 
         if (etkIdToWbBarcode.Values.Count >= MAX_PRODUCTS_PER_PAGE)
@@ -164,12 +188,14 @@ public class WildberriesApiClient
             }).ToList()
         };
 
-        logger.LogTrace("UpdateQuantity");
+        nlog.Trace("UpdateQuantity PAYLOAD: {payload}", JsonSerializer.Serialize(payload));
         //var res = await httpClient.PutAsJsonAsync(uri, payload);
+        nlog.Trace("UpdateQuantity END");
     }
 
     private async Task UpdatePrices()
     {
+        nlog.Trace("UpdatePrices START");
         string uri = "https://discounts-prices-api.wb.ru/api/v2/upload/task";
 
         var payload = new WBPriceUpdatePayload()
@@ -181,7 +207,8 @@ public class WildberriesApiClient
             }).ToList()
         };
 
-        logger.LogTrace("UpdatePrices");
+        nlog.Trace("UpdatePrices PAYLOAD: {payload}", JsonSerializer.Serialize(payload));
         //var res = await httpClient.PostAsJsonAsync(uri, payload);
+        nlog.Trace("UpdatePrices END");
     }
 }

@@ -1,52 +1,51 @@
 ﻿using System.ComponentModel;
 
-namespace EtkBlazorApp.BL.Data
+namespace EtkBlazorApp.BL.Data;
+
+public enum LogEntryGroupName
 {
-    public enum LogEntryGroupName
-    {
-        [Description("Не указано")]
-        None,
+    [Description("Не указано")]
+    None,
 
-        [Description("Приложение")]
-        Auth,
+    [Description("Приложение")]
+    Auth,
 
-        [Description("Цены и остатки")]
-        PriceUpdate,
+    [Description("Цены и остатки")]
+    PriceUpdate,
 
-        [Description("Производитель")]
-        ManufacturerUpdate,
+    [Description("Производитель")]
+    ManufacturerUpdate,
 
-        [Description("Обновление товара по ссылке")]
-        ProductUpdate,
+    [Description("Обновление товара по ссылке")]
+    ProductUpdate,
 
-        [Description("Обновление шаблона")]
-        TemplateUpdate,
+    [Description("Обновление шаблона")]
+    TemplateUpdate,
 
-        [Description("Задание")]
-        CronTask,
+    [Description("Задание")]
+    CronTask,
 
-        [Description("Аккаунты")]
-        Accounts,
+    [Description("Аккаунты")]
+    Accounts,
 
-        [Description("ВсеИнструменты")]
-        Prikat,
+    [Description("ВсеИнструменты")]
+    Prikat,
 
-        [Description("Загрузка шаблона")]
-        PriceListTemplateLoad,
+    [Description("Загрузка шаблона")]
+    PriceListTemplateLoad,
 
-        [Description("Озон")]
-        Ozon,
+    [Description("Озон")]
+    Ozon,
 
-        [Description("Скидки")]
-        Discounts,
+    [Description("Скидки")]
+    Discounts,
 
-        [Description("Партнеры")]
-        Partners,
+    [Description("Партнеры")]
+    Partners,
 
-        [Description("Заказы")]
-        Orders,
+    [Description("Заказы")]
+    Orders,
 
-        [Description("Маркетплейс Wildberries")]
-        Wildberries,
-    }
+    [Description("Маркетплейс Wildberries")]
+    Wildberries,
 }

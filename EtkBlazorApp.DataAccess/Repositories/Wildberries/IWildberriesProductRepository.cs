@@ -19,9 +19,9 @@ public class WildberriesProductRepository : IWildberriesProductRepository
 
     public async Task<List<WildberriesEtkProductUpdateEntry>> ReadProducts()
     {
-        //TODO: Wildberries цена с распродажей
-        //1. Цена округается до 10ков
+        //1. Цена округается до 10ков (в рублях)
         //2. Склады (суммирование) попадают только те которые указаны на странцие настроек маркетплейса
+        //TODO: Wildberries цена с распродажей
         //3. Сюда не попадут товары которые в разделе Распродажа
         //Соответственно на WB они должны пропасть из продажи (количество 0, цена 0)
         //Либо доработать в будущем этот момент
