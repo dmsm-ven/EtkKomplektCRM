@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
 
-namespace EtkBlazorApp.Core;
+namespace EtkBlazorApp.ApiCommonExtensions;
 public static class HttpClientExtensions
 {
     public static Task<HttpResponseMessage> DeleteAsJsonAsync<T>(this HttpClient httpClient, string requestUri, T data)

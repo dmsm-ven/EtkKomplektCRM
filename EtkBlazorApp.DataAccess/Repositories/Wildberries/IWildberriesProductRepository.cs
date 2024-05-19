@@ -19,14 +19,18 @@ public class WildberriesProductRepository : IWildberriesProductRepository
 
     public async Task<List<WildberriesEtkProductUpdateEntry>> ReadProducts()
     {
-        //1. Цена округается до 10ков (в рублях)
-        //2. Склады (суммирование) попадают только те которые указаны на странцие настроек маркетплейса
+        //Склады (суммирование) попадают только те которые указаны на странцие настроек маркетплейса
         //TODO: Wildberries цена с распродажей
-        //3. Сюда не попадут товары которые в разделе Распродажа
+        //Сюда не попадут товары которые в разделе Распродажа
         //Соответственно на WB они должны пропасть из продажи (количество 0, цена 0)
         //Либо доработать в будущем этот момент
+
+        // Как расчитывается цена:
+        // 1. Берется цена товара на сайте в рубля, если она менее 500 рублей, то умножается на 2
+        // 2. Цена умножается на скидку выбранную в личном кабинете для поставщика
+        // 3. Округляется до 10
         var sql = @"SELECT CONCAT('ETK-', p.product_id) as ProductId, 
-						ROUND((p.price * (100 + mbe.discount)) / 100 , -1) as Price,  
+						ROUND((IF(p.price >= 500, p.price, p.price * 2) * (100 + mbe.discount)) / 100 , -1) as PriceInRUB,  
 						SUM(IFNULL(pts.quantity, 0)) as Quantity				
 					FROM oc_product p 
 						JOIN oc_product_description pd ON (p.product_id = pd.product_id) 

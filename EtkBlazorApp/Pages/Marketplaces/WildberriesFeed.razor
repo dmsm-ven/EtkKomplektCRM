@@ -1,0 +1,56 @@
+﻿@page "/marketplace-export/wildberries-feed"
+@using EtkBlazorApp.Core.Data.Wildberries
+@using EtkBlazorApp.DataAccess.Repositories.Wildberries
+
+<h1>Данные для отладки (просмотр фида который выгружается в Wildberries)</h1>
+<p>Дата последнего обновления: <strong>@lastRequestDateTime</strong></p>
+<p>Всего товаров в списке: <strong>@totalProducts</strong></p>
+<div>
+    <button @onclick="() => showAll = !showAll" type="button" class="btn btn-primary">@showAllButtonCaption</button>
+</div>
+<div class="table-responsive">
+    <table class="table table-sm">
+        <thead class="thead-etk">
+            <tr>
+                <td>ETK & WB PID</td>
+                <td>Цена</td>
+                <td>Количество</td>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in productsSource)
+            {
+                <tr>
+                    <td>@p.ProductId</td>
+                    <td>@p.PriceInRUB</td>
+                    <td>@p.Quantity</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Inject] public IWildberriesProductRepository repository { get; set; }
+    [Inject] public ISettingStorageReader settingsReader { get; set; }
+
+    private List<WildberriesEtkProductUpdateEntry> products = new();
+    private IEnumerable<WildberriesEtkProductUpdateEntry> productsSource => showAll ? products : products.Take(50);
+    private string showAllButtonCaption =>
+        products.Count == 0 ? "Показать все" : (
+            showAll ?
+            "Показать первые 50 товаров" :
+            $"Показать все ({products.Count} товаров)");
+
+    private string lastRequestDateTime = "?";
+    private int totalProducts = 0;
+    bool showAll = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        products = await repository.ReadProducts();
+
+        lastRequestDateTime = await settingsReader.GetValue("wildberries_last_request") ?? "Неизвестно";
+        totalProducts = products.Count;
+    }
+}

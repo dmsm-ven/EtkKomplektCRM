@@ -4,23 +4,22 @@
 @inject IMarketplaceExportService marketplaceExport
 @inject UserLogger logger
 
-<div class="container">
-   <div class="row">
+<div class="container-fluid">
        <div class="col-md-12">
            <div class="row">
-                @foreach(var tab in tabs)
-                {                 
-                    <div class="col-md-3 col-sm-6 marketplace-tab-item @(SelectedTab == tab ? "active" : "")" @onclick="@(e => SelectedTab = tab)">
-                        @if(tab != tabs.Last())
-                        {
-                            <img src="/image/logotips/marketplaces/@tab-logo.png" style="width: 200px; height: 100px;" />
-                        }
-                        else
-                        {
-                            <span style="display: block;bottom: 32px;position: absolute;">@tab</span>
-                        }
-                    </div>
-                }
+            @foreach (var tab in tabs)
+            {
+                <div class="marketplace-tab-item @(SelectedTab == tab ? "active" : "")" @onclick="@(e => SelectedTab = tab)">
+                    @if (tab != tabs.Last())
+                    {
+                        <img src="/image/logotips/marketplaces/@tab-logo.png" style="width: 200px; height: 100px;" />
+                    }
+                    else
+                    {
+                        <span style="display: block;bottom: 32px;position: absolute;">@tab</span>
+                    }
+                </div>
+            }
             </div>     
         </div>
         <div id="marketplace-tab-content" class="col-md-8 offset-2">
@@ -53,7 +52,7 @@
                 <MarketplaceBrandsExportTable Marketplace="Wildberries"
                                               Title="Настройки выгрузки Wildberries"
                                               CabinetURL="https://seller.wildberries.ru"
-                                              FeedURL="https://etk-komplekt.ru">
+                                              FeedURL="https://lk.etk-komplekt.ru/marketplace-export/wildberries-feed">
                 </MarketplaceBrandsExportTable>
             }
         </div>
@@ -63,7 +62,6 @@
                 <MarketplacePivotTable />
             }
         </div>
-    </div>
 </div>
 
 @code {

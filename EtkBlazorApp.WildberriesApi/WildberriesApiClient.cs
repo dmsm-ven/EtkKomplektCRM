@@ -1,9 +1,10 @@
-﻿using EtkBlazorApp.Core.Data.Wildberries;
+﻿using EtkBlazorApp.ApiCommonExtensions;
+using EtkBlazorApp.Core.Data.Wildberries;
 using EtkBlazorApp.WildberriesApi.Data;
 using Microsoft.Extensions.Logging;
 using NLog;
 using System.Net.Http.Json;
-using System.Text.Json;
+
 
 namespace EtkBlazorApp.WildberriesApi;
 
@@ -73,37 +74,9 @@ public class WildberriesApiClient
         nlog.Trace("UpdateProducts END");
     }
 
-    private async Task<int> GetWarehouseId()
-    {
-        var uri = $"https://suppliers-api.wildberries.ru/api/v3/warehouses";
-
-        var list = await httpClient.GetFromJsonAsync<WBWarehouseList>(uri);
-
-        if (list == null || list.Count == 0 || list[0].id == 0)
-        {
-            throw new Exception("Не найдено ни одного склада Wildberries");
-        }
-
-        return list[0].id;
-    }
-
-    private void ConvertEtkProductsToDictionaries(IEnumerable<WildberriesEtkProductUpdateEntry> productsData)
-    {
-        nlog.Trace("ConvertEtkProductsToDictionaries START");
-
-        etkIdToPriceMap = productsData.ToDictionary(i => i.ProductId, i => i.PriceInRUB);
-        nlog.Trace("etkIdToPriceMap COUNT: {count}", etkIdToPriceMap.Count);
-
-        etkIdToQuantity = productsData.ToDictionary(i => i.ProductId, i => i.Quantity);
-        nlog.Trace("etkIdToQuantity COUNT: {count}", etkIdToQuantity.Count);
-
-        nlog.Trace("ConvertEtkProductsToDictionaries END");
-    }
-
+    //STEP 1
     private async Task ReceiveWbProductsData()
     {
-        nlog.Trace("ReceiveWbProductsData START");
-
         etkIdToWbBarcode.Clear();
         etkIdToWbNMID.Clear();
 
@@ -113,9 +86,18 @@ public class WildberriesApiClient
         try
         {
             var res = await httpClient.PostAsJsonAsync(uri, WBCardListPayload.Empty);
-            var productsData = await res.Content.ReadFromJsonAsync<WBCardListResponse>();
+            WBCardListResponse? productsData = null;
+            if (res.IsSuccessStatusCode)
+            {
+                productsData = await res.Content.ReadFromJsonAsync<WBCardListResponse>();
+                nlog.Trace("ReceiveWbProductsData COUNT: {productsReaded}", productsData?.cards.Count);
+            }
+            else
+            {
+                string responseMessage = await res.Content.ReadAsStringAsync();
+                nlog.Warn("Ошибка загрузки товаров WB: {msg}", responseMessage);
+            }
 
-            nlog.Trace("ReceiveWbProductsData COUNT: {productsReaded}", productsData.cards.Count);
 
             if (productsData?.cards?.Count == 0)
             {
@@ -136,7 +118,7 @@ public class WildberriesApiClient
                 }
                 catch
                 {
-                    //пропускаем карточку товара
+                    nlog.Warn("Ошибка парсинга карточки товара {cardName}", card?.vendorCode ?? "<Без артикула>");
                 }
             }
         }
@@ -144,14 +126,37 @@ public class WildberriesApiClient
         {
             throw;
         }
-
-        nlog.Trace("ReceiveWbProductsData END");
     }
 
+    //STEP 2
+    private void ConvertEtkProductsToDictionaries(IEnumerable<WildberriesEtkProductUpdateEntry> productsData)
+    {
+        etkIdToPriceMap = productsData.ToDictionary(i => i.ProductId, i => i.PriceInRUB);
+        etkIdToQuantity = productsData.ToDictionary(i => i.ProductId, i => i.Quantity);
+    }
+
+    //STEP 3
+    private async Task<int> GetWarehouseId()
+    {
+        var uri = $"https://suppliers-api.wildberries.ru/api/v3/warehouses";
+
+        var list = await httpClient.GetFromJsonAsync<WBWarehouseList>(uri);
+
+        if (list == null || list.Count == 0 || list[0].id == 0)
+        {
+            throw new Exception("Не найдено ни одного склада Wildberries");
+        }
+        if (list.Count > 1)
+        {
+            throw new Exception("Найден дополнительный склад WB логика для обработки которого не реализована");
+        }
+
+        return list[0].id;
+    }
+
+    //STEP 4
     private async Task ClearStock(int warehouseId)
     {
-        nlog.Trace("ClearStock START");
-
         var uri = $"https://suppliers-api.wildberries.ru/api/v3/stocks/{warehouseId}";
 
         if (etkIdToWbBarcode.Values.Count >= MAX_PRODUCTS_PER_PAGE)
@@ -164,14 +169,14 @@ public class WildberriesApiClient
             skus = etkIdToWbBarcode.Values.ToList()
         };
 
-        nlog.Trace("ClearStock PAYLOAD: {payload}", JsonSerializer.Serialize(payload));
-        //var res = await httpClient.DeleteAsJsonAsync(uri, payload);
-        nlog.Trace("ClearStock END");
+        var response = await httpClient.DeleteAsJsonAsync(uri, payload);
+        var responseMessage = await response.Content.ReadAsStringAsync();
+        nlog.Trace("ClearStock Response | StatusCode = {code}, Message = {message}", response.StatusCode, responseMessage);
     }
 
+    //STEP 5
     private async Task UpdateQuantity(int warehouseId)
     {
-        nlog.Trace("UpdateQuantity START");
         string uri = $"https://suppliers-api.wildberries.ru/api/v3/stocks/{warehouseId}";
 
         if (etkIdToWbBarcode.Values.Count >= MAX_PRODUCTS_PER_PAGE)
@@ -188,14 +193,16 @@ public class WildberriesApiClient
             }).ToList()
         };
 
-        nlog.Trace("UpdateQuantity PAYLOAD: {payload}", JsonSerializer.Serialize(payload));
-        //var res = await httpClient.PutAsJsonAsync(uri, payload);
-        nlog.Trace("UpdateQuantity END");
+        //nlog.Trace("UpdateQuantity PAYLOAD: {payload}", JsonSerializer.Serialize(payload));
+        var response = await httpClient.PutAsJsonAsync(uri, payload);
+        var responseMessage = await response.Content.ReadAsStringAsync();
+        nlog.Trace("UpdateQuantity Response | StatusCode = {code}, Message = {message}", response.StatusCode, responseMessage);
+
     }
 
+    //STEP 6
     private async Task UpdatePrices()
     {
-        nlog.Trace("UpdatePrices START");
         string uri = "https://discounts-prices-api.wb.ru/api/v2/upload/task";
 
         var payload = new WBPriceUpdatePayload()
@@ -207,8 +214,10 @@ public class WildberriesApiClient
             }).ToList()
         };
 
-        nlog.Trace("UpdatePrices PAYLOAD: {payload}", JsonSerializer.Serialize(payload));
-        //var res = await httpClient.PostAsJsonAsync(uri, payload);
-        nlog.Trace("UpdatePrices END");
+        //nlog.Trace("UpdatePrices PAYLOAD: {payload}", JsonSerializer.Serialize(payload));
+
+        var response = await httpClient.PostAsJsonAsync(uri, payload);
+        var responseMessage = await response.Content.ReadAsStringAsync();
+        nlog.Trace("UpdatePrices Response | StatusCode = {code}, Message = {message}", response.StatusCode, responseMessage);
     }
 }

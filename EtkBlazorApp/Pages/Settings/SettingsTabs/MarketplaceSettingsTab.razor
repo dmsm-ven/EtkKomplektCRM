@@ -2,6 +2,14 @@
 
 <div id="marketplaces-tab">
     <div class="marketplace-tab-group">
+        <h3>Wildberries</h3>
+        <div class="form-group">
+            <label for="wildberries_secure_token">Wildberries API Token</label>
+            <input type="password" class="form-control" id="wildberries_secure_token" @bind="wildberries_secure_token">
+        </div>
+    </div>
+
+    <div class="marketplace-tab-group">
         <h3>YandexMarket</h3>
         <div class="row">
             <div class="col-md-6">
@@ -20,7 +28,7 @@
     </div>
 
     <div class="marketplace-tab-group">
-        <h3>Seller Ozon</h3>
+        <h3>OzonSeller</h3>
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
@@ -65,7 +73,8 @@
     decimal sbermegamarket_minimumPrice;
     decimal yandex_market_underRatio;
     decimal ozon_seller_underRatio;
-    string vse_instrumenty_gln;
+    string vse_instrumenty_gln = string.Empty;
+    string wildberries_secure_token = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -75,6 +84,7 @@
         yandex_market_underRatio = await settingsReader.GetValue<decimal>("yandex_market_export_under_minimum_ratio");
         ozon_seller_underRatio = await settingsReader.GetValue<decimal>("ozon_seller_export_under_minimum_ratio");
         vse_instrumenty_gln = await settingsReader.GetValue<string>("vse_instrumenti_gln");
+        wildberries_secure_token = await settingsReader.GetValue<string>("wildberries_api_token");
 
         tabData.SaveButtonClicked = new Action(async () =>
         {
@@ -84,6 +94,7 @@
             await settingsWriter.SetValue("yandex_market_export_under_minimum_ratio", yandex_market_underRatio);
             await settingsWriter.SetValue("ozon_seller_export_under_minimum_ratio", ozon_seller_underRatio);
             await settingsWriter.SetValue("vse_instrumenti_gln", vse_instrumenty_gln);
+            await settingsWriter.SetValue("wildberries_api_token", wildberries_secure_token);
         });
     }
 }

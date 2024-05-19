@@ -18,29 +18,35 @@ public class WildberriesUpdateService : BackgroundService
     private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
 
     public readonly TimeSpan UpdateInterval = TimeSpan.FromHours(2);
+    public readonly TimeSpan FirstRunDelay = TimeSpan.FromSeconds(15);
 
     private readonly WildberriesApiClient wbApiClient;
     private readonly IWildberriesProductRepository productRepository;
     private readonly ISettingStorageReader settingStorageReader;
+    private readonly ISettingStorageWriter settingStorageWriter;
     private readonly SystemEventsLogger sysLogger;
 
     public WildberriesUpdateService(WildberriesApiClient wbApiClient,
         IWildberriesProductRepository productRepository,
         ISettingStorageReader settingStorageReader,
+        ISettingStorageWriter settingStorageWriter,
         SystemEventsLogger sysLogger)
     {
         this.wbApiClient = wbApiClient;
         this.productRepository = productRepository;
         this.settingStorageReader = settingStorageReader;
+        this.settingStorageWriter = settingStorageWriter;
         this.sysLogger = sysLogger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await Task.Delay(TimeSpan.FromSeconds(15));
+        nlog.Info("Служба обновление товаров на Wildberries запущена. Следующий запуск через {delay}", FirstRunDelay.Humanize());
+
+        await Task.Delay(FirstRunDelay);
 
         using PeriodicTimer timer = new(UpdateInterval);
-        nlog.Info("Служба обновление товаров на Wildberries запущена");
+
 
         try
         {
@@ -61,7 +67,7 @@ public class WildberriesUpdateService : BackgroundService
         {
             await sysLogger.WriteSystemEvent(LogEntryGroupName.Wildberries,
                 "Обновление остановлено",
-                $"Ошибка в работе службы обновление товаров на Wildberries. Детали {ex.Message}");
+                $"Ошибка в работе службы обновление товаров на Wildberries. Детали {ex.Message}. StackTrace: {ex.StackTrace}");
         }
     }
 
@@ -82,7 +88,11 @@ public class WildberriesUpdateService : BackgroundService
         var progress = new Progress<WildberriesUpdateProgress>(v =>
         {
             string msgTemplate = "Wildberries API: {desc} [{step} | {totalSteps}]. Длительность выполнения: {elapsed}";
-            nlog.Trace(msgTemplate, v.CurrentStepDescription, v.CurrentStep, v.TotalSteps, (v.CurrentStep == 1 ? TimeSpan.Zero : sw.Elapsed).Humanize());
+            nlog.Trace(msgTemplate,
+                v.CurrentStepDescription,
+                v.CurrentStep,
+                v.TotalSteps,
+                (v.CurrentStep == 1 ? TimeSpan.Zero : sw.Elapsed).Humanize());
         });
 
         //Токен, судя по описанию API, должен меняться каждые 180 дн. (на 18.05.2024).
@@ -91,5 +101,7 @@ public class WildberriesUpdateService : BackgroundService
         //Наценки считаются прямо в SQL запросе
         var products = await productRepository.ReadProducts();
         await wbApiClient.UpdateProducts(secureToken, products, progress);
+
+        await settingStorageWriter.SetValueToDateTimeNow("wildberries_last_request");
     }
 }
