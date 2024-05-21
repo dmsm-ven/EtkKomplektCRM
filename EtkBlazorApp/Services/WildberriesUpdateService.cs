@@ -61,7 +61,7 @@ public class WildberriesUpdateService : BackgroundService
         }
         catch (OperationCanceledException)
         {
-            nlog.Trace("Служба обновление товаров на Wildberries остановлен");
+            nlog.Trace("Служба обновление товаров на Wildberries остановлена");
         }
         catch (Exception ex)
         {

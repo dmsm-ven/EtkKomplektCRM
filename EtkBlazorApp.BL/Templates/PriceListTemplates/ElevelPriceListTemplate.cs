@@ -24,15 +24,19 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 if (tab.GetValue<string>(1, column).Equals("Производитель СПБ")) { stock_spb_producer_index = column; }
             }
 
-            //Тут по факту в прайс-листе много разных брендов, но на все ставим Elevel - в итоге попадают все товары
-            //Товаров очень много, на 2024-01 примерно 170 000
-            const string manufacturerName = "Elevel";
+            //Товаров очень много, на 2024-05 примерно 180 000 и ~200 разных брендов         
 
             for (int row = 3; row < tab.Dimension.Rows; row++)
             {
                 string model = tab.GetValue<string>(row, 1).Trim();
                 string sku = tab.GetValue<string>(row, 2).Trim();
+                string manufacturerName = MapManufacturerName(tab.GetValue<string>(row, 3));
                 var price = ParsePrice(tab.GetValue<string>(row, 4));
+
+                if (SkipThisBrand(manufacturerName))
+                {
+                    continue;
+                }
 
                 if (!Enum.TryParse<CurrencyType>(tab.GetValue<string>(row, 5), out var currency))
                 {

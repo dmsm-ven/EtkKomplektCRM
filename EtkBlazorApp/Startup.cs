@@ -207,7 +207,7 @@ public class Startup
         {
             x.DefaultRequestHeaders.Add("Accept", "application/json");
         });
-        services.AddTransient<WildberriesApiClient>();
+        services.AddSingleton<WildberriesApiClient>();
     }
 
     private void ConfigureDatabaseServices(IServiceCollection services)

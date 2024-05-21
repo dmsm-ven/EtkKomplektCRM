@@ -189,7 +189,9 @@ public class WildberriesApiClient
             stocks = etkIdToWbBarcode.Select(i => new WBQuantityUpdatePayload_Stock()
             {
                 sku = i.Value,
-                amount = etkIdToQuantity.ContainsKey(i.Key) ? etkIdToQuantity[i.Key] : 0
+                amount = ((etkIdToPriceMap.ContainsKey(i.Key) && etkIdToPriceMap[i.Key] > 0)
+                    ? (etkIdToQuantity.ContainsKey(i.Key) ? etkIdToQuantity[i.Key] : 0)
+                    : 0)
             }).ToList()
         };
 
