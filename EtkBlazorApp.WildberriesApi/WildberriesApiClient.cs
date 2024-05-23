@@ -15,10 +15,9 @@ namespace EtkBlazorApp.WildberriesApi;
 public class WildberriesApiClient
 {
     private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
-
+    private const int MAX_PRODUCTS_PER_PAGE_FOR_STOCK = 1000;
     private readonly ILogger<WildberriesApiClient> logger;
     private readonly HttpClient httpClient;
-    private readonly int MAX_PRODUCTS_PER_PAGE = 1000;
     private readonly int TOTAL_STEPS = 7;
     private readonly Dictionary<string, string> etkIdToWbBarcode = new();   //ETK-123456 -> 20941237821 (баркод/ean) от WB
     private readonly Dictionary<string, int> etkIdToWbNMID = new();         //ETK-123456 -> 37372 (внутренний код товара от WB)
@@ -74,42 +73,20 @@ public class WildberriesApiClient
         nlog.Trace("UpdateProducts END");
     }
 
-    //STEP 1
+    /// <summary>
+    /// Шаг 1. Получаем список товаров которые есть на WB
+    /// </summary>
+    /// <returns></returns>
     private async Task ReceiveWbProductsData()
     {
         etkIdToWbBarcode.Clear();
         etkIdToWbNMID.Clear();
 
-        //Если товаров больше MAX_PRODUCTS_PER_PAGE - то тут нужна пагинация
-        var uri = $"https://suppliers-api.wildberries.ru/content/v2/get/cards/list?locale=ru";
-
         try
         {
-            var res = await httpClient.PostAsJsonAsync(uri, WBCardListPayload.Empty);
-            WBCardListResponse? productsData = null;
-            if (res.IsSuccessStatusCode)
-            {
-                productsData = await res.Content.ReadFromJsonAsync<WBCardListResponse>();
-                nlog.Trace("ReceiveWbProductsData COUNT: {productsReaded}", productsData?.cards.Count);
-            }
-            else
-            {
-                string responseMessage = await res.Content.ReadAsStringAsync();
-                nlog.Warn("Ошибка загрузки товаров WB: {msg}", responseMessage);
-            }
+            var cards = await GetAllWbCards();
 
-
-            if (productsData?.cards?.Count == 0)
-            {
-                throw new Exception("Ошибка считывания о товара по API Wildberries");
-            }
-
-            if (productsData?.cards.Count >= MAX_PRODUCTS_PER_PAGE)
-            {
-                throw new NotSupportedException("Пагинация товаров в API Wildberries не поддерживается (реализована)");
-            }
-
-            foreach (var card in productsData.cards)
+            foreach (var card in cards)
             {
                 try
                 {
@@ -128,14 +105,21 @@ public class WildberriesApiClient
         }
     }
 
-    //STEP 2
+    /// <summary>
+    /// Шаг 2. Преобразование товаров ЕТК в словари остатков и цен
+    /// </summary>
+    /// <param name="productsData"></param>
     private void ConvertEtkProductsToDictionaries(IEnumerable<WildberriesEtkProductUpdateEntry> productsData)
     {
         etkIdToPriceMap = productsData.ToDictionary(i => i.ProductId, i => i.PriceInRUB);
         etkIdToQuantity = productsData.ToDictionary(i => i.ProductId, i => i.Quantity);
     }
 
-    //STEP 3
+    /// <summary>
+    /// Шаг 3. Получаем список складов WB и берем первый
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
     private async Task<int> GetWarehouseId()
     {
         var uri = $"https://suppliers-api.wildberries.ru/api/v3/warehouses";
@@ -154,12 +138,17 @@ public class WildberriesApiClient
         return list[0].id;
     }
 
-    //STEP 4
+    /// <summary>
+    /// Шаг 4. Выполнение API запроса к WB на обнуление остатков
+    /// </summary>
+    /// <param name="warehouseId"></param>
+    /// <returns></returns>
+    /// <exception cref="NotSupportedException"></exception>
     private async Task ClearStock(int warehouseId)
     {
         var uri = $"https://suppliers-api.wildberries.ru/api/v3/stocks/{warehouseId}";
 
-        if (etkIdToWbBarcode.Values.Count >= MAX_PRODUCTS_PER_PAGE)
+        if (etkIdToWbBarcode.Values.Count >= MAX_PRODUCTS_PER_PAGE_FOR_STOCK)
         {
             throw new NotSupportedException("Пагинация товаров не реализована");
         }
@@ -174,12 +163,17 @@ public class WildberriesApiClient
         nlog.Trace("ClearStock Response | StatusCode = {code}, Message = {message}", response.StatusCode, responseMessage);
     }
 
-    //STEP 5
+    /// <summary>
+    /// Шаг 5. Выполнение API запроса к WB на обновление остатков
+    /// </summary>
+    /// <param name="warehouseId"></param>
+    /// <returns></returns>
+    /// <exception cref="NotSupportedException"></exception>
     private async Task UpdateQuantity(int warehouseId)
     {
         string uri = $"https://suppliers-api.wildberries.ru/api/v3/stocks/{warehouseId}";
 
-        if (etkIdToWbBarcode.Values.Count >= MAX_PRODUCTS_PER_PAGE)
+        if (etkIdToWbBarcode.Values.Count >= MAX_PRODUCTS_PER_PAGE_FOR_STOCK)
         {
             throw new NotSupportedException("Пагинация товаров не реализована");
         }
@@ -202,7 +196,10 @@ public class WildberriesApiClient
 
     }
 
-    //STEP 6
+    /// <summary>
+    /// Шаг 6. Выполнение API запроса к WB на обновление цен
+    /// </summary>
+    /// <returns></returns>
     private async Task UpdatePrices()
     {
         string uri = "https://discounts-prices-api.wb.ru/api/v2/upload/task";
@@ -221,5 +218,59 @@ public class WildberriesApiClient
         var response = await httpClient.PostAsJsonAsync(uri, payload);
         var responseMessage = await response.Content.ReadAsStringAsync();
         nlog.Trace("UpdatePrices Response | StatusCode = {code}, Message = {message}", response.StatusCode, responseMessage);
+    }
+
+    /// <summary>
+    /// Загружаем список товаров от WB для того что бы узнать соответствие [артикула етк] --> [артикулу WB]
+    /// </summary>
+    /// <returns></returns>
+    private async Task<List<WBCardListResponse_Card>> GetAllWbCards()
+    {
+        var uri = $"https://suppliers-api.wildberries.ru/content/v2/get/cards/list?locale=ru";
+        const int PRODUCTS_PER_REQUEST = 100;
+        const int MAX_REQUEST_TRY_COUNT = 50;
+
+        var list = new List<WBCardListResponse_Card>();
+        int readedProducts = 0;
+        int tryCount = 0;
+
+        DateTimeOffset lastUpdatedAt = DateTimeOffset.MinValue;
+        int lastNmID = 0;
+
+        do
+        {
+            var payload = list.Count == 0 ?
+                WBCardListPayloadFactory.Empty :
+                WBCardListPayloadFactory.GetPayloadWithPagination(PRODUCTS_PER_REQUEST, lastUpdatedAt, lastNmID);
+
+            using HttpResponseMessage? res = await httpClient.PostAsJsonAsync(uri, payload);
+
+            var responseData = await res.Content.ReadFromJsonAsync<WBCardListResponse>();
+
+            lastUpdatedAt = responseData.cursor.updatedAt;
+            lastNmID = responseData.cursor.nmID;
+            readedProducts = responseData.cursor.total;
+
+            list.AddRange(responseData.cards);
+
+            if (readedProducts == 0)
+            {
+                break;
+            }
+
+            //50 запросов = 5000 товаров, если товаров на WB больше 5000 то необходимо убрать эту проверку
+            if (++tryCount > MAX_REQUEST_TRY_COUNT) // - на всякий случай делаем проверку, что бы не заспамить API, и не быть заблокированными
+            {
+                break;
+            }
+        } while (readedProducts == PRODUCTS_PER_REQUEST);
+
+
+        if (list.GroupBy(p => p.vendorCode).Count() > (MAX_REQUEST_TRY_COUNT - 1) * PRODUCTS_PER_REQUEST)
+        {
+            throw new NotSupportedException("Необходимо убрать проверку на максимальное число запросов");
+        }
+
+        return list;
     }
 }

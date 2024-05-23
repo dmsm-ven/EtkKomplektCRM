@@ -36,6 +36,14 @@ public class WBCardListResponse_Photo
 public class WBCardListResponse
 {
     public List<WBCardListResponse_Card> cards { get; set; }
+    public WBCardListResponse_Cursor cursor { get; set; } = new();
+}
+
+public class WBCardListResponse_Cursor
+{
+    public DateTimeOffset updatedAt { get; set; }
+    public int nmID { get; set; } = 0;
+    public int total { get; set; } = 0;
 }
 
 public class WBCardListResponse_Size
