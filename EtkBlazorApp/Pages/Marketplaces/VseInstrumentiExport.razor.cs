@@ -1,6 +1,7 @@
 ﻿using Blazored.Toast.Services;
 using EtkBlazorApp.BL;
 using EtkBlazorApp.BL.Data;
+using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.Components.Controls;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
@@ -11,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.Pages.Marketplaces;
@@ -22,13 +24,16 @@ public partial class VseInstrumentiExport : ComponentBase
     [Inject] public ISettingStorageWriter settingsWriter { get; set; }
     [Inject] public IToastService toasts { get; set; }
     [Inject] public IManufacturerStorage manufacturerStorage { get; set; }
+    [Inject] public CronTaskService cronTaskService { get; set; }
     [Inject] public IJSRuntime js { get; set; }
     [Inject] public UserLogger logger { get; set; }
     [Inject] public ReportManager ReportManager { get; set; }
 
     private List<PrikatManufacturerDiscountViewModel> itemsSource;
 
-    private List<PrikatManufacturerDiscountViewModel> orderedSource => itemsSource.OrderByDescending(t => t.IsChecked).ToList();
+    private List<PrikatManufacturerDiscountViewModel> orderedSource => itemsSource
+        .OrderByDescending(t => t.IsChecked)
+        .ToList();
 
     private StocksCheckListBox selectedStocksCheckListBox;
 
@@ -71,6 +76,10 @@ public partial class VseInstrumentiExport : ComponentBase
 
     private async Task GetReport()
     {
+        using var cts = new CancellationTokenSource();
+
+        await WaitUntilActiveTaskCompleted(cts.Token);
+
         inProgress = true;
         StateHasChanged();
         string filePath = null;
@@ -95,7 +104,18 @@ public partial class VseInstrumentiExport : ComponentBase
                 File.Delete(filePath);
             }
             inProgress = false;
+            cts.Cancel();
         }
+    }
+
+    private async Task WaitUntilActiveTaskCompleted(CancellationToken cancelToken)
+    {
+        while (cronTaskService.TaskInProgress != null)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(3));
+        }
+        //Запускаем задачу на запрещающую выполнение других задач
+        cronTaskService.PauseQueueUntilCancellationNotRequested(cancelToken);
     }
 
     private VseInstrumentiReportOptions GetReportOptions()

@@ -1,5 +1,4 @@
-﻿using EtkBlazorApp.BL.CronTask;
-using EtkBlazorApp.BL.Data;
+﻿using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.BL.Loggers;
 using EtkBlazorApp.BL.Templates.CronTask;
 using EtkBlazorApp.BL.Templates.PriceListTemplates.RemoteFileLoaders;
@@ -126,6 +125,32 @@ namespace EtkBlazorApp.BL.Managers
             {
                 AddTaskToQueue(task, forced);
             }
+        }
+
+        /// <summary>
+        /// Задача пустышка, которая не дает выполнятся в отведелнное время другим задачам
+        /// Метод нужен, что бы другие сервисы могли выполнить задачу с товарами без ошибок. Т.к. задачи могут обновлять товары
+        /// В общем это что то типа транзакции, только менее надежное
+        /// </summary>
+        /// <param name="pauseTime"></param>
+        public void PauseQueueUntilCancellationNotRequested(CancellationToken cancelToken)
+        {
+            TimeSpan maxPauseTime = TimeSpan.FromMinutes(10);
+
+            Stopwatch sw = Stopwatch.StartNew();
+            nlog.Trace("Queue worker таймер остановлен на {interval}", maxPauseTime.Humanize());
+
+            queueWorkerTimer.Enabled = false;
+            var t = Task.Delay(maxPauseTime, cancelToken)
+                .ContinueWith(t =>
+                {
+                    queueWorkerTimer.Enabled = true;
+                    nlog.Trace("Queue worker таймер восстановлен. Статус задачи: {status}. Заняло времени: {elapsed}",
+                        t.Status,
+                        sw.Elapsed.Humanize());
+                });
+
+            Task.WhenAll(t);
         }
 
         public void AddTaskToQueue(CronTaskBase task, bool forced = false)

@@ -1,10 +1,8 @@
 ﻿using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.DataAccess.Entity;
-using System;
-using System.Linq;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.BL.CronTask
+namespace EtkBlazorApp.BL.Templates.CronTask
 {
     public abstract class CronTaskBase
     {
@@ -14,9 +12,9 @@ namespace EtkBlazorApp.BL.CronTask
         public CronTaskBase(CronTaskService service, int taskId)
         {
             this.service = service;
-            this.TaskId = taskId;
+            TaskId = taskId;
         }
-        
+
         public abstract Task Run(CronTaskEntity taskInfo);
     }
 }

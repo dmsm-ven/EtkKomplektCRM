@@ -1,5 +1,4 @@
-﻿using EtkBlazorApp.BL.CronTask;
-using EtkBlazorApp.BL.Managers;
+﻿using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.DataAccess.Entity;
 using NLog;
 using System;
