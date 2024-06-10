@@ -1,5 +1,6 @@
 ﻿using EtkBlazorApp.BL.Templates.PriceListTemplates.Base;
 using EtkBlazorApp.Core.Data;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -13,6 +14,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     [PriceListTemplateGuid("438B5182-62DD-42C4-846F-4901C3B38B14")]
     public class PristPriceListTemplate : PriceListTemplateReaderBase, IPriceListTemplate
     {
+        private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
+
         public string FileName { get; private set; }
 
         public PristPriceListTemplate(string uri)
@@ -25,6 +28,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         {
             var loader = new PristXmlReader();
             var offers = await Task.Run(() => loader.LoadPristProducts(FileName));
+
             FixOffers(offers);
 
             var list = new List<PriceLine>();
@@ -57,13 +61,32 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         private void FixOffers(List<PristOffer> offers)
         {
             var offerWithError = offers
-                .Where(name => name != null)
-                .FirstOrDefault(o => o.Name == "Источник питания GPP-72323 (GPIB)");
+                .Where(o => !string.IsNullOrWhiteSpace(o.Name) && o.Name.StartsWith("Источник питания GPP-"))
+                .ToList();
 
-            if (offerWithError != null)
+            if (offerWithError.Count == 0)
             {
-                offerWithError.Model = "GPP-72323 (GPIB)";
+                return;
             }
+
+            foreach (var offer in offerWithError)
+            {
+                if (offer.Name.EndsWith(" (GPIB)") && !offer.Model.EndsWith(" (GPIB)"))
+                {
+                    offer.Model = $"{offer.Model} (GPIB)";
+                }
+            }
+
+            var dups = offers
+                .GroupBy(o => o.Model)
+                .Where(g => g.Count() > 1);
+
+            if (dups.Count() > 0)
+            {
+                string dupModels = string.Join(";", dups.Select(g => g.Key ?? "<empty model>"));
+                nlog.Warn("Обнаружены дубли по моделям в прайс-листе. Следующие модели имеются в 2х или более офферах: {dupModels}", dupModels);
+            }
+
         }
 
         private class PristXmlReader
