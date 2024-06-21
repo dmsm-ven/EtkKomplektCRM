@@ -1,23 +1,16 @@
-﻿using EtkBlazorApp.BL.Managers;
-using EtkBlazorApp.BL.Managers.ReportFormatters;
-using EtkBlazorApp.Core.Interfaces;
-using EtkBlazorApp.DataAccess;
-using EtkBlazorApp.DataAccess.Repositories;
+﻿using EtkBlazorApp.BL.Managers.ReportFormatters;
 
-namespace EtkBlazorApp.BL
+namespace EtkBlazorApp.BL.Managers
 {
     public class ReportManager
     {
-        public VseInstrumentiReportGenerator Prikat { get; }
-        public EtkKomplektReportGenerator EtkPricelist { get; }
+        public VseInstrumentiReportGenerator Prikat { get; private set; }
+        public EtkKomplektReportGenerator EtkPricelist { get; private set; }
 
-        public ReportManager(ICurrencyChecker currencyCheker,
-            IPrikatTemplateStorage templateStorage,
-            IProductStorage productStorage,
-            PriceListManager priceListManager)
+        public ReportManager(VseInstrumentiReportGenerator viGenerator, EtkKomplektReportGenerator etkExportGenerator)
         {
-            Prikat = new VseInstrumentiReportGenerator(currencyCheker, templateStorage, productStorage, priceListManager);
-            EtkPricelist = new EtkKomplektReportGenerator(productStorage);
+            Prikat = viGenerator;
+            EtkPricelist = etkExportGenerator;
         }
     }
 }

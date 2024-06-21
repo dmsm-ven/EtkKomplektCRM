@@ -7,6 +7,7 @@ using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using EtkBlazorApp.DataAccess.Entity.PriceList;
 using EtkBlazorApp.DataAccess.Repositories.PriceList;
+using EtkBlazorApp.DataAccess.Repositories.Product;
 using EtkBlazorApp.Model.PriceListTemplate;
 using EtkBlazorApp.Services;
 using Microsoft.AspNetCore.Components;

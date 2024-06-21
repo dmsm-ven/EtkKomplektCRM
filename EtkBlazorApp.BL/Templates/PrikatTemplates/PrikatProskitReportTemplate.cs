@@ -1,60 +1,32 @@
+﻿using EtkBlazorApp.BL.Templates.PrikatTemplates.Base;
 using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.DataAccess.Entity;
-using NLog;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 
-namespace EtkBlazorApp.BL.Templates.PrikatTemplates.Base
+namespace EtkBlazorApp.BL.Templates.PrikatTemplates
 {
-    public abstract class PrikatReportTemplateBase
+    //В этом шаблоне, в отличии от обычных, не выгружаем РРЦ цена (всегда должна быть 0)
+    //А цена расчитывается от цены поставщика SYMMETRON
+    public sealed class PrikatProskitReportTemplate : PrikatReportTemplateBase
     {
-        private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
+        private readonly int SYMMETRON_STOCK_ID = 4;
 
-        public decimal CurrencyRatio { get; set; }
-        public decimal Discount1 { get; set; }
-        public decimal Discount2 { get; set; }
-        public string GLN { get; set; }
+        public PrikatProskitReportTemplate(string manufacturer, CurrencyType currency) : base(manufacturer, currency) { }
 
-        protected virtual decimal[] DEFAULT_DIMENSIONS { get; } = new decimal[] { 150, 100, 100, 0.4m };
-        protected virtual string LENGTH_UNIT { get; } = "миллиметр";
-        protected virtual string WEIGHT_UNIT { get; } = "килограмм";
-
-        protected int Precission { get; }
-        public string Manufacturer { get; }
-        public CurrencyType Currency { get; }
-
-        public PrikatReportTemplateBase(string manufacturer, CurrencyType currency)
+        protected override void WriteProductLine(ProductEntity product, StreamWriter sw)
         {
-            Manufacturer = manufacturer;
-            Currency = currency;
-            Precission = Currency == CurrencyType.RUB ? 0 : 2;
-        }
-
-        public void WriteProductLines(IEnumerable<ProductEntity> products, StreamWriter sw)
-        {
-            foreach (var product in products)
+            decimal priceInCurrency = product.stock_data == null ? 0 :
+                product.stock_data.FirstOrDefault(s => s.stock_partner_id == SYMMETRON_STOCK_ID)?.original_price ?? 0;
+            if (priceInCurrency == decimal.Zero)
             {
-                WriteProductLine(product, sw);
+                return;
             }
-        }
-
-        protected virtual void WriteProductLine(ProductEntity product, StreamWriter sw)
-        {
-            decimal priceInCurrency = (int)product.price;
-            if (Currency != CurrencyType.RUB)
-            {
-                priceInCurrency = product.base_currency_code == Currency.ToString() && product.base_price != decimal.Zero ?
-                    product.base_price :
-                    Math.Round(product.price / CurrencyRatio, 2);
-            }
-
-            decimal price1 = Math.Round(priceInCurrency * ((100m + Discount2) / 100m), Precission);
-            decimal price2 = Math.Round(price1 * (100m + Discount1) / 100m, Precission);
-
-            string vi_price_rrc = price1.ToString($"F{Precission}", new CultureInfo("en-EN"));
-            string vi_price = price2.ToString($"F{Precission}", new CultureInfo("en-EN"));
+            priceInCurrency = Math.Round(priceInCurrency / CurrencyRatio, 2);
+            decimal purchasePrice = Math.Round(priceInCurrency * (100m + Discount1) / 100m, Precission);
+            string purchasePriceString = purchasePrice.ToString($"F{Precission}", new CultureInfo("en-EN"));
 
             string length = (product.length != decimal.Zero ? product.length : DEFAULT_DIMENSIONS[0]).ToString("F2", new CultureInfo("en-EN"));
             string width = (product.width != decimal.Zero ? product.width : DEFAULT_DIMENSIONS[1]).ToString("F2", new CultureInfo("en-EN"));
@@ -90,21 +62,12 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates.Base
             WriteCell(sw, WEIGHT_UNIT); //Единицы измерения
             WriteCell(sw); //Страна производитель
             WriteCell(sw); //Годен до
-            WriteCell(sw, vi_price_rrc); //Рекомендованная цена
-            WriteCell(sw, vi_price); //Закупочная цена
+            WriteCell(sw, "0"); //Рекомендованная цена
+            WriteCell(sw, purchasePriceString); //Закупочная цена
             WriteCell(sw, product.quantity.ToString()); //Количество остатков на скаладе
             WriteCell(sw, Currency.ToString().ToLower()); //Рекомендованная валюта
             WriteCell(sw, Currency.ToString().ToLower()); //Закупчная валюта
             sw.WriteLine();
-        }
-
-        protected void WriteCell(StreamWriter sw, string value = null)
-        {
-            if (!string.IsNullOrWhiteSpace(value))
-            {
-                sw.Write(value.Replace(";", " ")?.Trim());
-            }
-            sw.Write(";");
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Blazored.Toast.Services;
-using EtkBlazorApp.BL;
 using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.BL.Managers.ReportFormatters;
@@ -7,6 +6,7 @@ using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using EtkBlazorApp.DataAccess.Entity.Marketplace;
 using EtkBlazorApp.DataAccess.Repositories;
+using EtkBlazorApp.DataAccess.Repositories.Product;
 using EtkBlazorApp.Model;
 using EtkBlazorApp.Services;
 using Microsoft.AspNetCore.Components;
@@ -38,11 +38,10 @@ public partial class VseInstrumentiExport : ComponentBase
     public bool ShowPriceExample { get; set; } = false;
     public decimal ExamplePrice { get; set; } = 1000;
 
-    private string reportOptionsGln;
     private bool inProgress = false;
     private ManufacturerEntity newManufacturer;
 
-    private bool reportButtonDisabled => itemsSource == null;
+    private bool reportButtonDisabled => itemsSource == null || inProgress;
 
     public List<StockPartnerEntity> allStocks { get; private set; }
 
@@ -89,7 +88,6 @@ public partial class VseInstrumentiExport : ComponentBase
             }
         }
 
-        reportOptionsGln = await settingsReader.GetValue("vse_instrumenti_gln");
         newManufacturer = new ManufacturerEntity();
 
         StateHasChanged();
@@ -107,7 +105,8 @@ public partial class VseInstrumentiExport : ComponentBase
 
         try
         {
-            filePath = await ReportManager.Prikat.Create(GetReportOptions());
+            var options = await GetReportOptions();
+            filePath = await ReportManager.Prikat.Create(options);
 
             await js.InvokeAsync<object>("saveAsFile", Path.GetFileName(filePath), Convert.ToBase64String(File.ReadAllBytes(filePath)));
             await logger.Write(LogEntryGroupName.Prikat, "Создан", "Выгрузка для ВсеИнструменты создана");
@@ -134,23 +133,20 @@ public partial class VseInstrumentiExport : ComponentBase
         {
             await Task.Delay(TimeSpan.FromSeconds(3));
         }
-        //Запускаем задачу на запрещающую выполнение других задач
+        //Запускаем задачу запрещающую выполнение других задач пока выполняет генерация файла
         cronTaskService.PauseQueueUntilCancellationNotRequested(cancelToken);
     }
 
-    private VseInstrumentiReportOptions GetReportOptions()
+    private async Task<VseInstrumentiReportOptions> GetReportOptions()
     {
+        var gln = await settingsReader.GetValue("vse_instrumenti_gln");
+
         var options = new VseInstrumentiReportOptions()
         {
-            GLN = reportOptionsGln,
+            GLN = gln
         };
 
         return options;
-    }
-
-    private IEnumerable<int> GetSelectedManufacturerIds()
-    {
-        return itemsSource.Select(item => item.Manufacturer_id);
     }
 
     private async Task DiscountChanged(PrikatManufacturerDiscountViewModel vmItem)

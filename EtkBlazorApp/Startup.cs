@@ -3,6 +3,7 @@ using EtkBlazorApp.BL;
 using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.BL.Loggers;
 using EtkBlazorApp.BL.Managers;
+using EtkBlazorApp.BL.Managers.ReportFormatters;
 using EtkBlazorApp.BL.Notifiers;
 using EtkBlazorApp.BL.Templates.PriceListTemplates.RemoteFileLoaders;
 using EtkBlazorApp.CdekApi;
@@ -143,6 +144,9 @@ public class Startup
         services.AddTransient<IUserService, BCryptUserService>();
         services.AddScoped<AuthenticationStateProvider, CustomAuthProvider>();
         services.AddScoped<UserLogger>();
+
+        services.AddScoped<VseInstrumentiReportGenerator>();
+        services.AddScoped<EtkKomplektReportGenerator>();
         services.AddScoped<ReportManager>();
         services.AddScoped<ChartDataExtractor>();
 
