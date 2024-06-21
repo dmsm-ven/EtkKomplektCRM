@@ -22,7 +22,7 @@ namespace EtkBlazorApp.BL.Templates.CronTask
             this.templateType = templateType;
         }
 
-        public override async Task Run(CronTaskEntity taskInfo)
+        public override async Task Run(CronTaskEntity taskInfo, bool forced)
         {
             Stopwatch sw = Stopwatch.StartNew();
 
@@ -34,7 +34,7 @@ namespace EtkBlazorApp.BL.Templates.CronTask
                 var loader = service.remoteTemplateLoaderFactory.GetMethod(templateInfo.remote_uri, templateInfo.remote_uri_method_name, templateGuid);
                 var response = await loader.GetFile();
 
-                if (response.Bytes.Length == taskInfo.last_exec_file_size)
+                if (!forced && response.Bytes.Length == (int)taskInfo.last_exec_file_size)
                 {
                     throw new CronTaskSkipException();
                 }

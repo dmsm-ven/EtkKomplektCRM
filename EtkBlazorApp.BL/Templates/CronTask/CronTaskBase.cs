@@ -15,6 +15,6 @@ namespace EtkBlazorApp.BL.Templates.CronTask
             TaskId = taskId;
         }
 
-        public abstract Task Run(CronTaskEntity taskInfo);
+        public abstract Task Run(CronTaskEntity taskInfo, bool forced);
     }
 }

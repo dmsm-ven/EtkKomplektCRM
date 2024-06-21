@@ -2,9 +2,12 @@
 using EtkBlazorApp.BL;
 using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.BL.Managers;
-using EtkBlazorApp.Components.Controls;
+using EtkBlazorApp.BL.Managers.ReportFormatters;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
+using EtkBlazorApp.DataAccess.Entity.Marketplace;
+using EtkBlazorApp.DataAccess.Repositories;
+using EtkBlazorApp.Model;
 using EtkBlazorApp.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -22,6 +25,7 @@ public partial class VseInstrumentiExport : ComponentBase
     [Inject] public IPrikatTemplateStorage templateStorage { get; set; }
     [Inject] public ISettingStorageReader settingsReader { get; set; }
     [Inject] public ISettingStorageWriter settingsWriter { get; set; }
+    [Inject] public IStockStorage stockStorage { get; set; }
     [Inject] public IToastService toasts { get; set; }
     [Inject] public IManufacturerStorage manufacturerStorage { get; set; }
     [Inject] public CronTaskService cronTaskService { get; set; }
@@ -31,47 +35,64 @@ public partial class VseInstrumentiExport : ComponentBase
 
     private List<PrikatManufacturerDiscountViewModel> itemsSource;
 
-    private List<PrikatManufacturerDiscountViewModel> orderedSource => itemsSource
-        .OrderByDescending(t => t.IsChecked)
-        .ToList();
-
-    private StocksCheckListBox selectedStocksCheckListBox;
-
     public bool ShowPriceExample { get; set; } = false;
     public decimal ExamplePrice { get; set; } = 1000;
 
-    private bool reportOptionsHasStock = false;
-    private bool reportOptionsHasEan = false;
     private string reportOptionsGln;
-    private bool uncheckAllState = false;
-    private bool showSettingsBox = false;
     private bool inProgress = false;
+    private ManufacturerEntity newManufacturer;
 
-    private bool reportButtonDisabled => itemsSource == null || itemsSource.All(m => m.IsChecked == false);
+    private bool reportButtonDisabled => itemsSource == null;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    public List<StockPartnerEntity> allStocks { get; private set; }
+
+    public Dictionary<int, List<StockPartnerEntity>> stocksWithProductsForManufacturer { get; private set; }
+
+    protected override async Task OnInitializedAsync()
     {
-        if (firstRender)
+        itemsSource = (await templateStorage.GetPrikatTemplates())
+            .Select(t => new PrikatManufacturerDiscountViewModel()
+            {
+                Discount1 = t.discount1,
+                Discount2 = t.discount2,
+                Manufacturer_id = t.manufacturer_id,
+                Manufacturer = t.manufacturer_name,
+                CurrencyCode = t.currency_code ?? "RUB",
+                TemplateId = t.template_id,
+                CheckedStocks = t.checked_stocks
+            })
+            .ToList();
+
+        var stocksSource = await stockStorage.GetManufacturersAvailableStocks();
+        allStocks = await stockStorage.GetStocks();
+        stocksWithProductsForManufacturer = stocksSource
+            .ToDictionary(
+                i => i.manufacturer_id,
+                j => allStocks.Where(s => j.stock_ids.Split(",").Contains(s.stock_partner_id.ToString())).ToList());
+
+        foreach (var ei in itemsSource)
         {
-            itemsSource = (await templateStorage.GetPrikatTemplates())
-                    .Select(t => new PrikatManufacturerDiscountViewModel()
+            if (string.IsNullOrWhiteSpace(ei.CheckedStocks))
+            {
+                ei.checked_stocks_list = GetStockListWithProductsForBrand(ei);
+            }
+            else
+            {
+                ei.checked_stocks_list = allStocks
+                    .Where(s => ei.CheckedStocks.Split(",").Select(stockId => int.Parse(stockId)).Contains(s.stock_partner_id))
+                    .Select(i => new StockPartnerEntity()
                     {
-                        IsChecked = t.enabled || (t.discount1 != decimal.Zero || t.discount2 != decimal.Zero),
-                        Discount1 = t.discount1,
-                        Discount2 = t.discount2,
-                        Manufacturer_id = t.manufacturer_id,
-                        Manufacturer = t.manufacturer_name,
-                        CurrencyCode = t.currency_code ?? "RUB",
-                        TemplateId = t.template_id
+                        stock_partner_id = i.stock_partner_id,
+                        name = i.name
                     })
                     .ToList();
-
-            reportOptionsHasStock = await settingsReader.GetValue<bool>("vse_instrumenti_export_options_stock");
-            reportOptionsHasEan = await settingsReader.GetValue<bool>("vse_instrumenti_export_options_ean");
-            reportOptionsGln = await settingsReader.GetValue("vse_instrumenti_gln");
-
-            StateHasChanged();
+            }
         }
+
+        reportOptionsGln = await settingsReader.GetValue("vse_instrumenti_gln");
+        newManufacturer = new ManufacturerEntity();
+
+        StateHasChanged();
     }
 
     private async Task GetReport()
@@ -86,10 +107,9 @@ public partial class VseInstrumentiExport : ComponentBase
 
         try
         {
-            filePath = await ReportManager.Prikat.Create(GetSelectedManufacturerIds(), GetReportOptions());
+            filePath = await ReportManager.Prikat.Create(GetReportOptions());
 
             await js.InvokeAsync<object>("saveAsFile", Path.GetFileName(filePath), Convert.ToBase64String(File.ReadAllBytes(filePath)));
-
             await logger.Write(LogEntryGroupName.Prikat, "Создан", "Выгрузка для ВсеИнструменты создана");
         }
         catch (Exception ex)
@@ -122,10 +142,7 @@ public partial class VseInstrumentiExport : ComponentBase
     {
         var options = new VseInstrumentiReportOptions()
         {
-            HasEan = reportOptionsHasEan,
-            StockGreaterThanZero = reportOptionsHasStock,
             GLN = reportOptionsGln,
-            UsePartnerStock = selectedStocksCheckListBox.CheckedStocks
         };
 
         return options;
@@ -133,25 +150,7 @@ public partial class VseInstrumentiExport : ComponentBase
 
     private IEnumerable<int> GetSelectedManufacturerIds()
     {
-        return itemsSource.Where(item => item.IsChecked).Select(item => item.Manufacturer_id);
-    }
-
-    private async Task ExportOptionsChanged()
-    {
-        await settingsWriter.SetValue("vse_instrumenti_export_options_stock", reportOptionsHasStock);
-        await settingsWriter.SetValue("vse_instrumenti_export_options_ean", reportOptionsHasEan);
-    }
-
-    private void HeaderCheckAll(ChangeEventArgs e)
-    {
-        uncheckAllState = !uncheckAllState;
-
-        foreach (var item in itemsSource)
-        {
-            item.IsChecked = uncheckAllState && new[] { item.Discount1, item.Discount2 }.Any(d => d != decimal.Zero);
-        }
-
-        StateHasChanged();
+        return itemsSource.Select(item => item.Manufacturer_id);
     }
 
     private async Task DiscountChanged(PrikatManufacturerDiscountViewModel vmItem)
@@ -161,16 +160,22 @@ public partial class VseInstrumentiExport : ComponentBase
             manufacturer_id = vmItem.Manufacturer_id,
             discount1 = vmItem.Discount1,
             discount2 = vmItem.Discount2,
-            enabled = vmItem.IsChecked,
             currency_code = vmItem.CurrencyCode ?? "RUB",
-            template_id = vmItem.TemplateId
+            template_id = vmItem.TemplateId,
+            checked_stocks = vmItem.CheckedStocks,
+            enabled = true
         };
 
         await templateStorage.SavePrikatTemplate(dbItem);
+
         vmItem.TemplateId = dbItem.template_id;
 
         StateHasChanged();
     }
 
+    private List<StockPartnerEntity> GetStockListWithProductsForBrand(PrikatManufacturerDiscountViewModel item)
+    {
+        return stocksWithProductsForManufacturer[item.Manufacturer_id];
+    }
 }
 

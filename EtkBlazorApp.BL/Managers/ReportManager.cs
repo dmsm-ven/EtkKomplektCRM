@@ -2,6 +2,7 @@
 using EtkBlazorApp.BL.Managers.ReportFormatters;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
+using EtkBlazorApp.DataAccess.Repositories;
 
 namespace EtkBlazorApp.BL
 {

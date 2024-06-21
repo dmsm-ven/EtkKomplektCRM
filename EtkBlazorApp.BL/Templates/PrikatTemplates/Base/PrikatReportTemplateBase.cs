@@ -2,10 +2,8 @@ using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.DataAccess.Entity;
 using NLog;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 
 namespace EtkBlazorApp.BL.Templates.PrikatTemplates.Base
 {
@@ -33,7 +31,7 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates.Base
             Precission = Currency == CurrencyType.RUB ? 0 : 2;
         }
 
-        public void AppendLines(List<ProductEntity> products, List<PriceLine> priceLines, StreamWriter writer)
+        /*public void AppendLines(List<ProductEntity> products, List<PriceLine> priceLines, StreamWriter writer)
         {
             if (priceLines.Count == 0)
             {
@@ -68,7 +66,7 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates.Base
                     }
                 }
             }
-        }
+        }*/
 
         protected virtual void AppendLine(ProductEntity product, StreamWriter sw)
         {

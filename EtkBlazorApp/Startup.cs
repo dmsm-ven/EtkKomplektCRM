@@ -81,17 +81,20 @@ public class Startup
         var sysLogger = app.ApplicationServices.GetRequiredService<SystemEventsLogger>();
 
         hostApplicationLifetime.ApplicationStarted.Register(async () =>
+    {
+        if (env.IsProduction())
         {
             app.ApplicationServices.GetRequiredService<CronTaskService>().Start();
             app.ApplicationServices.GetRequiredService<NewOrdersNotificationService>().Start();
             app.ApplicationServices.GetRequiredService<EmailPriceListCheckingService>().Start();
-
-            await sysLogger.WriteSystemEvent(LogEntryGroupName.Auth, "Запуск", "Запуск приложения личного кабинета");
-        });
+        }
+        await sysLogger.WriteSystemEvent(LogEntryGroupName.Auth, "Запуск", "Запуск приложения личного кабинета");
+    });
         hostApplicationLifetime.ApplicationStopping.Register(async () =>
         {
             await sysLogger.WriteSystemEvent(LogEntryGroupName.Auth, "Остановка", "Остановка приложения личного кабинета");
         });
+
     }
 
     public void ConfigureServices(IServiceCollection services)

@@ -4,6 +4,7 @@ using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Repositories.Wildberries;
 using EtkBlazorApp.WildberriesApi;
 using Humanizer;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using NLog;
 using System;
@@ -24,29 +25,37 @@ public class WildberriesUpdateService : BackgroundService
     private readonly IWildberriesProductRepository productRepository;
     private readonly ISettingStorageReader settingStorageReader;
     private readonly ISettingStorageWriter settingStorageWriter;
+    private readonly IWebHostEnvironment env;
     private readonly SystemEventsLogger sysLogger;
 
     public WildberriesUpdateService(WildberriesApiClient wbApiClient,
         IWildberriesProductRepository productRepository,
         ISettingStorageReader settingStorageReader,
         ISettingStorageWriter settingStorageWriter,
+        IWebHostEnvironment env,
         SystemEventsLogger sysLogger)
     {
         this.wbApiClient = wbApiClient;
         this.productRepository = productRepository;
         this.settingStorageReader = settingStorageReader;
         this.settingStorageWriter = settingStorageWriter;
+        this.env = env;
         this.sysLogger = sysLogger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        if (env.IsDevelopment())
+        {
+            nlog.Info("Служба обновления Wildberries в Development режиме отключена");
+            return;
+        }
+
         nlog.Info("Служба обновление товаров на Wildberries запущена. Следующий запуск через {delay}", FirstRunDelay.Humanize());
 
         await Task.Delay(FirstRunDelay);
 
         using PeriodicTimer timer = new(UpdateInterval);
-
 
         try
         {

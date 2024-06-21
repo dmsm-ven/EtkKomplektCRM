@@ -277,7 +277,7 @@ namespace EtkBlazorApp.BL.Managers
             {
                 nlog.Trace("Запуск выполнения задачи {taskName}", taskInfo?.name);
 
-                await task.Run(taskInfo);
+                await task.Run(taskInfo, forced);
                 exec_result = CronTaskExecResult.Success;
 
                 await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {taskInfo.name} выполнено. Длительность выполнения {sw.Elapsed.Humanize()}");
