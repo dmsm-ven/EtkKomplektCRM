@@ -353,3 +353,4 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+/EtkBlazorApp/docker-compose.yml
