@@ -161,6 +161,9 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
                 }
             }
 
+            //Исключаем товары с 0 остатком
+            products.RemoveAll(p => p.quantity == 0);
+
             //Исключаем все товары с нулевой ценой
             products.RemoveAll(p => p.price == decimal.Zero);
 

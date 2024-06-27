@@ -33,15 +33,19 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates
             string height = (product.height != decimal.Zero ? product.height : DEFAULT_DIMENSIONS[2]).ToString("F2", new CultureInfo("en-EN"));
             string weight = (product.weight != decimal.Zero ? product.weight : DEFAULT_DIMENSIONS[3]).ToString("F4", new CultureInfo("en-EN"));
 
+            //TODO: ИЗМЕНИТЬ, изначально сделано неправильно - тут должен быть артикул поставщика (НАШ SKU), 
+            //А не артикул поставщика у того которого мы покупаем товар
+            //Правильный вариант, у всех товаров должен быть вида: ETK-123456
+            string sku =
+                !string.IsNullOrWhiteSpace(product.sku) ? product.sku :
+                (!string.IsNullOrWhiteSpace(product.model) ? product.model :
+                $"ETK-{product.product_id}");
+
             WriteCell(sw, GLN);   //GLN поставщика
             WriteCell(sw); //Позиция
             WriteCell(sw, product.ean); //Штрихкод
             WriteCell(sw); //Артикул товара покупателя
-
-            //TODO: ИЗМЕНИТЬ, изначально сделано неправильно - тут должен быть артикул поставщика (НАШ SKU), 
-            //А не артикул поставщика у того которого мы покупаем товар
-            //Правильный вариант, у всех товаров должен быть вида: ETK-123456
-            WriteCell(sw, product.sku ?? $"ETK-{product.product_id}"); //Артикул товара поставщика 
+            WriteCell(sw, sku); //Артикул товара поставщика 
             WriteCell(sw, product.name); //Наименование
             WriteCell(sw, "1"); //Кол-во
             WriteCell(sw, "шт."); //Единицы измерения
