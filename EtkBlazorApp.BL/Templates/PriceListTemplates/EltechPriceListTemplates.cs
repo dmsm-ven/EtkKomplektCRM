@@ -67,6 +67,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Quantity = quantityString,
                     Currency = CurrencyType.USD,
                     Price = maxPrice,
+                    OriginalPrice = maxPrice,
                     Manufacturer = manufacturer,
                     Sku = model,
                     Model = model,

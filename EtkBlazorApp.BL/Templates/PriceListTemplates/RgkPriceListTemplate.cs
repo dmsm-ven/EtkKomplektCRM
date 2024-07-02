@@ -106,34 +106,87 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         {
             var list = new List<PriceLine>();
 
-            const string brand = "HIKMICRO";
+            list.AddRange(ParseHikmicro());
+            list.AddRange(ParseRigol());
 
-            var hikmicroTab = this.Excel.Workbook.Worksheets.FirstOrDefault(t => t.Name.Contains(brand));
+            return list;
+        }
 
-            if (hikmicroTab != null)
+        private List<PriceLine> ParseRigol()
+        {
+            const string rigolTabName = "Rigol";
+
+            var rigolTab = this.Excel.Workbook.Worksheets.FirstOrDefault(t => t.Name.Contains(rigolTabName));
+
+            if (rigolTab == null)
             {
-                for (int row = 2; row < hikmicroTab.Dimension.Rows; row++)
+                return Enumerable.Empty<PriceLine>().ToList();
+            }
+
+            var list = new List<PriceLine>();
+            for (int row = 2; row < rigolTab.Dimension.Rows; row++)
+            {
+                string sku = rigolTab.GetValue<string>(row, 1);
+                string name = rigolTab.GetValue<string>(row, 2);
+                var price = ParsePrice(rigolTab.GetValue<string>(row, 3), canBeNull: true);
+
+                if (price is null)
                 {
-                    var sku = hikmicroTab.GetValue<string>(row, 3);
-                    var model = hikmicroTab.GetValue<string>(row, 4);
-                    var name = hikmicroTab.GetValue<string>(row, 5);
-                    var rrcPrice = ParsePrice(hikmicroTab.GetValue<string>(row, 6));
-
-                    var line = new PriceLine(this)
-                    {
-                        Manufacturer = brand,
-                        Currency = CurrencyType.RUB,
-                        Model = model,
-                        Sku = sku,
-                        Name = name,
-                        Price = rrcPrice
-                    };
-
-                    list.Add(line);
+                    continue;
                 }
+
+                var line = new PriceLine(this)
+                {
+                    Manufacturer = rigolTabName,
+                    Currency = CurrencyType.RUB,
+                    Model = sku,
+                    Sku = sku,
+                    Name = name,
+                    Price = price,
+                    OriginalPrice = price,
+                };
+
+                list.Add(line);
             }
 
             return list;
+        }
+
+        private List<PriceLine> ParseHikmicro()
+        {
+            const string hikmicroTabName = "HIKMICRO";
+
+            var hikmicroTab = this.Excel.Workbook.Worksheets.FirstOrDefault(t => t.Name.Contains(hikmicroTabName));
+
+            if (hikmicroTab == null)
+            {
+                return Enumerable.Empty<PriceLine>().ToList();
+            }
+
+            var list = new List<PriceLine>();
+
+            for (int row = 2; row < hikmicroTab.Dimension.Rows; row++)
+            {
+                var sku = hikmicroTab.GetValue<string>(row, 3);
+                var model = hikmicroTab.GetValue<string>(row, 4);
+                var name = hikmicroTab.GetValue<string>(row, 5);
+                var rrcPrice = ParsePrice(hikmicroTab.GetValue<string>(row, 6));
+
+                var line = new PriceLine(this)
+                {
+                    Manufacturer = hikmicroTabName,
+                    Currency = CurrencyType.RUB,
+                    Model = model,
+                    Sku = sku,
+                    Name = name,
+                    Price = rrcPrice
+                };
+
+                list.Add(line);
+            }
+
+            return list;
+
         }
     }
 
