@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.Core.Interfaces;
+﻿using EtkBlazorApp.BL.Templates.PriceListTemplates.RemoteFileLoaders.ForSpecificTemplate;
+using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Repositories.PriceList;
 using System;
@@ -25,7 +26,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates.RemoteFileLoaders
 
         public IRemoteTemplateFileLoader GetMethod(string remoteUri, string methodName, string guid)
         {
-            //методы перечислены в таблице 'etk_app_price_list_template_remote_method'
+            //методы перечислены в таблице 'etk_app_price_list_template_load_method'
             switch (methodName)
             {
                 case "HttpGet":
@@ -43,6 +44,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates.RemoteFileLoaders
                         guid);
                 case "mks.master.pro API":
                     return new MksMasterProApiFileLoader(templateStorage, guid);
+                case "aktakom.ru ЛК":
+                    return new AtakomLkFileLoader(templateStorage, guid);
             }
 
             throw new NotSupportedException($"Шаблон загрузки файла '{methodName}' не поддерживается");
