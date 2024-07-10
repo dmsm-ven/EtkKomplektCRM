@@ -150,6 +150,7 @@ public class Startup
         services.AddScoped<ReportManager>();
         services.AddScoped<ChartDataExtractor>();
 
+        services.AddSingleton<WildberriesUpdateService>();
         services.AddHostedService<WildberriesUpdateService>();
     }
 

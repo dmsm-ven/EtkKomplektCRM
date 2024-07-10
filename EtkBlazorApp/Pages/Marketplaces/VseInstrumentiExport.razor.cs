@@ -49,7 +49,7 @@ public partial class VseInstrumentiExport : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        itemsSource = (await templateStorage.GetPrikatTemplates())
+        itemsSource = (await templateStorage.GetPrikatTemplates(includeDisabled: false))
             .Select(t => new PrikatManufacturerDiscountViewModel()
             {
                 Discount1 = t.discount1,
@@ -147,6 +147,19 @@ public partial class VseInstrumentiExport : ComponentBase
         };
 
         return options;
+    }
+
+    private async Task DeleteClick(PrikatManufacturerDiscountViewModel item)
+    {
+        await templateStorage.DisablePrikatTemplate(item.TemplateId);
+        itemsSource.Remove(item);
+        StateHasChanged();
+    }
+
+    private async Task AddNewManufacturer()
+    {
+        await templateStorage.AddNewOrRestorePrikatTemplate(newManufacturer.manufacturer_id);
+        StateHasChanged();
     }
 
     private async Task DiscountChanged(PrikatManufacturerDiscountViewModel vmItem)

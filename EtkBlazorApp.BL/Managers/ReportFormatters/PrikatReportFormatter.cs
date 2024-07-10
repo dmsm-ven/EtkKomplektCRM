@@ -50,7 +50,7 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
         {
             Stopwatch sw = Stopwatch.StartNew();
 
-            var templateSource = await templateStorage.GetPrikatTemplates();
+            var templateSource = await templateStorage.GetPrikatTemplates(includeDisabled: false);
 
             string fileName = Path.GetTempPath() + $"prikat_{DateTime.Now.ToShortDateString().Replace(".", "_")}.csv";
             try

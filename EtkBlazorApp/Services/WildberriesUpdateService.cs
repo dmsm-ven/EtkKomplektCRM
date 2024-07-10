@@ -80,7 +80,7 @@ public class WildberriesUpdateService : BackgroundService
         }
     }
 
-    private async Task UpdateWildberriesProducts()
+    public async Task UpdateWildberriesProducts()
     {
         nlog.Info("Запуск обновление товаров на Wildberries");
 

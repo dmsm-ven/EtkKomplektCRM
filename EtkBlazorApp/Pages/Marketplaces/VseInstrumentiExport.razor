@@ -14,13 +14,13 @@
         else
         {
             <div class="row my-3">
-                <div class="col-md-3">
-                    <button class="btn btn-info w-100 h-100 mx-2" @onclick="@(e => ShowPriceExample = !ShowPriceExample)">
+                <div class="col-md-3 col-sm-6">
+                    <button class="btn btn-info w-100 h-100" @onclick="@(e => ShowPriceExample = !ShowPriceExample)">
                         <span class="oi oi-info px-1"></span>
                         @(!ShowPriceExample ? "Показать тестовые цены" : "Скрыть тестовые цены")
                     </button>
                 </div>
-            <div class="offset-3 col-md-6">
+            <div class="offset-md-6 col-md-3 col-sm-6">
                     <button type="button" class="btn btn-primary w-100 h-100" @onclick="GetReport" disabled="@reportButtonDisabled">
                         <span class="oi oi-spreadsheet px-1"></span>
                         Скачать выгрузку
@@ -46,6 +46,7 @@
                 <thead class="thead-etk">
                     <tr>
                         <th>Производитель</th>
+                        <th></th>
                         <th>Рекомендуемая цена</th>
                         <th>Закупочная цена</th>
                         <th>Валюта выгрузки</th>
@@ -66,12 +67,25 @@
                                     <PrikatTemplateItem 
                                         AllStocks="@allStocks"
                                         StocksWithAtLeastOneProduct="@GetStockListWithProductsForBrand(item)"
-                                        Item="@item" 
+                                        Item="@item"
+                                        DeleteClick="@DeleteClick"
                                         ItemChanged="@DiscountChanged" />
                                 </CascadingValue>
                             </CascadingValue>
                         }
-                    }
+
+                    <tr>
+                        <td>
+                            <button class="btn btn-sm btn-primary" @onclick="AddNewManufacturer">
+                                <span class="oi oi-plus"></span>
+                            </button>
+                        </td>
+                        <td colspan="5">
+                            <SelectManufacturerDropdown @bind-Manufacturer="newManufacturer"
+                                                        DisabledManufacturers="@this.itemsSource.Select(i => new ManufacturerEntity(){ manufacturer_id = i.Manufacturer_id}).ToList()" />
+                        </td>
+                    </tr>
+                    }           
                 </tbody>
             </table>
         </div>

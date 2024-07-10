@@ -1,8 +1,5 @@
 ﻿@page "/marketplace-export"
 @attribute [Authorize(Roles = "Administrator, Manager")]
-@inject IToastService toasts
-@inject IMarketplaceExportService marketplaceExport
-@inject UserLogger logger
 
 <div class="container-fluid">
        <div class="col-md-12">
@@ -52,8 +49,12 @@
                 <MarketplaceBrandsExportTable Marketplace="Wildberries"
                                               Title="Настройки выгрузки Wildberries"
                                               CabinetURL="https://seller.wildberries.ru"
-                                              FeedURL="https://lk.etk-komplekt.ru/marketplace-export/wildberries-feed">
+                                              FeedURL="https://lk.etk-komplekt.ru/marketplace-export/wildberries-feed">                
                 </MarketplaceBrandsExportTable>
+            <button class="btn btn-primary" disabled=@wbUpdateInProgress
+                    @onclick="UpdateWildberriesStockAndPrice">
+                Обновить сейчас
+            </button>
             }
         </div>
         <div class="col-md-12">
@@ -67,6 +68,31 @@
 @code {
     static string[] tabs = new[] { "Wildberries", "OzonSeller", "YandexMarket", "Sbermegamarket", "Сводная таблица" };
 
+    [Inject] public IToastService toasts { get; set; }
+
+    [Inject] public IMarketplaceExportService marketplaceExport { get; set; }
+
+    [Inject] public WildberriesUpdateService wbUpdateService { get; set; }
+
     public string SelectedTab { get; set; } = tabs[0];
 
+    private bool wbUpdateInProgress = false;
+
+    private async Task UpdateWildberriesStockAndPrice()
+    {
+        wbUpdateInProgress = true;
+        try
+        {
+            await wbUpdateService.UpdateWildberriesProducts();
+            toasts.ShowInfo("Обновление товаров на Wildberries выполнено");
+        }
+        catch(Exception ex)
+        {
+            toasts.ShowError("Не удалось выполнить обновление товаров Wildberries. " + ex.Message);
+        }
+        finally
+        {
+            wbUpdateInProgress = false;
+        }
+    }
 }

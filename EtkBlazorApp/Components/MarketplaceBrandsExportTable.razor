@@ -84,7 +84,7 @@
     [Parameter] public string CabinetURL { get; set; }
     [Parameter] public string FeedURL { get; set; }
     [Parameter] public string Title { get; set; }
-    
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -114,11 +114,15 @@
         if (firstRender)
         {
             var source = await stockStorage.GetManufacturersAvailableStocks();
-            stocksWithProductsForManufacturer = source
-                .ToDictionary(
-                    i => i.manufacturer_id,
-                    j => allStocks.Where(s => j.stock_ids.Split(",").Contains(s.stock_partner_id.ToString())).ToList());
-            StateHasChanged();
+            if (source != null && allStocks != null)
+            {
+                stocksWithProductsForManufacturer = source
+                .Where(i => !string.IsNullOrWhiteSpace(i.stock_ids))
+                    .ToDictionary(
+                        i => i.manufacturer_id,
+                        j => allStocks.Where(s => j.stock_ids.Split(",").Contains(s.stock_partner_id.ToString())).ToList());
+                StateHasChanged();
+            }
         }
     }
 
