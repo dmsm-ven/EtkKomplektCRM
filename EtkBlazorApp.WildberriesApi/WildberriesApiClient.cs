@@ -16,6 +16,7 @@ public class WildberriesApiClient
 {
     private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
     private const int MAX_PRODUCTS_PER_PAGE_FOR_STOCK = 1000;
+    private const int SPAM_CHECK_TRY_COUNT = 5; // 1000 * 5 = 5000 товаров, если больше - то нужно переработать проверку с этим полем
     private readonly ILogger<WildberriesApiClient> logger;
     private readonly HttpClient httpClient;
     private readonly int TOTAL_STEPS = 7;
@@ -148,19 +149,30 @@ public class WildberriesApiClient
     {
         var uri = $"https://suppliers-api.wildberries.ru/api/v3/stocks/{warehouseId}";
 
-        if (etkIdToWbBarcode.Values.Count >= MAX_PRODUCTS_PER_PAGE_FOR_STOCK)
-        {
-            throw new NotSupportedException("Пагинация товаров не реализована");
-        }
+        int currentPage = 0;
+        int lastPage = (int)Math.Ceiling((double)etkIdToWbBarcode.Values.Count / MAX_PRODUCTS_PER_PAGE_FOR_STOCK);
 
-        var payload = new WBQuantityClearPayload()
+        do
         {
-            skus = etkIdToWbBarcode.Values.ToList()
-        };
+            var currentPageSkus = etkIdToWbBarcode.Values.Skip(currentPage * MAX_PRODUCTS_PER_PAGE_FOR_STOCK).Take(MAX_PRODUCTS_PER_PAGE_FOR_STOCK).ToList();
 
-        var response = await httpClient.DeleteAsJsonAsync(uri, payload);
-        var responseMessage = await response.Content.ReadAsStringAsync();
-        nlog.Trace("ClearStock Response | StatusCode = {code}, Message = {message}", response.StatusCode, responseMessage);
+            var payload = new WBQuantityClearPayload()
+            {
+                skus = currentPageSkus
+            };
+
+            var response = await httpClient.DeleteAsJsonAsync(uri, payload);
+            var responseMessage = await response.Content.ReadAsStringAsync();
+
+            nlog.Trace("ClearStock Response | StatusCode = {code}, Message = {message}", response.StatusCode, responseMessage);
+
+            currentPage++;
+            // УБРАТЬ, ЕСЛИ ТОВАРОВ БОЛЬШЕ ЧЕМ 5000
+            if (currentPage > SPAM_CHECK_TRY_COUNT)
+            {
+                break;
+            }
+        } while (currentPage < lastPage);
     }
 
     /// <summary>
@@ -173,27 +185,38 @@ public class WildberriesApiClient
     {
         string uri = $"https://suppliers-api.wildberries.ru/api/v3/stocks/{warehouseId}";
 
-        if (etkIdToWbBarcode.Values.Count >= MAX_PRODUCTS_PER_PAGE_FOR_STOCK)
-        {
-            throw new NotSupportedException("Пагинация товаров не реализована");
-        }
+        int currentPage = 0;
+        int lastPage = (int)Math.Ceiling((double)etkIdToWbBarcode.Values.Count / MAX_PRODUCTS_PER_PAGE_FOR_STOCK);
 
-        WBQuantityUpdatePayload payload = new()
+        do
         {
-            stocks = etkIdToWbBarcode.Select(i => new WBQuantityUpdatePayload_Stock()
+            var stocksData = etkIdToWbBarcode
+                .Skip(currentPage * MAX_PRODUCTS_PER_PAGE_FOR_STOCK).Take(MAX_PRODUCTS_PER_PAGE_FOR_STOCK)
+                .Select(i => new WBQuantityUpdatePayload_Stock()
+                {
+                    sku = i.Value,
+                    amount = ((etkIdToPriceMap.ContainsKey(i.Key) && etkIdToPriceMap[i.Key] > 0)
+                        ? (etkIdToQuantity.ContainsKey(i.Key) ? etkIdToQuantity[i.Key] : 0)
+                        : 0)
+                }).ToList();
+
+            WBQuantityUpdatePayload payload = new()
             {
-                sku = i.Value,
-                amount = ((etkIdToPriceMap.ContainsKey(i.Key) && etkIdToPriceMap[i.Key] > 0)
-                    ? (etkIdToQuantity.ContainsKey(i.Key) ? etkIdToQuantity[i.Key] : 0)
-                    : 0)
-            }).ToList()
-        };
+                stocks = stocksData
+            };
 
-        //nlog.Trace("UpdateQuantity PAYLOAD: {payload}", JsonSerializer.Serialize(payload));
-        var response = await httpClient.PutAsJsonAsync(uri, payload);
-        var responseMessage = await response.Content.ReadAsStringAsync();
-        nlog.Trace("UpdateQuantity Response | StatusCode = {code}, Message = {message}", response.StatusCode, responseMessage);
+            //nlog.Trace("UpdateQuantity PAYLOAD: {payload}", JsonSerializer.Serialize(payload));
+            var response = await httpClient.PutAsJsonAsync(uri, payload);
+            var responseMessage = await response.Content.ReadAsStringAsync();
+            nlog.Trace("UpdateQuantity Response | StatusCode = {code}, Message = {message}", response.StatusCode, responseMessage);
 
+            currentPage++;
+            //Удалить если товаров больше 5000
+            if (currentPage > SPAM_CHECK_TRY_COUNT)
+            {
+                break;
+            }
+        } while (currentPage < lastPage);
     }
 
     /// <summary>
@@ -204,20 +227,39 @@ public class WildberriesApiClient
     {
         string uri = "https://discounts-prices-api.wb.ru/api/v2/upload/task";
 
-        var payload = new WBPriceUpdatePayload()
+        int currentPage = 0;
+        int lastPage = (int)Math.Ceiling((double)etkIdToWbBarcode.Values.Count / MAX_PRODUCTS_PER_PAGE_FOR_STOCK);
+
+        do
         {
-            data = etkIdToWbNMID.Select(i => new WBProductPriceUpdate()
+            var priceData = etkIdToWbNMID
+                .Skip(currentPage * MAX_PRODUCTS_PER_PAGE_FOR_STOCK).Take(MAX_PRODUCTS_PER_PAGE_FOR_STOCK)
+                .Select(i => new WBProductPriceUpdate()
+                {
+                    nmID = i.Value,
+                    price = etkIdToPriceMap.ContainsKey(i.Key) ? etkIdToPriceMap[i.Key] : 0
+                }).ToList();
+
+
+            var payload = new WBPriceUpdatePayload()
             {
-                nmID = i.Value,
-                price = etkIdToPriceMap.ContainsKey(i.Key) ? etkIdToPriceMap[i.Key] : 0
-            }).ToList()
-        };
+                data = priceData
+            };
 
-        //nlog.Trace("UpdatePrices PAYLOAD: {payload}", JsonSerializer.Serialize(payload));
+            //nlog.Trace("UpdatePrices PAYLOAD: {payload}", JsonSerializer.Serialize(payload));
 
-        var response = await httpClient.PostAsJsonAsync(uri, payload);
-        var responseMessage = await response.Content.ReadAsStringAsync();
-        nlog.Trace("UpdatePrices Response | StatusCode = {code}, Message = {message}", response.StatusCode, responseMessage);
+            var response = await httpClient.PostAsJsonAsync(uri, payload);
+            var responseMessage = await response.Content.ReadAsStringAsync();
+            nlog.Trace("UpdatePrices Response | StatusCode = {code}, Message = {message}", response.StatusCode, responseMessage);
+
+            currentPage++;
+
+            //Убрать если товаров больше 5000
+            if (currentPage > SPAM_CHECK_TRY_COUNT)
+            {
+                break;
+            }
+        } while (currentPage < lastPage);
     }
 
     /// <summary>
@@ -246,6 +288,11 @@ public class WildberriesApiClient
             using HttpResponseMessage? res = await httpClient.PostAsJsonAsync(uri, payload);
 
             var responseData = await res.Content.ReadFromJsonAsync<WBCardListResponse>();
+
+            if (responseData?.cards == null)
+            {
+                break;
+            }
 
             lastUpdatedAt = responseData.cursor.updatedAt;
             lastNmID = responseData.cursor.nmID;

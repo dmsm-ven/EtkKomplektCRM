@@ -82,12 +82,12 @@ namespace EtkBlazorApp.BL
                             var found = await connection.Inbox.SearchAsync(query);
                             if (found.Count > 0)
                             {
-                                nlog.Trace("[+] {sender}", cr.Value.Sender);
+                                //nlog.Trace("[+] {sender}", cr.Value.Sender);
                                 list.Add(cr.Key);
                             }
                             else
                             {
-                                nlog.Trace("[-] {sender}", cr.Value.Sender);
+                                //nlog.Trace("[-] {sender}", cr.Value.Sender);
                             }
                         }
 

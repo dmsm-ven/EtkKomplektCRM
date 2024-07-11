@@ -1,4 +1,5 @@
 ﻿@page "/marketplace-export"
+@using Humanizer
 @attribute [Authorize(Roles = "Administrator, Manager")]
 
 <div class="container-fluid">
@@ -83,8 +84,14 @@
         wbUpdateInProgress = true;
         try
         {
-            await wbUpdateService.UpdateWildberriesProducts();
-            toasts.ShowInfo("Обновление товаров на Wildberries выполнено");
+            var toastsIndicator = new Progress<string>((msg) =>
+            {
+                toasts.ShowInfo($"{DateTime.Now} {msg}");
+            });
+
+            await wbUpdateService.UpdateWildberriesProducts(toastsIndicator);
+
+            toasts.ShowSuccess("Обновление товаров на Wildberries выполнено");
         }
         catch(Exception ex)
         {

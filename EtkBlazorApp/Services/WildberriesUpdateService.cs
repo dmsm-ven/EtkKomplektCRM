@@ -72,15 +72,9 @@ public class WildberriesUpdateService : BackgroundService
         {
             nlog.Trace("Служба обновление товаров на Wildberries остановлена");
         }
-        catch (Exception ex)
-        {
-            await sysLogger.WriteSystemEvent(LogEntryGroupName.Wildberries,
-                "Обновление остановлено",
-                $"Ошибка в работе службы обновление товаров на Wildberries. Детали {ex.Message}. StackTrace: {ex.StackTrace}");
-        }
     }
 
-    public async Task UpdateWildberriesProducts()
+    public async Task UpdateWildberriesProducts(IProgress<string> progressIndicator = null)
     {
         nlog.Info("Запуск обновление товаров на Wildberries");
 
@@ -97,20 +91,39 @@ public class WildberriesUpdateService : BackgroundService
         var progress = new Progress<WildberriesUpdateProgress>(v =>
         {
             string msgTemplate = "Wildberries API: {desc} [{step} | {totalSteps}]. Длительность выполнения: {elapsed}";
+
             nlog.Trace(msgTemplate,
                 v.CurrentStepDescription,
                 v.CurrentStep,
                 v.TotalSteps,
                 (v.CurrentStep == 1 ? TimeSpan.Zero : sw.Elapsed).Humanize());
+
+            progressIndicator?.Report(v.CurrentStepDescription);
         });
 
         //Токен, судя по описанию API, должен меняться каждые 180 дн. (на 18.05.2024).
         //Т.е. его нужно будет перевыпускать и обновлнять в настройках в личном кабинете
-
         //Наценки считаются прямо в SQL запросе
-        var products = await productRepository.ReadProducts();
-        await wbApiClient.UpdateProducts(secureToken, products, progress);
 
-        await settingStorageWriter.SetValueToDateTimeNow("wildberries_last_request");
+        try
+        {
+            var products = await productRepository.ReadProducts();
+
+            await wbApiClient.UpdateProducts(secureToken, products, progress);
+
+            await settingStorageWriter.SetValueToDateTimeNow("wildberries_last_request");
+
+            string updateType = progressIndicator == null ? "по таймеру" : "форсированное";
+
+            await sysLogger.WriteSystemEvent(LogEntryGroupName.Wildberries,
+                "Синхронизация выполнена",
+                $"Синхронизация цен и остатков с Wildberries выполнена ({updateType})");
+        }
+        catch (Exception ex)
+        {
+            await sysLogger.WriteSystemEvent(LogEntryGroupName.Wildberries,
+                "Ошибка обновления",
+                $"Ошибка в работе службы обновление товаров на Wildberries. Детали {ex.Message}. StackTrace: {ex.StackTrace}");
+        }
     }
 }
