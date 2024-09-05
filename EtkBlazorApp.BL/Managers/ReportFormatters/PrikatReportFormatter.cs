@@ -167,6 +167,9 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
             //Исключаем все товары с нулевой ценой
             products.RemoveAll(p => p.price == decimal.Zero);
 
+            //Исключаем все товары без EAN
+            products.RemoveAll(p => p.ean is null || (p.ean?.Length ?? 0) != 13);
+
             return products;
         }
 

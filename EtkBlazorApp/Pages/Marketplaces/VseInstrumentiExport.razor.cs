@@ -110,6 +110,8 @@ public partial class VseInstrumentiExport : ComponentBase
 
             await js.InvokeAsync<object>("saveAsFile", Path.GetFileName(filePath), Convert.ToBase64String(File.ReadAllBytes(filePath)));
             await logger.Write(LogEntryGroupName.Prikat, "Создан", "Выгрузка для ВсеИнструменты создана");
+
+            toasts.ShowInfo("Выгрузка создана. Примечание: в выгрузку не попадают товары с [0 ценой] [0 остатком] [без EAN13]");
         }
         catch (Exception ex)
         {

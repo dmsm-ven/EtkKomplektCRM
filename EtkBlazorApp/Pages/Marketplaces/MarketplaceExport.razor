@@ -54,7 +54,7 @@
                 </MarketplaceBrandsExportTable>
             <button class="btn btn-primary" disabled=@wbUpdateInProgress
                     @onclick="UpdateWildberriesStockAndPrice">
-                Обновить сейчас
+                Синхронизировать цены/остатки сейчас
             </button>
             }
         </div>
@@ -71,6 +71,10 @@
 
     [Inject] public IToastService toasts { get; set; }
 
+    [Inject] public ISettingStorageReader settingsReader { get; set; }
+
+    [Inject] public ISettingStorageWriter settingsWrite { get; set; }
+
     [Inject] public IMarketplaceExportService marketplaceExport { get; set; }
 
     [Inject] public WildberriesUpdateService wbUpdateService { get; set; }
@@ -79,11 +83,28 @@
 
     private bool wbUpdateInProgress = false;
 
+    private bool wbToggleState = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        wbToggleState = await settingsReader.GetValue<bool>("wildberries-enabled");
+    }
+
+    private async Task SetWildberriesState()
+    {
+        wbToggleState = !wbToggleState;
+
+        await settingsWrite.SetValue("wildberries-enabled", wbToggleState);
+    }
+
     private async Task UpdateWildberriesStockAndPrice()
     {
         wbUpdateInProgress = true;
+        StateHasChanged();
         try
         {
+            toasts.ShowInfo($"{DateTime.Now} Запуск обновления");
+
             var toastsIndicator = new Progress<string>((msg) =>
             {
                 toasts.ShowInfo($"{DateTime.Now} {msg}");
@@ -100,6 +121,7 @@
         finally
         {
             wbUpdateInProgress = false;
+            StateHasChanged();
         }
     }
 }

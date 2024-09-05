@@ -142,7 +142,7 @@ namespace EtkBlazorApp.DataAccess.Repositories.Product
 
             var pidArray = string.Join(",", idsToUpdate);
 
-            //Пересчет всех цен на товары исходя из складких (oc_product_to_stock) записей у товара
+            //Пересчет всех цен на товары исходя из складcких (oc_product_to_stock) записей у товара
             string sql = $@"UPDATE oc_product
 				            INNER JOIN (SELECT pts.product_id, 
 									            IF(SUM(pts.quantity)  = 0, MAX(pts.price), (SELECT MIN(price) FROM oc_product_to_stock WHERE quantity > 0 AND product_id = pts.product_id)) as price, 

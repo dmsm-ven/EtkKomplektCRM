@@ -84,7 +84,5 @@ public class CurrencyCheckerCbRf_V2 : ICurrencyChecker
 
         return dic;
     }
-
-
 }
 
