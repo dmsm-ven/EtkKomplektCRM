@@ -34,7 +34,7 @@ namespace EtkBlazorApp.BL.Templates.CronTask
                 var loader = service.remoteTemplateLoaderFactory.GetMethod(templateInfo.remote_uri, templateInfo.remote_uri_method_name, templateGuid);
                 var response = await loader.GetFile();
 
-                if (!forced && response.Bytes.Length == (int)taskInfo.last_exec_file_size)
+                if (!forced && taskInfo?.last_exec_file_size != null && response.Bytes.Length == (int)taskInfo.last_exec_file_size)
                 {
                     throw new CronTaskSkipException();
                 }
