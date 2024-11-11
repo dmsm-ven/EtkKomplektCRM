@@ -76,6 +76,12 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     continue;
                 }
 
+                if (Regex.IsMatch(skuNumber, "-Г$"))
+                {
+                    //Пропускам
+                    continue;
+                }
+
                 if (Regex.IsMatch(skuNumber, @"^(\d){6,}N$"))
                 {
                     skuNumber = skuNumber.TrimEnd('N');
@@ -84,6 +90,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 {
                     skuNumber = skuNumber.Substring(3);
                 }
+
+
 
                 var line = new PriceLine(this)
                 {
@@ -94,6 +102,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Manufacturer = "Weller",
                     //Stock = StockName.SpringE
                 };
+
                 list.Add(line);
             }
 

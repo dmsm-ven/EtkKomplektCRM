@@ -56,6 +56,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
         protected override List<PriceLine> ReadDataFromExcel()
         {
             Dictionary<StockName, int> columnIndexes = GetHeaderIndexes();
+            int rrcPriceColumnIndex = GetRrcColumnIndex();
 
             var list = new List<PriceLine>();
 
@@ -65,7 +66,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string manufacturer = tab.GetValue<string>(row, 4);
                 string sku = tab.GetValue<string>(row, 6);
 
-                var price = ParsePrice(tab.GetValue<string>(row, 8));
+                var price = ParsePrice(tab.GetValue<string>(row, rrcPriceColumnIndex));
 
                 int? quantitySpb = ParseQuantity(tab.GetValue<string>(row, columnIndexes[StockName.RGK_Spb]), canBeNull: false);
 
@@ -94,6 +95,24 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             }
 
             return list;
+        }
+
+        private int GetRrcColumnIndex()
+        {
+            int headerRowIndex = 7;
+            int totalColumns = tab.Columns.Count();
+
+            for (int i = 1; i < totalColumns; i++)
+            {
+                var cellText = tab.GetValue<string>(headerRowIndex, i);
+                if (!string.IsNullOrWhiteSpace(cellText) && cellText == "РРЦ")
+                {
+                    return i;
+                }
+            }
+
+            int defaultColumnIndex = 10;
+            return defaultColumnIndex;
         }
     }
 

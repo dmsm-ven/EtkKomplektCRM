@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.DataAccess.Entity;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -22,6 +23,8 @@ namespace EtkBlazorApp.DataAccess.Repositories.Product
     public class ProductUpdateService : IProductUpdateService
     {
         private readonly IDatabaseAccess database;
+
+        private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
 
         public ProductUpdateService(IDatabaseAccess database)
         {
@@ -61,10 +64,12 @@ namespace EtkBlazorApp.DataAccess.Repositories.Product
                 return;
             }
 
-
             var stocksToUpdate = string.Join(",", groupedByPartner.Keys);
             //Очищаем все склады которые будем обновлять
             await database.ExecuteQuery($"UPDATE oc_product_to_stock SET quantity = 0 WHERE stock_partner_id IN ({stocksToUpdate})");
+
+            //Сохраняем историю обновления остатков для склада-товара, для того что бы можно было очищать устаревшие остатки
+            var quantityHistorySb = new StringBuilder("INSERT INTO etk_app_product_quantity_last_update(product_id, stock_partner_id, quantity, last_update) VALUES\n");
 
             //Вставляем если нет, либо обновляем если уже есть склад с остатками (или ценами) для определенного товара
             var sb = new StringBuilder("INSERT INTO oc_product_to_stock (stock_partner_id, product_id, quantity) VALUES\n");
@@ -73,11 +78,18 @@ namespace EtkBlazorApp.DataAccess.Repositories.Product
                 foreach (var kvp in group.Value.Where(v => v.quantity.HasValue))
                 {
                     sb.AppendLine($"({group.Key}, {kvp.product_id}, {Math.Max(kvp.quantity.Value, 0)}),");
+                    quantityHistorySb.AppendLine($"({kvp.product_id}, {group.Key}, {kvp.quantity}, CURRENT_TIMESTAMP),");
                 }
             }
             var sql = sb.ToString().Trim('\r', '\n', ',') + " ON DUPLICATE KEY UPDATE quantity = VALUES(quantity);";
-
             await database.ExecuteQuery(sql);
+
+
+            var quantityHistorySql = quantityHistorySb.ToString().Trim('\r', '\n', ',') + @" ON DUPLICATE KEY UPDATE 
+                                                                    last_update = VALUES(last_update), 
+                                                                    quantity = VALUES(quantity)";
+            //nlog.Trace("INVALID SQL: {param}", quantityHistorySql);
+            await database.ExecuteQuery(quantityHistorySql);
         }
 
         private async Task UpdateProductsStockPrice(IReadOnlyDictionary<int, List<ProductUpdateData>> groupedByPartner)
