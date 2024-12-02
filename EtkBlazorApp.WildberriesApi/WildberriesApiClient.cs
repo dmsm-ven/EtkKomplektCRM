@@ -53,12 +53,15 @@ public class WildberriesApiClient
 
         progress?.Report(new WildberriesUpdateProgress(1, TOTAL_STEPS, "Получаем список товаров которые есть на WB"));
         await ReceiveWbProductsData();
+        nlog.Trace("OK - элементы словарей: WBIDS[{wbids}] | BARCODES[{barcodes}]", etkIdToWbNMID.Count, etkIdToWbBarcode.Count);
 
         progress?.Report(new WildberriesUpdateProgress(2, TOTAL_STEPS, "Преобразование товаров ЕТК в словари остатков и цен"));
         ConvertEtkProductsToDictionaries(productsData);
+        nlog.Trace("Преобразовано элементов: {count}", productsData.Count());
 
         progress?.Report(new WildberriesUpdateProgress(3, TOTAL_STEPS, "Получаем список складов WB и берем первый"));
         int warehouseId = await GetWarehouseId();
+        nlog.Trace("WarehouseID: {id}", warehouseId);
 
         progress?.Report(new WildberriesUpdateProgress(4, TOTAL_STEPS, "Выполнение API запроса к WB на обнуление остатков"));
         await ClearStock(warehouseId);
@@ -70,7 +73,6 @@ public class WildberriesApiClient
         await UpdatePrices();
 
         progress?.Report(new WildberriesUpdateProgress(TOTAL_STEPS, TOTAL_STEPS, "Конец обновление остатков и цен WB"));
-
         nlog.Trace("UpdateProducts END");
     }
 
