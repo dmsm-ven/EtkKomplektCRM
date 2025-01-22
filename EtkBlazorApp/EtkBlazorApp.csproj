@@ -3,6 +3,9 @@
   
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+	<RuntimeFrameworkVersion>6.0.35</RuntimeFrameworkVersion>
+	  <!--удалить RuntimeFrameworkVersion после мигации на .NET 8 -->
+	  
     <UserSecretsId>2072fd8b-67fb-4577-bc60-329b7e864f37</UserSecretsId>
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
   </PropertyGroup>
