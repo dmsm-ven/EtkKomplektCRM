@@ -114,6 +114,12 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
             template.CurrencyRatio = currentCurrencyRate;
             template.GLN = gln;
 
+            var discountedProducts = await templateStorage.GetDiscountedProducts();
+            if (discountedProducts != null && discountedProducts.Count > 0)
+            {
+                template.ProductIdToDiscount = discountedProducts.ToDictionary(i => i.product_id, i => i.discount_price ?? data.discount1);
+            }
+
             return template;
         }
 

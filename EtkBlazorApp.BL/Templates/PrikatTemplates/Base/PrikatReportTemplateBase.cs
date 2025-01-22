@@ -15,7 +15,10 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates.Base
         public decimal CurrencyRatio { get; set; }
         public decimal Discount1 { get; set; }
         public decimal Discount2 { get; set; }
+
         public string GLN { get; set; }
+
+        public Dictionary<int, decimal> ProductIdToDiscount { get; set; } = new();
 
         protected virtual decimal[] DEFAULT_DIMENSIONS { get; } = new decimal[] { 150, 100, 100, 0.4m };
         protected virtual string LENGTH_UNIT { get; } = "миллиметр";
@@ -40,6 +43,15 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates.Base
             }
         }
 
+        protected virtual decimal LineDiscountForProductId(int product_id)
+        {
+            if (ProductIdToDiscount != null && ProductIdToDiscount.ContainsKey(product_id))
+            {
+                return ProductIdToDiscount[product_id];
+            }
+            return Discount2;
+        }
+
         protected virtual void WriteProductLine(ProductEntity product, StreamWriter sw)
         {
             decimal priceInCurrency = (int)product.price;
@@ -50,7 +62,7 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates.Base
                     Math.Round(product.price / CurrencyRatio, 2);
             }
 
-            decimal price1 = Math.Round(priceInCurrency * ((100m + Discount2) / 100m), Precission);
+            decimal price1 = Math.Round(priceInCurrency * ((100m + LineDiscountForProductId(product.product_id)) / 100m), Precission);
             decimal price2 = Math.Round(price1 * (100m + Discount1) / 100m, Precission);
 
             string vi_price_rrc = price1.ToString($"F{Precission}", new CultureInfo("en-EN"));
@@ -61,9 +73,8 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates.Base
             string height = (product.height != decimal.Zero ? product.height : DEFAULT_DIMENSIONS[2]).ToString("F2", new CultureInfo("en-EN"));
             string weight = (product.weight != decimal.Zero ? product.weight : DEFAULT_DIMENSIONS[3]).ToString("F4", new CultureInfo("en-EN"));
 
-            //TODO: ИЗМЕНИТЬ, изначально сделано неправильно - тут должен быть артикул поставщика (НАШ SKU), 
+            //TODO: ИЗМЕНИТЬ, изначально сделано неправильно - тут должен быть артикул поставщика - НАШ SKU вида: ETK-{PID}, например: ЕТК-148, 
             //А не артикул поставщика у того которого мы покупаем товар
-            //Правильный вариант, у всех товаров должен быть вида: ETK-123456
             string sku =
                 !string.IsNullOrWhiteSpace(product.sku) ? product.sku :
                 (!string.IsNullOrWhiteSpace(product.model) ? product.model :

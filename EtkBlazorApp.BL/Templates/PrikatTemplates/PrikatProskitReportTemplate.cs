@@ -9,12 +9,21 @@ using System.Linq;
 namespace EtkBlazorApp.BL.Templates.PrikatTemplates
 {
     //В этом шаблоне, в отличии от обычных, не выгружаем РРЦ цена (всегда должна быть 0)
-    //А цена расчитывается от цены поставщика SYMMETRON
+    //А цена расчитывается от цены поставщика SYMMETRON  
     public sealed class PrikatProskitReportTemplate : PrikatReportTemplateBase
     {
         private readonly int SYMMETRON_STOCK_ID = 4;
 
         public PrikatProskitReportTemplate(string manufacturer, CurrencyType currency) : base(manufacturer, currency) { }
+
+        protected override decimal LineDiscountForProductId(int product_id)
+        {
+            if (ProductIdToDiscount != null && ProductIdToDiscount.ContainsKey(product_id))
+            {
+                return ProductIdToDiscount[product_id];
+            }
+            return Discount1;
+        }
 
         protected override void WriteProductLine(ProductEntity product, StreamWriter sw)
         {
@@ -25,7 +34,7 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates
                 return;
             }
             priceInCurrency = Math.Round(priceInCurrency / CurrencyRatio, 2);
-            decimal purchasePrice = Math.Round(priceInCurrency * (100m + Discount1) / 100m, Precission);
+            decimal purchasePrice = Math.Round(priceInCurrency * (100m + LineDiscountForProductId(product.product_id)) / 100m, Precission);
             string purchasePriceString = purchasePrice.ToString($"F{Precission}", new CultureInfo("en-EN"));
 
             string length = (product.length != decimal.Zero ? product.length : DEFAULT_DIMENSIONS[0]).ToString("F2", new CultureInfo("en-EN"));

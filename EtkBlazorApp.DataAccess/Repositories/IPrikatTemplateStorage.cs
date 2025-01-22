@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.DataAccess.Entity.Marketplace;
+﻿using EtkBlazorApp.DataAccess.Entity;
+using EtkBlazorApp.DataAccess.Entity.Marketplace;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,6 +12,9 @@ namespace EtkBlazorApp.DataAccess.Repositories
         Task SavePrikatTemplate(PrikatReportTemplateEntity template);
         Task DisablePrikatTemplate(int template_id);
         Task AddNewOrRestorePrikatTemplate(int manufacturer_id);
+        Task AddOrUpdateSingleProductDiscount(int product_id, int discount_percent);
+        Task RemoveSingleProductDiscount(int product_id);
+        Task<List<ProductEntity>> GetDiscountedProducts();
     }
 
     public class PrikatTemplateStorage : IPrikatTemplateStorage
@@ -89,6 +93,31 @@ namespace EtkBlazorApp.DataAccess.Repositories
                     enabled = true
                 });
             }
+        }
+
+        public async Task RemoveSingleProductDiscount(int product_id)
+        {
+            string deleteSql = @"DELETE FROM etk_app_prikat_product_discount WHERE product_id = @product_id";
+            await database.ExecuteQuery(deleteSql, new { product_id });
+        }
+
+        public async Task AddOrUpdateSingleProductDiscount(int product_id, int discount_percent)
+        {
+            string insertSql = @"INSERT INTO etk_app_prikat_product_discount (product_id, discount) VALUES 
+                       (@product_id, @discount_percent)
+                        ON DUPLICATE KEY UPDATE discount = @discount_percent";
+            await database.ExecuteQuery(insertSql, new { product_id, discount_percent });
+        }
+
+        public async Task<List<ProductEntity>> GetDiscountedProducts()
+        {
+            string sql = @"SELECT pd.product_id, d.name, pd.discount as discount_price
+                           FROM etk_app_prikat_product_discount pd
+                           JOIN oc_product_description d ON (pd.product_id = d.product_id)";
+
+            var products = await database.GetList<ProductEntity>(sql);
+
+            return products;
         }
     }
 }

@@ -2,77 +2,76 @@
 @attribute [Authorize(Roles = "Administrator, Manager")]
 
 
-    <img style="height: 100px; margin: 0px auto 40px auto; display: block;" 
-         src="image/logotips/vse-instrumenti-logo-big.jpg" 
-         class="img-fluid" />
+<img style="height: 100px; margin: 0px auto 40px auto; display: block;"
+     src="image/logotips/vse-instrumenti-logo-big.jpg"
+     class="img-fluid" />
 
-    <div class="container">
-        @if (inProgress)
-        {
-            <IntermediateProgressBar></IntermediateProgressBar>
-        }
-        else
-        {
-            <div class="row my-3">
-                <div class="col-md-3 col-sm-6">
-                    <button class="btn btn-info w-100 h-100" @onclick="@(e => ShowPriceExample = !ShowPriceExample)">
-                        <span class="oi oi-info px-1"></span>
-                        @(!ShowPriceExample ? "Показать тестовые цены" : "Скрыть тестовые цены")
-                    </button>
-                </div>
-            <div class="offset-md-6 col-md-3 col-sm-6">
-                    <button type="button" class="btn btn-primary w-100 h-100" @onclick="GetReport" disabled="@reportButtonDisabled">
-                        <span class="oi oi-spreadsheet px-1"></span>
-                        Скачать выгрузку
-                    </button>
-                </div>
+<div class="container">
+    @if (inProgress)
+    {
+        <IntermediateProgressBar></IntermediateProgressBar>
+    }
+    else
+    {
+        <div class="row my-3">
+            <div class="col-md-3 col-sm-6">
+                <button class="btn btn-info w-100 h-100" @onclick="@(e => ShowPriceExample = !ShowPriceExample)">
+                    <span class="oi oi-info px-1"></span>
+                    @(!ShowPriceExample ? "Показать тестовые цены" : "Скрыть тестовые цены")
+                </button>
             </div>
+            <div class="offset-md-6 col-md-3 col-sm-6">
+                <button type="button" class="btn btn-primary w-100 h-100" @onclick="GetReport" disabled="@reportButtonDisabled">
+                    <span class="oi oi-spreadsheet px-1"></span>
+                    Скачать выгрузку
+                </button>
+            </div>
+        </div>
 
-                
-                    @if (ShowPriceExample)
-                    {
-                    <div class="form-inline my-2">
-                        <label for="test-price">Цена для примера/проверки</label>
-                        <input type="number" id="test-price" 
-                               class="form-control mx-2 justify-content-center" 
-                               style="width: 120px;"
-                               name="example-price" @bind-value="ExamplePrice" />
-                    </div>
-                }
+
+        @if (ShowPriceExample)
+        {
+            <div class="form-inline my-2">
+                <label for="test-price">Цена для примера/проверки</label>
+                <input type="number" id="test-price"
+                       class="form-control mx-2 justify-content-center"
+                       style="width: 120px;"
+                       name="example-price" @bind-value="ExamplePrice" />
+            </div>
         }
+    }
 
-        <div class=" table-responsive">
-            <table class="table prikat-table">
-                <thead class="thead-etk">
-                    <tr>
-                        <th>Производитель</th>
-                        <th></th>
-                        <th>Рекомендуемая цена</th>
-                        <th>Закупочная цена</th>
-                        <th>Валюта выгрузки</th>
-                        <th>Выгружаемые склады</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (itemsSource == null)
+    <div class="table-responsive">
+        <table class="table prikat-table">
+            <thead class="thead-etk">
+                <tr>
+                    <th>Производитель</th>
+                    <th></th>
+                    <th>Рекомендуемая цена</th>
+                    <th>Закупочная цена</th>
+                    <th>Валюта выгрузки</th>
+                    <th>Выгружаемые склады</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (itemsSource == null)
+                {
+                    <LoadingSpinner></LoadingSpinner>
+                }
+                else
+                {
+                    foreach (var item in itemsSource)
                     {
-                        <LoadingSpinner></LoadingSpinner>
-                    }
-                    else
-                    {
-                        foreach (var item in itemsSource)
-                        {
-                            <CascadingValue Value="@ShowPriceExample">
-                                <CascadingValue Value="@ExamplePrice">
-                                    <PrikatTemplateItem 
-                                        AllStocks="@allStocks"
-                                        StocksWithAtLeastOneProduct="@GetStockListWithProductsForBrand(item)"
-                                        Item="@item"
-                                        DeleteClick="@DeleteClick"
-                                        ItemChanged="@DiscountChanged" />
-                                </CascadingValue>
+                        <CascadingValue Value="@ShowPriceExample">
+                            <CascadingValue Value="@ExamplePrice">
+                                <PrikatTemplateItem AllStocks="@allStocks"
+                                                    StocksWithAtLeastOneProduct="@GetStockListWithProductsForBrand(item)"
+                                                    Item="@item"
+                                                    DeleteClick="@DeleteClick"
+                                                    ItemChanged="@DiscountChanged" />
                             </CascadingValue>
-                        }
+                        </CascadingValue>
+                    }
 
                     <tr>
                         <td>
@@ -85,8 +84,58 @@
                                                         DisabledManufacturers="@this.itemsSource.Select(i => new ManufacturerEntity(){ manufacturer_id = i.Manufacturer_id}).ToList()" />
                         </td>
                     </tr>
-                    }           
+                }
+            </tbody>
+        </table>
+    </div>
+    <h2>Приоритетные скидки на отдельные товары</h2>
+    <div class="container">
+        <div class="row py-2">
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100" type="button"
+                        style="display: block; vertical-align: bottom;"
+                        @onclick="(e => AddDiscountItem())">
+                    <span class="oi oi-plus">&nbsp; Добавить</span>
+                </button>
+            </div>
+            <div class="col-md-7">
+                <SelectProductBlazoredTypehead ProductChanged="@SelectedProductChanged" />
+            </div>
+            <div class="col-md-3" style="display: flex; gap: 20px;">
+                <input type="number" id="discount_percent" class="form-control"
+                       value="@newDiscountProduct.DiscountPercent"
+                       @onchange="@(e => newDiscountProduct.DiscountPercent = int.Parse(e.Value.ToString()))" />
+            </div>
+        </div>
+        <div class="row">
+            <table class="table table-sm">
+                <thead style="margin-bottom: 12px;">
+                    <tr>
+                        <th class="col-md-2"></th>
+                        <th class="col-md-7">Товар</th>
+                        <th class="col-md-3">Наценка, %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in discountedProducts)
+                    {
+                        <tr>
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger"
+                                        @onclick="(e => RemoveDiscountItem(item))">
+                                    <span class="oi oi-minus"></span>
+                                </button>
+                            </td>
+                            <td>
+                                <a href="@item.ProductIdUri" target="_blank">@HttpUtility.HtmlDecode(item.Name)</a>
+                            </td>
+                            <td class="discount-percent">
+                                @(item.DiscountPercent.ToString() + " %")
+                            </td>
+                        </tr>
+                    }
                 </tbody>
             </table>
         </div>
     </div>
+</div>

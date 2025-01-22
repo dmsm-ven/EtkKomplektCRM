@@ -33,22 +33,24 @@ public partial class VseInstrumentiExport : ComponentBase
     [Inject] public UserLogger logger { get; set; }
     [Inject] public ReportManager ReportManager { get; set; }
 
-    private List<PrikatManufacturerDiscountViewModel> itemsSource;
+
+    private List<PrikatManufacturerDiscountViewModel> itemsSource = new();
 
     public bool ShowPriceExample { get; set; } = false;
     public decimal ExamplePrice { get; set; } = 1000;
 
     private bool inProgress = false;
-    private ManufacturerEntity newManufacturer;
+    private ManufacturerEntity newManufacturer = new();
 
     private bool reportButtonDisabled => itemsSource == null || inProgress;
 
     public List<StockPartnerEntity> allStocks { get; private set; }
 
-    public Dictionary<int, List<StockPartnerEntity>> stocksWithProductsForManufacturer { get; private set; }
+    public Dictionary<int, List<StockPartnerEntity>> stocksWithProductsForManufacturer { get; private set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
+
         itemsSource = (await templateStorage.GetPrikatTemplates(includeDisabled: false))
             .Select(t => new PrikatManufacturerDiscountViewModel()
             {
@@ -64,6 +66,7 @@ public partial class VseInstrumentiExport : ComponentBase
 
         var stocksSource = await stockStorage.GetManufacturersAvailableStocks();
         allStocks = await stockStorage.GetStocks();
+
         stocksWithProductsForManufacturer = stocksSource
             .ToDictionary(
                 i => i.manufacturer_id,
@@ -88,7 +91,15 @@ public partial class VseInstrumentiExport : ComponentBase
             }
         }
 
-        newManufacturer = new ManufacturerEntity();
+
+
+        discountedProducts = (await templateStorage.GetDiscountedProducts())
+    .Select(i => new ProductDiscountViewModel()
+    {
+        Id = i.product_id,
+        Name = i.name,
+        DiscountPercent = (int)i.discount_price.Value
+    }).ToList();
 
         StateHasChanged();
     }
@@ -186,7 +197,55 @@ public partial class VseInstrumentiExport : ComponentBase
 
     private List<StockPartnerEntity> GetStockListWithProductsForBrand(PrikatManufacturerDiscountViewModel item)
     {
-        return stocksWithProductsForManufacturer[item.Manufacturer_id];
+        if (stocksWithProductsForManufacturer.TryGetValue(item.Manufacturer_id, out var list))
+        {
+            return list;
+        }
+        return new List<StockPartnerEntity>();
+    }
+
+    // PRODUCT DISCOUNT START
+    private ProductDiscountViewModel newDiscountProduct = new();
+    private List<ProductDiscountViewModel> discountedProducts = new();
+
+    private void SelectedProductChanged(ProductEntity product)
+    {
+        if (product != null)
+        {
+            newDiscountProduct.Id = product.product_id;
+            newDiscountProduct.Name = product.name;
+            StateHasChanged();
+        }
+    }
+
+    private async Task AddDiscountItem()
+    {
+        await templateStorage.AddOrUpdateSingleProductDiscount(newDiscountProduct.Id, newDiscountProduct.DiscountPercent);
+        toasts.ShowSuccess($"{newDiscountProduct.Name}. Скидка добавлена");
+
+        var existedItem = discountedProducts.FirstOrDefault(di => di.Id == newDiscountProduct.Id);
+        if (existedItem != null)
+        {
+            existedItem.DiscountPercent = newDiscountProduct.DiscountPercent;
+            await logger.Write(LogEntryGroupName.Prikat, "Обновлена", $"Обновлена скидка {newDiscountProduct.DiscountPercent}% для товара '{newDiscountProduct.Name}'");
+        }
+        else
+        {
+            await logger.Write(LogEntryGroupName.Prikat, "Добавление", $"Скидка для товара '{newDiscountProduct.Name}' ({newDiscountProduct.DiscountPercent}%)");
+        }
+
+        newDiscountProduct = new ProductDiscountViewModel();
+        newDiscountProduct.PropertyChanged += (o, e) => InvokeAsync(() => StateHasChanged());
+
+        StateHasChanged();
+    }
+
+    private async Task RemoveDiscountItem(ProductDiscountViewModel product)
+    {
+        discountedProducts.Remove(product);
+        await templateStorage.RemoveSingleProductDiscount(product.Id);
+        await logger.Write(LogEntryGroupName.Prikat, "Удаление скидки", $"Скидка для товара '{product.Name}' удалена");
+        StateHasChanged();
     }
 }
 
