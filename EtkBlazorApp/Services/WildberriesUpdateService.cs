@@ -1,5 +1,6 @@
 ﻿using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.BL.Loggers;
+using EtkBlazorApp.Core.Data.Wildberries;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Repositories.Wildberries;
 using EtkBlazorApp.WildberriesApi;
@@ -8,7 +9,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using NLog;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -101,13 +104,11 @@ public class WildberriesUpdateService : BackgroundService
             progressIndicator?.Report(v.CurrentStepDescription);
         });
 
-        //Токен, судя по описанию API, должен меняться каждые 180 дн. (на 18.05.2024).
-        //Т.е. его нужно будет перевыпускать и обновлнять в настройках в личном кабинете
-        //Наценки считаются прямо в SQL запросе
-
         try
         {
             var products = await productRepository.ReadProducts();
+
+            AppendMinimumPriceDiscountAndRoundPrice(products);
 
             await wbApiClient.UpdateProducts(secureToken, products, progress);
 
@@ -124,6 +125,36 @@ public class WildberriesUpdateService : BackgroundService
             await sysLogger.WriteSystemEvent(LogEntryGroupName.Wildberries,
                 "Ошибка обновления",
                 $"Ошибка в работе службы обновление товаров на Wildberries. Детали {ex.Message}. StackTrace: {ex.StackTrace}");
+        }
+    }
+
+    public void AppendMinimumPriceDiscountAndRoundPrice(IEnumerable<WildberriesEtkProductUpdateEntry> products)
+    {
+        var stepsDic = new Dictionary<int, decimal>()
+        {
+            [500] = 2.5m,
+            [1000] = 2.0m
+        };
+
+        var maxStep = stepsDic.Keys.Max();
+
+        foreach (var product in products)
+        {
+            decimal productPrice = product.PriceInRUB;
+
+            if (product.PriceInRUB < maxStep)
+            {
+                foreach (var (stepInRub, addMultiplier) in stepsDic)
+                {
+                    if (product.PriceInRUB < stepInRub)
+                    {
+                        productPrice *= addMultiplier;
+                        break;
+                    }
+                }
+            }
+
+            product.PriceInRUB = ((int)Math.Ceiling(productPrice / 10m)) * 10;
         }
     }
 }

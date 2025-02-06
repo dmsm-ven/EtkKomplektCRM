@@ -130,7 +130,7 @@
                                 <a href="@item.ProductIdUri" target="_blank">@HttpUtility.HtmlDecode(item.Name)</a>
                             </td>
                             <td class="discount-percent">
-                                @(item.DiscountPercent.ToString() + " %")
+                                @(item.DiscountPercent.ToString("F2").Replace(",", ".") + " %")
                             </td>
                         </tr>
                     }

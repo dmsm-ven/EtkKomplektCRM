@@ -25,12 +25,8 @@ public class WildberriesProductRepository : IWildberriesProductRepository
         //Соответственно на WB они должны пропасть из продажи (количество 0, цена 0)
         //Либо доработать в будущем этот момент
 
-        // Как расчитывается цена:
-        // 1. Берется цена товара на сайте в рубля, если она менее 500 рублей, то умножается на 2
-        // 2. Цена умножается на скидку выбранную в личном кабинете для поставщика
-        // 3. Округляется до 10
         var sql = @"SELECT CONCAT('ETK-', p.product_id) as ProductId, 
-						ROUND((IF(p.price >= 500, p.price, p.price * 2) * (100 + mbe.discount)) / 100 , -1) as PriceInRUB,  
+						((p.price * (100 + mbe.discount)) / 100) as PriceInRUB,  
 						SUM(IFNULL(pts.quantity, 0)) as Quantity				
 					FROM oc_product p 
 						JOIN oc_product_description pd ON (p.product_id = pd.product_id) 

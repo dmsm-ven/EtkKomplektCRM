@@ -33,20 +33,16 @@ public partial class VseInstrumentiExport : ComponentBase
     [Inject] public UserLogger logger { get; set; }
     [Inject] public ReportManager ReportManager { get; set; }
 
-
+    private List<StockPartnerEntity> allStocks { get; set; }
+    private Dictionary<int, List<StockPartnerEntity>> stocksWithProductsForManufacturer { get; set; } = new();
+    private bool ShowPriceExample { get; set; } = false;
+    private decimal ExamplePrice { get; set; } = 1000;
     private List<PrikatManufacturerDiscountViewModel> itemsSource = new();
-
-    public bool ShowPriceExample { get; set; } = false;
-    public decimal ExamplePrice { get; set; } = 1000;
-
+    private List<ProductDiscountViewModel> discountedProducts = new();
     private bool inProgress = false;
     private ManufacturerEntity newManufacturer = new();
-
+    private ProductDiscountViewModel newDiscountProduct = new();
     private bool reportButtonDisabled => itemsSource == null || inProgress;
-
-    public List<StockPartnerEntity> allStocks { get; private set; }
-
-    public Dictionary<int, List<StockPartnerEntity>> stocksWithProductsForManufacturer { get; private set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -204,9 +200,7 @@ public partial class VseInstrumentiExport : ComponentBase
         return new List<StockPartnerEntity>();
     }
 
-    // PRODUCT DISCOUNT START
-    private ProductDiscountViewModel newDiscountProduct = new();
-    private List<ProductDiscountViewModel> discountedProducts = new();
+    // PRODUCT DISCOUNT
 
     private void SelectedProductChanged(ProductEntity product)
     {
@@ -220,6 +214,14 @@ public partial class VseInstrumentiExport : ComponentBase
 
     private async Task AddDiscountItem()
     {
+        if (newDiscountProduct == null || newDiscountProduct.Id == 0)
+        {
+            newDiscountProduct = new ProductDiscountViewModel();
+            toasts.ShowInfo("Ошибка добавления товара. ID не найден");
+            StateHasChanged();
+            return;
+        }
+
         await templateStorage.AddOrUpdateSingleProductDiscount(newDiscountProduct.Id, newDiscountProduct.DiscountPercent);
         toasts.ShowSuccess($"{newDiscountProduct.Name}. Скидка добавлена");
 
@@ -231,6 +233,7 @@ public partial class VseInstrumentiExport : ComponentBase
         }
         else
         {
+            discountedProducts.Insert(0, newDiscountProduct);
             await logger.Write(LogEntryGroupName.Prikat, "Добавление", $"Скидка для товара '{newDiscountProduct.Name}' ({newDiscountProduct.DiscountPercent}%)");
         }
 

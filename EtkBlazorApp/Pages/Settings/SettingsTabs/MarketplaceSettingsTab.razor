@@ -10,56 +10,13 @@
     </div>
 
     <div class="marketplace-tab-group">
-        <h3>YandexMarket</h3>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label for="yandex_market_min_export_price">Минимальная цена выгрузки</label>
-                    <input type="number" min="0" class="form-control" id="yandex_market_min_export_price" @bind="yandex_market_minimumPrice">
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label for="yandex_market_under_min_price_ratio">Множитель (если меньше min)</label>
-                    <input type="number" min="1" class="form-control" id="yandex_market_under_min_price_ratio" @bind="yandex_market_underRatio">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="marketplace-tab-group">
-        <h3>OzonSeller</h3>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label for="ozon_seller_min_export_price">Минимальная цена выгрузки</label>
-                    <input type="number" min="0" class="form-control" id="ozon_seller_min_export_price" @bind="ozon_seller_minimumPrice">
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label for="ozon_seller_under_min_price_ratio">Множитель (если меньше min)</label>
-                    <input type="number" min="0" class="form-control" id="ozon_seller_under_min_price_ratio" @bind="ozon_seller_underRatio">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="marketplace-tab-group">
-        <h3>Sbermegamarket</h3>
-        <div class="form-group">
-            <label for="sbermegamarket_export_min_price">Минимальная цена выгрузки</label>
-            <input type="number" min="0" class="form-control" id="sbermegamarket_export_min_price" @bind="sbermegamarket_minimumPrice">
-        </div>
-    </div>
-
-    <div class="marketplace-tab-group">
         <h3>ВсеИнструменты</h3>
         <div class="form-group">
             <label for="gln">GLN поставщика</label>
             <input type="text" class="form-control" id="gln" @bind="vse_instrumenty_gln">
         </div>
     </div>
+
 </div>
 
 @code {
@@ -68,31 +25,16 @@
     [Inject] public ISettingStorageWriter settingsWriter { get; set; }
     [CascadingParameter] public SettingsTabData tabData { get; set; }
 
-    decimal ozon_seller_minimumPrice;
-    decimal yandex_market_minimumPrice;
-    decimal sbermegamarket_minimumPrice;
-    decimal yandex_market_underRatio;
-    decimal ozon_seller_underRatio;
     string vse_instrumenty_gln = string.Empty;
     string wildberries_secure_token = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        ozon_seller_minimumPrice = await settingsReader.GetValue<decimal>("ozon_seller_export_minimum_price");
-        sbermegamarket_minimumPrice = await settingsReader.GetValue<decimal>("sbermegamarket_export_minimum_price");
-        yandex_market_minimumPrice = await settingsReader.GetValue<decimal>("yandex_market_export_minimum_price");
-        yandex_market_underRatio = await settingsReader.GetValue<decimal>("yandex_market_export_under_minimum_ratio");
-        ozon_seller_underRatio = await settingsReader.GetValue<decimal>("ozon_seller_export_under_minimum_ratio");
         vse_instrumenty_gln = await settingsReader.GetValue<string>("vse_instrumenti_gln");
         wildberries_secure_token = await settingsReader.GetValue<string>("wildberries_api_token");
 
         tabData.SaveButtonClicked = new Action(async () =>
         {
-            await settingsWriter.SetValue("ozon_seller_export_minimum_price", ozon_seller_minimumPrice);
-            await settingsWriter.SetValue("sbermegamarket_export_minimum_price", sbermegamarket_minimumPrice);
-            await settingsWriter.SetValue("yandex_market_export_minimum_price", yandex_market_minimumPrice);
-            await settingsWriter.SetValue("yandex_market_export_under_minimum_ratio", yandex_market_underRatio);
-            await settingsWriter.SetValue("ozon_seller_export_under_minimum_ratio", ozon_seller_underRatio);
             await settingsWriter.SetValue("vse_instrumenti_gln", vse_instrumenty_gln);
             await settingsWriter.SetValue("wildberries_api_token", wildberries_secure_token);
         });
