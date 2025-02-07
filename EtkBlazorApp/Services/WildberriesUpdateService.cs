@@ -21,6 +21,7 @@ public class WildberriesUpdateService : BackgroundService
 {
     private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
 
+    //TODO: Перенести инициализацию в настройки или appconfig
     public readonly TimeSpan UpdateInterval = TimeSpan.FromHours(2);
     public readonly TimeSpan FirstRunDelay = TimeSpan.FromSeconds(15);
 
@@ -63,12 +64,12 @@ public class WildberriesUpdateService : BackgroundService
         try
         {
             //Запускаем один раз
-            await UpdateWildberriesProducts();
+            await UpdateWildberriesProducts(forced: false);
 
             while (await timer.WaitForNextTickAsync(stoppingToken))
             {
                 //И по таймеру
-                await UpdateWildberriesProducts();
+                await UpdateWildberriesProducts(forced: false);
             }
         }
         catch (OperationCanceledException)
@@ -77,8 +78,14 @@ public class WildberriesUpdateService : BackgroundService
         }
     }
 
-    public async Task UpdateWildberriesProducts(IProgress<string> progressIndicator = null)
+    public async Task UpdateWildberriesProducts(bool forced = false, IProgress<string> progressIndicator = null)
     {
+        if (!forced && await IsExecutedRecently())
+        {
+            nlog.Info("Пропуск т.к. синхронизация выполнялась ранее в пределах таймера");
+            return;
+        }
+
         nlog.Info("Запуск обновление товаров на Wildberries");
 
         string secureToken = await settingStorageReader.GetValue("wildberries_api_token");
@@ -128,6 +135,18 @@ public class WildberriesUpdateService : BackgroundService
         }
     }
 
+    private async Task<bool> IsExecutedRecently()
+    {
+        var lastExec = await productRepository.GetStockLastSuccessSyncDateDate();
+        if (lastExec.HasValue && (lastExec.Value + UpdateInterval) > DateTime.Now)
+        {
+            return true;
+
+        }
+        return false;
+    }
+
+    //TODO: доработать, т.к. тут возможен вариант при нескольких вызовах на одном и том же списке, скидки добавятся 2..3.. и т.д. раз
     public void AppendMinimumPriceDiscountAndRoundPrice(IEnumerable<WildberriesEtkProductUpdateEntry> products)
     {
         var stepsDic = new Dictionary<int, decimal>()

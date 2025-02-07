@@ -8,6 +8,7 @@ using EtkBlazorApp.DataAccess.Entity.Marketplace;
 using EtkBlazorApp.DataAccess.Repositories;
 using EtkBlazorApp.DataAccess.Repositories.Product;
 using EtkBlazorApp.Model;
+using EtkBlazorApp.Model.Product;
 using EtkBlazorApp.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -35,8 +36,6 @@ public partial class VseInstrumentiExport : ComponentBase
 
     private List<StockPartnerEntity> allStocks { get; set; }
     private Dictionary<int, List<StockPartnerEntity>> stocksWithProductsForManufacturer { get; set; } = new();
-    private bool ShowPriceExample { get; set; } = false;
-    private decimal ExamplePrice { get; set; } = 1000;
     private List<PrikatManufacturerDiscountViewModel> itemsSource = new();
     private List<ProductDiscountViewModel> discountedProducts = new();
     private bool inProgress = false;
@@ -50,8 +49,7 @@ public partial class VseInstrumentiExport : ComponentBase
         itemsSource = (await templateStorage.GetPrikatTemplates(includeDisabled: false))
             .Select(t => new PrikatManufacturerDiscountViewModel()
             {
-                Discount1 = t.discount1,
-                Discount2 = t.discount2,
+                Discount = t.discount,
                 Manufacturer_id = t.manufacturer_id,
                 Manufacturer = t.manufacturer_name,
                 CurrencyCode = t.currency_code ?? "RUB",
@@ -94,7 +92,7 @@ public partial class VseInstrumentiExport : ComponentBase
     {
         Id = i.product_id,
         Name = i.name,
-        DiscountPercent = (int)i.discount_price.Value
+        DiscountPercent = i.discount_price ?? 0
     }).ToList();
 
         StateHasChanged();
@@ -169,6 +167,7 @@ public partial class VseInstrumentiExport : ComponentBase
     {
         await templateStorage.AddNewOrRestorePrikatTemplate(newManufacturer.manufacturer_id);
         StateHasChanged();
+        newManufacturer = new ManufacturerEntity();
     }
 
     private async Task DiscountChanged(PrikatManufacturerDiscountViewModel vmItem)
@@ -176,8 +175,7 @@ public partial class VseInstrumentiExport : ComponentBase
         var dbItem = new PrikatReportTemplateEntity()
         {
             manufacturer_id = vmItem.Manufacturer_id,
-            discount1 = vmItem.Discount1,
-            discount2 = vmItem.Discount2,
+            discount = vmItem.Discount,
             currency_code = vmItem.CurrencyCode ?? "RUB",
             template_id = vmItem.TemplateId,
             checked_stocks = vmItem.CheckedStocks,

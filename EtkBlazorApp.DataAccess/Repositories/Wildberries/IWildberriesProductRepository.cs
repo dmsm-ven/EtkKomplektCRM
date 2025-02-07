@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.Core.Data.Wildberries;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -6,6 +7,7 @@ namespace EtkBlazorApp.DataAccess.Repositories.Wildberries;
 public interface IWildberriesProductRepository
 {
     Task<List<WildberriesEtkProductUpdateEntry>> ReadProducts();
+    Task<DateTime?> GetStockLastSuccessSyncDateDate();
 }
 
 public class WildberriesProductRepository : IWildberriesProductRepository
@@ -15,6 +17,23 @@ public class WildberriesProductRepository : IWildberriesProductRepository
     public WildberriesProductRepository(IDatabaseAccess database)
     {
         this.database = database;
+    }
+
+    public async Task<DateTime?> GetStockLastSuccessSyncDateDate()
+    {
+        string sql = @"SELECT date_time
+                       FROM `etk_app_log`
+                       WHERE group_name = 'Маркетплейс Wildberries' AND title = 'Синхронизация выполнена'
+                       ORDER BY id DESC
+                       LIMIT 1";
+
+        var dt = await database.GetScalar<DateTime>(sql);
+
+        if (dt == default(DateTime))
+        {
+            return null;
+        }
+        return dt;
     }
 
     public async Task<List<WildberriesEtkProductUpdateEntry>> ReadProducts()

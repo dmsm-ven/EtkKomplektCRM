@@ -18,52 +18,52 @@
                     }
                 </div>
             }
-            </div>     
-        </div>
-        <div id="marketplace-tab-content" class="col-md-8 offset-2">
-            @if(SelectedTab == "OzonSeller")
-            {
-                <MarketplaceBrandsExportTable Marketplace="OzonSeller"   
-                                              Title="Настройки выгрузки Ozon Seller"
-                                              CabinetURL="https://seller.ozon.ru/app/main"
-                                              FeedURL="https://etk-komplekt.ru/index.php?route=feed/ozon_seller">
-                </MarketplaceBrandsExportTable>
-            }
-            else if(SelectedTab == "YandexMarket")
-            {
-                <MarketplaceBrandsExportTable Marketplace="YandexMarket" 
-                                              Title="Настройки выгрузки Yandex Market"
-                                              CabinetURL="https://partner.market.yandex.ru/business/892602/marketplace"
-                                          FeedURL="https://etk-komplekt.ru/index.php?route=feed/yandex_yml&token=DA000001A17164D2;https://etk-komplekt.ru/index.php?route=feed/yandex_yml/asJsonMainInfoOnly">
-                </MarketplaceBrandsExportTable>
-            }
-            else if (SelectedTab == "Sbermegamarket")
-            {
-                <MarketplaceBrandsExportTable Marketplace="Sbermegamarket"
-                                              Title="Настройки выгрузки Sbermegamarket"
-                                              CabinetURL="https://partner.sbermegamarket.ru/home"
-                                              FeedURL="https://etk-komplekt.ru/index.php?route=feed/sbermegamarket_yml&token=D7C6CD2F-94B4-447E-B358-44D2B51787F4">
-                </MarketplaceBrandsExportTable>
-            }
-            else if (SelectedTab == "Wildberries")
-            {
-                <MarketplaceBrandsExportTable Marketplace="Wildberries"
-                                              Title="Настройки выгрузки Wildberries"
-                                              CabinetURL="https://seller.wildberries.ru"
-                                              FeedURL="https://lk.etk-komplekt.ru/marketplace-export/wildberries-feed">                
-                </MarketplaceBrandsExportTable>
+        </div>     
+    </div>
+    <div id="marketplace-tab-content" class="col-md-8 offset-2">
+        @if(SelectedTab == "OzonSeller")
+        {
+            <MarketplaceBrandsExportTable Marketplace="OzonSeller"   
+            Title="Настройки выгрузки Ozon Seller"
+            CabinetURL="https://seller.ozon.ru/app/main"
+            FeedURL="https://etk-komplekt.ru/index.php?route=feed/ozon_seller">
+            </MarketplaceBrandsExportTable>
+        }
+        else if(SelectedTab == "YandexMarket")
+        {
+            <MarketplaceBrandsExportTable Marketplace="YandexMarket" 
+            Title="Настройки выгрузки Yandex Market"
+            CabinetURL="https://partner.market.yandex.ru/business/892602/marketplace"
+            FeedURL="https://etk-komplekt.ru/index.php?route=feed/yandex_yml&token=DA000001A17164D2;https://etk-komplekt.ru/index.php?route=feed/yandex_yml/asJsonMainInfoOnly">
+            </MarketplaceBrandsExportTable>
+        }
+        else if (SelectedTab == "Sbermegamarket")
+        {
+            <MarketplaceBrandsExportTable Marketplace="Sbermegamarket"
+            Title="Настройки выгрузки Sbermegamarket"
+            CabinetURL="https://partner.sbermegamarket.ru/home"
+            FeedURL="https://etk-komplekt.ru/index.php?route=feed/sbermegamarket_yml&token=D7C6CD2F-94B4-447E-B358-44D2B51787F4">
+            </MarketplaceBrandsExportTable>
+        }
+        else if (SelectedTab == "Wildberries")
+        {
+            <MarketplaceBrandsExportTable Marketplace="Wildberries"
+            Title="Настройки выгрузки Wildberries"
+            CabinetURL="https://seller.wildberries.ru"
+            FeedURL="https://lk.etk-komplekt.ru/marketplace-export/wildberries-feed">                
+            </MarketplaceBrandsExportTable>
             <button class="btn btn-primary" disabled=@wbUpdateInProgress
-                    @onclick="UpdateWildberriesStockAndPrice">
+            @onclick="UpdateWildberriesStockAndPrice">
                 Синхронизировать цены/остатки сейчас
             </button>
-            }
-        </div>
-        <div class="col-md-12">
-            @if(SelectedTab == "Сводная таблица")
-            {
-                <MarketplacePivotTable />
-            }
-        </div>
+        }
+    </div>
+    <div class="col-md-12">
+        @if(SelectedTab == "Сводная таблица")
+        {
+            <MarketplacePivotTable />
+        }
+    </div>
 </div>
 
 @code {
@@ -110,7 +110,7 @@
                 toasts.ShowInfo($"{DateTime.Now} {msg}");
             });
 
-            await wbUpdateService.UpdateWildberriesProducts(toastsIndicator);
+            await wbUpdateService.UpdateWildberriesProducts(forced: true, toastsIndicator);
 
             toasts.ShowSuccess("Обновление товаров на Wildberries выполнено");
         }

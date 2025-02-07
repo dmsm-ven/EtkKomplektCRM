@@ -12,7 +12,7 @@ namespace EtkBlazorApp.DataAccess.Repositories
         Task SavePrikatTemplate(PrikatReportTemplateEntity template);
         Task DisablePrikatTemplate(int template_id);
         Task AddNewOrRestorePrikatTemplate(int manufacturer_id);
-        Task AddOrUpdateSingleProductDiscount(int product_id, int discount_percent);
+        Task AddOrUpdateSingleProductDiscount(int product_id, decimal discount_percent);
         Task RemoveSingleProductDiscount(int product_id);
         Task<List<ProductEntity>> GetDiscountedProducts();
     }
@@ -49,9 +49,9 @@ namespace EtkBlazorApp.DataAccess.Repositories
             if (template.template_id == 0)
             {
                 string insertSql = @"INSERT INTO etk_app_prikat_template
-                       (manufacturer_id, enabled, discount1, discount2, currency_code, checked_stocks)
+                       (manufacturer_id, enabled, discount, currency_code, checked_stocks)
                        VALUES
-                       (@manufacturer_id, @enabled, @discount1, @discount2, @currency_code, @checked_stocks)";
+                       (@manufacturer_id, @enabled, @discount, @currency_code, @checked_stocks)";
                 await database.ExecuteQuery(insertSql, template);
 
                 template.template_id = await database.GetScalar<int>("SELECT max(template_id) FROM etk_app_prikat_template");
@@ -62,8 +62,7 @@ namespace EtkBlazorApp.DataAccess.Repositories
                                     SET 
                                         manufacturer_id = @manufacturer_id,
                                         enabled = @enabled,
-                                        discount1 = @discount1,
-                                        discount2 = @discount2,
+                                        discount = @discount,
                                         currency_code = @currency_code,
                                         checked_stocks = @checked_stocks
                                     WHERE template_id = @template_id";
@@ -86,8 +85,7 @@ namespace EtkBlazorApp.DataAccess.Repositories
                 await SavePrikatTemplate(new PrikatReportTemplateEntity()
                 {
                     manufacturer_id = manufacturer_id,
-                    discount1 = 0,
-                    discount2 = 0,
+                    discount = 0,
                     checked_stocks = "",
                     currency_code = "RUB",
                     enabled = true
@@ -101,7 +99,7 @@ namespace EtkBlazorApp.DataAccess.Repositories
             await database.ExecuteQuery(deleteSql, new { product_id });
         }
 
-        public async Task AddOrUpdateSingleProductDiscount(int product_id, int discount_percent)
+        public async Task AddOrUpdateSingleProductDiscount(int product_id, decimal discount_percent)
         {
             string insertSql = @"INSERT INTO etk_app_prikat_product_discount (product_id, discount) VALUES 
                        (@product_id, @discount_percent)

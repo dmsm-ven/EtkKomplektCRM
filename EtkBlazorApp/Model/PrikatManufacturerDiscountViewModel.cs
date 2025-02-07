@@ -7,8 +7,7 @@ namespace EtkBlazorApp.Model
     {
         public int TemplateId { get; set; }
         public int Manufacturer_id { get; set; }
-        public decimal Discount1 { get; set; }
-        public decimal Discount2 { get; set; }
+        public decimal Discount { get; set; }
         public string Manufacturer { get; set; }
         public string CurrencyCode { get; set; }
 

@@ -109,15 +109,14 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
 
             PrikatReportTemplateBase template = PrikatReportTemplateFactory.Create(data.manufacturer_name, currency);
 
-            template.Discount1 = data.discount1;
-            template.Discount2 = data.discount2;
+            template.Discount = data.discount;
             template.CurrencyRatio = currentCurrencyRate;
             template.GLN = gln;
 
             var discountedProducts = await templateStorage.GetDiscountedProducts();
             if (discountedProducts != null && discountedProducts.Count > 0)
             {
-                template.ProductIdToDiscount = discountedProducts.ToDictionary(i => i.product_id, i => i.discount_price ?? data.discount1);
+                template.ProductIdToDiscount = discountedProducts.ToDictionary(i => i.product_id, i => i.discount_price ?? data.discount);
             }
 
             return template;

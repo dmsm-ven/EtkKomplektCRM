@@ -18,15 +18,8 @@
     @* Рекомендуемая цена *@
     <td>
         <input type="number" class="form-control"
-               value="@Item.Discount2.ToString("G29", CultureInfo.InvariantCulture)"
-               @onchange="@(async (e) => { Item.Discount2 = decimal.Parse(e.Value.ToString(), CultureInfo.InvariantCulture); await Changed(); } )" />
-    </td>
-
-    @* Закупочная цена *@
-    <td>
-        <input type="number" class="form-control"
-               value="@Item.Discount1.ToString("G29", CultureInfo.InvariantCulture)"
-               @onchange="@(async (e) => { Item.Discount1 = decimal.Parse(e.Value.ToString(), CultureInfo.InvariantCulture); await Changed(); } )" />
+               value="@Item.Discount.ToString("G29", CultureInfo.InvariantCulture)"
+               @onchange="@(async (e) => { Item.Discount = decimal.Parse(e.Value.ToString(), CultureInfo.InvariantCulture); await Changed(); } )" />
     </td>
 
     @* Валюта выгрузки *@
@@ -38,6 +31,7 @@
             }
         </select>
     </td>
+    
     @* Выгружаемые склады *@
     <td>
         <StocksCheckListBoxNew StocksWithProduct="@StocksWithAtLeastOneProduct"
@@ -46,16 +40,7 @@
                                CheckedStocksChanging="@(async e => await Changed())" />
     </td>
 </tr>
-@if (ShowPriceExample)
-{
-    <tr class="prikat-price-example-row">
-            <td></td>
-            <td>@GetExampleStringPart(1)</td>
-            <td>@GetExampleStringPart(2)</td>
-            <td></td>
-            <td></td>
-    </tr>
-}
+
 
 <style>
     .remove-vi-manufacturer-btn {
@@ -79,34 +64,9 @@
     [Parameter] public EventCallback<PrikatManufacturerDiscountViewModel> ItemChanged { get; set; }
     [Parameter] public EventCallback<PrikatManufacturerDiscountViewModel> DeleteClick { get; set; }
 
-    [CascadingParameter] public bool ShowPriceExample { get; set; }
-    [CascadingParameter] public decimal ExamplePrice { get; set; }
-
     StocksCheckListBoxNew stockList = null;
 
     List<string> currencyCodeList = new List<string>(Enum.GetNames(typeof(CurrencyType)));
-
-    private MarkupString GetExampleStringPart(int index)
-    {
-        decimal priceExample1 = (ExamplePrice * (decimal)(1 + ((decimal)Item.Discount2 / 100)));
-        decimal priceExample2 = priceExample1 * (decimal)(1 + ((decimal)Item.Discount1 / 100));
-
-        string sign1 = Math.Sign(Item.Discount2) < 0 ? "-" : "+";
-        string sign2 = Math.Sign(Item.Discount1) < 0 ? "-" : "+";
-
-        string part1 = $"{ExamplePrice.ToString("0.##")} {sign1} {Math.Abs(Item.Discount2).ToString("0.##")}% = <strong>{priceExample1.ToString("0.##")}<strong>";
-        string part2 = $"{priceExample1.ToString("0.##")} {sign2} {Math.Abs(Item.Discount1).ToString("0.##")}% = <strong>{priceExample2.ToString("0.##")}</strong>";
-
-        if(priceExample2 > priceExample1)
-        {
-            part2 = part2.Replace("<strong>", "<strong style=\"color: red;\">");
-        }
-
-        if(index == 1) { return (MarkupString)part1; }
-        if(index == 2) { return (MarkupString)part2; }
-
-        throw new ArgumentOutOfRangeException();
-    }
 
     private async Task Changed()
     {

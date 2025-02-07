@@ -14,31 +14,13 @@
     else
     {
         <div class="row my-3">
-            <div class="col-md-3 col-sm-6">
-                <button class="btn btn-info w-100 h-100" @onclick="@(e => ShowPriceExample = !ShowPriceExample)">
-                    <span class="oi oi-info px-1"></span>
-                    @(!ShowPriceExample ? "Показать тестовые цены" : "Скрыть тестовые цены")
-                </button>
-            </div>
-            <div class="offset-md-6 col-md-3 col-sm-6">
+            <div class="offset-md-9 col-md-3 offset-sm-6 col-sm-6">
                 <button type="button" class="btn btn-primary w-100 h-100" @onclick="GetReport" disabled="@reportButtonDisabled">
                     <span class="oi oi-spreadsheet px-1"></span>
                     Скачать выгрузку
                 </button>
             </div>
         </div>
-
-
-        @if (ShowPriceExample)
-        {
-            <div class="form-inline my-2">
-                <label for="test-price">Цена для примера/проверки</label>
-                <input type="number" id="test-price"
-                       class="form-control mx-2 justify-content-center"
-                       style="width: 120px;"
-                       name="example-price" @bind-value="ExamplePrice" />
-            </div>
-        }
     }
 
     <div class="table-responsive">
@@ -48,7 +30,6 @@
                     <th>Производитель</th>
                     <th></th>
                     <th>Рекомендуемая цена</th>
-                    <th>Закупочная цена</th>
                     <th>Валюта выгрузки</th>
                     <th>Выгружаемые склады</th>
                 </tr>
@@ -62,15 +43,11 @@
                 {
                     foreach (var item in itemsSource)
                     {
-                        <CascadingValue Value="@ShowPriceExample">
-                            <CascadingValue Value="@ExamplePrice">
-                                <PrikatTemplateItem AllStocks="@allStocks"
+                          <PrikatTemplateItem AllStocks="@allStocks"
                                                     StocksWithAtLeastOneProduct="@GetStockListWithProductsForBrand(item)"
                                                     Item="@item"
                                                     DeleteClick="@DeleteClick"
                                                     ItemChanged="@DiscountChanged" />
-                            </CascadingValue>
-                        </CascadingValue>
                     }
 
                     <tr>
@@ -88,6 +65,7 @@
             </tbody>
         </table>
     </div>
+    
     <h2>Приоритетные скидки на отдельные товары</h2>
     <div class="container">
         <div class="row py-2">
@@ -113,7 +91,7 @@
                     <tr>
                         <th class="col-md-2"></th>
                         <th class="col-md-7">Товар</th>
-                        <th class="col-md-3">Наценка, %</th>
+                        <th class="col-md-3">Новая наценка, %</th>
                     </tr>
                 </thead>
                 <tbody>

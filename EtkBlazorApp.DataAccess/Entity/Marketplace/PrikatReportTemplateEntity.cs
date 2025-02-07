@@ -6,8 +6,7 @@ namespace EtkBlazorApp.DataAccess.Entity.Marketplace
     {
         public int template_id { get; set; }
         public int manufacturer_id { get; set; }
-        public decimal discount1 { get; set; }
-        public decimal discount2 { get; set; }
+        public decimal discount { get; set; }
         public bool enabled { get; set; }
 
         public string manufacturer_name { get; set; }

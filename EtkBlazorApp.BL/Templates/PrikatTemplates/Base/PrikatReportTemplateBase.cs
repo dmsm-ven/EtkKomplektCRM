@@ -13,8 +13,7 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates.Base
         private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
 
         public decimal CurrencyRatio { get; set; }
-        public decimal Discount1 { get; set; }
-        public decimal Discount2 { get; set; }
+        public decimal Discount { get; set; }
 
         public string GLN { get; set; }
 
@@ -35,21 +34,21 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates.Base
             Precission = Currency == CurrencyType.RUB ? 0 : 2;
         }
 
+        protected decimal GetCustomDiscountOrDefaultForProductId(int product_id)
+        {
+            if (ProductIdToDiscount != null && ProductIdToDiscount.ContainsKey(product_id))
+            {
+                return ProductIdToDiscount[product_id];
+            }
+            return Discount;
+        }
+
         public void WriteProductLines(IEnumerable<ProductEntity> products, StreamWriter sw)
         {
             foreach (var product in products)
             {
                 WriteProductLine(product, sw);
             }
-        }
-
-        protected virtual decimal LineDiscountForProductId(int product_id)
-        {
-            if (ProductIdToDiscount != null && ProductIdToDiscount.ContainsKey(product_id))
-            {
-                return ProductIdToDiscount[product_id];
-            }
-            return Discount2;
         }
 
         protected virtual void WriteProductLine(ProductEntity product, StreamWriter sw)
@@ -62,11 +61,15 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates.Base
                     Math.Round(product.price / CurrencyRatio, 2);
             }
 
-            decimal price1 = Math.Round(priceInCurrency * ((100m + LineDiscountForProductId(product.product_id)) / 100m), Precission);
-            decimal price2 = Math.Round(price1 * (100m + Discount1) / 100m, Precission);
+            decimal priceWithDiscount = Math.Round(priceInCurrency * ((100m + GetCustomDiscountOrDefaultForProductId(product.product_id)) / 100m), Precission);
 
-            string vi_price_rrc = price1.ToString($"F{Precission}", new CultureInfo("en-EN"));
-            string vi_price = price2.ToString($"F{Precission}", new CultureInfo("en-EN"));
+            WriteLineData(product, priceWithDiscount, priceInCurrency, sw);
+        }
+
+        protected void WriteLineData(ProductEntity product, decimal rrcPrice, decimal sellPrice, StreamWriter sw)
+        {
+            string rrcPriceString = rrcPrice.ToString($"F{Precission}", new CultureInfo("en-EN"));
+            string sellPriceString = sellPrice.ToString($"F{Precission}", new CultureInfo("en-EN"));
 
             string length = (product.length != decimal.Zero ? product.length : DEFAULT_DIMENSIONS[0]).ToString("F2", new CultureInfo("en-EN"));
             string width = (product.width != decimal.Zero ? product.width : DEFAULT_DIMENSIONS[1]).ToString("F2", new CultureInfo("en-EN"));
@@ -105,8 +108,8 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates.Base
             WriteCell(sw, WEIGHT_UNIT); //Единицы измерения
             WriteCell(sw); //Страна производитель
             WriteCell(sw); //Годен до
-            WriteCell(sw, vi_price_rrc); //Рекомендованная цена
-            WriteCell(sw, vi_price); //Закупочная цена
+            WriteCell(sw, rrcPriceString); //Рекомендованная цена
+            WriteCell(sw, sellPriceString); //Закупочная цена
             WriteCell(sw, product.quantity.ToString()); //Количество остатков на скаладе
             WriteCell(sw, Currency.ToString().ToLower()); //Рекомендованная валюта
             WriteCell(sw, Currency.ToString().ToLower()); //Закупчная валюта

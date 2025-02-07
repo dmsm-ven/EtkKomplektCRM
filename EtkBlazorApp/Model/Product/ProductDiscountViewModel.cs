@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
-namespace EtkBlazorApp
+namespace EtkBlazorApp.Model.Product
 {
     public class ProductDiscountViewModel : ProductModel, INotifyPropertyChanged
     {
@@ -75,8 +72,8 @@ namespace EtkBlazorApp
             }
         }
 
-        int discountPercent;
-        public new int DiscountPercent
+        private decimal discountPercent;
+        public new decimal DiscountPercent
         {
             get => discountPercent;
             set
@@ -85,8 +82,8 @@ namespace EtkBlazorApp
                 {
                     discountPercent = value;
 
-                    newPriceInRub = (int)((base.Price * (100 - discountPercent)) / 100);
-                    newPriceInCurrency = (int)((base.BasePrice * (100 - discountPercent)) / 100);
+                    newPriceInRub = (int)(Price * (100 - discountPercent) / 100);
+                    newPriceInCurrency = (int)(BasePrice * (100 - discountPercent) / 100);
 
                     RaisePropertyChanged();
 
@@ -147,11 +144,11 @@ namespace EtkBlazorApp
         {
             if (currencyCode == "RUB" && Price != 0)
             {
-                return (int)((1m - (NewPriceInRub / (decimal)Price)) * 100);
+                return (int)((1m - NewPriceInRub / Price) * 100);
             }
             else if (BasePrice != 0)
             {
-                return (int)((1m - (NewPriceInCurrency / (decimal)BasePrice)) * 100);
+                return (int)((1m - NewPriceInCurrency / BasePrice) * 100);
             }
             return 0;
         }
