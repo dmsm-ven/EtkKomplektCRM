@@ -116,7 +116,7 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
             var discountedProducts = await templateStorage.GetDiscountedProducts();
             if (discountedProducts != null && discountedProducts.Count > 0)
             {
-                template.ProductIdToDiscount = discountedProducts.ToDictionary(i => i.product_id, i => i.discount_price ?? data.discount);
+                template.ProductIdToDiscount = discountedProducts.ToDictionary(i => i.product_id, i => i.discount_price.Value);
             }
 
             return template;

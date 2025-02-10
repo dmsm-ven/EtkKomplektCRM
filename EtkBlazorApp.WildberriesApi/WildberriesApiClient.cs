@@ -51,25 +51,27 @@ public class WildberriesApiClient
         }
         httpClient.DefaultRequestHeaders.Add("Authorization", secureToken);
 
-        progress?.Report(new WildberriesUpdateProgress(1, TOTAL_STEPS, "Получаем список товаров которые есть на WB"));
+        int currentStep = 1;
+
+        progress?.Report(new WildberriesUpdateProgress(currentStep++, TOTAL_STEPS, "Получаем список товаров которые есть на WB"));
         await ReceiveWbProductsData();
         nlog.Trace("OK - элементы словарей: WBIDS[{wbids}] | BARCODES[{barcodes}]", etkIdToWbNMID.Count, etkIdToWbBarcode.Count);
 
-        progress?.Report(new WildberriesUpdateProgress(2, TOTAL_STEPS, "Преобразование товаров ЕТК в словари остатков и цен"));
+        progress?.Report(new WildberriesUpdateProgress(currentStep++, TOTAL_STEPS, "Преобразование товаров ЕТК в словари остатков и цен"));
         ConvertEtkProductsToDictionaries(productsData);
         nlog.Trace("Преобразовано элементов: {count}", productsData.Count());
 
-        progress?.Report(new WildberriesUpdateProgress(3, TOTAL_STEPS, "Получаем список складов WB и берем первый"));
+        progress?.Report(new WildberriesUpdateProgress(currentStep++, TOTAL_STEPS, "Получаем список складов WB и берем первый"));
         int warehouseId = await GetWarehouseId();
         nlog.Trace("WarehouseID: {id}", warehouseId);
 
-        progress?.Report(new WildberriesUpdateProgress(4, TOTAL_STEPS, "Выполнение API запроса к WB на обнуление остатков"));
+        progress?.Report(new WildberriesUpdateProgress(currentStep++, TOTAL_STEPS, "Выполнение API запроса к WB на обнуление остатков"));
         await ClearStock(warehouseId);
 
-        progress?.Report(new WildberriesUpdateProgress(5, TOTAL_STEPS, "Выполнение API запроса к WB на обновление остатков"));
+        progress?.Report(new WildberriesUpdateProgress(currentStep++, TOTAL_STEPS, "Выполнение API запроса к WB на обновление остатков"));
         await UpdateQuantity(warehouseId);
 
-        progress?.Report(new WildberriesUpdateProgress(6, TOTAL_STEPS, "Выполнение API запроса к WB на обновление цен"));
+        progress?.Report(new WildberriesUpdateProgress(currentStep++, TOTAL_STEPS, "Выполнение API запроса к WB на обновление цен"));
         await UpdatePrices();
 
         progress?.Report(new WildberriesUpdateProgress(TOTAL_STEPS, TOTAL_STEPS, "Конец обновление остатков и цен WB"));

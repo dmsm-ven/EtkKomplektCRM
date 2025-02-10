@@ -53,17 +53,30 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates.Base
 
         protected virtual void WriteProductLine(ProductEntity product, StreamWriter sw)
         {
-            decimal priceInCurrency = (int)product.price;
+            decimal sellPrice = (int)product.price;
             if (Currency != CurrencyType.RUB)
             {
-                priceInCurrency = product.base_currency_code == Currency.ToString() && product.base_price != decimal.Zero ?
+                sellPrice = product.base_currency_code == Currency.ToString() && product.base_price != decimal.Zero ?
                     product.base_price :
                     Math.Round(product.price / CurrencyRatio, 2);
             }
 
-            decimal priceWithDiscount = Math.Round(priceInCurrency * ((100m + GetCustomDiscountOrDefaultForProductId(product.product_id)) / 100m), Precission);
+            decimal currentDiscount = GetCustomDiscountOrDefaultForProductId(product.product_id);
 
-            WriteLineData(product, priceWithDiscount, priceInCurrency, sw);
+            decimal rrcPrice = Math.Round(sellPrice * ((100m + currentDiscount) / 100m), Precission);
+
+            //Важно, эта проверка с изменение должна быть после расчет [decimal rrcPrice = ...]
+            if (currentDiscount != Discount)
+            {
+                decimal discountDiff = (Discount - currentDiscount);
+                if (discountDiff != decimal.Zero)
+                {
+                    decimal discountRatio = 1.00m - (discountDiff / 100m);
+                    sellPrice = Math.Round(sellPrice * discountRatio, Precission);
+                }
+            }
+
+            WriteLineData(product, rrcPrice, sellPrice, sw);
         }
 
         protected void WriteLineData(ProductEntity product, decimal rrcPrice, decimal sellPrice, StreamWriter sw)
