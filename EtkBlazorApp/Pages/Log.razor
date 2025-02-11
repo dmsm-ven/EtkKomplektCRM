@@ -169,4 +169,10 @@ else
             selectedGroup = Enum.Parse<LogEntryGroupName>(e.Value.ToString());
         }
     }
+
+    public void Dispose()
+    {
+        _timer?.Stop();
+        _timer?.Dispose();       
+    }
 }
