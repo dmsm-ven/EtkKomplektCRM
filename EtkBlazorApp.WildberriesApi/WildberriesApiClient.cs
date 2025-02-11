@@ -8,10 +8,8 @@ using System.Net.Http.Json;
 
 namespace EtkBlazorApp.WildberriesApi;
 
-//TODO: Доработать следуюие моменты
-// 1. Пагинация, если товаров больше 1000
-// 2. Не отправлять на обновление, если статус точно такой же как у WB, либо
-// 3. Отправлять только данные на товары которые изменились
+//TODO: Можно доработать следуюие моменты
+// Отправлять только данные на товары которые изменились, что уменьшит количество запросов. Но усложнит логику, пока лимита хватает
 public class WildberriesApiClient
 {
     private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
@@ -127,7 +125,7 @@ public class WildberriesApiClient
     /// <exception cref="Exception"></exception>
     private async Task<int> GetWarehouseId()
     {
-        var uri = $"https://suppliers-api.wildberries.ru/api/v3/warehouses";
+        var uri = $"https://marketplace-api.wildberries.ru/api/v3/warehouses";
 
         var list = await httpClient.GetFromJsonAsync<WBWarehouseList>(uri);
 
@@ -151,7 +149,7 @@ public class WildberriesApiClient
     /// <exception cref="NotSupportedException"></exception>
     private async Task ClearStock(int warehouseId)
     {
-        var uri = $"https://suppliers-api.wildberries.ru/api/v3/stocks/{warehouseId}";
+        var uri = $"https://marketplace-api.wildberries.ru/api/v3/stocks/{warehouseId}";
 
         int currentPage = 0;
         int lastPage = (int)Math.Ceiling((double)etkIdToWbBarcode.Values.Count / MAX_PRODUCTS_PER_PAGE_FOR_STOCK);
@@ -187,7 +185,7 @@ public class WildberriesApiClient
     /// <exception cref="NotSupportedException"></exception>
     private async Task UpdateQuantity(int warehouseId)
     {
-        string uri = $"https://suppliers-api.wildberries.ru/api/v3/stocks/{warehouseId}";
+        string uri = $"https://marketplace-api.wildberries.ru/api/v3/stocks/{warehouseId}";
 
         int currentPage = 0;
         int lastPage = (int)Math.Ceiling((double)etkIdToWbBarcode.Values.Count / MAX_PRODUCTS_PER_PAGE_FOR_STOCK);
@@ -272,7 +270,7 @@ public class WildberriesApiClient
     /// <returns></returns>
     private async Task<List<WBCardListResponse_Card>> GetAllWbCards()
     {
-        var uri = $"https://suppliers-api.wildberries.ru/content/v2/get/cards/list?locale=ru";
+        var uri = $"https://content-api.wildberries.ru/content/v2/get/cards/list?locale=ru";
         const int PRODUCTS_PER_REQUEST = 100;
         const int MAX_REQUEST_TRY_COUNT = 50;
 
