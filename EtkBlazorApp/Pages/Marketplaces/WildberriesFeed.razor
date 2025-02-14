@@ -4,7 +4,8 @@
 
 <h1>Данные для отладки (просмотр фида который выгружается в Wildberries)</h1>
 <p>Всего товаров в списке: <strong>@(products?.Count ?? 0)</strong></p>
-@if (products is null)
+
+@if (products is null || products.Count == 0)
 {
     <LoadingSpinner Text="Загрузка списка"/>
 }
@@ -17,17 +18,14 @@ else
 
 @code {
     [Inject] public WildberriesUpdateService wbUpdateService { get; set; }
-    [Inject] public IWildberriesProductRepository repository { get; set; }
-    [Inject] public ISettingStorageReader settingsReader { get; set; }
 
-    private List<WildberriesEtkProductUpdateEntry> products = null;
+    private List<WildberriesEtkProductUpdateEntry> products = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            products = await repository.ReadProducts();
-            wbUpdateService.AppendMinimumPriceDiscountAndRoundPrice(products);
+            products = await wbUpdateService.GetProductsFeed();
             StateHasChanged();
         }
     }

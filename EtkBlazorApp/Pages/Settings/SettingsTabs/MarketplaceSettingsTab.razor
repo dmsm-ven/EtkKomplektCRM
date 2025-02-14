@@ -1,42 +1,141 @@
-﻿
+﻿@using EtkBlazorApp.DataAccess.Repositories
+@using EtkBlazorApp.Model.Marketplace
 
 <div id="marketplaces-tab">
-    <div class="marketplace-tab-group">
-        <h3>Wildberries</h3>
-        <div class="form-group">
-            <label for="wildberries_secure_token">Wildberries API Token</label>
-            <input type="password" class="form-control" id="wildberries_secure_token" @bind="wildberries_secure_token">
-        </div>
-    </div>
+	<div class="marketplace-tab-group">
+		<h3>Wildberries</h3>
+		<div class="form-group">
+			<label for="wildberries_secure_token">Wildberries API Token</label>
+			<input type="password" class="form-control" id="wildberries_secure_token" @bind="wildberries_secure_token">
+		</div>
+	</div>
 
-    <div class="marketplace-tab-group">
-        <h3>ВсеИнструменты</h3>
-        <div class="form-group">
-            <label for="gln">GLN поставщика</label>
-            <input type="text" class="form-control" id="gln" @bind="vse_instrumenty_gln">
-        </div>
-    </div>
+	<div class="marketplace-tab-group">
+		<h3>ВсеИнструменты</h3>
+		<div class="form-group">
+			<label for="gln">GLN поставщика</label>
+			<input type="text" class="form-control" id="gln" @bind="vse_instrumenty_gln">
+		</div>
+	</div>
 
+	<div class="marketplace-tab-group">
+		<h3>Дополнительные наценки маркетплейсов</h3>
+		<p style="marketplace-discount-step-shop-names">OZON, Wildberries, YandexMarket</p>
+		<div class="form-group discount_step__box">
+			@foreach (var item in orderedPriceSteps)
+			{
+				<div class="discount_step__item">
+					<div class="discount_step__min_border">
+						<label for="step_key@(item.MinPriceInRub)">Если цена менее (руб.)</label>
+						<input type="number" readonly @bind="item.MinPriceInRub" class="form-control" id="step_key@(item.MinPriceInRub)" />
+					</div>
+					<div class="discount_step__ratio">
+						<label for="step_value@(item.MinPriceInRub)">То коэффициент</label>
+						<input type="number" readonly @bind="item.Ratio" class="form-control" id="step_value@(item.MinPriceInRub)" />
+					</div>
+					<div class="discount_step__remove">
+						<button type="button" @onclick="@(async (e) => await RemoveDiscountStep(item))" class="btn btn-outline-primary" title="Убрать эту наценку">
+							<span class="oi oi-trash"></span>
+						</button>
+					</div>
+				</div>
+			}
+			<h4>Добавить новый коэффициент</h4>
+			<div class="discount_step__item">
+				<div class="discount_step__min_border">
+					<label for="step_key_new">Если цена менее (руб.)</label>
+					<input type="number" min="1" step="10" @bind="newPriceStep.MinPriceInRub" class="form-control" id="step_key_new" />
+				</div>
+				<div class="discount_step__ratio">
+					<label for="step_value_new">То коэффициент</label>
+					<input type="number" step="0.1" @bind="newPriceStep.Ratio" class="form-control" id="step_value_new" />
+				</div>
+				<div class="discount_step__remove">
+					<button type="button" @onclick="AddDiscountStep" class="btn btn-outline-primary" title="Убрать эту наценку">
+						<span class="oi oi-plus"></span>
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
+
+<style>
+	.marketplace-discount-step-shop-names {
+		text-align: center;
+	}
+	.discount_step__box {
+		display: flex;
+		flex-direction: column;
+		justify-content: start;
+		align-items: start;
+		gap: 20px;
+	}
+
+	.discount_step__item {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		gap: 20px;
+	}
+
+		.discount_step__item > div {
+			display: flex;
+			flex-direction: row;
+			justify-content: start;
+			justify-content: space-between;
+			align-items: center;
+			gap: 10px;
+		}
+</style>
 
 @code {
 
-    [Inject] public ISettingStorageReader settingsReader { get; set; }
-    [Inject] public ISettingStorageWriter settingsWriter { get; set; }
-    [CascadingParameter] public SettingsTabData tabData { get; set; }
+	[Inject] public ISettingStorageReader settingsReader { get; set; }
+	[Inject] public ISettingStorageWriter settingsWriter { get; set; }
+	[Inject] public IMapper mapper { get; set; }
+	[Inject] public IMarketplaceExportService marketplaceExportSettings { get; set; }
+	[Inject] public IToastService toastService { get; set; }
+	[CascadingParameter] public SettingsTabData tabData { get; set; }
 
-    string vse_instrumenty_gln = string.Empty;
-    string wildberries_secure_token = string.Empty;
+	private string vse_instrumenty_gln = string.Empty;
+	private string wildberries_secure_token = string.Empty;
+	private readonly List<MarketplaceStepDiscountModel> priceSteps = new();
+	private IEnumerable<MarketplaceStepDiscountModel> orderedPriceSteps => priceSteps.OrderBy(i => i.MinPriceInRub);
+	private MarketplaceStepDiscountModel newPriceStep = new();
 
-    protected override async Task OnInitializedAsync()
-    {
-        vse_instrumenty_gln = await settingsReader.GetValue<string>("vse_instrumenti_gln");
-        wildberries_secure_token = await settingsReader.GetValue<string>("wildberries_api_token");
+	protected override async Task OnInitializedAsync()
+	{
+		vse_instrumenty_gln = await settingsReader.GetValue<string>("vse_instrumenti_gln");
+		wildberries_secure_token = await settingsReader.GetValue<string>("wildberries_api_token");
 
-        tabData.SaveButtonClicked = new Action(async () =>
-        {
-            await settingsWriter.SetValue("vse_instrumenti_gln", vse_instrumenty_gln);
-            await settingsWriter.SetValue("wildberries_api_token", wildberries_secure_token);
-        });
-    }
+		var dbPriceSteps = await marketplaceExportSettings.GetAllStepDiscounts();
+		var priceStepModels = mapper.Map<MarketplaceStepDiscountModel[]>(dbPriceSteps);
+		priceSteps.AddRange(priceStepModels);
+
+		tabData.SaveButtonClicked = new Action(async () =>
+		{
+			await settingsWriter.SetValue("vse_instrumenti_gln", vse_instrumenty_gln);
+			await settingsWriter.SetValue("wildberries_api_token", wildberries_secure_token);
+			// скидки на маркетплейсы удаляются напрямую, кнопку 'сохранить' нажимать не надо
+		});
+	}
+
+	private async Task RemoveDiscountStep(MarketplaceStepDiscountModel item)
+	{
+		priceSteps.Remove(item);
+		await marketplaceExportSettings.RemoveStepDiscount("all", item.MinPriceInRub);
+		StateHasChanged();
+		toastService?.ShowInfo("Наценка убрана");
+	}
+
+	private async Task AddDiscountStep()
+	{
+		priceSteps.Add(newPriceStep);
+		await marketplaceExportSettings.AddStepDiscount("all", newPriceStep.MinPriceInRub, newPriceStep.Ratio);
+		newPriceStep = new();
+		StateHasChanged();
+		toastService?.ShowSuccess("Наценка добавлена");
+	}
 }

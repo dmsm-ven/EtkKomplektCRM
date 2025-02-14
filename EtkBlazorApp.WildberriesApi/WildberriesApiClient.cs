@@ -114,7 +114,7 @@ public class WildberriesApiClient
     /// <param name="productsData"></param>
     private void ConvertEtkProductsToDictionaries(IEnumerable<WildberriesEtkProductUpdateEntry> productsData)
     {
-        etkIdToPriceMap = productsData.ToDictionary(i => i.ProductId, i => i.PriceInRUB);
+        etkIdToPriceMap = productsData.ToDictionary(i => i.ProductId, i => i.PriceInRUBWithDiscounts);
         etkIdToQuantity = productsData.ToDictionary(i => i.ProductId, i => i.Quantity);
     }
 

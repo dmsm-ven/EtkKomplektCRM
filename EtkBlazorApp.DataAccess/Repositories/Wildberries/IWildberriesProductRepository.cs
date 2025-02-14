@@ -59,7 +59,7 @@ public class WildberriesProductRepository : IWildberriesProductRepository
 							(ps.product_id IS NULL) AND
 							FIND_IN_SET(pts.stock_partner_id, mbe.checked_stocks) > 0						
 					GROUP BY p.product_id
-					ORDER BY p.sku";
+					ORDER BY p.product_id";
 
         var products = await database.GetList<WildberriesEtkProductUpdateEntry>(sql);
 

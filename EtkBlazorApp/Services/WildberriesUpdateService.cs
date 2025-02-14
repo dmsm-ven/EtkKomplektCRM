@@ -2,6 +2,7 @@
 using EtkBlazorApp.BL.Loggers;
 using EtkBlazorApp.Core.Data.Wildberries;
 using EtkBlazorApp.DataAccess;
+using EtkBlazorApp.DataAccess.Repositories;
 using EtkBlazorApp.DataAccess.Repositories.Wildberries;
 using EtkBlazorApp.WildberriesApi;
 using Humanizer;
@@ -27,6 +28,7 @@ public class WildberriesUpdateService : BackgroundService
 
     private readonly WildberriesApiClient wbApiClient;
     private readonly IWildberriesProductRepository productRepository;
+    private readonly IMarketplaceExportService marketplaceExportService;
     private readonly ISettingStorageReader settingStorageReader;
     private readonly ISettingStorageWriter settingStorageWriter;
     private readonly IWebHostEnvironment env;
@@ -34,6 +36,7 @@ public class WildberriesUpdateService : BackgroundService
 
     public WildberriesUpdateService(WildberriesApiClient wbApiClient,
         IWildberriesProductRepository productRepository,
+        IMarketplaceExportService marketplaceExportService,
         ISettingStorageReader settingStorageReader,
         ISettingStorageWriter settingStorageWriter,
         IWebHostEnvironment env,
@@ -43,6 +46,7 @@ public class WildberriesUpdateService : BackgroundService
         this.productRepository = productRepository;
         this.settingStorageReader = settingStorageReader;
         this.settingStorageWriter = settingStorageWriter;
+        this.marketplaceExportService = marketplaceExportService;
         this.env = env;
         this.sysLogger = sysLogger;
     }
@@ -115,7 +119,7 @@ public class WildberriesUpdateService : BackgroundService
         {
             var products = await productRepository.ReadProducts();
 
-            AppendMinimumPriceDiscountAndRoundPrice(products);
+            await ApplyDiscountAndRoundPrice(products);
 
             await wbApiClient.UpdateProducts(secureToken, products, progress);
 
@@ -135,6 +139,15 @@ public class WildberriesUpdateService : BackgroundService
         }
     }
 
+    public async Task<List<WildberriesEtkProductUpdateEntry>> GetProductsFeed()
+    {
+        var products = await productRepository.ReadProducts();
+
+        await ApplyDiscountAndRoundPrice(products);
+
+        return products;
+    }
+
     private async Task<bool> IsExecutedRecently()
     {
         var lastExec = await productRepository.GetStockLastSuccessSyncDateDate();
@@ -146,34 +159,55 @@ public class WildberriesUpdateService : BackgroundService
         return false;
     }
 
-    //TODO: доработать, т.к. тут возможен вариант при нескольких вызовах на одном и том же списке, скидки добавятся 2..3.. и т.д. раз
-    public void AppendMinimumPriceDiscountAndRoundPrice(IEnumerable<WildberriesEtkProductUpdateEntry> products)
+    /// <summary>
+    /// Добавляем наценку по условию (если цена меньше определенной) и округляем цену.
+    /// </summary>
+    /// <param name="products"></param>
+    /// <returns></returns>
+    private async Task ApplyDiscountAndRoundPrice(IEnumerable<WildberriesEtkProductUpdateEntry> products)
     {
-        var stepsDic = new Dictionary<int, decimal>()
-        {
-            [500] = 2.5m,
-            [1000] = 2.0m
-        };
+        var stepsDic = new Dictionary<int, decimal>();
+        //{
+        //    [500] = 2.5m,
+        //    [1000] = 2.0m
+        //};
 
-        var maxStep = stepsDic.Keys.Max();
+        //Тут дополнить логику, когда нужно будет сделать, что для каждого маркетплейса своя наценка, а не одна общая на все
+        //marketplaceExportService.GetAllStepDiscounts(marketplace: "wildberries")
+        try
+        {
+            var stepItems = await marketplaceExportService.GetAllStepDiscounts();
+
+            foreach (var item in stepItems.OrderBy(i => i.price_border_in_rub))
+            {
+                stepsDic[item.price_border_in_rub] = item.ratio;
+            }
+        }
+        catch
+        {
+            //не удалось загрузить наценки, пропускаем
+        }
+
+        int maxStep = stepsDic.Count > 0 ? stepsDic.Keys.Max() : 0;
 
         foreach (var product in products)
         {
             decimal productPrice = product.PriceInRUB;
 
-            if (product.PriceInRUB < maxStep)
+            if (productPrice < maxStep)
             {
-                foreach (var (stepInRub, addMultiplier) in stepsDic)
+                foreach (var (border, ratio) in stepsDic)
                 {
-                    if (product.PriceInRUB < stepInRub)
+                    if ((int)productPrice < border)
                     {
-                        productPrice *= addMultiplier;
+                        productPrice *= ratio;
                         break;
                     }
                 }
             }
 
-            product.PriceInRUB = ((int)Math.Ceiling(productPrice / 10m)) * 10;
+            // округляем цену до 10 руб в любом случае, даже если наценки нет
+            product.PriceInRUBWithDiscounts = ((int)Math.Ceiling(productPrice / 10m)) * 10;
         }
     }
 }

@@ -1,9 +1,11 @@
 ﻿using EtkBlazorApp.DataAccess.Entity;
+using EtkBlazorApp.DataAccess.Entity.Manufacturer;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.DataAccess
+namespace EtkBlazorApp.DataAccess.Repositories
 {
     public interface IMarketplaceExportService
     {
@@ -11,6 +13,10 @@ namespace EtkBlazorApp.DataAccess
         Task<List<string>> GetAllMarketplaces();
         Task AddOrUpdate(string marketplace, MarketplaceBrandExportEntity data);
         Task Remove(string marketplace, int manufacturer_id);
+
+        Task<List<MarketplaceStepDiscountEntity>> GetAllStepDiscounts();
+        Task AddStepDiscount(string marketplace, int priceInRub, decimal ratio);
+        Task RemoveStepDiscount(string marketplace, int priceInRub);
     }
 
     public class MarketplaceExportService : IMarketplaceExportService
@@ -31,9 +37,9 @@ namespace EtkBlazorApp.DataAccess
                            ORDER BY m.name";
 
             var exportInfo = await database.GetList<MarketplaceBrandExportEntity, dynamic>(sql, new { marketplace });
-            foreach(var item in exportInfo)
+            foreach (var item in exportInfo)
             {
-                if(string.IsNullOrWhiteSpace(item.checked_stocks)) { continue; }
+                if (string.IsNullOrWhiteSpace(item.checked_stocks)) { continue; }
 
                 item.checked_stocks_list = item.checked_stocks.Split(',').Select(id => new StockPartnerEntity()
                 {
@@ -49,7 +55,7 @@ namespace EtkBlazorApp.DataAccess
             string sql = "DELETE FROM etk_app_marketplace_brand_export WHERE marketplace = @marketplace AND manufacturer_id = @manufacturer_id";
             await database.ExecuteQuery<dynamic>(sql, new { marketplace, manufacturer_id });
         }
-        
+
         public async Task AddOrUpdate(string marketplace, MarketplaceBrandExportEntity data)
         {
             var sql = @"INSERT INTO etk_app_marketplace_brand_export
@@ -62,11 +68,11 @@ namespace EtkBlazorApp.DataAccess
 
             string separetedCheckedStocks = string.Join(",", data.checked_stocks_list?.Select(s => s.stock_partner_id));
 
-            await database.ExecuteQuery<dynamic>(sql, new 
-            { 
+            await database.ExecuteQuery<dynamic>(sql, new
+            {
                 marketplace,
-                manufacturer_id = data.manufacturer_id,
-                discount = data.discount,
+                data.manufacturer_id,
+                data.discount,
                 checked_stocks = separetedCheckedStocks
             });
         }
@@ -78,6 +84,67 @@ namespace EtkBlazorApp.DataAccess
             var data = await database.GetList<string>(sql);
 
             return data;
+        }
+
+        public async Task<List<MarketplaceStepDiscountEntity>> GetAllStepDiscounts()
+        {
+            string sql = "SELECT `oc_setting`.`value` FROM oc_setting WHERE `oc_setting`.`key` = 'marketplace_discount_steps_all'";
+            var list = new List<MarketplaceStepDiscountEntity>();
+
+            try
+            {
+                var json = await database.GetScalar<string>(sql);
+
+                var dic = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, decimal>>(json);
+
+                list.AddRange(dic.Select(kvp => new MarketplaceStepDiscountEntity()
+                {
+                    marketplace = "all",
+                    price_border_in_rub = int.Parse(kvp.Key),
+                    ratio = kvp.Value
+                }));
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+            return list;
+        }
+
+        public async Task AddStepDiscount(string marketplace, int priceInRub, decimal ratio)
+        {
+            string setting_key = $"marketplace_discount_steps_{marketplace}";
+            string sql = $@"UPDATE oc_setting
+                            SET oc_setting.value = JSON_SET(oc_setting.value, '$.{priceInRub}', {ratio.ToString().Replace(",", ".")})
+                            WHERE oc_setting.key = @setting_key AND serialized = 1";
+
+            try
+            {
+                await database.ExecuteQuery(sql, new { setting_key, ratio });
+            }
+            catch
+            {
+
+            }
+        }
+
+        public async Task RemoveStepDiscount(string marketplace, int priceInRub)
+        {
+            string setting_key = $"marketplace_discount_steps_{marketplace}";
+            string sql = $@"UPDATE oc_setting
+                            SET oc_setting.value = JSON_REMOVE(oc_setting.value, '$.{priceInRub}')
+                            WHERE oc_setting.key = @setting_key AND serialized = 1";
+
+            try
+            {
+                await database.ExecuteQuery(sql, new { setting_key });
+            }
+            catch
+            {
+
+            }
+
         }
     }
 }
