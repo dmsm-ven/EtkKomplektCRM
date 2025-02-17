@@ -17,6 +17,10 @@ namespace EtkBlazorApp.DataAccess.Repositories
         Task<List<MarketplaceStepDiscountEntity>> GetAllStepDiscounts();
         Task AddStepDiscount(string marketplace, int priceInRub, decimal ratio);
         Task RemoveStepDiscount(string marketplace, int priceInRub);
+
+        Task<List<ManufacturerEntity>> GetOzonInOrderStockManufacturers();
+        Task AddOzonInOrderStockManufacturer(int manufacturer_id);
+        Task RemoveOzonInOrderStockManufacturer(int manufacturer_id);
     }
 
     public class MarketplaceExportService : IMarketplaceExportService
@@ -145,6 +149,28 @@ namespace EtkBlazorApp.DataAccess.Repositories
 
             }
 
+        }
+
+        public async Task<List<ManufacturerEntity>> GetOzonInOrderStockManufacturers()
+        {
+            string sql = @"SELECT m.* 
+                            FROM etk_app_ozon_seller_in_order_manufacturer om
+                            JOIN oc_manufacturer m ON (om.manufacturer_id = m.manufacturer_id)";
+
+            var list = await database.GetList<ManufacturerEntity>(sql);
+
+            return list;
+        }
+
+        public async Task AddOzonInOrderStockManufacturer(int manufacturer_id)
+        {
+            await database.ExecuteQuery("INSERT IGNORE INTO etk_app_ozon_seller_in_order_manufacturer (manufacturer_id) VALUES (@manufacturer_id)", new { manufacturer_id });
+
+        }
+
+        public async Task RemoveOzonInOrderStockManufacturer(int manufacturer_id)
+        {
+            await database.ExecuteQuery("DELETE FROM etk_app_ozon_seller_in_order_manufacturer WHERE manufacturer_id = @manufacturer_id", new { manufacturer_id });
         }
     }
 }

@@ -58,36 +58,58 @@
 			</div>
 		</div>
 	</div>
+
+	<div class="marketplace-tab-group">
+		<h3>Ozon</h3>
+		<p>Список брендов, для которых остатки из всех складов<br /> (кроме главного склада) попадают в склад OZON "под заказ"</p>
+		<div style="display: flex; gap: 8px;">
+			<button class="btn btn-outline-primary" @onclick="(async (e) => await AddOzonInOrderStockManufacturer())">
+				<span class="oi oi-plus"></span>
+			</button>
+			<SelectManufacturerDropdown @bind-Manufacturer="ozonNewManufacturer" DisabledManufacturers="ozonManufacturers" />
+		</div>
+		<div>
+			@foreach (var brand_info in ozonManufacturers)
+			{
+				<button type="button" class="btn btn-primary mx-1 my-2">
+					<span class="oi oi-trash partner-brand-label"
+					@onclick="(async (e) => await RemoveOzonInOrderStockManufacturer(brand_info))">
+					</span>
+					@brand_info.name
+				</button>
+			}
+		</div>
+	</div>
 </div>
 
 <style>
 	.marketplace-discount-step-shop-names {
-		text-align: center;
+	text-align: center;
 	}
 	.discount_step__box {
-		display: flex;
-		flex-direction: column;
-		justify-content: start;
-		align-items: start;
-		gap: 20px;
+	display: flex;
+	flex-direction: column;
+	justify-content: start;
+	align-items: start;
+	gap: 20px;
 	}
 
 	.discount_step__item {
-		display: flex;
-		flex-direction: row;
-		justify-content: space-between;
-		align-items: center;
-		gap: 20px;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+	gap: 20px;
 	}
 
-		.discount_step__item > div {
-			display: flex;
-			flex-direction: row;
-			justify-content: start;
-			justify-content: space-between;
-			align-items: center;
-			gap: 10px;
-		}
+	.discount_step__item > div {
+	display: flex;
+	flex-direction: row;
+	justify-content: start;
+	justify-content: space-between;
+	align-items: center;
+	gap: 10px;
+	}
 </style>
 
 @code {
@@ -101,9 +123,14 @@
 
 	private string vse_instrumenty_gln = string.Empty;
 	private string wildberries_secure_token = string.Empty;
+
 	private readonly List<MarketplaceStepDiscountModel> priceSteps = new();
 	private IEnumerable<MarketplaceStepDiscountModel> orderedPriceSteps => priceSteps.OrderBy(i => i.MinPriceInRub);
 	private MarketplaceStepDiscountModel newPriceStep = new();
+
+	private readonly List<ManufacturerEntity> ozonManufacturers = new();
+	private IEnumerable<ManufacturerEntity> orderedozonManufacturers => ozonManufacturers.OrderBy(i => i.name);
+	private ManufacturerEntity ozonNewManufacturer = new();
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -114,12 +141,24 @@
 		var priceStepModels = mapper.Map<MarketplaceStepDiscountModel[]>(dbPriceSteps);
 		priceSteps.AddRange(priceStepModels);
 
+		var ozonManufacturerItems = await marketplaceExportSettings.GetOzonInOrderStockManufacturers();
+		ozonManufacturers.AddRange(ozonManufacturerItems);
+
 		tabData.SaveButtonClicked = new Action(async () =>
 		{
 			await settingsWriter.SetValue("vse_instrumenti_gln", vse_instrumenty_gln);
 			await settingsWriter.SetValue("wildberries_api_token", wildberries_secure_token);
 			// скидки на маркетплейсы удаляются напрямую, кнопку 'сохранить' нажимать не надо
 		});
+	}
+
+	private async Task AddDiscountStep()
+	{
+		priceSteps.Add(newPriceStep);
+		await marketplaceExportSettings.AddStepDiscount("all", newPriceStep.MinPriceInRub, newPriceStep.Ratio);
+		newPriceStep = new();
+		StateHasChanged();
+		toastService?.ShowSuccess("Наценка добавлена");
 	}
 
 	private async Task RemoveDiscountStep(MarketplaceStepDiscountModel item)
@@ -130,12 +169,22 @@
 		toastService?.ShowInfo("Наценка убрана");
 	}
 
-	private async Task AddDiscountStep()
+	private async Task RemoveOzonInOrderStockManufacturer(ManufacturerEntity item)
 	{
-		priceSteps.Add(newPriceStep);
-		await marketplaceExportSettings.AddStepDiscount("all", newPriceStep.MinPriceInRub, newPriceStep.Ratio);
-		newPriceStep = new();
+		ozonManufacturers.Remove(item);
+		await marketplaceExportSettings.RemoveOzonInOrderStockManufacturer(item.manufacturer_id);
 		StateHasChanged();
-		toastService?.ShowSuccess("Наценка добавлена");
+	}
+
+	private async Task AddOzonInOrderStockManufacturer()
+	{
+		if (ozonNewManufacturer.manufacturer_id == 0 || ozonManufacturers.FirstOrDefault(m => m.manufacturer_id == ozonNewManufacturer.manufacturer_id) != null)
+		{
+			return;
+		}
+		await marketplaceExportSettings.AddOzonInOrderStockManufacturer(ozonNewManufacturer.manufacturer_id);
+		ozonManufacturers.Add(ozonNewManufacturer);
+		StateHasChanged();
+		ozonNewManufacturer = new ManufacturerEntity();
 	}
 }

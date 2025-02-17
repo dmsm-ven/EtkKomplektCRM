@@ -272,7 +272,7 @@ public class WildberriesApiClient
     {
         var uri = $"https://content-api.wildberries.ru/content/v2/get/cards/list?locale=ru";
         const int PRODUCTS_PER_REQUEST = 100;
-        const int MAX_REQUEST_TRY_COUNT = 50;
+        const int MAX_REQUEST_TRY_COUNT = 100; // 100 * 100 = 10_000 товаров, если товаров больше то убрать
 
         var list = new List<WBCardListResponse_Card>();
         int readedProducts = 0;
@@ -307,8 +307,7 @@ public class WildberriesApiClient
                 break;
             }
 
-            //50 запросов = 5000 товаров, если товаров на WB больше 5000 то необходимо убрать эту проверку
-            if (++tryCount > MAX_REQUEST_TRY_COUNT) // - на всякий случай делаем проверку, что бы не заспамить API, и не быть заблокированными
+            if (++tryCount > MAX_REQUEST_TRY_COUNT) // на всякий случай делаем проверку, что бы не заспамить API, и не быть заблокированными
             {
                 break;
             }
