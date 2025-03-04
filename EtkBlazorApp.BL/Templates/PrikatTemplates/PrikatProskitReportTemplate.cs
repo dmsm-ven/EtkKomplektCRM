@@ -29,7 +29,7 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates
             decimal purchasePrice = Math.Round(priceInCurrency * (100m + GetCustomDiscountOrDefaultForProductId(product.product_id)) / 100m, Precission);
 
             // Для Proskit исключение, у него закупочная цена специально сделана всегда = 0
-            WriteLineData(product, purchasePrice, 0m, sw);
+            WriteLineData(product, 0m, purchasePrice, sw);
         }
     }
 }
