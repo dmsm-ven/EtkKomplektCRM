@@ -1,7 +1,7 @@
 ﻿using Blazored.Toast.Services;
 using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.BL.Managers;
-using EtkBlazorApp.BL.Managers.ReportFormatters;
+using EtkBlazorApp.BL.Managers.ReportFormatters.VseInstrumenti;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using EtkBlazorApp.DataAccess.Entity.Marketplace;

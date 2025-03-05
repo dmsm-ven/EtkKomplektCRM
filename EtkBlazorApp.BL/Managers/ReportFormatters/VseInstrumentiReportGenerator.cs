@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.BL.Templates.PrikatTemplates;
+﻿using EtkBlazorApp.BL.Managers.ReportFormatters.VseInstrumenti;
+using EtkBlazorApp.BL.Templates.PrikatTemplates;
 using EtkBlazorApp.BL.Templates.PrikatTemplates.Base;
 using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.Core.Interfaces;
