@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using NLog;
+using NLog.Config;
 
 namespace EtkBlazorApp
 {
@@ -7,8 +9,9 @@ namespace EtkBlazorApp
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            LogManager.Configuration = new XmlLoggingConfiguration("nlog.config");
 
+            CreateHostBuilder(args).Build().Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>

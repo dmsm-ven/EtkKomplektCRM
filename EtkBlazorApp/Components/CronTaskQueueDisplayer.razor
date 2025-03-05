@@ -1,0 +1,39 @@
+﻿@inject CronTaskService taskManager
+
+<div class="table-responsive cron-task-table">
+    <table class="table">
+        <thead class="thead-etk">
+            <tr>
+                <th style="width: 80%">Задача</th>
+                <th style="width: 20%">Номер в списке</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                int index = 1;
+            }
+            @foreach (var t in taskManager.TasksQueue)
+            {
+                <tr>
+                    <td>@t.name</td>
+                    <td>@(index++).ToString()</td>
+                </tr>
+                
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private System.Threading.Timer timer;
+
+    protected override void OnInitialized()
+    {
+        timer = new System.Threading.Timer((object stateInfo) =>
+        {
+            StateHasChanged(); 
+        }, new System.Threading.AutoResetEvent(false), 
+        (int)TimeSpan.FromSeconds(10).TotalMilliseconds, 
+        (int)TimeSpan.FromSeconds(10).TotalMilliseconds);
+    }
+}

@@ -1,89 +1,79 @@
 ﻿@using System.Globalization
+@using EtkBlazorApp.DataAccess.Entity.Marketplace
+@using EtkBlazorApp.DataAccess.Repositories
 
-<tr class="@(!Item.IsChecked ? "disabled-row" : "")">
-    <td>
-        <input type="checkbox"
-               style="display: inline-block;  margin: 2px 6px; vertical-align: middle;"
-               checked="@Item.IsChecked"
-               @onchange="@(e => { Item.IsChecked = !Item.IsChecked; Changed(); } )" />
-    </td>
+<tr>
+    @* Название производителя *@
     <td>
         <p class="manufacturer-name">@Item.Manufacturer</p>
     </td>
 
-    @if (Item.IsChecked)
-    {
-        <td>
-            <input type="number" class="form-control"
-                   value="@Item.Discount2.ToString("G29", CultureInfo.InvariantCulture)"
-                   @onchange="@(e => { Item.Discount2 = decimal.Parse(e.Value.ToString(), CultureInfo.InvariantCulture); Changed(); } )" />
-        </td>
-        <td>
-            <input type="number" class="form-control"
-                   value="@Item.Discount1.ToString("G29", CultureInfo.InvariantCulture)"
-                   @onchange="@(e => { Item.Discount1 = decimal.Parse(e.Value.ToString(), CultureInfo.InvariantCulture); Changed(); } )" />
-        </td>
-        <td>
-            <select @onchange="@(async e => { Item.CurrencyCode = (string)e.Value; await Changed(); })" class="form-control">
-                @foreach (var currencyCode in currencyCodeList)
-                {
-                    <option selected="@(currencyCode.Equals(Item.CurrencyCode))" value="@currencyCode">@currencyCode</option>
-                }
-            </select>
-        </td>
-    }
-    else
-    {
-        <td></td>
-        <td></td>
-        <td></td>
-    }
+    @* Исключить бренд из выгрузки *@
+    <td>
+        <button class="btn btn-sm btn-danger remove-vi-manufacturer-btn" onclick="@(async () => await this.DeleteClick.InvokeAsync(Item))">
+            <span class="oi oi-trash"></span>
+        </button>
+    </td>
+
+    @* Рекомендуемая цена *@
+    <td>
+        <input type="number" class="form-control"
+               value="@Item.Discount.ToString("G29", CultureInfo.InvariantCulture)"
+               @onchange="@(async (e) => { Item.Discount = decimal.Parse(e.Value.ToString(), CultureInfo.InvariantCulture); await Changed(); } )" />
+    </td>
+
+    @* Валюта выгрузки *@
+    <td>
+        <select @onchange="@(async e => { Item.CurrencyCode = (string)e.Value; await Changed(); })" class="form-control">
+            @foreach (var currencyCode in currencyCodeList)
+            {
+                <option selected="@(currencyCode.Equals(Item.CurrencyCode))" value="@currencyCode">@currencyCode</option>
+            }
+        </select>
+    </td>
+    
+    @* Выгружаемые склады *@
+    <td>
+        <StocksCheckListBoxNew StocksWithProduct="@StocksWithAtLeastOneProduct"
+                               CheckedStocks="@Item.checked_stocks_list"
+                               ReverseLabelDirection=true
+                               CheckedStocksChanging="@(async e => await Changed())" />
+    </td>
 </tr>
-@if (ShowPriceExample && Item.IsChecked)
-{
-<tr class="prikat-price-example-row">
-    <td></td>
-    <td>Пример цен</td>
-    <td>@GetExampleStringPart(1)</td>
-    <td>@GetExampleStringPart(2)</td>
-    <td></td>
-</tr>
-}
+
+
+<style>
+    .remove-vi-manufacturer-btn {
+        opacity: 0.05;
+        transition: 50ms;
+    }
+
+    .remove-vi-manufacturer-btn:hover{
+            opacity: 1.0;
+            transition: 1.5s;
+    }
+</style>
 
 
 @code {
 
+    [Inject] public IPrikatTemplateStorage templateStorage  { get; set; }
     [Parameter] public PrikatManufacturerDiscountViewModel Item { get; set; }
+    [Parameter] public List<StockPartnerEntity> AllStocks { get; set; }
+    [Parameter] public List<StockPartnerEntity> StocksWithAtLeastOneProduct { get; set; }
     [Parameter] public EventCallback<PrikatManufacturerDiscountViewModel> ItemChanged { get; set; }
-    [CascadingParameter] public bool ShowPriceExample { get; set; }
-    [CascadingParameter] public decimal ExamplePrice { get; set; }
+    [Parameter] public EventCallback<PrikatManufacturerDiscountViewModel> DeleteClick { get; set; }
+
+    StocksCheckListBoxNew stockList = null;
 
     List<string> currencyCodeList = new List<string>(Enum.GetNames(typeof(CurrencyType)));
 
-    private MarkupString GetExampleStringPart(int index)
-    {
-        decimal priceExample1 = (ExamplePrice * (decimal)(1 + ((decimal)Item.Discount2 / 100)));
-        decimal priceExample2 = priceExample1 * (decimal)(1 + ((decimal)Item.Discount1 / 100));
-
-        string sign1 = Math.Sign(Item.Discount2) < 0 ? "-" : "+";
-        string sign2 = Math.Sign(Item.Discount1) < 0 ? "-" : "+";
-
-        string part1 = $"{ExamplePrice.ToString("0.##")} {sign1} {Math.Abs(Item.Discount2).ToString("0.##")}% = <strong>{priceExample1.ToString("0.##")}<strong>";
-        string part2 = $"{priceExample1.ToString("0.##")} {sign2} {Math.Abs(Item.Discount1).ToString("0.##")}% = <strong>{priceExample2.ToString("0.##")}</strong>";
-
-        if(priceExample2 > priceExample1)
-        {
-            part2 = part2.Replace("<strong>", "<strong style=\"color: red;\">");
-        }
-
-        if(index == 1) { return (MarkupString)part1; }
-        if(index == 2) { return (MarkupString)part2; }
-
-        throw new ArgumentOutOfRangeException();
-    }
-
     private async Task Changed()
     {
+        Item.CheckedStocks = Item.checked_stocks_list.Any() ?
+            string.Join(",", Item.checked_stocks_list.Select(csl => csl.stock_partner_id)) :
+            string.Empty;
+
         await ItemChanged.InvokeAsync(Item);
         StateHasChanged();
     }

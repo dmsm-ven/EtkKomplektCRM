@@ -1,0 +1,32 @@
+﻿@page "/marketplace-export/wildberries-feed"
+@using EtkBlazorApp.Core.Data.Wildberries
+@using EtkBlazorApp.DataAccess.Repositories.Wildberries
+
+<h1>Данные для отладки (просмотр фида который выгружается в Wildberries)</h1>
+<p>Всего товаров в списке: <strong>@(products?.Count ?? 0)</strong></p>
+
+@if (products is null || products.Count == 0)
+{
+    <LoadingSpinner Text="Загрузка списка"/>
+}
+else
+{
+    <pre>
+        @(System.Text.Json.JsonSerializer.Serialize(products, new System.Text.Json.JsonSerializerOptions() { WriteIndented = true }))
+    </pre>
+}
+
+@code {
+    [Inject] public WildberriesUpdateService wbUpdateService { get; set; }
+
+    private List<WildberriesEtkProductUpdateEntry> products = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            products = await wbUpdateService.GetProductsFeed();
+            StateHasChanged();
+        }
+    }
+}

@@ -1,5 +1,5 @@
 using AutoMapper;
-using EtkBlazorApp.BL;
+using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.Components.Dialogs;
 using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.DataAccess;

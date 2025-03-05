@@ -30,7 +30,10 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 string name = tab.GetValue<string>(row, 4);
                 var quantity = ParseQuantity(tab.GetValue<string>(row, 7));
 
-                if (string.IsNullOrWhiteSpace(skuNumber) || SkipThisBrand(manufacturer)) { continue; }
+                if (string.IsNullOrWhiteSpace(skuNumber) || SkipThisBrand(manufacturer))
+                {
+                    continue;
+                }
 
                 var priceLine = new PriceLine(this)
                 {
@@ -39,7 +42,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Model = skuNumber,
                     Quantity = quantity,
                     Manufacturer = manufacturer,
-                    //                    Stock = StockName._1C
+                    //Stock = StockName._1C
                 };
 
                 list.Add(priceLine);

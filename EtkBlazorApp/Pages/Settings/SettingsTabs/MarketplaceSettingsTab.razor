@@ -1,89 +1,190 @@
-﻿
+﻿@using EtkBlazorApp.DataAccess.Repositories
+@using EtkBlazorApp.Model.Marketplace
 
 <div id="marketplaces-tab">
-    <div class="marketplace-tab-group">
-        <h3>YandexMarket</h3>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label for="yandex_market_min_export_price">Минимальная цена выгрузки</label>
-                    <input type="number" min="0" class="form-control" id="yandex_market_min_export_price" @bind="yandex_market_minimumPrice">
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label for="yandex_market_under_min_price_ratio">Множитель (если меньше min)</label>
-                    <input type="number" min="1" class="form-control" id="yandex_market_under_min_price_ratio" @bind="yandex_market_underRatio">
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="marketplace-tab-group">
+		<h3>Wildberries</h3>
+		<div class="form-group">
+			<label for="wildberries_secure_token">Wildberries API Token</label>
+			<input type="password" class="form-control" id="wildberries_secure_token" @bind="wildberries_secure_token">
+		</div>
+	</div>
 
-    <div class="marketplace-tab-group">
-        <h3>Seller Ozon</h3>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label for="ozon_seller_min_export_price">Минимальная цена выгрузки</label>
-                    <input type="number" min="0" class="form-control" id="ozon_seller_min_export_price" @bind="ozon_seller_minimumPrice">
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label for="ozon_seller_under_min_price_ratio">Множитель (если меньше min)</label>
-                    <input type="number" min="0" class="form-control" id="ozon_seller_under_min_price_ratio" @bind="ozon_seller_underRatio">
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="marketplace-tab-group">
+		<h3>ВсеИнструменты</h3>
+		<div class="form-group">
+			<label for="gln">GLN поставщика</label>
+			<input type="text" class="form-control" id="gln" @bind="vse_instrumenty_gln">
+		</div>
+	</div>
 
-    <div class="marketplace-tab-group">
-        <h3>Sbermegamarket</h3>
-        <div class="form-group">
-            <label for="sbermegamarket_export_min_price">Минимальная цена выгрузки</label>
-            <input type="number" min="0" class="form-control" id="sbermegamarket_export_min_price" @bind="sbermegamarket_minimumPrice">
-        </div>
-    </div>
+	<div class="marketplace-tab-group">
+		<h3>Дополнительные наценки маркетплейсов</h3>
+		<p style="marketplace-discount-step-shop-names">OZON, Wildberries, YandexMarket</p>
+		<div class="form-group discount_step__box">
+			@foreach (var item in orderedPriceSteps)
+			{
+				<div class="discount_step__item">
+					<div class="discount_step__min_border">
+						<label for="step_key@(item.MinPriceInRub)">Если цена менее (руб.)</label>
+						<input type="number" readonly @bind="item.MinPriceInRub" class="form-control" id="step_key@(item.MinPriceInRub)" />
+					</div>
+					<div class="discount_step__ratio">
+						<label for="step_value@(item.MinPriceInRub)">То коэффициент</label>
+						<input type="number" readonly @bind="item.Ratio" class="form-control" id="step_value@(item.MinPriceInRub)" />
+					</div>
+					<div class="discount_step__remove">
+						<button type="button" @onclick="@(async (e) => await RemoveDiscountStep(item))" class="btn btn-outline-primary" title="Убрать эту наценку">
+							<span class="oi oi-trash"></span>
+						</button>
+					</div>
+				</div>
+			}
+			<h4>Добавить новый коэффициент</h4>
+			<div class="discount_step__item">
+				<div class="discount_step__min_border">
+					<label for="step_key_new">Если цена менее (руб.)</label>
+					<input type="number" min="1" step="10" @bind="newPriceStep.MinPriceInRub" class="form-control" id="step_key_new" />
+				</div>
+				<div class="discount_step__ratio">
+					<label for="step_value_new">То коэффициент</label>
+					<input type="number" step="0.1" @bind="newPriceStep.Ratio" class="form-control" id="step_value_new" />
+				</div>
+				<div class="discount_step__remove">
+					<button type="button" @onclick="AddDiscountStep" class="btn btn-outline-primary" title="Убрать эту наценку">
+						<span class="oi oi-plus"></span>
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
-    <div class="marketplace-tab-group">
-        <h3>ВсеИнструменты</h3>
-        <div class="form-group">
-            <label for="gln">GLN поставщика</label>
-            <input type="text" class="form-control" id="gln" @bind="vse_instrumenty_gln">
-        </div>
-    </div>
+	<div class="marketplace-tab-group">
+		<h3>Ozon</h3>
+		<p>Список брендов, для которых остатки из всех складов<br /> (кроме главного склада) попадают в склад OZON "под заказ"</p>
+		<div style="display: flex; gap: 8px;">
+			<button class="btn btn-outline-primary" @onclick="(async (e) => await AddOzonInOrderStockManufacturer())">
+				<span class="oi oi-plus"></span>
+			</button>
+			<SelectManufacturerDropdown @bind-Manufacturer="ozonNewManufacturer" DisabledManufacturers="ozonManufacturers" />
+		</div>
+		<div>
+			@foreach (var brand_info in ozonManufacturers)
+			{
+				<button type="button" class="btn btn-primary mx-1 my-2">
+					<span class="oi oi-trash partner-brand-label"
+					@onclick="(async (e) => await RemoveOzonInOrderStockManufacturer(brand_info))">
+					</span>
+					@brand_info.name
+				</button>
+			}
+		</div>
+	</div>
 </div>
+
+<style>
+	.marketplace-discount-step-shop-names {
+	text-align: center;
+	}
+	.discount_step__box {
+	display: flex;
+	flex-direction: column;
+	justify-content: start;
+	align-items: start;
+	gap: 20px;
+	}
+
+	.discount_step__item {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+	gap: 20px;
+	}
+
+	.discount_step__item > div {
+	display: flex;
+	flex-direction: row;
+	justify-content: start;
+	justify-content: space-between;
+	align-items: center;
+	gap: 10px;
+	}
+</style>
 
 @code {
 
-    [Inject] public ISettingStorageReader settingsReader { get; set; }
-    [Inject] public ISettingStorageWriter settingsWriter { get; set; }
-    [CascadingParameter] public SettingsTabData tabData { get; set; }
+	[Inject] public ISettingStorageReader settingsReader { get; set; }
+	[Inject] public ISettingStorageWriter settingsWriter { get; set; }
+	[Inject] public IMapper mapper { get; set; }
+	[Inject] public IMarketplaceExportService marketplaceExportSettings { get; set; }
+	[Inject] public IToastService toastService { get; set; }
+	[CascadingParameter] public SettingsTabData tabData { get; set; }
 
-    decimal ozon_seller_minimumPrice;
-    decimal yandex_market_minimumPrice;
-    decimal sbermegamarket_minimumPrice;
-    decimal yandex_market_underRatio;
-    decimal ozon_seller_underRatio;
-    string vse_instrumenty_gln;
+	private string vse_instrumenty_gln = string.Empty;
+	private string wildberries_secure_token = string.Empty;
 
-    protected override async Task OnInitializedAsync()
-    {
-        ozon_seller_minimumPrice = await settingsReader.GetValue<decimal>("ozon_seller_export_minimum_price");
-        sbermegamarket_minimumPrice = await settingsReader.GetValue<decimal>("sbermegamarket_export_minimum_price");
-        yandex_market_minimumPrice = await settingsReader.GetValue<decimal>("yandex_market_export_minimum_price");
-        yandex_market_underRatio = await settingsReader.GetValue<decimal>("yandex_market_export_under_minimum_ratio");
-        ozon_seller_underRatio = await settingsReader.GetValue<decimal>("ozon_seller_export_under_minimum_ratio");
-        vse_instrumenty_gln = await settingsReader.GetValue<string>("vse_instrumenti_gln");
+	private readonly List<MarketplaceStepDiscountModel> priceSteps = new();
+	private IEnumerable<MarketplaceStepDiscountModel> orderedPriceSteps => priceSteps.OrderBy(i => i.MinPriceInRub);
+	private MarketplaceStepDiscountModel newPriceStep = new();
 
-        tabData.SaveButtonClicked = new Action(async () =>
-        {
-            await settingsWriter.SetValue("ozon_seller_export_minimum_price", ozon_seller_minimumPrice);
-            await settingsWriter.SetValue("sbermegamarket_export_minimum_price", sbermegamarket_minimumPrice);
-            await settingsWriter.SetValue("yandex_market_export_minimum_price", yandex_market_minimumPrice);
-            await settingsWriter.SetValue("yandex_market_export_under_minimum_ratio", yandex_market_underRatio);
-            await settingsWriter.SetValue("ozon_seller_export_under_minimum_ratio", ozon_seller_underRatio);
-            await settingsWriter.SetValue("vse_instrumenti_gln", vse_instrumenty_gln);
-        });
-    }
+	private readonly List<ManufacturerEntity> ozonManufacturers = new();
+	private IEnumerable<ManufacturerEntity> orderedozonManufacturers => ozonManufacturers.OrderBy(i => i.name);
+	private ManufacturerEntity ozonNewManufacturer = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		vse_instrumenty_gln = await settingsReader.GetValue<string>("vse_instrumenti_gln");
+		wildberries_secure_token = await settingsReader.GetValue<string>("wildberries_api_token");
+
+		var dbPriceSteps = await marketplaceExportSettings.GetAllStepDiscounts();
+		var priceStepModels = mapper.Map<MarketplaceStepDiscountModel[]>(dbPriceSteps);
+		priceSteps.AddRange(priceStepModels);
+
+		var ozonManufacturerItems = await marketplaceExportSettings.GetOzonInOrderStockManufacturers();
+		ozonManufacturers.AddRange(ozonManufacturerItems);
+
+		tabData.SaveButtonClicked = new Action(async () =>
+		{
+			await settingsWriter.SetValue("vse_instrumenti_gln", vse_instrumenty_gln);
+			await settingsWriter.SetValue("wildberries_api_token", wildberries_secure_token);
+			// скидки на маркетплейсы удаляются напрямую, кнопку 'сохранить' нажимать не надо
+		});
+	}
+
+	private async Task AddDiscountStep()
+	{
+		priceSteps.Add(newPriceStep);
+		await marketplaceExportSettings.AddStepDiscount("all", newPriceStep.MinPriceInRub, newPriceStep.Ratio);
+		newPriceStep = new();
+		StateHasChanged();
+		toastService?.ShowSuccess("Наценка добавлена");
+	}
+
+	private async Task RemoveDiscountStep(MarketplaceStepDiscountModel item)
+	{
+		priceSteps.Remove(item);
+		await marketplaceExportSettings.RemoveStepDiscount("all", item.MinPriceInRub);
+		StateHasChanged();
+		toastService?.ShowInfo("Наценка убрана");
+	}
+
+	private async Task RemoveOzonInOrderStockManufacturer(ManufacturerEntity item)
+	{
+		ozonManufacturers.Remove(item);
+		await marketplaceExportSettings.RemoveOzonInOrderStockManufacturer(item.manufacturer_id);
+		StateHasChanged();
+	}
+
+	private async Task AddOzonInOrderStockManufacturer()
+	{
+		if (ozonNewManufacturer.manufacturer_id == 0 || ozonManufacturers.FirstOrDefault(m => m.manufacturer_id == ozonNewManufacturer.manufacturer_id) != null)
+		{
+			return;
+		}
+		await marketplaceExportSettings.AddOzonInOrderStockManufacturer(ozonNewManufacturer.manufacturer_id);
+		ozonManufacturers.Add(ozonNewManufacturer);
+		StateHasChanged();
+		ozonNewManufacturer = new ManufacturerEntity();
+	}
 }

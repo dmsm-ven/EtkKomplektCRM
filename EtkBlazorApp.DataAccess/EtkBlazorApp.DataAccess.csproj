@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>   
+    <TargetFramework>net6.0</TargetFramework>
+	  <RuntimeFrameworkVersion>6.0.35</RuntimeFrameworkVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +13,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.0" />
     <PackageReference Include="MySql.Data" Version="8.0.28" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="NLog" Version="5.2.8" />
     <PackageReference Include="SSH.NET" Version="2023.0.0" />
   </ItemGroup>
 

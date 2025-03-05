@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
 using Blazored.Toast.Services;
 using EtkBlazorApp.BL;
+using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.BL.Managers;
-using EtkBlazorApp.BL.Templates.PriceListTemplates;
+using EtkBlazorApp.BL.Templates.PriceListTemplates.RemoteFileLoaders;
 using EtkBlazorApp.Components.Controls;
 using EtkBlazorApp.Components.Dialogs;
 using EtkBlazorApp.DataAccess.Repositories.PriceList;
@@ -27,6 +28,8 @@ namespace EtkBlazorApp.Pages.PriceList;
 //TODO: разбить класс на мелкие фрагменты, получился слишком сложным 
 public partial class TemplatesListPage
 {
+    private static readonly NLog.Logger nlog = NLog.LogManager.GetCurrentClassLogger();
+
     const int MAX_UPLOAD_FILE_SIZE = 32_000_000; // 32 мб размер максимально допустимого файла
     const int UPLOAD_BUFFER_SIZE = 64_000; // Порциями по 64кб загружаем файл с отображением прогресса
 
@@ -133,16 +136,19 @@ public partial class TemplatesListPage
 
             await logger.Write(LogEntryGroupName.PriceListTemplateLoad, "Файл загружен", $"Загружен прайс-лист '{selectedTemplate.Title} ({readedLines} строк)'");
             toast.ShowSuccess($"{selectedTemplate.Title} Файл считан ({readedLines} строк)");
+            nlog.Info("Загрузка прайс-листа {title} выполнена", selectedTemplate.Title);
         }
         catch (NotFoundedPriceListTemplateException)
         {
             await logger.Write(LogEntryGroupName.PriceListTemplateLoad, "Ошибка загрузки", $"Шаблон для '{selectedTemplate.Title}' не реализован'");
             toast.ShowError($"{selectedTemplate.Title} Шаблон не реализован!");
+            nlog.Warn("Ошибка загрузки прайс-листа {title} выполнена", selectedTemplate.Title);
         }
         catch (Exception ex)
         {
-            await logger.Write(LogEntryGroupName.PriceListTemplateLoad, "Ошибка загрузки", $"Ошибка загрузки файла с шаблоном {selectedTemplate.Title}. Ошибка: {ex.Message}");
+            await logger.Write(LogEntryGroupName.PriceListTemplateLoad, "Ошибка загрузки", $"Ошибка загрузки файла с шаблоном {selectedTemplate.Title}. Ошибка: {ex.Message}. Детали ошибки: {ex.StackTrace}");
             toast.ShowError($"{selectedTemplate.Title} ошибка: {ex.Message}");
+            nlog.Warn("Ошибка загрузки файла с шаблоном {title}. StackTrace: {stackTrace}", selectedTemplate.Title, ex.StackTrace);
         }
         finally
         {

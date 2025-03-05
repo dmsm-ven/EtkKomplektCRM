@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.BL;
+﻿using EtkBlazorApp.BL.Data;
+using EtkBlazorApp.BL.Loggers;
 using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.Core.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
@@ -15,8 +16,16 @@ public class CurrencyCheckerCbRf_V2 : ICurrencyChecker
     private readonly IMemoryCache cache;
     private readonly SystemEventsLogger logger;
 
-    private readonly string currencyXmlFeed = "http://www.cbr.ru/scripts/XML_daily.asp";
+    private readonly string XmlFeedUri = "http://www.cbr.ru/scripts/XML_daily.asp";
+
+    //Временный костыль, т.к. похоже забанили на CBR по IP сервер
+    private readonly string XmlFeedUriProxy = "http://90.156.211.247:14223/cbr_rates_proxy";
     private readonly string cacheKey = "currency_rates";
+
+    private DateTime? LoadingErrorsLastDate { get; set; }
+    //Период времени в течении которого перестаем обращатся за курсом валют
+    private TimeSpan LoadingErrorStropInterval { get; } = TimeSpan.FromHours(1);
+    private TimeSpan CacheExpirationTime { get; } = TimeSpan.FromMinutes(45);
 
     public CurrencyCheckerCbRf_V2(IMemoryCache cache, SystemEventsLogger logger)
     {
@@ -26,17 +35,25 @@ public class CurrencyCheckerCbRf_V2 : ICurrencyChecker
 
     public async ValueTask<decimal> GetCurrencyRate(CurrencyType type)
     {
+        if (LoadingErrorsLastDate.HasValue && LoadingErrorsLastDate.Value.Add(LoadingErrorStropInterval) > DateTime.Now)
+        {
+            return 0;
+        }
+
         if (!cache.TryGetValue<Dictionary<CurrencyType, decimal>>(cacheKey, out var rates))
         {
             try
             {
                 rates = await ReadCurrenciesFromCbRf();
                 LastUpdate = DateTime.Now;
-                cache.Set(cacheKey, rates, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(10)));
+                LoadingErrorsLastDate = null;
+                cache.Set(cacheKey, rates, new MemoryCacheEntryOptions().SetAbsoluteExpiration(CacheExpirationTime));
+
             }
             catch (Exception ex)
             {
-                await logger.WriteSystemEvent(LogEntryGroupName.Auth, "Ошибка курса валют", $"Не удалось загрузить курс валют из источника: {currencyXmlFeed} Детали: {ex.Message}");
+                await logger.WriteSystemEvent(LogEntryGroupName.Auth, "Ошибка курса валют", $"Не удалось загрузить курс валют из источника: {XmlFeedUriProxy} Детали: {ex.Message}");
+                LoadingErrorsLastDate = DateTime.Now;
             }
         }
 
@@ -50,7 +67,7 @@ public class CurrencyCheckerCbRf_V2 : ICurrencyChecker
             [CurrencyType.RUB] = 1
         };
 
-        var doc = await Task.Run(() => XDocument.Load(currencyXmlFeed));
+        var doc = await Task.Run(() => XDocument.Load(XmlFeedUriProxy));
 
         var currencies = doc.Descendants("Valute");
 
@@ -67,6 +84,5 @@ public class CurrencyCheckerCbRf_V2 : ICurrencyChecker
 
         return dic;
     }
-
 }
 

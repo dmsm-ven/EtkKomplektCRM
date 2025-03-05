@@ -153,13 +153,13 @@ else
             isProgressBarVisible = true;
             StateHasChanged();
 
-            await Task.Delay(TimeSpan.FromSeconds(1));
-
-            await InvokeAsync(() => taskManager.ExecuteForced(item.Id));
+            await InvokeAsync(() => taskManager.AddTaskToQueue(item.Id, forced: true));
 
             isProgressBarVisible = false;
 
-            await userLogger.Write(LogEntryGroupName.CronTask, "Задание выполнено (forced)", $"Задание '{item.Title}' выполнено");
+            toasts.ShowSuccess("Задача будет выполнена в ближайшее время");
+
+            await userLogger.Write(LogEntryGroupName.CronTask, "Добавление задания", $"Задание '{item.Title}' добавлено в очередь на выполнение (с приоритетом)");
         }
     }
 

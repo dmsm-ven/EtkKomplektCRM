@@ -1,5 +1,6 @@
 ﻿@page "/cron-task"
 @inject ICronTaskStorage cronTaskStorage
+@inject IPriceListTemplateStorage templateStorage
 @inject UserLogger userLogger
 @inject NavigationManager navigationManager
 @inject CronTaskService taskManager
@@ -58,14 +59,25 @@
     <AddNewCronTaskDialog @ref="addNewDialog" ConfirmationChanged="NewTaskDialogStateChanged" />
 
 
-    @code {
-        Timer timeLeftRefresh = new Timer(TimeSpan.FromSeconds(15).TotalMilliseconds);
-        IOrderedEnumerable<CronTaskViewModel> cronTaskList = null;
-        AddNewCronTaskDialog addNewDialog;     
+@code {
+    Timer timeLeftRefresh = new Timer(TimeSpan.FromSeconds(15).TotalMilliseconds);
+    IOrderedEnumerable<CronTaskViewModel> cronTaskList = null;
+    AddNewCronTaskDialog addNewDialog;
 
-        protected override async Task OnInitializedAsync()
+    private string getMainTableClass
+    {
+        get
         {
-            cronTaskList = (await cronTaskStorage.GetCronTasks())
+            string mainClass = $"col-md-{(taskManager.TasksQueue.Count() > 0 ? "8" : "12")}";
+            return mainClass + " px-0";
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var templates = await templateStorage.GetPriceListTemplates();
+
+        cronTaskList = (await cronTaskStorage.GetCronTasks())
                         .Select(ct => new CronTaskViewModel()
                         {
                             Id = ct.task_id,
@@ -78,10 +90,12 @@
                             Title = ct.name,
                             TypeId = (CronTaskType)ct.task_type_id,
                             TypeName = ct.task_type_name,
+                            IsEmailAttachmentTask = templates.FirstOrDefault(t => t.id == ct.linked_price_list_guid)?.remote_uri_method_name == "EmailAttachment",
                             AdditionalExecTime = ct.additional_exec_time != null ?
                                 JsonConvert.DeserializeObject<List<TimeSpan>>(ct.additional_exec_time) : new List<TimeSpan>()
                         })
                         .OrderBy(ct => ct.IsEnabled ? 0 : 1)
+                        .ThenBy(ct => ct.IsEmailAttachmentTask ? 1 : 0)
                         .ThenBy(ct => ct.NextExecutionLeft);
 
             timeLeftRefresh.Elapsed += (o, e) => InvokeAsync(() => StateHasChanged());

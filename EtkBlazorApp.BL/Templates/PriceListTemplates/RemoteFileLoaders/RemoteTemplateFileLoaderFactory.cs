@@ -1,13 +1,10 @@
-﻿using EtkBlazorApp.Core.Interfaces;
+﻿using EtkBlazorApp.BL.Templates.PriceListTemplates.RemoteFileLoaders.ForSpecificTemplate;
+using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Repositories.PriceList;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace EtkBlazorApp.BL.Templates.PriceListTemplates
+namespace EtkBlazorApp.BL.Templates.PriceListTemplates.RemoteFileLoaders
 {
     public class RemoteTemplateFileLoaderFactory
     {
@@ -29,7 +26,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
         public IRemoteTemplateFileLoader GetMethod(string remoteUri, string methodName, string guid)
         {
-            //методы перечислены в таблице 'etk_app_price_list_template_remote_method'
+            //методы перечислены в таблице 'etk_app_price_list_template_load_method'
             switch (methodName)
             {
                 case "HttpGet":
@@ -41,9 +38,14 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 case "YandexDisk":
                     return new YandexDiskRemoteTemplateFileLoader(remoteUri, zipExtractor);
                 case "EmailAttachment":
-                    return new EmailAttachmentRemoteTemplateFileLoader(settings, zipExtractor, templateStorage, encryptHelper, guid);
+                    return new EmailAttachmentRemoteTemplateFileLoader(
+                        templateStorage,
+                        new EmailAttachmentExtractorInitializer(settings, zipExtractor, encryptHelper),
+                        guid);
                 case "mks.master.pro API":
                     return new MksMasterProApiFileLoader(templateStorage, guid);
+                case "aktakom.ru ЛК":
+                    return new AtakomLkFileLoader(templateStorage, guid);
             }
 
             throw new NotSupportedException($"Шаблон загрузки файла '{methodName}' не поддерживается");

@@ -1,5 +1,7 @@
-﻿using EtkBlazorApp.Core.Data;
+﻿using EtkBlazorApp.BL.Templates.PriceListTemplates;
+using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.DataAccess;
+using EtkBlazorApp.DataAccess.Repositories.Product;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -102,7 +104,9 @@ namespace EtkBlazorApp.BL.Managers
                 .Distinct()
                 .ToList();
 
-            AddAdditionalAffectedBrands(affectedBrands);
+            var templates = priceLines.GroupBy(p => p.Template.GetType()).Select(g => g.Key).Distinct().ToArray();
+
+            AddAdditionalAffectedBrands(templates, affectedBrands);
 
             var affectedBrandsIds = allManufacturers
                 .Where(m => affectedBrands.Contains(m.name, StringComparer.OrdinalIgnoreCase))
@@ -116,13 +120,12 @@ namespace EtkBlazorApp.BL.Managers
         /// Дополнительное добавление брендов для нахождения сопоставления. Если в прайс-листе поставщика нет отдельного поля с брендом - то что бы он корректно загрузился, нужно добавить его в дополнительную загруку
         /// </summary>
         /// <param name="affectedBrands"></param>
-        private void AddAdditionalAffectedBrands(List<string> affectedBrands)
+        private void AddAdditionalAffectedBrands(Type[] templateTypes, List<string> affectedBrands)
         {
-            //В прайс-листе Elevel нет столбца с брендом, приходится загружать все их бренды
-            //это очень увеличивает скорость сопоставления товаров
-            if (affectedBrands.Contains("Elevel"))
+            if (templateTypes != null && templateTypes.FirstOrDefault(t => t == typeof(_1CPriceListTemplate)) != null)
             {
-                affectedBrands.AddRange(new[] { "IEK", "ABB", "Legrand", "Schneider Electric", "DKC", "Wago" });
+                //В выгрузке 1С есть товары без брендаы
+                affectedBrands.Add("Не указан");
             }
 
             // В производителе Bosch есть подбренд Dremel, но он так же считается и отдельным брендом. 

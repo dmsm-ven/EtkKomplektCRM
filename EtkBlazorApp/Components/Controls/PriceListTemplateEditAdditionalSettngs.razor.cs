@@ -1,5 +1,5 @@
 using Blazored.Toast.Services;
-using EtkBlazorApp.BL;
+using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.DataAccess.Entity;
 using EtkBlazorApp.DataAccess.Repositories.PriceList;
 using EtkBlazorApp.Model.PriceListTemplate;
@@ -194,6 +194,7 @@ public partial class PriceListTemplateEditAdditionalSettngs
         StateHasChanged();
 
         toasts.ShowSuccess("Выполнено");
+
         await logger.Write(LogEntryGroupName.TemplateUpdate, "Добавлено", $"Преобразование модели/артикула '{newModelMapKey}' --> '{newModelMapValue}' для шаблона {sourceTemplate.Title}");
     }
 

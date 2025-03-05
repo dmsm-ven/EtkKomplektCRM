@@ -24,12 +24,24 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 if (tab.GetValue<string>(1, column).Equals("Производитель СПБ")) { stock_spb_producer_index = column; }
             }
 
+            //Товаров очень много, на 2024-05 примерно 180 000 и ~200 разных брендов         
+
             for (int row = 3; row < tab.Dimension.Rows; row++)
             {
                 string model = tab.GetValue<string>(row, 1).Trim();
                 string sku = tab.GetValue<string>(row, 2).Trim();
-                var price = ParsePrice(tab.GetValue<string>(row, 3));
-                CurrencyType currency = Enum.Parse<CurrencyType>(tab.GetValue<string>(row, 4));
+                string manufacturerName = MapManufacturerName(tab.GetValue<string>(row, 3));
+                var price = ParsePrice(tab.GetValue<string>(row, 4));
+
+                if (SkipThisBrand(manufacturerName))
+                {
+                    continue;
+                }
+
+                if (!Enum.TryParse<CurrencyType>(tab.GetValue<string>(row, 5), out var currency))
+                {
+                    continue;
+                }
 
                 var quantitySpbSelf = ParseQuantity(tab.GetValue<string>(row, stock_spb_self_index));
                 var quantitySpbProducer = ParseQuantity(tab.GetValue<string>(row, stock_spb_producer_index));
@@ -39,7 +51,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Quantity = quantitySpbSelf,
                     Sku = model,
                     Model = sku,
-                    Manufacturer = "Elevel",
+                    Manufacturer = manufacturerName,
                     Price = price,
                     Currency = currency,
                     Stock = StockName.ElevelSbp_self

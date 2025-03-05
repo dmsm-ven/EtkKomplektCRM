@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Blazored.Toast.Services;
 using EtkBlazorApp.BL;
+using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.Components.Dialogs;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;

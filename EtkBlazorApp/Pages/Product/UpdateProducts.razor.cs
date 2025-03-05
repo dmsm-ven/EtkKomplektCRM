@@ -1,8 +1,7 @@
 ﻿using Blazored.Toast.Services;
-using EtkBlazorApp.BL;
+using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.DataAccess;
-using EtkBlazorApp.DataAccess.Entity;
 using EtkBlazorApp.Services;
 using Microsoft.AspNetCore.Components;
 using System;
@@ -21,12 +20,10 @@ public partial class UpdateProducts : ComponentBase, IDisposable
     [Inject] public ProductsPriceAndStockUpdateManager databaseManager { get; set; }
     [Inject] public UserLogger logger { get; set; }
 
-    bool inProgress = false;
-
-    List<string> websiteManufacturers;
-    List<string> updateProgressSteps = new List<string>();
-
-    string selectedTabName = "tab-1";
+    private bool inProgress = false;
+    private List<string> websiteManufacturers;
+    private readonly List<string> updateProgressSteps = new();
+    private string selectedTabName = "tab-1";
 
     protected override void OnInitialized()
     {

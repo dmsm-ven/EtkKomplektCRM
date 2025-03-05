@@ -1,4 +1,6 @@
-﻿using EtkBlazorApp.Core.Interfaces;
+﻿using EtkBlazorApp.BL.Data;
+using EtkBlazorApp.BL.Loggers;
+using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
 using MailKit.Net.Smtp;

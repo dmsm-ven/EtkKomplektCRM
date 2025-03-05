@@ -1,6 +1,7 @@
 ﻿@page "/log"
 
 @using System.Threading;
+@using EtkBlazorApp.BL.Data;
 @attribute [Authorize(Roles = "Administrator")]
 @inject ILogStorage database
 @inject IUserService usersService
@@ -14,7 +15,7 @@ else
 {
     <div class="container-fluid">
         <div class="row my-2">
-            <button class="btn btn-success" style="margin-right: 18px;" @onclick="ApplyFilter">Обновить фильтр</button>
+            <button class="btn btn-success" style="margin-right: 18px;" @onclick="@(async(e) => await ApplyFilter(forced: true))">Обновить фильтр</button>
 
             <div class="btn-group btn-group-toggle" data-toggle="buttons">
                 <label class="btn btn-primary @(filterMaxDays == 0 ? "active" : string.Empty)" @onclick="@(e => filterMaxDays = 0)">
@@ -80,7 +81,7 @@ else
             <tbody>
                 @foreach (var item in entries)
                 {
-                    <tr>
+                    <tr class="@(IsNewEvent(item) ? "new-log-item-blink" : "")">
                         <td>@item.date_time.ToString("G")</td>
                         <td>@item.user</td>
                         <td>@item.group_name</td>
@@ -96,10 +97,13 @@ else
 @code {
     const int MAX_ITEMS = 100;
 
+    private System.Timers.Timer _timer;
+
     int filterMaxDays = 0;
     string selectedUser = null;
     LogEntryGroupName? selectedGroup = null;
-    List<LogEntryEntity> entries = null;
+    List<LogEntryEntity> entries = new();
+    List<int> newItemsToHighlight = new();
     List<string> users = new List<string>();
 
     protected override async Task OnInitializedAsync()
@@ -107,15 +111,51 @@ else
         var usersList = (await usersService.GetUsers()).Select(u => u.login).ToList();
         usersList.Insert(0, "System");
         users = usersList;
-        await ApplyFilter();
+        await ApplyFilter(forced: true);
+
+        _timer = new();
+        _timer.Interval = 3000;
+        _timer.Elapsed += async (o, e) =>
+        {
+            await ApplyFilter(forced: false);
+        };
+        _timer.Enabled = true;
     }
 
-    private async Task ApplyFilter()
+
+    private async Task ApplyFilter(bool forced = true)
     {
-        entries = null;
-        StateHasChanged();
-        entries = await database.GetLogItems(MAX_ITEMS, filterMaxDays, selectedUser, selectedGroup?.GetDescriptionAttribute());
-        StateHasChanged();
+        bool hasChanges = forced;
+        newItemsToHighlight.Clear();
+
+        var oldEntries = entries;
+        var newEntries = await database.GetLogItems(MAX_ITEMS, filterMaxDays, selectedUser, selectedGroup?.GetDescriptionAttribute());
+        if (forced)
+        {
+            entries = newEntries;
+        }
+        else
+        {
+            if ((oldEntries?.Count ?? 0) > 0 && (newEntries?.Count > 0) && (oldEntries[0].id != newEntries[0].id))
+            {
+                entries = newEntries;
+                newItemsToHighlight.AddRange(newEntries.Select(i => i.id).Except(oldEntries.Select(i => i.id)));
+                hasChanges = true;
+            }
+        }
+
+        if(hasChanges)
+        {
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private bool IsNewEvent(LogEntryEntity item)
+    {
+        if(item == null || item.id == 0){
+            return false;
+        }
+        return newItemsToHighlight.Contains(item.id);
     }
 
     private void SelectedGroupFilterChanged(ChangeEventArgs e)
@@ -128,5 +168,11 @@ else
         {
             selectedGroup = Enum.Parse<LogEntryGroupName>(e.Value.ToString());
         }
+    }
+
+    public void Dispose()
+    {
+        _timer?.Stop();
+        _timer?.Dispose();       
     }
 }

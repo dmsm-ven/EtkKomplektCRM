@@ -4,7 +4,8 @@ using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity.PriceList;
 using EtkBlazorApp.DataAccess.Repositories.PriceList;
-using Microsoft.Extensions.Logging;
+using Humanizer;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,46 +19,43 @@ namespace EtkBlazorApp.BL.Managers
     //TODO: разбить/упростить класс
     public class PriceListManager
     {
-        public event Action OnPriceListLoaded;
+        private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
 
+        public event Action OnPriceListLoaded;
+        public decimal NDS { get; private set; }
         public List<PriceLine> PriceLines { get; }
         public List<LoadedPriceListTemplateData> LoadedFiles { get; }
 
-        public decimal NDS { get; private set; }
         private readonly IPriceLineLoadCorrelator correlator;
         private readonly IPriceListTemplateStorage templateStorage;
         private readonly ISettingStorageReader settings;
-        private readonly ILogger<PriceListManager> logger;
 
         public PriceListManager(IPriceLineLoadCorrelator correlator,
             IPriceListTemplateStorage templateStorage,
-            ISettingStorageReader settings,
-            ILogger<PriceListManager> logger)
+            ISettingStorageReader settings)
         {
             PriceLines = new List<PriceLine>();
             LoadedFiles = new List<LoadedPriceListTemplateData>();
             this.correlator = correlator;
             this.templateStorage = templateStorage;
             this.settings = settings;
-            this.logger = logger;
         }
 
-        public void RemovePriceListAll()
-        {
-            LoadedFiles.Clear();
-            PriceLines.Clear();
-        }
-
-        public void RemovePriceList(LoadedPriceListTemplateData data)
-        {
-            LoadedFiles.Remove(data);
-            PriceLines.RemoveAll(line => line.Template == data.TemplateInstance);
-        }
-
+        /// <summary>
+        /// Метод для Blazor вебинтерфейса личного кабинета
+        /// </summary>
+        /// <param name="templateType"></param>
+        /// <param name="stream"></param>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
         public async Task UploadTemplate(Type templateType, Stream stream, string fileName)
         {
+            nlog.Info("Начало загрузки прайс-листа вида {templateName} из файла {fileName}", templateType.Name, fileName);
+
             var data = await ReadTemplateLines(templateType, stream, fileName, addFileData: true);
             AddNewPriceLines(data);
+
+            nlog.Info("Загружены данные для {count} товаров", data?.Count ?? 0);
         }
 
         /// <summary>
@@ -75,51 +73,193 @@ namespace EtkBlazorApp.BL.Managers
                 throw new ArgumentNullException(nameof(templateType));
             }
 
-            string filePath = Path.Combine(Path.GetTempPath(), fileName);
+            string tempFilePath = Path.Combine(Path.GetTempPath(), fileName);
+            List<PriceLine> list = new();
+
+            try
+            {
+                nlog.Info("Начало загрузки шаблона типа {templateTypeName} из файла {fileName} по временному пути {tempPath}"
+                    , templateType.Name, fileName, tempFilePath);
+                list = await ReadPriceLinesAndApplyModifiers(templateType, stream, fileName, addFileData, tempFilePath);
+            }
+            catch (Exception ex)
+            {
+                nlog.Warn("Ошибка загрузки шаблона {templateTypeName}. Message: {msg}. StackTrace: {stackTrace}", templateType.Name, ex.Message, ex.StackTrace);
+                throw;
+            }
+            finally
+            {
+                if (File.Exists(tempFilePath))
+                {
+                    nlog.Trace("Временны файл {tempPath} удален", tempFilePath);
+                    File.Delete(tempFilePath);
+                }
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// Загрузить строки указанного шаблона и применить все модификаторы
+        /// </summary>
+        /// <param name="templateType"></param>
+        /// <param name="stream"></param>
+        /// <param name="fileName"></param>
+        /// <param name="addFileData"></param>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        private async Task<List<PriceLine>> ReadPriceLinesAndApplyModifiers(Type templateType, Stream stream, string fileName, bool addFileData, string filePath)
+        {
             using (var fs = File.Create(filePath))
             {
                 await stream.CopyToAsync(fs);
             }
 
-            try
+            IPriceListTemplate templateInstance = (IPriceListTemplate)Activator.CreateInstance(templateType, filePath);
+            PriceListTemplateEntity templateInfo = await GetTemplateDescription(templateType);
+
+            if (templateInfo == null)
             {
-                IPriceListTemplate templateInstance = (IPriceListTemplate)Activator.CreateInstance(templateType, filePath);
-                PriceListTemplateEntity templateInfo = await GetTemplateDescription(templateType);
-                if (templateInstance is PriceListTemplateReaderBase pb)
+                nlog.Warn("templateInfo пуст для типа {typeName}", templateType.Name);
+                throw new ArgumentNullException($"'{nameof(templateInfo)}' не может быть null");
+            }
+
+            if (templateInstance is PriceListTemplateReaderBase pb)
+            {
+                //Обязательно должно быть перед считываением, т.к. тут заполняются словари с преобразованиями
+                try
                 {
-                    //Обязательно должно быть перед считываением, т.к. тут заполняются словари с преобразованиями
                     pb.FillTemplateInfo(templateInfo);
                 }
-
-                var list = await templateInstance.ReadPriceLines(CancellationToken.None);
-
-                FillLinkedStock(list, templateInfo.stock_partner_id);
-
-                ApplyModelMap(list, templateInfo);
-
-                await ApplyDiscounts(list, templateInfo);
-
-                if (addFileData)
+                catch
                 {
-                    var loadedFileInfo = new LoadedPriceListTemplateData(templateInstance, templateInfo, list, fileName);
-                    LoadedFiles.Add(loadedFileInfo);
+                    throw;
                 }
+            }
 
-                return list;
-            }
-            catch
+            nlog.Trace("Начало загрузки данных из шаблона прайс-листа типа {typeName}", templateType.Name);
+            var list = await templateInstance.ReadPriceLines(CancellationToken.None);
+            nlog.Trace("Загружены данные для {count} товаров из шаблона прайс-листа типа {typeName}", list.Count, templateType.Name);
+
+            await ApplyModifiers(list, templateInfo);
+
+            if (addFileData)
             {
-                throw;
+                var loadedFileInfo = new LoadedPriceListTemplateData(templateInstance, templateInfo, list, fileName);
+                LoadedFiles.Add(loadedFileInfo);
             }
-            finally
-            {
-                File.Delete(filePath);
-            }
+
+            return list;
         }
 
+        /// <summary>
+        /// Применить ПОСТ-подификаторы к считанным строкам прайс-листа
+        /// </summary>
+        /// <param name="templateInfo"></param>
+        /// <param name="list"></param>
+        /// <returns></returns>
+        private async Task ApplyModifiers(List<PriceLine> list, PriceListTemplateEntity templateInfo)
+        {
+            MapManufacturerNamesAndSkipUnnecessaryManufacturers(list, templateInfo);
+
+            FillLinkedStock(list, templateInfo.stock_partner_id);
+
+            ApplyModelMap(list, templateInfo);
+
+            await ApplyDiscounts(list, templateInfo);
+        }
+
+        /// <summary>
+        /// Применяем черный/белый список для производителей в прайс-листе
+        /// </summary>
+        /// <param name="templateInfo"></param>
+        /// <param name="list"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        private void MapManufacturerNamesAndSkipUnnecessaryManufacturers(List<PriceLine> list, PriceListTemplateEntity templateInfo)
+        {
+            if (list is null || templateInfo is null)
+            {
+                return;
+            }
+
+            if ((templateInfo?.manufacturer_name_map?.Count ?? 0) > 0)
+            {
+                Dictionary<string, string> brandNameMap = templateInfo.manufacturer_name_map
+                    .Where(i => !string.IsNullOrWhiteSpace(i.text) && !string.IsNullOrWhiteSpace(i.name))
+                    .ToDictionary(i => i.text, i => i.name);
+
+                if ((list != null && list.Any()) && (brandNameMap != null && brandNameMap.Any()))
+                {
+                    foreach (var line in list)
+                    {
+                        if (!string.IsNullOrWhiteSpace(line.Manufacturer) && brandNameMap.ContainsKey(line.Manufacturer))
+                        {
+                            line.Manufacturer = brandNameMap[line.Manufacturer];
+                        }
+                    }
+                }
+            }
+
+            if ((templateInfo?.manufacturer_skip_list?.Count ?? 0) == 0)
+            {
+                return;
+            }
+
+            int linesAtStart = list.Count;
+            int whiteListDeleted = 0;
+            int blackListDeleted = 0;
+
+            //Применяем черный лист
+            var blackList = templateInfo.manufacturer_skip_list
+                .Where(i => i.list_type == "black_list" && !string.IsNullOrWhiteSpace(i.name))
+                .Select(i => i.name)
+                .ToHashSet();
+            if (blackList.Count > 0)
+            {
+                list.RemoveAll(priceLine => blackList.Contains(priceLine.Manufacturer, StringComparer.OrdinalIgnoreCase));
+                foreach (var line in list.ToArray())
+                {
+                    if (!string.IsNullOrWhiteSpace(line.Manufacturer) && blackList.Contains(line.Manufacturer, StringComparer.OrdinalIgnoreCase))
+                    {
+                        list.Remove(line);
+                    }
+                }
+                blackListDeleted = list.Count - linesAtStart;
+            }
+
+            //Применяем белый лист
+            var whiteList = templateInfo.manufacturer_skip_list
+                .Where(i => i.list_type == "white_list" && !string.IsNullOrWhiteSpace(i.name))
+                .Select(i => i.name)
+                .ToHashSet();
+            if (whiteList.Count > 0)
+            {
+                foreach (var line in list.ToArray())
+                {
+                    if (!string.IsNullOrWhiteSpace(line.Manufacturer) && !whiteList.Contains(line.Manufacturer, StringComparer.OrdinalIgnoreCase))
+                    {
+                        list.Remove(line);
+                    }
+                }
+                whiteListDeleted = linesAtStart - list.Count - blackListDeleted;
+            }
+
+            int deletedCount = linesAtStart - list.Count;
+            nlog.Trace("Удаление данных для ненужных брендов. Было {countBefore} стало {countAfter} записей. Удалено всего {deletedCount} (из них белый список: {whiteList}, черный список: {blackList})"
+                , linesAtStart, list.Count, deletedCount, whiteListDeleted, blackListDeleted);
+        }
+
+        /// <summary>
+        /// Заполняем связанных склад поставщика для всех считанных строк
+        /// </summary>
+        /// <param name="list"></param>
+        /// <param name="stock_partner_id"></param>
         private void FillLinkedStock(List<PriceLine> list, int? stock_partner_id)
         {
-            if (!stock_partner_id.HasValue) { return; }
+            if (!stock_partner_id.HasValue)
+            {
+                return;
+            }
 
             StockName stock = (StockName)stock_partner_id.Value;
             foreach (var line in list.Where(l => l.Stock == StockName.None))
@@ -128,7 +268,11 @@ namespace EtkBlazorApp.BL.Managers
             }
         }
 
-        //Заменяем модели из прайс-листа (если есть данные на замену)
+        /// <summary>
+        /// Подменяем модели в считанных строках из прайс-листа, если есть добавленные сопоставления
+        /// </summary>
+        /// <param name="priceLines"></param>
+        /// <param name="templateInfo"></param>
         private void ApplyModelMap(IEnumerable<PriceLine> priceLines, PriceListTemplateEntity templateInfo)
         {
             if (templateInfo.model_map == null || templateInfo.model_map.Count == 0)
@@ -138,7 +282,9 @@ namespace EtkBlazorApp.BL.Managers
 
             var modelMap = templateInfo.model_map.ToDictionary(i => i.old_text, i => i.new_text);
 
-            logger.LogInformation($"Запуск преобразования моделей/артикулов для прайс-листа '{templateInfo?.title ?? "<Пусто>"}'");
+            nlog.Trace("Запуск преобразования моделей/артикулов для прайс-листа '{templateTitle}'"
+                , templateInfo?.title);
+
             var sw = new Stopwatch();
 
             var linesToReplace = priceLines
@@ -159,7 +305,8 @@ namespace EtkBlazorApp.BL.Managers
                 }
             }
 
-            logger.LogInformation($"Конец преобразования моделей/артикулов для прайс-листа '{templateInfo?.title ?? "<Пусто>"}'. Длительность выполнения: {sw.Elapsed.TotalMilliseconds:N} ms");
+            nlog.Trace("Конец преобразования моделей/артикулов для прайс-листа '{templateTitle}'. Длительность выполнения: {elapsedMs}",
+                templateInfo?.title, sw.Elapsed.Humanize());
         }
 
         /// <summary>
@@ -190,7 +337,7 @@ namespace EtkBlazorApp.BL.Managers
             // Наценка закупки Бренд/Скидка
             Dictionary<string, decimal> purchaseDiscounts = templateInfo.manufacturer_purchase_map.ToDictionary(i => i.name, i => i.discount);
 
-            //Загружаем НДС
+            //Загружаем размер НДС из настроек
             NDS = (100m + await settings.GetValue<int>("nds")) / 100;
 
             foreach (var line in source)
@@ -199,6 +346,16 @@ namespace EtkBlazorApp.BL.Managers
             }
         }
 
+        /// <summary>
+        /// Расчитать скидку для определенной строки из прайс-листа
+        /// </summary>
+        /// <param name="templateInfo"></param>
+        /// <param name="emptyDiscountGeneralDiscount"></param>
+        /// <param name="emptySellDiscountMap"></param>
+        /// <param name="emptyPurchaseDiscountMap"></param>
+        /// <param name="sellDiscounts"></param>
+        /// <param name="purchaseDiscounts"></param>
+        /// <param name="line"></param>
         private void CaclDiscount(PriceListTemplateEntity templateInfo,
                 bool emptyDiscountGeneralDiscount,
                 bool emptySellDiscountMap,
@@ -216,7 +373,7 @@ namespace EtkBlazorApp.BL.Managers
 
             decimal discountValue = emptyDiscountGeneralDiscount ? 0m : templateInfo.discount;
             // Если бренд есть в словаре, то берем скидку для него в первую очередь (заменяя стандартную от прайс-листа)
-            if (!emptySellDiscountMap && sellDiscounts.ContainsKey(line.Manufacturer))
+            if (!emptySellDiscountMap && !string.IsNullOrWhiteSpace(line.Manufacturer) && sellDiscounts.ContainsKey(line.Manufacturer))
             {
                 discountValue = sellDiscounts[line.Manufacturer];
             }
@@ -253,6 +410,11 @@ namespace EtkBlazorApp.BL.Managers
             }
         }
 
+        /// <summary>
+        /// Загружаем описание шаблонапо указанному типа
+        /// </summary>
+        /// <param name="templateType"></param>
+        /// <returns></returns>
         private async Task<PriceListTemplateEntity> GetTemplateDescription(Type templateType)
         {
             var guid = templateType.GetPriceListGuidByType();
@@ -287,11 +449,32 @@ namespace EtkBlazorApp.BL.Managers
                     {
                         linkedLine.Quantity = line.Quantity;
                     }
+
+                    //Если товар уже загружен - то прибавляем остаток от новой загруженно строки прайс-листа (без добавления)
                     continue;
                 }
 
                 PriceLines.Add(line);
             }
+        }
+
+        /// <summary>
+        /// Удаляем из памяти все ранее загруженные прайс-листы
+        /// </summary>
+        public void RemovePriceListAll()
+        {
+            LoadedFiles.Clear();
+            PriceLines.Clear();
+        }
+
+        /// <summary>
+        /// Удаляем из памяти данные загруженного прайс-листа определенного типа
+        /// </summary>
+        /// <param name="data"></param>
+        public void RemovePriceList(LoadedPriceListTemplateData data)
+        {
+            LoadedFiles.Remove(data);
+            PriceLines.RemoveAll(line => line.Template == data.TemplateInstance);
         }
     }
 }

@@ -1,19 +1,23 @@
 using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.DataAccess.Entity;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 
-namespace EtkBlazorApp.BL.Templates
+namespace EtkBlazorApp.BL.Templates.PrikatTemplates.Base
 {
     public abstract class PrikatReportTemplateBase
     {
+        private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
+
         public decimal CurrencyRatio { get; set; }
-        public decimal Discount1 { get; set; }
-        public decimal Discount2 { get; set; }
+        public decimal Discount { get; set; }
+
         public string GLN { get; set; }
+
+        public Dictionary<int, decimal> ProductIdToDiscount { get; set; } = new();
 
         protected virtual decimal[] DEFAULT_DIMENSIONS { get; } = new decimal[] { 150, 100, 100, 0.4m };
         protected virtual string LENGTH_UNIT { get; } = "миллиметр";
@@ -27,72 +31,76 @@ namespace EtkBlazorApp.BL.Templates
         {
             Manufacturer = manufacturer;
             Currency = currency;
-            Precission = (Currency == CurrencyType.RUB ? 0 : 2);
+            Precission = Currency == CurrencyType.RUB ? 0 : 2;
         }
 
-        public void AppendLines(List<ProductEntity> products, List<PriceLine> priceLines, StreamWriter writer)
+        protected decimal GetCustomDiscountOrDefaultForProductId(int product_id)
         {
-            if (priceLines.Count == 0)
+            if (ProductIdToDiscount != null && ProductIdToDiscount.ContainsKey(product_id))
             {
-                products.Where(p => !string.IsNullOrWhiteSpace(p.sku)).ToList().ForEach(p => AppendLine(p, writer));
+                return ProductIdToDiscount[product_id];
             }
-            else
+            return Discount;
+        }
+
+        public void WriteProductLines(IEnumerable<ProductEntity> products, StreamWriter sw)
+        {
+            foreach (var product in products)
             {
-                foreach (var product in products)
-                {
-                    var linkedPriceLine = priceLines
-                        .FirstOrDefault(line => line.Sku.Equals(product.sku, StringComparison.OrdinalIgnoreCase) || (!string.IsNullOrEmpty(line.Model) && (line.Model.Equals(product.model, StringComparison.OrdinalIgnoreCase))));
-
-                    if (linkedPriceLine != null)
-                    {
-                        if (!string.IsNullOrWhiteSpace(linkedPriceLine.Name))
-                        {
-                            product.name = linkedPriceLine.Name.Replace(";", " ").Trim();
-                        }
-                        if (linkedPriceLine.Price.HasValue)
-                        {
-                            product.price = linkedPriceLine.Price.Value * CurrencyRatio;
-                        }
-                    }
-                    else
-                    {
-                        product.sku = null;
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(product.sku))
-                    {
-                        AppendLine(product, writer);
-                    }
-                }
+                WriteProductLine(product, sw);
             }
         }
 
-        protected virtual void AppendLine(ProductEntity product, StreamWriter sw)
+        protected virtual void WriteProductLine(ProductEntity product, StreamWriter sw)
         {
-            decimal priceInCurrency = (int)product.price;
+            decimal sellPrice = (int)product.price;
             if (Currency != CurrencyType.RUB)
             {
-                priceInCurrency = (product.base_currency_code == Currency.ToString() && product.base_price != decimal.Zero) ?
+                sellPrice = product.base_currency_code == Currency.ToString() && product.base_price != decimal.Zero ?
                     product.base_price :
                     Math.Round(product.price / CurrencyRatio, 2);
             }
 
-            decimal price1 = Math.Round(priceInCurrency * ((100m + Discount2) / 100m), Precission);
-            decimal price2 = Math.Round((price1 * (100m + Discount1)) / 100m, Precission);
+            decimal currentDiscount = GetCustomDiscountOrDefaultForProductId(product.product_id);
 
-            string vi_price_rrc = price1.ToString($"F{Precission}", new CultureInfo("en-EN"));
-            string vi_price = price2.ToString($"F{Precission}", new CultureInfo("en-EN"));
+            decimal rrcPrice = Math.Round(sellPrice * ((100m + currentDiscount) / 100m), Precission);
+
+            //Важно, эта проверка с изменение должна быть после расчет [decimal rrcPrice = ...]
+            if (currentDiscount != Discount)
+            {
+                decimal discountDiff = (Discount - currentDiscount);
+                if (discountDiff != decimal.Zero)
+                {
+                    decimal discountRatio = 1.00m - (discountDiff / 100m);
+                    sellPrice = Math.Round(sellPrice * discountRatio, Precission);
+                }
+            }
+
+            WriteLineData(product, rrcPrice, sellPrice, sw);
+        }
+
+        protected void WriteLineData(ProductEntity product, decimal rrcPrice, decimal sellPrice, StreamWriter sw)
+        {
+            string rrcPriceString = rrcPrice.ToString($"F{Precission}", new CultureInfo("en-EN"));
+            string sellPriceString = sellPrice.ToString($"F{Precission}", new CultureInfo("en-EN"));
 
             string length = (product.length != decimal.Zero ? product.length : DEFAULT_DIMENSIONS[0]).ToString("F2", new CultureInfo("en-EN"));
             string width = (product.width != decimal.Zero ? product.width : DEFAULT_DIMENSIONS[1]).ToString("F2", new CultureInfo("en-EN"));
             string height = (product.height != decimal.Zero ? product.height : DEFAULT_DIMENSIONS[2]).ToString("F2", new CultureInfo("en-EN"));
             string weight = (product.weight != decimal.Zero ? product.weight : DEFAULT_DIMENSIONS[3]).ToString("F4", new CultureInfo("en-EN"));
 
+            //TODO: ИЗМЕНИТЬ, изначально сделано неправильно - тут должен быть артикул поставщика - НАШ SKU вида: ETK-{PID}, например: ЕТК-148, 
+            //А не артикул поставщика у того которого мы покупаем товар
+            string sku =
+                !string.IsNullOrWhiteSpace(product.sku) ? product.sku :
+                (!string.IsNullOrWhiteSpace(product.model) ? product.model :
+                $"ETK-{product.product_id}");
+
             WriteCell(sw, GLN);   //GLN поставщика
             WriteCell(sw); //Позиция
             WriteCell(sw, product.ean); //Штрихкод
             WriteCell(sw); //Артикул товара покупателя
-            WriteCell(sw, product.sku); //Артикул товара поставщика
+            WriteCell(sw, sku); //Артикул товара поставщика 
             WriteCell(sw, product.name); //Наименование
             WriteCell(sw, "1"); //Кол-во
             WriteCell(sw, "шт."); //Единицы измерения
@@ -113,16 +121,15 @@ namespace EtkBlazorApp.BL.Templates
             WriteCell(sw, WEIGHT_UNIT); //Единицы измерения
             WriteCell(sw); //Страна производитель
             WriteCell(sw); //Годен до
-            WriteCell(sw, vi_price_rrc); //Рекомендованная цена
-            WriteCell(sw, vi_price); //Закупочная цена
+            WriteCell(sw, rrcPriceString); //Рекомендованная цена
+            WriteCell(sw, sellPriceString); //Закупочная цена
             WriteCell(sw, product.quantity.ToString()); //Количество остатков на скаладе
             WriteCell(sw, Currency.ToString().ToLower()); //Рекомендованная валюта
             WriteCell(sw, Currency.ToString().ToLower()); //Закупчная валюта
             sw.WriteLine();
-
         }
 
-        private void WriteCell(StreamWriter sw, string value = null)
+        protected void WriteCell(StreamWriter sw, string value = null)
         {
             if (!string.IsNullOrWhiteSpace(value))
             {

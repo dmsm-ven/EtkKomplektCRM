@@ -63,12 +63,14 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 
             for (int row = 2; row < tab.Dimension.Rows; row++)
             {
-                string sku = tab.GetValue<string>(row, 3);
-                string name = tab.GetValue<string>(row, 4);
-                int quantity = tab.GetValue<int>(row, 10);
-                decimal? priceInUsd = ParsePrice(tab.GetValue<string>(row, 11));
-                string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 12));
-                string model = tab.GetValue<string>(row, 13);
+                string sku = tab.GetValue<string>(row, 1);
+                string name = tab.GetValue<string>(row, 2);
+                string model = tab.GetValue<string>(row, 3);
+                string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 4));
+
+                //TODO: тут хак, стоит доработать parsequantity (вместо использования ParsePrice) метод что бы он корректно обрабатывал
+                int quantity = (int)Math.Ceiling(ParsePrice(tab.GetValue<string>(row, 5)) ?? 0);
+                decimal? price = ParsePrice(tab.GetValue<string>(row, 9));
 
                 if (SkipThisBrand(manufacturer))
                 {
@@ -81,10 +83,9 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Sku = sku,
                     Model = model,
                     Manufacturer = manufacturer,
-                    Price = priceInUsd,
+                    Price = price,
                     Currency = CurrencyType.RUB,
                     Quantity = quantity,
-                    //Stock = StockName.Symmetron
                 };
 
                 list.Add(priceLine);

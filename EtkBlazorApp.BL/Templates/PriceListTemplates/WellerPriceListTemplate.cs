@@ -69,12 +69,17 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
             {
                 string skuNumber = tab.GetValue<string>(row, 2);
                 string name = tab.GetValue<string>(row, 3);
-                string ean = tab.GetValue<string>(row, 4);
-                int? quantity = ParseQuantity(tab.GetValue<string>(row, 5));
+                int? quantity = ParseQuantity(tab.GetValue<string>(row, 4));
 
-                if (string.IsNullOrWhiteSpace(skuNumber)) 
-                { 
-                    continue; 
+                if (string.IsNullOrWhiteSpace(skuNumber))
+                {
+                    continue;
+                }
+
+                if (Regex.IsMatch(skuNumber, "-Г$"))
+                {
+                    //Пропускам
+                    continue;
                 }
 
                 if (Regex.IsMatch(skuNumber, @"^(\d){6,}N$"))
@@ -86,6 +91,8 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     skuNumber = skuNumber.Substring(3);
                 }
 
+
+
                 var line = new PriceLine(this)
                 {
                     Name = name,
@@ -95,6 +102,7 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                     Manufacturer = "Weller",
                     //Stock = StockName.SpringE
                 };
+
                 list.Add(line);
             }
 

@@ -1,11 +1,9 @@
 ﻿using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
-using EtkBlazorApp.DataAccess.Entity.PriceList;
 using EtkBlazorApp.DataAccess.Repositories;
 using EtkBlazorApp.DataAccess.Repositories.PriceList;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,8 +18,7 @@ public class PriceListPriceHistoryManager
     private readonly IProductStorage productStorage;
     private readonly IPriceListTemplateStorage priceListRepo;
     private readonly IEtkUpdatesNotifier notifier;
-
-    const int MAX_ITEMS = 500;
+    private const int MAX_ITEMS = 500;
 
     public PriceListPriceHistoryManager(IPriceListUpdateHistoryRepository repo,
         ISettingStorageReader settings,
@@ -50,7 +47,20 @@ public class PriceListPriceHistoryManager
             .ToDictionary(p => p.product_id, p => p.price.Value);
 
         //TODO: проверить, тут может быть ошибка, если загружается несколько прайс-листов за раз
-        string guid = products.GroupBy(p => p.Template).Single().Key.GetType().GetPriceListGuidByType();
+
+        var templateTypes = products.GroupBy(p => p.Template).Select(i => i.Key.GetType().GetPriceListGuidByType()).ToArray();
+        if (templateTypes.Length == 0)
+        {
+            int productsCount = products != null ? products.Count() : 0;
+            throw new ArgumentException($"В товарах ({productsCount}) не указан шаблон");
+        }
+        if (templateTypes.Length > 1)
+        {
+            string templateNames = string.Join(", ", templateTypes);
+            throw new ArgumentOutOfRangeException($"Невозможно загрузить сразу несколько шаблонов прайс-листов: {templateNames ?? "<Пусто>"}");
+        }
+        string guid = templateTypes.Single();
+
 
         // Шаг 1. Берем все вхождения (заголовки)
         var entries = await repo.GetPriceListUpdateEntries(guid);
@@ -99,7 +109,7 @@ public class PriceListPriceHistoryManager
 
     private Dictionary<int, decimal> GetNewLines(Dictionary<int, decimal> currentUpdateData, Dictionary<int, decimal> previuosUpdateData)
     {
-        Dictionary<int, decimal> dic = new Dictionary<int, decimal>();
+        Dictionary<int, decimal> dic = new();
 
         foreach (var kvp in currentUpdateData)
         {

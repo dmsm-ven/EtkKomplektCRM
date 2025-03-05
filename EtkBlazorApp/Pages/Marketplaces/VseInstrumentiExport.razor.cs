@@ -1,8 +1,14 @@
 ﻿using Blazored.Toast.Services;
-using EtkBlazorApp.BL;
-using EtkBlazorApp.Components.Controls;
+using EtkBlazorApp.BL.Data;
+using EtkBlazorApp.BL.Managers;
+using EtkBlazorApp.BL.Managers.ReportFormatters.VseInstrumenti;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Entity;
+using EtkBlazorApp.DataAccess.Entity.Marketplace;
+using EtkBlazorApp.DataAccess.Repositories;
+using EtkBlazorApp.DataAccess.Repositories.Product;
+using EtkBlazorApp.Model;
+using EtkBlazorApp.Model.Product;
 using EtkBlazorApp.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -10,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.Pages.Marketplaces;
@@ -19,72 +26,101 @@ public partial class VseInstrumentiExport : ComponentBase
     [Inject] public IPrikatTemplateStorage templateStorage { get; set; }
     [Inject] public ISettingStorageReader settingsReader { get; set; }
     [Inject] public ISettingStorageWriter settingsWriter { get; set; }
+    [Inject] public IStockStorage stockStorage { get; set; }
     [Inject] public IToastService toasts { get; set; }
     [Inject] public IManufacturerStorage manufacturerStorage { get; set; }
+    [Inject] public CronTaskService cronTaskService { get; set; }
     [Inject] public IJSRuntime js { get; set; }
     [Inject] public UserLogger logger { get; set; }
     [Inject] public ReportManager ReportManager { get; set; }
 
-    List<PrikatManufacturerDiscountViewModel> itemsSource;
-    List<PrikatManufacturerDiscountViewModel> orderedSource => itemsSource.OrderByDescending(t => t.IsChecked).ToList();
+    private List<StockPartnerEntity> allStocks { get; set; }
+    private Dictionary<int, List<StockPartnerEntity>> stocksWithProductsForManufacturer { get; set; } = new();
+    private List<PrikatManufacturerDiscountViewModel> itemsSource = new();
+    private List<ProductDiscountViewModel> discountedProducts = new();
+    private bool inProgress = false;
+    private ManufacturerEntity newManufacturer = new();
+    private ProductDiscountViewModel newDiscountProduct = new();
+    private bool reportButtonDisabled => itemsSource == null || inProgress;
 
-    StocksCheckListBox selectedStocksCheckListBox;
-
-    public bool ShowPriceExample { get; set; } = false;
-    public decimal ExamplePrice { get; set; } = 1000;
-
-    bool reportOptionsHasStock = false;
-    bool reportOptionsHasEan = false;
-    string reportOptionsGln;
-
-    bool uncheckAllState = false;
-    bool showSettingsBox = false;
-
-    bool inProgress = false;
-    bool reportButtonDisabled => itemsSource == null || itemsSource.All(m => m.IsChecked == false);
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        if (firstRender)
+
+        itemsSource = (await templateStorage.GetPrikatTemplates(includeDisabled: false))
+            .Select(t => new PrikatManufacturerDiscountViewModel()
+            {
+                Discount = t.discount,
+                Manufacturer_id = t.manufacturer_id,
+                Manufacturer = t.manufacturer_name,
+                CurrencyCode = t.currency_code ?? "RUB",
+                TemplateId = t.template_id,
+                CheckedStocks = t.checked_stocks
+            })
+            .ToList();
+
+        var stocksSource = await stockStorage.GetManufacturersAvailableStocks();
+        allStocks = await stockStorage.GetStocks();
+
+        stocksWithProductsForManufacturer = stocksSource
+            .ToDictionary(
+                i => i.manufacturer_id,
+                j => allStocks.Where(s => j.stock_ids.Split(",").Contains(s.stock_partner_id.ToString())).ToList());
+
+        foreach (var ei in itemsSource)
         {
-            itemsSource = (await templateStorage.GetPrikatTemplates())
-                    .Select(t => new PrikatManufacturerDiscountViewModel()
+            if (string.IsNullOrWhiteSpace(ei.CheckedStocks))
+            {
+                ei.checked_stocks_list = GetStockListWithProductsForBrand(ei);
+            }
+            else
+            {
+                ei.checked_stocks_list = allStocks
+                    .Where(s => ei.CheckedStocks.Split(",").Select(stockId => int.Parse(stockId)).Contains(s.stock_partner_id))
+                    .Select(i => new StockPartnerEntity()
                     {
-                        IsChecked = t.enabled || (t.discount1 != decimal.Zero || t.discount2 != decimal.Zero),
-                        Discount1 = t.discount1,
-                        Discount2 = t.discount2,
-                        Manufacturer_id = t.manufacturer_id,
-                        Manufacturer = t.manufacturer_name,
-                        CurrencyCode = t.currency_code ?? "RUB",
-                        TemplateId = t.template_id
+                        stock_partner_id = i.stock_partner_id,
+                        name = i.name
                     })
                     .ToList();
-
-            reportOptionsHasStock = await settingsReader.GetValue<bool>("vse_instrumenti_export_options_stock");
-            reportOptionsHasEan = await settingsReader.GetValue<bool>("vse_instrumenti_export_options_ean");
-            reportOptionsGln = await settingsReader.GetValue("vse_instrumenti_gln");
-
-            StateHasChanged();
+            }
         }
+
+
+
+        discountedProducts = (await templateStorage.GetDiscountedProducts())
+    .Select(i => new ProductDiscountViewModel()
+    {
+        Id = i.product_id,
+        Name = i.name,
+        DiscountPercent = i.discount_price ?? 0
+    }).ToList();
+
+        StateHasChanged();
     }
 
     private async Task GetReport()
     {
+        using var cts = new CancellationTokenSource();
+
+        await WaitUntilActiveTaskCompleted(cts.Token);
+
         inProgress = true;
         StateHasChanged();
         string filePath = null;
 
         try
         {
-            filePath = await ReportManager.Prikat.Create(GetSelectedManufacturerIds(), GetReportOptions());
+            var options = await GetReportOptions();
+            filePath = await ReportManager.Prikat.Create(options);
 
             await js.InvokeAsync<object>("saveAsFile", Path.GetFileName(filePath), Convert.ToBase64String(File.ReadAllBytes(filePath)));
-
             await logger.Write(LogEntryGroupName.Prikat, "Создан", "Выгрузка для ВсеИнструменты создана");
+
+            toasts.ShowInfo("Выгрузка создана. Примечание: в выгрузку не попадают товары с [0 ценой] [0 остатком] [без EAN13]");
         }
         catch (Exception ex)
         {
-            await logger.Write(LogEntryGroupName.Prikat, "Ошибка", $"Ошибка создания выгрузки для ВсеИнструменты: {ex.Message}. {ex.StackTrace}");
+            await logger.Write(LogEntryGroupName.Prikat, "Ошибка", $"Ошибка создания выгрузки для ВсеИнструменты: {ex.Message}");
             toasts.ShowError($"Ошибка создания отчета: {ex.Message}");
         }
         finally
@@ -94,43 +130,44 @@ public partial class VseInstrumentiExport : ComponentBase
                 File.Delete(filePath);
             }
             inProgress = false;
+            cts.Cancel();
         }
     }
 
-    private VseInstrumentiReportOptions GetReportOptions()
+    private async Task WaitUntilActiveTaskCompleted(CancellationToken cancelToken)
     {
+        while (cronTaskService.TaskInProgress != null)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(3));
+        }
+        //Запускаем задачу запрещающую выполнение других задач пока выполняет генерация файла
+        cronTaskService.PauseQueueUntilCancellationNotRequested(cancelToken);
+    }
+
+    private async Task<VseInstrumentiReportOptions> GetReportOptions()
+    {
+        var gln = await settingsReader.GetValue("vse_instrumenti_gln");
+
         var options = new VseInstrumentiReportOptions()
         {
-            HasEan = reportOptionsHasEan,
-            StockGreaterThanZero = reportOptionsHasStock,
-            GLN = reportOptionsGln,
-            UsePartnerStock = selectedStocksCheckListBox.CheckedStocks
+            GLN = gln
         };
 
         return options;
     }
 
-    private IEnumerable<int> GetSelectedManufacturerIds()
+    private async Task DeleteClick(PrikatManufacturerDiscountViewModel item)
     {
-        return itemsSource.Where(item => item.IsChecked).Select(item => item.Manufacturer_id);
-    }
-
-    private async Task ExportOptionsChanged()
-    {
-        await settingsWriter.SetValue("vse_instrumenti_export_options_stock", reportOptionsHasStock);
-        await settingsWriter.SetValue("vse_instrumenti_export_options_ean", reportOptionsHasEan);
-    }
-
-    private void HeaderCheckAll(ChangeEventArgs e)
-    {
-        uncheckAllState = !uncheckAllState;
-
-        foreach (var item in itemsSource)
-        {
-            item.IsChecked = uncheckAllState && new[] { item.Discount1, item.Discount2 }.Any(d => d != decimal.Zero);
-        }
-
+        await templateStorage.DisablePrikatTemplate(item.TemplateId);
+        itemsSource.Remove(item);
         StateHasChanged();
+    }
+
+    private async Task AddNewManufacturer()
+    {
+        await templateStorage.AddNewOrRestorePrikatTemplate(newManufacturer.manufacturer_id);
+        StateHasChanged();
+        newManufacturer = new ManufacturerEntity();
     }
 
     private async Task DiscountChanged(PrikatManufacturerDiscountViewModel vmItem)
@@ -138,18 +175,78 @@ public partial class VseInstrumentiExport : ComponentBase
         var dbItem = new PrikatReportTemplateEntity()
         {
             manufacturer_id = vmItem.Manufacturer_id,
-            discount1 = vmItem.Discount1,
-            discount2 = vmItem.Discount2,
-            enabled = vmItem.IsChecked,
+            discount = vmItem.Discount,
             currency_code = vmItem.CurrencyCode ?? "RUB",
-            template_id = vmItem.TemplateId
+            template_id = vmItem.TemplateId,
+            checked_stocks = vmItem.CheckedStocks,
+            enabled = true
         };
 
         await templateStorage.SavePrikatTemplate(dbItem);
+
         vmItem.TemplateId = dbItem.template_id;
 
         StateHasChanged();
     }
 
+    private List<StockPartnerEntity> GetStockListWithProductsForBrand(PrikatManufacturerDiscountViewModel item)
+    {
+        if (stocksWithProductsForManufacturer.TryGetValue(item.Manufacturer_id, out var list))
+        {
+            return list;
+        }
+        return new List<StockPartnerEntity>();
+    }
+
+    // PRODUCT DISCOUNT
+
+    private void SelectedProductChanged(ProductEntity product)
+    {
+        if (product != null)
+        {
+            newDiscountProduct.Id = product.product_id;
+            newDiscountProduct.Name = product.name;
+            StateHasChanged();
+        }
+    }
+
+    private async Task AddDiscountItem()
+    {
+        if (newDiscountProduct == null || newDiscountProduct.Id == 0)
+        {
+            newDiscountProduct = new ProductDiscountViewModel();
+            toasts.ShowInfo("Ошибка добавления товара. ID не найден");
+            StateHasChanged();
+            return;
+        }
+
+        await templateStorage.AddOrUpdateSingleProductDiscount(newDiscountProduct.Id, newDiscountProduct.DiscountPercent);
+        toasts.ShowSuccess($"{newDiscountProduct.Name}. Скидка добавлена");
+
+        var existedItem = discountedProducts.FirstOrDefault(di => di.Id == newDiscountProduct.Id);
+        if (existedItem != null)
+        {
+            existedItem.DiscountPercent = newDiscountProduct.DiscountPercent;
+            await logger.Write(LogEntryGroupName.Prikat, "Обновлена", $"Обновлена скидка {newDiscountProduct.DiscountPercent}% для товара '{newDiscountProduct.Name}'");
+        }
+        else
+        {
+            discountedProducts.Insert(0, newDiscountProduct);
+            await logger.Write(LogEntryGroupName.Prikat, "Добавление", $"Скидка для товара '{newDiscountProduct.Name}' ({newDiscountProduct.DiscountPercent}%)");
+        }
+
+        newDiscountProduct = new ProductDiscountViewModel();
+        newDiscountProduct.PropertyChanged += (o, e) => InvokeAsync(() => StateHasChanged());
+
+        StateHasChanged();
+    }
+
+    private async Task RemoveDiscountItem(ProductDiscountViewModel product)
+    {
+        discountedProducts.Remove(product);
+        await templateStorage.RemoveSingleProductDiscount(product.Id);
+        await logger.Write(LogEntryGroupName.Prikat, "Удаление скидки", $"Скидка для товара '{product.Name}' удалена");
+        StateHasChanged();
+    }
 }
 

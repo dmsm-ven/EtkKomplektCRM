@@ -1,20 +1,26 @@
 using Blazored.Toast;
 using EtkBlazorApp.BL;
+using EtkBlazorApp.BL.Data;
+using EtkBlazorApp.BL.Loggers;
 using EtkBlazorApp.BL.Managers;
+using EtkBlazorApp.BL.Managers.ReportFormatters;
 using EtkBlazorApp.BL.Notifiers;
-using EtkBlazorApp.BL.Templates.PriceListTemplates;
+using EtkBlazorApp.BL.Templates.PriceListTemplates.RemoteFileLoaders;
 using EtkBlazorApp.CdekApi;
 using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.Core.Interfaces;
 using EtkBlazorApp.DataAccess;
 using EtkBlazorApp.DataAccess.Repositories;
 using EtkBlazorApp.DataAccess.Repositories.PriceList;
+using EtkBlazorApp.DataAccess.Repositories.Product;
+using EtkBlazorApp.DataAccess.Repositories.Wildberries;
 using EtkBlazorApp.DellinApi;
 using EtkBlazorApp.Model.Chart;
 using EtkBlazorApp.Model.IOptionProfiles;
 using EtkBlazorApp.Services;
 using EtkBlazorApp.Services.CurrencyChecker;
 using EtkBlazorApp.TelegramBotLib;
+using EtkBlazorApp.WildberriesApi;
 using EtkBlazorAppi.DadataApi;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -24,6 +30,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NLog;
 using System;
 using System.Globalization;
 using System.Net;
@@ -33,6 +40,8 @@ namespace EtkBlazorApp;
 
 public class Startup
 {
+    private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
+
     public IConfiguration Configuration { get; }
 
     public Startup(IConfiguration configuration)
@@ -40,7 +49,7 @@ public class Startup
         Configuration = configuration;
     }
 
-    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime hostApplicationLifetime)
     {
         if (env.IsDevelopment())
         {
@@ -68,15 +77,29 @@ public class Startup
             endpoints.MapControllers();
         });
 
-        app.ApplicationServices.GetService<CronTaskService>();
-        app.ApplicationServices.GetService<NewOrdersNotificationService>().RefreshInterval = TimeSpan.FromSeconds(5);
-
         CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("ru-RU");
+
+        var sysLogger = app.ApplicationServices.GetRequiredService<SystemEventsLogger>();
+
+        hostApplicationLifetime.ApplicationStarted.Register(async () =>
+    {
+        if (env.IsProduction())
+        {
+            app.ApplicationServices.GetRequiredService<CronTaskService>().Start();
+            app.ApplicationServices.GetRequiredService<NewOrdersNotificationService>().Start();
+            app.ApplicationServices.GetRequiredService<EmailPriceListCheckingService>().Start();
+        }
+        await sysLogger.WriteSystemEvent(LogEntryGroupName.Auth, "Запуск", "Запуск приложения личного кабинета");
+    });
+        hostApplicationLifetime.ApplicationStopping.Register(async () =>
+        {
+            await sysLogger.WriteSystemEvent(LogEntryGroupName.Auth, "Остановка", "Остановка приложения личного кабинета");
+        });
+
     }
 
     public void ConfigureServices(IServiceCollection services)
     {
-
 
         //Сторонние
         services.AddBlazoredToast();
@@ -100,7 +123,6 @@ public class Startup
         services.AddTransient<IUserInfoChecker, UserInfoChecker>();
         services.AddTransient<ICompressedFileExtractor, SharpCompressFileExtractor>();
 
-
         ConfigureCorrelators(services);
         ConfigureDatabaseServices(services);
         ConfigureExteralApiClients(services);
@@ -108,6 +130,7 @@ public class Startup
         ConfigureOptions(services);
 
         services.AddSingleton<ICurrencyChecker, CurrencyCheckerCbRf_V2>();
+        services.AddSingleton<EmailAttachmentExtractorInitializer>();
         services.AddSingleton<CashPlusPlusLinkGenerator>();
         services.AddSingleton<RemoteTemplateFileLoaderFactory>();
         services.AddSingleton<SystemEventsLogger>();
@@ -116,12 +139,19 @@ public class Startup
         services.AddSingleton<ProductsPriceAndStockUpdateManager>();
         services.AddSingleton<PriceListManager>();
         services.AddSingleton<CronTaskService>();
+        services.AddSingleton<EmailPriceListCheckingService>();
 
         services.AddTransient<IUserService, BCryptUserService>();
         services.AddScoped<AuthenticationStateProvider, CustomAuthProvider>();
         services.AddScoped<UserLogger>();
+
+        services.AddScoped<VseInstrumentiReportGenerator>();
+        services.AddScoped<EtkKomplektReportGenerator>();
         services.AddScoped<ReportManager>();
         services.AddScoped<ChartDataExtractor>();
+
+        services.AddSingleton<WildberriesUpdateService>();
+        services.AddHostedService<WildberriesUpdateService>();
     }
 
     private void ConfigureOptions(IServiceCollection services)
@@ -129,6 +159,7 @@ public class Startup
         services.Configure<Integration1C_Configuration>(Configuration.GetSection(nameof(Integration1C_Configuration)));
         services.Configure<CurrencyUpdaterEndpointOptions>(Configuration.GetSection(nameof(CurrencyUpdaterEndpointOptions)));
     }
+
     private void ConfigureNotifiers(IServiceCollection services)
     {
         services.AddTransient<ICustomerOrderNotificator, MailkitOrderEmailNotificator>();
@@ -179,11 +210,18 @@ public class Startup
         });
 
         services.AddSingleton<DeliveryServiceApiManager>();
+
+        services.AddHttpClient<WildberriesApiClient>(x =>
+        {
+            x.DefaultRequestHeaders.Add("Accept", "application/json");
+        });
+        services.AddSingleton<WildberriesApiClient>();
     }
 
     private void ConfigureDatabaseServices(IServiceCollection services)
     {
         services.AddTransient<IDatabaseAccess, EtkDatabaseDapperAccess>();
+        services.AddTransient<IWildberriesProductRepository, WildberriesProductRepository>();
         services.AddTransient<IPriceListUpdateHistoryRepository, PriceListUpdateHistoryRepository>();
         services.AddTransient<IPartnersInformationService, PartnersInformationService>();
         services.AddTransient<IProductDiscountStorage, ProductDiscountStorage>();

@@ -2,11 +2,7 @@
 using EtkBlazorApp.DataAccess;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace EtkBlazorApp.BL.Templates.PriceListTemplates
 {
@@ -14,38 +10,47 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
     public class MeanWellSilverPriceListTemplate : ExcelPriceListTemplateBase
     {
         public MeanWellSilverPriceListTemplate(string fileName) : base(fileName) { }
-        const int START_ROW = 3;
+
+        private const int START_ROW = 3;
 
         protected override List<PriceLine> ReadDataFromExcel()
         {
             var list = new List<PriceLine>();
 
             PriceLine previousPriceLine = null;
+
             for (int row = START_ROW; row < tab.Dimension.Rows; row++)
             {
                 string manufacturer = MapManufacturerName(tab.GetValue<string>(row, 1));
-                string skuNumber = tab.GetValue<string>(row, 2);
+                string model = tab.GetValue<string>(row, 2);
 
-                if (string.IsNullOrWhiteSpace(skuNumber) || SkipThisBrand(manufacturer))
+                if (string.IsNullOrWhiteSpace(model) || SkipThisBrand(manufacturer))
                 {
                     continue;
                 }
 
                 int quantityString = tab.GetValue<int>(row, 6);
 
-                if (previousPriceLine != null && previousPriceLine.Sku == skuNumber && previousPriceLine.Manufacturer == manufacturer)
+                if (previousPriceLine != null && previousPriceLine.Sku == model &&
+                    previousPriceLine.Manufacturer == manufacturer)
                 {
                     previousPriceLine.Quantity += quantityString;
                     continue;
                 }
 
-                decimal regularPriceString = tab.GetValue<decimal>(row, 7);
-                decimal discountPriceString = tab.GetValue<decimal>(row, 8);
+                decimal? regularPriceString = ParsePrice(tab.GetValue<string>(row, 7));
+                decimal? discountPriceString = ParsePrice(tab.GetValue<string>(row, 8));
 
                 int? stockNextShipmentQuantity = ParseQuantity(tab.GetValue<string>(row, 9), canBeNull: true);
                 int? stockNextShipmentWeeks = ParseQuantity(tab.GetValue<string>(row, 10), canBeNull: true);
 
-                decimal priceString = new decimal[] { regularPriceString, discountPriceString }.Max();
+                decimal? maxPrice = null;
+                if (regularPriceString.HasValue || discountPriceString.HasValue)
+                {
+                    maxPrice = new decimal?[] { regularPriceString, discountPriceString }
+                    .Where(price => price.HasValue)
+                    .Max();
+                }
 
                 NextStockDelivery productDeliveryInfo = null;
                 if (stockNextShipmentQuantity.HasValue && stockNextShipmentWeeks.HasValue)
@@ -61,11 +66,11 @@ namespace EtkBlazorApp.BL.Templates.PriceListTemplates
                 {
                     Quantity = quantityString,
                     Currency = CurrencyType.USD,
-                    Price = priceString,
+                    Price = maxPrice,
+                    OriginalPrice = maxPrice,
                     Manufacturer = manufacturer,
-                    Sku = skuNumber,
-                    Model = skuNumber,
-                    //Stock = StockName.Eltech,
+                    Sku = model,
+                    Model = model,
                     NextStockDelivery = productDeliveryInfo
                 };
 

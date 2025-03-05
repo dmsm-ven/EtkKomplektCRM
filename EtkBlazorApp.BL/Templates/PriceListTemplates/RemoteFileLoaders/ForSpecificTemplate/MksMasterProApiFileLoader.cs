@@ -2,18 +2,16 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web;
 
-namespace EtkBlazorApp.BL
+namespace EtkBlazorApp.BL.Templates.PriceListTemplates.RemoteFileLoaders
 {
     public class MksMasterProApiFileLoader : IRemoteTemplateFileLoader
     {
-        static readonly int ETK_KOMPLEKT_LK_ID = 598510;
+        private static readonly int ETK_KOMPLEKT_LK_ID = 598510;
         private readonly IPriceListTemplateStorage templateStorage;
         private readonly string guid;
 
