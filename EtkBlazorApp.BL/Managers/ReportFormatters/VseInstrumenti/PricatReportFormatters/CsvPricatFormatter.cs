@@ -6,6 +6,9 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters.VseInstrumenti.PricatReportF
 
 public sealed class CsvPricatFormatter : PricatFormatterBase
 {
+    private static readonly string DEFAULT_LENGTH_UNIT = "миллиметр";
+    private static readonly string DEFAULT_WEIGHT_UNIT = "килограмм";
+
     public override void WriteProductEntry(ProductEntity product, decimal rrcPrice, decimal sellPrice)
     {
         string rrcPriceString = rrcPrice.ToString($"F{CurrentTemplate.Precission}", new CultureInfo("en-EN"));
@@ -33,15 +36,15 @@ public sealed class CsvPricatFormatter : PricatFormatterBase
         WriteCell(); //Вариант названия продукта
         WriteCell(); //Функциональное название
         WriteCell(length); //Глубина
-        WriteCell(LENGTH_UNIT); //Единицы измерения
+        WriteCell(DEFAULT_LENGTH_UNIT); //Единицы измерения
         WriteCell(width); //Ширина
-        WriteCell(LENGTH_UNIT); //Единицы измерения
+        WriteCell(DEFAULT_LENGTH_UNIT); //Единицы измерения
         WriteCell(height); //Высота
-        WriteCell(LENGTH_UNIT); //Единицы измерения
+        WriteCell(DEFAULT_LENGTH_UNIT); //Единицы измерения
         WriteCell(); //Объем
         WriteCell(); //Единицы измерения
         WriteCell(weight); //Вес, брутто
-        WriteCell(WEIGHT_UNIT); //Единицы измерения
+        WriteCell(DEFAULT_WEIGHT_UNIT); //Единицы измерения
         WriteCell(); //Страна производитель
         WriteCell(); //Годен до
         WriteCell(rrcPriceString); //Рекомендованная цена

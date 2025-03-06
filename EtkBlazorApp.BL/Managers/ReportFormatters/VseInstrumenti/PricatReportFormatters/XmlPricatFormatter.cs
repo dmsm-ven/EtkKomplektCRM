@@ -15,7 +15,6 @@ public sealed class XmlPricatFormatter : PricatFormatterBase
     public XmlPricatFormatter()
     {
         numberFormat = new NumberFormatInfo();
-        numberFormat.NumberDecimalDigits = 4;
         numberFormat.NumberDecimalSeparator = ".";
 
         xml = XmlWriter.Create(sb, new XmlWriterSettings() { Indent = true });
@@ -51,13 +50,13 @@ public sealed class XmlPricatFormatter : PricatFormatterBase
         xml.WriteElementString("UOM", UnitCodeDictionary["штук"]);
 
         //Количество штук в упаковке (decimal 10.4)
-        xml.WriteElementString("ItemsPerUnit", 1.ToString(numberFormat));
+        xml.WriteElementString("ItemsPerUnit", 1.ToString("F4", numberFormat));
 
         //Количество  (decimal 10.4)
-        xml.WriteElementString("QTY", product.quantity.ToString(numberFormat));
+        xml.WriteElementString("QTY", product.quantity.ToString("F4", numberFormat));
 
         //Закупочная цена (с ндс) КОНЕЧНАЯ ЗАКУПОЧНАЯ ЦЕНА С УЧЕТОМ ВСЕХ СКИДОК.
-        xml.WriteElementString("Price2", sellPrice.ToString(numberFormat));
+        xml.WriteElementString("Price2", sellPrice.ToString("F4", numberFormat));
 
         //Заполняем дополнительные данные по товару
         WriteProductDetailOptions(product, rrcPrice);
@@ -75,17 +74,17 @@ public sealed class XmlPricatFormatter : PricatFormatterBase
         AppendDocOption("Brand", this.CurrentTemplate.Manufacturer);
 
         //Длина max (15 символов)
-        string length = (product.length != decimal.Zero ? product.length : DEFAULT_DIMENSIONS[0]).ToString(numberFormat);
+        string length = (product.length != decimal.Zero ? product.length : DEFAULT_DIMENSIONS[0]).ToString("F4", numberFormat);
         AppendDocOption("Depth", length);
         AppendDocOption("DepthUnit", UnitCodeDictionary["миллиметр"]);
 
         //Ширина max (15 символов)
-        string width = (product.width != decimal.Zero ? product.width : DEFAULT_DIMENSIONS[1]).ToString(numberFormat);
+        string width = (product.width != decimal.Zero ? product.width : DEFAULT_DIMENSIONS[1]).ToString("F4", numberFormat);
         AppendDocOption("Width", width);
         AppendDocOption("WidthUnit", UnitCodeDictionary["миллиметр"]);
 
         //Высота max (15 символов)
-        string height = (product.height != decimal.Zero ? product.height : DEFAULT_DIMENSIONS[2]).ToString(numberFormat);
+        string height = (product.height != decimal.Zero ? product.height : DEFAULT_DIMENSIONS[2]).ToString("F4", numberFormat);
         AppendDocOption("Height", height);
         AppendDocOption("HeightUnit", UnitCodeDictionary["миллиметр"]);
 
@@ -93,12 +92,12 @@ public sealed class XmlPricatFormatter : PricatFormatterBase
         AppendDocOption("Currency", this.CurrentTemplate.Currency.ToString().ToLower());
 
         //Вес (15 символов)
-        string weight = (product.weight != decimal.Zero ? product.weight : DEFAULT_DIMENSIONS[3]).ToString(numberFormat);
-        AppendDocOption("Weight", height);
+        string weight = (product.weight != decimal.Zero ? product.weight : DEFAULT_DIMENSIONS[3]).ToString("F4", numberFormat);
+        AppendDocOption("Weight", weight);
         AppendDocOption("WeightUnit", UnitCodeDictionary["килограмм"]);
 
         //Рекомендованная цена
-        AppendDocOption("RetailPrice", rrcPrice.ToString(numberFormat));
+        AppendDocOption("RetailPrice", rrcPrice.ToString("F4", numberFormat));
         //Рекомендованная валюта (обязательно указывать строчными («маленькими») буквами)
         AppendDocOption("RetailCurrency", this.CurrentTemplate.Currency.ToString().ToLower());
 

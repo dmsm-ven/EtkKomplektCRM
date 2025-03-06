@@ -12,8 +12,6 @@ public abstract class PricatFormatterBase
 {
     protected static readonly char[] PRODUCT_NAME_INVALID_CHARS = "#%&@*^$<>#!?()[]{}\t\r\n".ToCharArray();
     protected static readonly decimal[] DEFAULT_DIMENSIONS = new decimal[] { 150, 100, 100, 0.4m };
-    protected static readonly string LENGTH_UNIT = "миллиметр";
-    protected static readonly string WEIGHT_UNIT = "килограмм";
     protected PrikatReportTemplateBase CurrentTemplate { get; private set; }
     protected StreamWriter StreamWriter { get; private set; }
     protected DateTime? GenerationDateTime { get; private set; }
@@ -35,6 +33,37 @@ public abstract class PricatFormatterBase
         ["упаковка"] = "NMP",
         ["бобина(бухта)"] = "NBB",
     };
+
+    /// <summary>
+    /// Максимальная длинна 35 символов. Этот код должен был генерироватся автоматически в 1c при создании нового документа
+    /// </summary>
+    /// <returns></returns>
+    public static string GenerateDocumentNumber(DateTime generationDateTime)
+    {
+        return generationDateTime.ToString("yyyyMMddHHmmss");
+    }
+
+    public abstract void WriteProductEntry(ProductEntity product, decimal rrcPrice, decimal sellPrice);
+
+    public virtual void OnDocumentStart(DateTime generationDateTime)
+    {
+        GenerationDateTime = generationDateTime;
+    }
+
+    public virtual void OnDocumentEnd()
+    {
+        StreamWriter.Flush();
+    }
+
+    public void SetStreamWriter(StreamWriter sw)
+    {
+        StreamWriter = sw;
+    }
+
+    public void SetCurrentTemplate(PrikatReportTemplateBase template)
+    {
+        CurrentTemplate = template;
+    }
 
     //TODO: тут проблема с SKU из-за изначально неверного понимания какой SKU должен быть
     //Должен быть уникальный SKU (вида: "ETK-123456") а сейчас тут, в том числе, артикулы от симметрона вида: "00123456"
@@ -70,36 +99,5 @@ public abstract class PricatFormatterBase
         }
 
         return rawName;
-    }
-
-    /// <summary>
-    /// Максимальная длинна 35 символов. Этот код должен был генерироватся автоматически в 1c при создании нового документа
-    /// </summary>
-    /// <returns></returns>
-    public static string GenerateDocumentNumber(DateTime generationDateTime)
-    {
-        return generationDateTime.ToString("yyyyMMdd_HHmmss");
-    }
-
-    public abstract void WriteProductEntry(ProductEntity product, decimal rrcPrice, decimal sellPrice);
-
-    public virtual void OnDocumentStart(DateTime generationDateTime)
-    {
-        GenerationDateTime = generationDateTime;
-    }
-
-    public virtual void OnDocumentEnd()
-    {
-        StreamWriter.Flush();
-    }
-
-    public void SetStreamWriter(StreamWriter sw)
-    {
-        StreamWriter = sw;
-    }
-
-    public void SetCurrentTemplate(PrikatReportTemplateBase template)
-    {
-        CurrentTemplate = template;
     }
 }

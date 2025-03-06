@@ -46,7 +46,6 @@ public partial class VseInstrumentiExport : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-
         itemsSource = (await templateStorage.GetPrikatTemplates(includeDisabled: false))
             .Select(t => new PrikatManufacturerDiscountViewModel()
             {
@@ -86,18 +85,20 @@ public partial class VseInstrumentiExport : ComponentBase
             }
         }
 
-
-
         discountedProducts = (await templateStorage.GetDiscountedProducts())
-    .Select(i => new ProductDiscountViewModel()
-    {
-        Id = i.product_id,
-        Name = i.name,
-        DiscountPercent = i.discount_price ?? 0
-    }).ToList();
+            .Select(i => new ProductDiscountViewModel()
+            {
+                Id = i.product_id,
+                Name = i.name,
+                DiscountPercent = i.discount_price ?? 0
+            })
+            .ToList();
+
+        selectedFormat = await settingsReader.GetValue<PricatFormat>("vse_instrumenti_selected_format");
 
         StateHasChanged();
     }
+
 
     private async Task GetReport()
     {
@@ -116,6 +117,8 @@ public partial class VseInstrumentiExport : ComponentBase
 
             await js.InvokeAsync<object>("saveAsFile", Path.GetFileName(filePath), Convert.ToBase64String(File.ReadAllBytes(filePath)));
             await logger.Write(LogEntryGroupName.Prikat, "Создан", "Выгрузка для ВсеИнструменты создана");
+
+            await settingsWriter.SetValue("vse_instrumenti_selected_format", options.PricatFormat.ToString());
 
             toasts.ShowInfo("Выгрузка создана. Примечание: в выгрузку не попадают товары с [0 ценой] [0 остатком] [без EAN13]");
         }
