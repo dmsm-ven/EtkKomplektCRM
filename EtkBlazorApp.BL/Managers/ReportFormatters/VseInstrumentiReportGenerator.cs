@@ -1,4 +1,5 @@
 ﻿using EtkBlazorApp.BL.Managers.ReportFormatters.VseInstrumenti;
+using EtkBlazorApp.BL.Managers.ReportFormatters.VseInstrumenti.PricatReportFormatters;
 using EtkBlazorApp.BL.Templates.PrikatTemplates;
 using EtkBlazorApp.BL.Templates.PrikatTemplates.Base;
 using EtkBlazorApp.Core.Data;
@@ -53,12 +54,16 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
 
             var templateSource = await templateStorage.GetPrikatTemplates(includeDisabled: false);
 
-            string fileName = Path.GetTempPath() + $"prikat_{DateTime.Now.ToShortDateString().Replace(".", "_")}.csv";
+            //example: pricat_169748872_050325_131738976.xml
+            string extension = options.PricatFormat.ToString().ToLower();
+            string fileName = $"pricat_{DateTime.Now.ToString("yyyyMMdd")}_{DateTime.Now.ToString("HHmmss")}.{extension}";
+            string filePath = Path.GetTempPath() + fileName;
+
             try
             {
-                await FillExportFile(fileName, options, templateSource);
+                await FillExportFile(filePath, options, templateSource);
 
-                nlog.Info("Выгрузка ВИ Pricat создана {fileName}. Длительность генерации файла: {elapsed}", fileName, sw.Elapsed.Humanize());
+                nlog.Info("Выгрузка ВИ Pricat создана {fileName}. Длительность генерации файла: {elapsed}", filePath, sw.Elapsed.Humanize());
             }
             catch (Exception ex)
             {
@@ -66,11 +71,13 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
                 throw;
             }
 
-            return fileName;
+            return filePath;
         }
 
         private async Task FillExportFile(string fileName, VseInstrumentiReportOptions options, List<PrikatReportTemplateEntity> templateSource)
         {
+            var formatter = PricatFormatterFactory.Create(options);
+
             var fi = new FileInfo(fileName);
             nlog.Trace("Начало создания выгрузки ВИ (ПРИКАТ) с именем файла {fileName}", fileName);
 
@@ -79,36 +86,38 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
                 using (var fs = new FileStream(fileName, FileMode.Create))
                 using (var sw = new StreamWriter(fs, Encoding.UTF8))
                 {
+                    formatter.SetStreamWriter(sw);
                     foreach (var data in templateSource)
                     {
-                        await InsertTemplateProductLines(sw, data, options);
+                        await InsertTemplateProductLines(sw, data, options.GLN, formatter);
                     }
                 }
             });
         }
 
-        private async Task InsertTemplateProductLines(StreamWriter sw, PrikatReportTemplateEntity data, VseInstrumentiReportOptions options)
+        private async Task InsertTemplateProductLines(StreamWriter sw, PrikatReportTemplateEntity data, string gln, PricatFormatterBase formatter)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            PrikatReportTemplateBase template = await GetTemplate(data, options.GLN);
+            PrikatReportTemplateBase template = await GetTemplate(data, gln, formatter);
 
             bool shouldFillStockData = template.GetType() != typeof(PrikatDefaultReportTemplate);
 
             List<ProductEntity> products = await PrepareProducts(data, shouldFillStockData);
 
+            formatter.SetCurrentTemplate(template);
             template.WriteProductLines(products, sw);
 
             nlog.Trace("Выгрузка товаров для бренда {brandName} ({productsCount}). Длительность загрузки для этого бренда: {elapsed}",
                 data.manufacturer_name, products.Count, stopwatch.Elapsed.Humanize());
         }
 
-        private async Task<PrikatReportTemplateBase> GetTemplate(PrikatReportTemplateEntity data, string gln)
+        private async Task<PrikatReportTemplateBase> GetTemplate(PrikatReportTemplateEntity data, string gln, PricatFormatterBase formatter)
         {
             var currency = Enum.Parse<CurrencyType>(data.currency_code);
             decimal currentCurrencyRate = await currencyChecker.GetCurrencyRate(currency);
 
-            PrikatReportTemplateBase template = PrikatReportTemplateFactory.Create(data.manufacturer_name, currency);
+            PrikatReportTemplateBase template = PrikatReportTemplateFactory.Create(data.manufacturer_name, currency, formatter);
 
             template.Discount = data.discount;
             template.CurrencyRatio = currentCurrencyRate;

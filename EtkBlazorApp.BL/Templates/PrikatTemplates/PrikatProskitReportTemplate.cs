@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.BL.Templates.PrikatTemplates.Base;
+﻿using EtkBlazorApp.BL.Managers.ReportFormatters.VseInstrumenti.PricatReportFormatters;
+using EtkBlazorApp.BL.Templates.PrikatTemplates.Base;
 using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.DataAccess.Entity;
 using System;
@@ -13,7 +14,8 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates
     {
         private readonly int SYMMETRON_STOCK_ID = 4;
 
-        public PrikatProskitReportTemplate(string manufacturer, CurrencyType currency) : base(manufacturer, currency) { }
+        public PrikatProskitReportTemplate(string manufacturer, CurrencyType currency, PricatFormatterBase formatter)
+            : base(manufacturer, currency, formatter) { }
 
         protected override async void WriteProductLine(ProductEntity product, StreamWriter sw)
         {
@@ -29,7 +31,7 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates
             decimal purchasePrice = Math.Round(priceInCurrency * (100m + GetCustomDiscountOrDefaultForProductId(product.product_id)) / 100m, Precission);
 
             // Для Proskit исключение, у него закупочная цена специально сделана всегда = 0
-            WriteLineData(product, 0m, purchasePrice, sw);
+            formatter.WriteProductEntry(product, 0m, purchasePrice);
         }
     }
 }
