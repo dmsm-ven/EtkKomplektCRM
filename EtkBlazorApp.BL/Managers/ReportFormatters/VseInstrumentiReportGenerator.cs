@@ -62,7 +62,7 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
 
             try
             {
-                await FillExportFile(filePath, options, templateSource, generationDateTime);
+                await StartExportFileAsync(filePath, options, templateSource, generationDateTime);
 
                 nlog.Info("Выгрузка ВИ Pricat создана {fileName}. Длительность генерации файла: {elapsed}", filePath, sw.Elapsed.Humanize());
             }
@@ -75,48 +75,45 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
             return filePath;
         }
 
-        private async Task FillExportFile(string fileName,
+        private async Task StartExportFileAsync(string fileName,
             VseInstrumentiReportOptions options,
             List<PrikatReportTemplateEntity> templateSource,
             DateTime generationDateTime)
         {
             var formatter = PricatFormatterFactory.Create(options);
 
-            var fi = new FileInfo(fileName);
-            nlog.Trace("Начало создания выгрузки ВИ (ПРИКАТ) с именем файла {fileName}", fileName);
-
-            await Task.Run(async () =>
+            using (var fs = new FileStream(fileName, FileMode.Create))
+            using (var sw = new StreamWriter(fs, Encoding.UTF8))
             {
-                using (var fs = new FileStream(fileName, FileMode.Create))
-                using (var sw = new StreamWriter(fs, Encoding.UTF8))
+                foreach (var data in templateSource)
                 {
-                    formatter.SetStreamWriter(sw);
-                    foreach (var data in templateSource)
+                    PrikatReportTemplateBase template = await GetTemplate(data, options);
+                    formatter.SetCurrentTemplate(template);
+
+                    if (data == templateSource.First())
                     {
-                        await InsertTemplateProductLines(data, formatter, options, generationDateTime);
+                        formatter.SetStreamWriter(sw);
+                        formatter.OnDocumentStart(generationDateTime);
                     }
+
+                    await InsertTemplateProductLines(data, template, formatter);
                 }
-            });
+                formatter.OnDocumentEnd();
+                sw.Flush();
+            }
         }
 
         private async Task InsertTemplateProductLines(PrikatReportTemplateEntity data,
-            PricatFormatterBase formatter,
-            VseInstrumentiReportOptions options,
-            DateTime generationDateTime)
+            PrikatReportTemplateBase template,
+            PricatFormatterBase formatter)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
-
-            PrikatReportTemplateBase template = await GetTemplate(data, options);
 
             bool shouldFillStockData = template.GetType() != typeof(PrikatDefaultReportTemplate);
 
             List<ProductEntity> products = await PrepareProducts(data, shouldFillStockData);
 
-            formatter.SetCurrentTemplate(template);
-            formatter.OnDocumentStart(generationDateTime);
             template.WriteProductLines(products, formatter);
-            formatter.OnDocumentEnd();
-            formatter.SetCurrentTemplate(null);
 
             nlog.Trace("Выгрузка товаров для бренда {brandName} ({productsCount}). Длительность загрузки для этого бренда: {elapsed}",
                 data.manufacturer_name, products.Count, stopwatch.Elapsed.Humanize());

@@ -17,7 +17,7 @@ public sealed class XmlPricatFormatter : PricatFormatterBase
         numberFormat = new NumberFormatInfo();
         numberFormat.NumberDecimalSeparator = ".";
 
-        xml = XmlWriter.Create(sb, new XmlWriterSettings() { Indent = true });
+        xml = XmlWriter.Create(sb, new XmlWriterSettings() { Indent = true, ConformanceLevel = ConformanceLevel.Document });
     }
 
     public override void OnDocumentStart(DateTime generationDateTime)
@@ -25,8 +25,8 @@ public sealed class XmlPricatFormatter : PricatFormatterBase
         xml.WriteStartElement("Document");
 
         xml.WriteElementString("DocType", "PRICAT");
-        xml.WriteElementString("SenderGLN", this.CurrentTemplate.Options.GLN_ETK);
-        xml.WriteElementString("ReceiverGLN", this.CurrentTemplate.Options.GLN_VI);
+        xml.WriteElementString("SenderGln", this.CurrentTemplate.Options.GLN_ETK);
+        xml.WriteElementString("ReceiverGln", this.CurrentTemplate.Options.GLN_VI);
         xml.WriteElementString("Currency", "RUB");
         xml.WriteElementString("DocumentNumber", PricatFormatterBase.GenerateDocumentNumber(generationDateTime));
         xml.WriteElementString("DocumentDate", generationDateTime.ToString("yyyyMMdd"));
@@ -41,10 +41,11 @@ public sealed class XmlPricatFormatter : PricatFormatterBase
         xml.WriteElementString("EAN", product.ean);
 
         //Код товара в УС отправителя (max 35)
-        xml.WriteElementString("SenderPrdCode", this.GetSku(product));
+        string sku = this.GetSku(product);
+        xml.WriteElementString("SenderPrdCode", sku);
 
         // Название товара (max 170, желательно не более 100)
-        xml.WriteElementString("ProductName", this.ClearProductName(product.name));
+        xml.WriteElementString("ProductName", RemoveInvalidChars(product.name));
 
         //Единица измерения
         xml.WriteElementString("UOM", UnitCodeDictionary["штук"]);
@@ -117,9 +118,11 @@ public sealed class XmlPricatFormatter : PricatFormatterBase
     {
         // Document END
         xml.WriteEndElement();
-
         xml.Flush();
-        StreamWriter.Write(sb.ToString());
-        base.OnDocumentEnd();
+
+        var xmlMarkup = sb.ToString();
+        xml.Dispose();
+
+        StreamWriter.Write(xmlMarkup);
     }
 }

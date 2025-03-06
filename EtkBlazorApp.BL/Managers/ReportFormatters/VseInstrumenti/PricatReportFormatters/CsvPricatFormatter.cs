@@ -19,7 +19,7 @@ public sealed class CsvPricatFormatter : PricatFormatterBase
         string height = (product.height != decimal.Zero ? product.height : DEFAULT_DIMENSIONS[2]).ToString("F4", new CultureInfo("en-EN"));
         string weight = (product.weight != decimal.Zero ? product.weight : DEFAULT_DIMENSIONS[3]).ToString("F4", new CultureInfo("en-EN"));
 
-        string productName = ClearProductName(product.name);
+        string productName = RemoveInvalidChars(product.name);
         string sku = GetSku(product);
 
         WriteCell(CurrentTemplate.Options.GLN_ETK);   //GLN поставщика

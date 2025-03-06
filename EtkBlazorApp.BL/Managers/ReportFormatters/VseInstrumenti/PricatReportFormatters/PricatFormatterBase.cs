@@ -10,11 +10,12 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters.VseInstrumenti.PricatReportF
 
 public abstract class PricatFormatterBase
 {
-    protected static readonly char[] PRODUCT_NAME_INVALID_CHARS = "#%&@*^$<>#!?()[]{}\t\r\n".ToCharArray();
+    protected static readonly char[] PRODUCT_NAME_INVALID_CHARS =
+        ("#%&@*^$<>#!?()[]{}\t\r\n".ToList().Concat(Path.GetInvalidFileNameChars())).ToArray();
+
     protected static readonly decimal[] DEFAULT_DIMENSIONS = new decimal[] { 150, 100, 100, 0.4m };
     protected PrikatReportTemplateBase CurrentTemplate { get; private set; }
     protected StreamWriter StreamWriter { get; private set; }
-    protected DateTime? GenerationDateTime { get; private set; }
     protected readonly IReadOnlyDictionary<string, string> UnitCodeDictionary = new Dictionary<string, string>()
     {
         ["грамм"] = "GRM",
@@ -45,15 +46,9 @@ public abstract class PricatFormatterBase
 
     public abstract void WriteProductEntry(ProductEntity product, decimal rrcPrice, decimal sellPrice);
 
-    public virtual void OnDocumentStart(DateTime generationDateTime)
-    {
-        GenerationDateTime = generationDateTime;
-    }
+    public virtual void OnDocumentStart(DateTime generationDateTime) { }
 
-    public virtual void OnDocumentEnd()
-    {
-        StreamWriter.Flush();
-    }
+    public virtual void OnDocumentEnd() { }
 
     public void SetStreamWriter(StreamWriter sw)
     {
@@ -79,25 +74,25 @@ public abstract class PricatFormatterBase
 
     //Не использовать символы (),{},[] ЗНАКИ ТАБУЛЯЦИИ И ДРУГИЕ: #,%,&,@,*,^,$,< >,#,!,?) и длина строки желательно не больше 100 символов
     //(из спецификации Формат "CISLINK XML  File Client FTP WEBService_[Все инструменты]_[v.5.2.8].docx")
-    protected string ClearProductName(string rawName)
+    protected string RemoveInvalidChars(string rawString)
     {
-        if (rawName.Any(ch => PRODUCT_NAME_INVALID_CHARS.Contains(ch)))
+        if (rawString.Any(ch => PRODUCT_NAME_INVALID_CHARS.Contains(ch)))
         {
-            string clearName = rawName;
+            string clearString = rawString;
 
             foreach (var invalidChar in PRODUCT_NAME_INVALID_CHARS)
             {
-                if (clearName.Contains(invalidChar))
+                if (clearString.Contains(invalidChar))
                 {
-                    clearName = clearName.Replace(invalidChar.ToString(), string.Empty);
+                    clearString = clearString.Replace(invalidChar.ToString(), string.Empty);
                 }
             }
 
-            clearName = Regex.Replace(clearName, " {2, }", " ").Trim();
+            clearString = Regex.Replace(clearString, " {2, }", " ").Trim();
 
-            return clearName;
+            return clearString;
         }
 
-        return rawName;
+        return rawString;
     }
 }
