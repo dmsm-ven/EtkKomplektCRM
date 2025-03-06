@@ -89,44 +89,43 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
                     formatter.SetStreamWriter(sw);
                     foreach (var data in templateSource)
                     {
-                        await InsertTemplateProductLines(sw, data, options.GLN, formatter);
+                        await InsertTemplateProductLines(data, formatter, options);
                     }
                 }
             });
         }
 
-        private async Task InsertTemplateProductLines(StreamWriter sw, PrikatReportTemplateEntity data, string gln, PricatFormatterBase formatter)
+        private async Task InsertTemplateProductLines(PrikatReportTemplateEntity data, PricatFormatterBase formatter, VseInstrumentiReportOptions options)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            PrikatReportTemplateBase template = await GetTemplate(data, gln, formatter);
+            PrikatReportTemplateBase template = await GetTemplate(data, options);
 
             bool shouldFillStockData = template.GetType() != typeof(PrikatDefaultReportTemplate);
 
             List<ProductEntity> products = await PrepareProducts(data, shouldFillStockData);
 
             formatter.SetCurrentTemplate(template);
-            template.WriteProductLines(products, sw);
+            formatter.OnDocumentStart();
+            template.WriteProductLines(products, formatter);
+            formatter.OnDocumentEnd();
+            formatter.SetCurrentTemplate(null);
 
             nlog.Trace("Выгрузка товаров для бренда {brandName} ({productsCount}). Длительность загрузки для этого бренда: {elapsed}",
                 data.manufacturer_name, products.Count, stopwatch.Elapsed.Humanize());
         }
 
-        private async Task<PrikatReportTemplateBase> GetTemplate(PrikatReportTemplateEntity data, string gln, PricatFormatterBase formatter)
+        private async Task<PrikatReportTemplateBase> GetTemplate(PrikatReportTemplateEntity data, VseInstrumentiReportOptions options)
         {
             var currency = Enum.Parse<CurrencyType>(data.currency_code);
             decimal currentCurrencyRate = await currencyChecker.GetCurrencyRate(currency);
 
-            PrikatReportTemplateBase template = PrikatReportTemplateFactory.Create(data.manufacturer_name, currency, formatter);
-
-            template.Discount = data.discount;
-            template.CurrencyRatio = currentCurrencyRate;
-            template.GLN = gln;
+            PrikatReportTemplateBase template = PrikatReportTemplateFactory.Create(data.manufacturer_name, currency, data.discount, currentCurrencyRate, options);
 
             var discountedProducts = await templateStorage.GetDiscountedProducts();
             if (discountedProducts != null && discountedProducts.Count > 0)
             {
-                template.ProductIdToDiscount = discountedProducts.ToDictionary(i => i.product_id, i => i.discount_price.Value);
+                template.AddDiscountMapItems(discountedProducts.Select(i => new KeyValuePair<int, decimal>(i.product_id, i.discount_price.Value)));
             }
 
             return template;

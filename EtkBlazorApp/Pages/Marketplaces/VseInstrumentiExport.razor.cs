@@ -42,6 +42,7 @@ public partial class VseInstrumentiExport : ComponentBase
     private ManufacturerEntity newManufacturer = new();
     private ProductDiscountViewModel newDiscountProduct = new();
     private bool reportButtonDisabled => itemsSource == null || inProgress;
+    private PricatFormat selectedFormat = PricatFormat.Csv;
 
     protected override async Task OnInitializedAsync()
     {
@@ -146,11 +147,14 @@ public partial class VseInstrumentiExport : ComponentBase
 
     private async Task<VseInstrumentiReportOptions> GetReportOptions()
     {
-        var gln = await settingsReader.GetValue("vse_instrumenti_gln");
+        var gln_etk = await settingsReader.GetValue("vse_instrumenti_gln_etk");
+        var gln_vi = await settingsReader.GetValue("vse_instrumenti_gln_vi");
 
         var options = new VseInstrumentiReportOptions()
         {
-            GLN = gln
+            GLN_ETK = gln_etk,
+            GLN_VI = gln_vi,
+            PricatFormat = selectedFormat
         };
 
         return options;

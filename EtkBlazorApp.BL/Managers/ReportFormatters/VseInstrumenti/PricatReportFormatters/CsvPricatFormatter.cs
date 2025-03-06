@@ -19,45 +19,45 @@ public sealed class CsvPricatFormatter : PricatFormatterBase
         string productName = ClearProductName(product.name);
         string sku = GetSku(product);
 
-        WriteCell(StreamWriter, CurrentTemplate.GLN);   //GLN поставщика
-        WriteCell(StreamWriter); //Позиция
-        WriteCell(StreamWriter, product.ean); //Штрихкод
-        WriteCell(StreamWriter); //Артикул товара покупателя
-        WriteCell(StreamWriter, sku); //Артикул товара поставщика 
-        WriteCell(StreamWriter, productName); //Наименование
-        WriteCell(StreamWriter, "1"); //Кол-во
-        WriteCell(StreamWriter, "шт."); //Единицы измерения
-        WriteCell(StreamWriter); //Товарная группа
-        WriteCell(StreamWriter, CurrentTemplate.Manufacturer); //Бренд
-        WriteCell(StreamWriter); //Суббренд
-        WriteCell(StreamWriter); //Вариант названия продукта
-        WriteCell(StreamWriter); //Функциональное название
-        WriteCell(StreamWriter, length); //Глубина
-        WriteCell(StreamWriter, LENGTH_UNIT); //Единицы измерения
-        WriteCell(StreamWriter, width); //Ширина
-        WriteCell(StreamWriter, LENGTH_UNIT); //Единицы измерения
-        WriteCell(StreamWriter, height); //Высота
-        WriteCell(StreamWriter, LENGTH_UNIT); //Единицы измерения
-        WriteCell(StreamWriter); //Объем
-        WriteCell(StreamWriter); //Единицы измерения
-        WriteCell(StreamWriter, weight); //Вес, брутто
-        WriteCell(StreamWriter, WEIGHT_UNIT); //Единицы измерения
-        WriteCell(StreamWriter); //Страна производитель
-        WriteCell(StreamWriter); //Годен до
-        WriteCell(StreamWriter, rrcPriceString); //Рекомендованная цена
-        WriteCell(StreamWriter, sellPriceString); //Закупочная цена
-        WriteCell(StreamWriter, product.quantity.ToString()); //Количество остатков на скаладе
-        WriteCell(StreamWriter, CurrentTemplate.Currency.ToString().ToLower()); //Рекомендованная валюта
-        WriteCell(StreamWriter, CurrentTemplate.Currency.ToString().ToLower()); //Закупчная валюта
+        WriteCell(CurrentTemplate.Options.GLN_ETK);   //GLN поставщика
+        WriteCell(); //Позиция
+        WriteCell(product.ean); //Штрихкод
+        WriteCell(); //Артикул товара покупателя
+        WriteCell(sku); //Артикул товара поставщика 
+        WriteCell(productName); //Наименование
+        WriteCell("1"); //Кол-во
+        WriteCell("шт."); //Единицы измерения
+        WriteCell(); //Товарная группа
+        WriteCell(CurrentTemplate.Manufacturer); //Бренд
+        WriteCell(); //Суббренд
+        WriteCell(); //Вариант названия продукта
+        WriteCell(); //Функциональное название
+        WriteCell(length); //Глубина
+        WriteCell(LENGTH_UNIT); //Единицы измерения
+        WriteCell(width); //Ширина
+        WriteCell(LENGTH_UNIT); //Единицы измерения
+        WriteCell(height); //Высота
+        WriteCell(LENGTH_UNIT); //Единицы измерения
+        WriteCell(); //Объем
+        WriteCell(); //Единицы измерения
+        WriteCell(weight); //Вес, брутто
+        WriteCell(WEIGHT_UNIT); //Единицы измерения
+        WriteCell(); //Страна производитель
+        WriteCell(); //Годен до
+        WriteCell(rrcPriceString); //Рекомендованная цена
+        WriteCell(sellPriceString); //Закупочная цена
+        WriteCell(product.quantity.ToString()); //Количество остатков на скаладе
+        WriteCell(CurrentTemplate.Currency.ToString().ToLower()); //Рекомендованная валюта
+        WriteCell(CurrentTemplate.Currency.ToString().ToLower()); //Закупчная валюта
         StreamWriter.WriteLine();
     }
 
-    private void WriteCell(StreamWriter sw, string value = null)
+    private void WriteCell(string value = null)
     {
         if (!string.IsNullOrWhiteSpace(value))
         {
-            sw.Write(value.Replace(";", " ")?.Trim());
+            StreamWriter.Write(value.Replace(";", " ")?.Trim());
         }
-        sw.Write(";");
+        StreamWriter.Write(";");
     }
 }

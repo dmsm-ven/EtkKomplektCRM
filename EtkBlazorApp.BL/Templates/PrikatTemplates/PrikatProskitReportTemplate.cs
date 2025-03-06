@@ -3,7 +3,6 @@ using EtkBlazorApp.BL.Templates.PrikatTemplates.Base;
 using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.DataAccess.Entity;
 using System;
-using System.IO;
 using System.Linq;
 
 namespace EtkBlazorApp.BL.Templates.PrikatTemplates
@@ -14,10 +13,10 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates
     {
         private readonly int SYMMETRON_STOCK_ID = 4;
 
-        public PrikatProskitReportTemplate(string manufacturer, CurrencyType currency, PricatFormatterBase formatter)
-            : base(manufacturer, currency, formatter) { }
+        public PrikatProskitReportTemplate(string manufacturer, CurrencyType currency, decimal discount, decimal currentCurrencyRate, Managers.ReportFormatters.VseInstrumenti.VseInstrumentiReportOptions options)
+            : base(manufacturer, currency, discount, currentCurrencyRate, options) { }
 
-        protected override async void WriteProductLine(ProductEntity product, StreamWriter sw)
+        protected override async void WriteProductLine(ProductEntity product, PricatFormatterBase formatter)
         {
             decimal priceInCurrency = product.stock_data == null ? 0 :
                 product.stock_data.FirstOrDefault(s => s.stock_partner_id == SYMMETRON_STOCK_ID)?.original_price ?? 0;

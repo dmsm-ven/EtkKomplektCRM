@@ -13,8 +13,12 @@
 	<div class="marketplace-tab-group">
 		<h3>ВсеИнструменты</h3>
 		<div class="form-group">
-			<label for="gln">GLN поставщика</label>
-			<input type="text" class="form-control" id="gln" @bind="vse_instrumenty_gln">
+			<label for="gln_etk">GLN поставщика (ЕТК)</label>
+			<input type="text" class="form-control" id="gln_etk" @bind="vse_instrumenty_gln_etk">
+		</div>
+		<div class="form-group">
+			<label for="gln_vi">GLN поставщика (ВИ)</label>
+			<input type="text" class="form-control" id="gln_vi" @bind="vse_instrumenty_gln_vi">
 		</div>
 	</div>
 
@@ -121,7 +125,8 @@
 	[Inject] public IToastService toastService { get; set; }
 	[CascadingParameter] public SettingsTabData tabData { get; set; }
 
-	private string vse_instrumenty_gln = string.Empty;
+	private string vse_instrumenty_gln_etk = string.Empty;
+	private string vse_instrumenty_gln_vi = string.Empty;
 	private string wildberries_secure_token = string.Empty;
 
 	private readonly List<MarketplaceStepDiscountModel> priceSteps = new();
@@ -134,7 +139,8 @@
 
 	protected override async Task OnInitializedAsync()
 	{
-		vse_instrumenty_gln = await settingsReader.GetValue<string>("vse_instrumenti_gln");
+		vse_instrumenty_gln_etk = await settingsReader.GetValue<string>("vse_instrumenti_gln_etk");
+		vse_instrumenty_gln_vi = await settingsReader.GetValue<string>("vse_instrumenti_gln_vi");
 		wildberries_secure_token = await settingsReader.GetValue<string>("wildberries_api_token");
 
 		var dbPriceSteps = await marketplaceExportSettings.GetAllStepDiscounts();
@@ -146,12 +152,13 @@
 
 		tabData.SaveButtonClicked = new Action(async () =>
 		{
-			await settingsWriter.SetValue("vse_instrumenti_gln", vse_instrumenty_gln);
+			await settingsWriter.SetValue("vse_instrumenti_gln_etk", vse_instrumenty_gln_etk);
+			await settingsWriter.SetValue("vse_instrumenti_gln_vi", vse_instrumenty_gln_vi);
 			await settingsWriter.SetValue("wildberries_api_token", wildberries_secure_token);
-			// скидки на маркетплейсы удаляются напрямую, кнопку 'сохранить' нажимать не надо
 		});
 	}
 
+	// скидки на маркетплейсы удаляются напрямую, кнопку 'сохранить' нажимать не надо
 	private async Task AddDiscountStep()
 	{
 		priceSteps.Add(newPriceStep);

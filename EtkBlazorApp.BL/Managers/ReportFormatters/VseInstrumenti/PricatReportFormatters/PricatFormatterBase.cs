@@ -54,6 +54,15 @@ public abstract class PricatFormatterBase
 
     public abstract void WriteProductEntry(ProductEntity product, decimal rrcPrice, decimal sellPrice);
 
+    public virtual void OnDocumentStart()
+    {
+
+    }
+    public virtual void OnDocumentEnd()
+    {
+        StreamWriter.Flush();
+    }
+
     public void SetStreamWriter(StreamWriter sw)
     {
         StreamWriter = sw;

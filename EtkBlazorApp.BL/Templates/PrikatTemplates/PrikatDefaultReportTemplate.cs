@@ -1,4 +1,4 @@
-﻿using EtkBlazorApp.BL.Managers.ReportFormatters.VseInstrumenti.PricatReportFormatters;
+﻿using EtkBlazorApp.BL.Managers.ReportFormatters.VseInstrumenti;
 using EtkBlazorApp.BL.Templates.PrikatTemplates.Base;
 using EtkBlazorApp.Core.Data;
 
@@ -6,19 +6,7 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates
 {
     public class PrikatDefaultReportTemplate : PrikatReportTemplateBase
     {
-        public PrikatDefaultReportTemplate(string manufacturer, CurrencyType currency, PricatFormatterBase formatter)
-            : base(manufacturer, currency, formatter) { }
-    }
-
-    public static class PrikatReportTemplateFactory
-    {
-        public static PrikatReportTemplateBase Create(string manufacturerName, CurrencyType currency, PricatFormatterBase formatter)
-        {
-            if (manufacturerName.Equals("Pro'sKit"))
-            {
-                return new PrikatProskitReportTemplate(manufacturerName, currency, formatter);
-            }
-            return new PrikatDefaultReportTemplate(manufacturerName, currency, formatter);
-        }
+        public PrikatDefaultReportTemplate(string manufacturer, CurrencyType currency, decimal discount, decimal currentCurrencyRate, VseInstrumentiReportOptions options)
+            : base(manufacturer, currency, discount, currentCurrencyRate, options) { }
     }
 }

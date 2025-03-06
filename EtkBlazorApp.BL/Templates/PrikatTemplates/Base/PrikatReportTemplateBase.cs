@@ -1,33 +1,48 @@
+using EtkBlazorApp.BL.Managers.ReportFormatters.VseInstrumenti;
 using EtkBlazorApp.BL.Managers.ReportFormatters.VseInstrumenti.PricatReportFormatters;
 using EtkBlazorApp.Core.Data;
 using EtkBlazorApp.DataAccess.Entity;
 using NLog;
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace EtkBlazorApp.BL.Templates.PrikatTemplates.Base
 {
     public abstract class PrikatReportTemplateBase
     {
         private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
-        protected readonly PricatFormatterBase formatter;
 
-        public decimal CurrencyRatio { get; set; }
-        public decimal Discount { get; set; }
-        public string GLN { get; set; }
-        public Dictionary<int, decimal> ProductIdToDiscount { get; set; } = new();
+        public decimal CurrencyRatio { get; }
+        public decimal Discount { get; }
+        public VseInstrumentiReportOptions Options { get; }
         public int Precission { get; }
         public string Manufacturer { get; }
         public CurrencyType Currency { get; }
 
-        public PrikatReportTemplateBase(string manufacturer, CurrencyType currency, PricatFormatterBase formatter)
-        {
-            Manufacturer = manufacturer;
-            Currency = currency;
-            Precission = Currency == CurrencyType.RUB ? 0 : 2;
+        private readonly Dictionary<int, decimal> productIdToDiscount = new();
+        protected IReadOnlyDictionary<int, decimal> ProductIdToDiscount => productIdToDiscount;
 
-            this.formatter = formatter;
+        public PrikatReportTemplateBase(string manufacturer,
+            CurrencyType currency,
+            decimal discount,
+            decimal currentCurrencyRate,
+            VseInstrumentiReportOptions options)
+        {
+            this.Manufacturer = manufacturer;
+            this.Currency = currency;
+            this.Precission = Currency == CurrencyType.RUB ? 0 : 2;
+            this.Discount = discount;
+            this.CurrencyRatio = currentCurrencyRate;
+            this.Options = options;
+        }
+
+        public void AddDiscountMapItems(IEnumerable<KeyValuePair<int, decimal>> items)
+        {
+            productIdToDiscount.Clear();
+            foreach (var item in items)
+            {
+                productIdToDiscount[item.Key] = item.Value;
+            }
         }
 
         protected decimal GetCustomDiscountOrDefaultForProductId(int product_id)
@@ -39,15 +54,15 @@ namespace EtkBlazorApp.BL.Templates.PrikatTemplates.Base
             return Discount;
         }
 
-        public void WriteProductLines(IEnumerable<ProductEntity> products, StreamWriter sw)
+        public void WriteProductLines(IEnumerable<ProductEntity> products, PricatFormatterBase formatter)
         {
             foreach (var product in products)
             {
-                WriteProductLine(product, sw);
+                WriteProductLine(product, formatter);
             }
         }
 
-        protected virtual void WriteProductLine(ProductEntity product, StreamWriter sw)
+        protected virtual void WriteProductLine(ProductEntity product, PricatFormatterBase formatter)
         {
             decimal sellPrice = (int)product.price;
             if (Currency != CurrencyType.RUB)

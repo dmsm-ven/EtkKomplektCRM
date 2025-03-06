@@ -1,10 +1,10 @@
 ﻿@page "/vse-instrumenti-export"
+@using EtkBlazorApp.BL.Managers.ReportFormatters.VseInstrumenti
 @attribute [Authorize(Roles = "Administrator, Manager")]
 
 
-<img style="height: 100px; margin: 0px auto 40px auto; display: block;"
-     src="image/logotips/vse-instrumenti-logo-big.jpg"
-     class="img-fluid" />
+<img src="image/logotips/vse-instrumenti-logo-big.jpg"
+     class="img-fluid vi-banner" />
 
 <div class="container">
     @if (inProgress)
@@ -14,11 +14,20 @@
     else
     {
         <div class="row my-3">
-            <div class="offset-md-9 col-md-3 offset-sm-6 col-sm-6">
-                <button type="button" class="btn btn-primary w-100 h-100" @onclick="GetReport" disabled="@reportButtonDisabled">
+            <div class="offset-md-8 col-md-4 offset-sm-6 col-sm-6 generate-report-panel">
+                <button type="button" class="btn btn-primary" style="white-space: nowrap;" @onclick="GetReport" disabled="@reportButtonDisabled">
                     <span class="oi oi-spreadsheet px-1"></span>
                     Скачать выгрузку
                 </button>
+
+                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                    <button class="btn @(selectedFormat == PricatFormat.Csv ? "btn-primary active" : "btn-outline-primary")" @onclick="@(e => selectedFormat = PricatFormat.Csv)" disabled="@reportButtonDisabled">
+                        <img src="/image/file-extensions/csv.svg" />
+                    </button>
+                    <button class="btn @(selectedFormat == PricatFormat.Xml ? "btn-primary active" : "btn-outline-primary")" @onclick="@(e => selectedFormat = PricatFormat.Xml)" disabled="@reportButtonDisabled">
+                        <img src="/image/file-extensions/xml.svg" />
+                    </button>
+                </div>
             </div>
         </div>
     }
@@ -117,3 +126,22 @@
         </div>
     </div>
 </div>
+
+<style>
+    .generate-report-panel {
+        display: flex;
+        justify-content: end;
+        gap: 12px;
+    }
+
+        .generate-report-panel img {
+            width: 32px;
+            height: 32px;
+        }
+    .vi-banner {
+        height: 100px;
+        margin: 0px auto 40px auto;
+        display: block;
+    }
+
+</style>
