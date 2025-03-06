@@ -54,14 +54,15 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
 
             var templateSource = await templateStorage.GetPrikatTemplates(includeDisabled: false);
 
-            //example: pricat_169748872_050325_131738976.xml
+            DateTime generationDateTime = DateTime.Now;
             string extension = options.PricatFormat.ToString().ToLower();
-            string fileName = $"pricat_{DateTime.Now.ToString("yyyyMMdd")}_{DateTime.Now.ToString("HHmmss")}.{extension}";
+            string document_id = PricatFormatterBase.GenerateDocumentNumber(generationDateTime);
+            string fileName = $"pricat_{document_id}_{DateTime.Now.ToString("yyyyMMdd")}.{extension}";
             string filePath = Path.GetTempPath() + fileName;
 
             try
             {
-                await FillExportFile(filePath, options, templateSource);
+                await FillExportFile(filePath, options, templateSource, generationDateTime);
 
                 nlog.Info("Выгрузка ВИ Pricat создана {fileName}. Длительность генерации файла: {elapsed}", filePath, sw.Elapsed.Humanize());
             }
@@ -74,7 +75,10 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
             return filePath;
         }
 
-        private async Task FillExportFile(string fileName, VseInstrumentiReportOptions options, List<PrikatReportTemplateEntity> templateSource)
+        private async Task FillExportFile(string fileName,
+            VseInstrumentiReportOptions options,
+            List<PrikatReportTemplateEntity> templateSource,
+            DateTime generationDateTime)
         {
             var formatter = PricatFormatterFactory.Create(options);
 
@@ -89,13 +93,16 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
                     formatter.SetStreamWriter(sw);
                     foreach (var data in templateSource)
                     {
-                        await InsertTemplateProductLines(data, formatter, options);
+                        await InsertTemplateProductLines(data, formatter, options, generationDateTime);
                     }
                 }
             });
         }
 
-        private async Task InsertTemplateProductLines(PrikatReportTemplateEntity data, PricatFormatterBase formatter, VseInstrumentiReportOptions options)
+        private async Task InsertTemplateProductLines(PrikatReportTemplateEntity data,
+            PricatFormatterBase formatter,
+            VseInstrumentiReportOptions options,
+            DateTime generationDateTime)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -106,7 +113,7 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
             List<ProductEntity> products = await PrepareProducts(data, shouldFillStockData);
 
             formatter.SetCurrentTemplate(template);
-            formatter.OnDocumentStart();
+            formatter.OnDocumentStart(generationDateTime);
             template.WriteProductLines(products, formatter);
             formatter.OnDocumentEnd();
             formatter.SetCurrentTemplate(null);

@@ -11,9 +11,9 @@ public sealed class CsvPricatFormatter : PricatFormatterBase
         string rrcPriceString = rrcPrice.ToString($"F{CurrentTemplate.Precission}", new CultureInfo("en-EN"));
         string sellPriceString = sellPrice.ToString($"F{CurrentTemplate.Precission}", new CultureInfo("en-EN"));
 
-        string length = (product.length != decimal.Zero ? product.length : DEFAULT_DIMENSIONS[0]).ToString("F2", new CultureInfo("en-EN"));
-        string width = (product.width != decimal.Zero ? product.width : DEFAULT_DIMENSIONS[1]).ToString("F2", new CultureInfo("en-EN"));
-        string height = (product.height != decimal.Zero ? product.height : DEFAULT_DIMENSIONS[2]).ToString("F2", new CultureInfo("en-EN"));
+        string length = (product.length != decimal.Zero ? product.length : DEFAULT_DIMENSIONS[0]).ToString("F4", new CultureInfo("en-EN"));
+        string width = (product.width != decimal.Zero ? product.width : DEFAULT_DIMENSIONS[1]).ToString("F4", new CultureInfo("en-EN"));
+        string height = (product.height != decimal.Zero ? product.height : DEFAULT_DIMENSIONS[2]).ToString("F4", new CultureInfo("en-EN"));
         string weight = (product.weight != decimal.Zero ? product.weight : DEFAULT_DIMENSIONS[3]).ToString("F4", new CultureInfo("en-EN"));
 
         string productName = ClearProductName(product.name);

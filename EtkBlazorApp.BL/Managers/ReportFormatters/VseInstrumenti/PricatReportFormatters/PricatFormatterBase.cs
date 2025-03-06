@@ -1,6 +1,7 @@
 ﻿using EtkBlazorApp.BL.Templates.PrikatTemplates.Base;
 using EtkBlazorApp.DataAccess.Entity;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -15,6 +16,25 @@ public abstract class PricatFormatterBase
     protected static readonly string WEIGHT_UNIT = "килограмм";
     protected PrikatReportTemplateBase CurrentTemplate { get; private set; }
     protected StreamWriter StreamWriter { get; private set; }
+    protected DateTime? GenerationDateTime { get; private set; }
+    protected readonly IReadOnlyDictionary<string, string> UnitCodeDictionary = new Dictionary<string, string>()
+    {
+        ["грамм"] = "GRM",
+        ["килограмм"] = "KGM",
+        ["литр"] = "LTR",
+        ["миллиметр"] = "MMT",
+        ["квадратный метр"] = "MTK",
+        ["кубический метр"] = "MTQ",
+        ["метр"] = "MTR",
+        ["миллиграмм"] = "MGM",
+        ["миллилитр"] = "MLT",
+        ["миллиметр кубический"] = "MMQ",
+        ["штук"] = "PCE",
+        ["дециметр кубический"] = "DMQ",
+        ["сантиметр"] = "CMT",
+        ["упаковка"] = "NMP",
+        ["бобина(бухта)"] = "NBB",
+    };
 
     //TODO: тут проблема с SKU из-за изначально неверного понимания какой SKU должен быть
     //Должен быть уникальный SKU (вида: "ETK-123456") а сейчас тут, в том числе, артикулы от симметрона вида: "00123456"
@@ -52,12 +72,22 @@ public abstract class PricatFormatterBase
         return rawName;
     }
 
+    /// <summary>
+    /// Максимальная длинна 35 символов. Этот код должен был генерироватся автоматически в 1c при создании нового документа
+    /// </summary>
+    /// <returns></returns>
+    public static string GenerateDocumentNumber(DateTime generationDateTime)
+    {
+        return generationDateTime.ToString("yyyyMMdd_HHmmss");
+    }
+
     public abstract void WriteProductEntry(ProductEntity product, decimal rrcPrice, decimal sellPrice);
 
-    public virtual void OnDocumentStart()
+    public virtual void OnDocumentStart(DateTime generationDateTime)
     {
-
+        GenerationDateTime = generationDateTime;
     }
+
     public virtual void OnDocumentEnd()
     {
         StreamWriter.Flush();
