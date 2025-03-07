@@ -150,7 +150,14 @@ namespace EtkBlazorApp.BL.Managers
                         sw.Elapsed.Humanize());
                 });
 
-            Task.WhenAll(t);
+            try
+            {
+                Task.WhenAll(t);
+            }
+            catch (TaskCanceledException)
+            {
+                //ignore
+            }
         }
 
         public void AddTaskToQueue(CronTaskBase task, bool forced = false)

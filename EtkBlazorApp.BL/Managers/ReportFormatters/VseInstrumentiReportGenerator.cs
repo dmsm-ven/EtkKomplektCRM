@@ -80,27 +80,30 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
             List<PrikatReportTemplateEntity> templateSource,
             DateTime generationDateTime)
         {
-            var formatter = PricatFormatterFactory.Create(options);
-
-            using (var fs = new FileStream(fileName, FileMode.Create))
-            using (var sw = new StreamWriter(fs, Encoding.UTF8))
+            await Task.Run(async () =>
             {
-                foreach (var data in templateSource)
+                var formatter = PricatFormatterFactory.Create(options);
+
+                using (var fs = new FileStream(fileName, FileMode.Create))
+                using (var sw = new StreamWriter(fs, Encoding.UTF8))
                 {
-                    PrikatReportTemplateBase template = await GetTemplate(data, options);
-                    formatter.SetCurrentTemplate(template);
-
-                    if (data == templateSource.First())
+                    foreach (var data in templateSource)
                     {
-                        formatter.SetStreamWriter(sw);
-                        formatter.OnDocumentStart(generationDateTime);
-                    }
+                        PrikatReportTemplateBase template = await GetTemplate(data, options);
+                        formatter.SetCurrentTemplate(template);
 
-                    await InsertTemplateProductLines(data, template, formatter);
+                        if (data == templateSource.First())
+                        {
+                            formatter.SetStreamWriter(sw);
+                            formatter.OnDocumentStart(generationDateTime);
+                        }
+
+                        await InsertTemplateProductLines(data, template, formatter);
+                    }
+                    formatter.OnDocumentEnd();
+                    sw.Flush();
                 }
-                formatter.OnDocumentEnd();
-                sw.Flush();
-            }
+            });
         }
 
         private async Task InsertTemplateProductLines(PrikatReportTemplateEntity data,

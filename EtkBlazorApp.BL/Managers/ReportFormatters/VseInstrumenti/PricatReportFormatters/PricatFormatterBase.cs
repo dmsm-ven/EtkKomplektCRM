@@ -41,7 +41,7 @@ public abstract class PricatFormatterBase
     /// <returns></returns>
     public static string GenerateDocumentNumber(DateTime generationDateTime)
     {
-        return generationDateTime.ToString("yyyyMMddHHmmss");
+        return generationDateTime.ToString("yyyyMMdd") + generationDateTime.ToString("HHmmss");
     }
 
     public abstract void WriteProductEntry(ProductEntity product, decimal rrcPrice, decimal sellPrice);

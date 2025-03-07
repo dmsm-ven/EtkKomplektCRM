@@ -15,7 +15,7 @@
     {
         <div class="row my-3">
             <div class="offset-md-6 col-md-6 offset-sm-6 col-sm-6 generate-report-panel">
-                <button type="button" class="btn btn-primary" style="white-space: nowrap;" @onclick="GetReport" disabled="@reportButtonDisabled">
+                <button type="button" class="btn btn-primary" style="white-space: nowrap;" @onclick="@(async (e) => await GetReport())" disabled="@reportButtonDisabled">
                     <span class="oi oi-spreadsheet px-1"></span>
                     @($"Создать PRICAT-файл в формате {selectedFormat.ToString().ToUpper()}")
                 </button>
