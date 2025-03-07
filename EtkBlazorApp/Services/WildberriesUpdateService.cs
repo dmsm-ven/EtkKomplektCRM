@@ -7,24 +7,18 @@ using EtkBlazorApp.DataAccess.Repositories.Wildberries;
 using EtkBlazorApp.WildberriesApi;
 using Humanizer;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
 using NLog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.Services;
 
-public class WildberriesUpdateService : BackgroundService
+public class WildberriesUpdateService
 {
     private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
-
-    //TODO: Перенести инициализацию в настройки или appconfig
-    public readonly TimeSpan UpdateInterval = TimeSpan.FromHours(2);
-    public readonly TimeSpan FirstRunDelay = TimeSpan.FromSeconds(15);
 
     private readonly WildberriesApiClient wbApiClient;
     private readonly IWildberriesProductRepository productRepository;
@@ -51,45 +45,8 @@ public class WildberriesUpdateService : BackgroundService
         this.sysLogger = sysLogger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public async Task UpdateWildberriesProducts(IProgress<string> progressIndicator = null)
     {
-        if (env.IsDevelopment())
-        {
-            nlog.Info("Служба обновления Wildberries в Development режиме отключена");
-            return;
-        }
-
-        nlog.Info("Служба обновление товаров на Wildberries запущена. Следующий запуск через {delay}", FirstRunDelay.Humanize());
-
-        await Task.Delay(FirstRunDelay);
-
-        using PeriodicTimer timer = new(UpdateInterval);
-
-        try
-        {
-            //Запускаем один раз
-            await UpdateWildberriesProducts(forced: false);
-
-            while (await timer.WaitForNextTickAsync(stoppingToken))
-            {
-                //И по таймеру
-                await UpdateWildberriesProducts(forced: false);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            nlog.Trace("Служба обновление товаров на Wildberries остановлена");
-        }
-    }
-
-    public async Task UpdateWildberriesProducts(bool forced = false, IProgress<string> progressIndicator = null)
-    {
-        if (!forced && await IsExecutedRecently())
-        {
-            nlog.Info("Пропуск т.к. синхронизация выполнялась ранее в пределах таймера");
-            return;
-        }
-
         nlog.Info("Запуск обновление товаров на Wildberries");
 
         string secureToken = await settingStorageReader.GetValue("wildberries_api_token");
@@ -146,17 +103,6 @@ public class WildberriesUpdateService : BackgroundService
         await ApplyDiscountAndRoundPrice(products);
 
         return products;
-    }
-
-    private async Task<bool> IsExecutedRecently()
-    {
-        var lastExec = await productRepository.GetStockLastSuccessSyncDateDate();
-        if (lastExec.HasValue && (lastExec.Value + UpdateInterval) > DateTime.Now)
-        {
-            return true;
-
-        }
-        return false;
     }
 
     /// <summary>

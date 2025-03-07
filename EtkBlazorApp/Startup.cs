@@ -18,6 +18,8 @@ using EtkBlazorApp.DellinApi;
 using EtkBlazorApp.Model.Chart;
 using EtkBlazorApp.Model.IOptionProfiles;
 using EtkBlazorApp.Services;
+using EtkBlazorApp.Services.CronTaskScheduler;
+using EtkBlazorApp.Services.CronTaskScheduler.CronJobs;
 using EtkBlazorApp.Services.CurrencyChecker;
 using EtkBlazorApp.TelegramBotLib;
 using EtkBlazorApp.WildberriesApi;
@@ -100,7 +102,6 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
-
         //Сторонние
         services.AddBlazoredToast();
         services.AddAutoMapper(this.GetType().Assembly);
@@ -145,13 +146,20 @@ public class Startup
         services.AddScoped<AuthenticationStateProvider, CustomAuthProvider>();
         services.AddScoped<UserLogger>();
 
-        services.AddScoped<VseInstrumentiReportGenerator>();
-        services.AddScoped<EtkKomplektReportGenerator>();
-        services.AddScoped<ReportManager>();
+        services.AddSingleton<VseInstrumentiReportGenerator>();
+        services.AddSingleton<EtkKomplektReportGenerator>();
+        services.AddSingleton<ReportManager>();
         services.AddScoped<ChartDataExtractor>();
 
         services.AddSingleton<WildberriesUpdateService>();
-        services.AddHostedService<WildberriesUpdateService>();
+
+        ConfigureCronJobs(services);
+    }
+
+    private void ConfigureCronJobs(IServiceCollection services)
+    {
+        services.AddCronJob<WildberriesSyncCronJob>("0 */4 * * *"); // At 0 minutes past the hour, every 4 hours
+        services.AddCronJob<VseInstrumentiPricatUploaderCronJon>("0 12 * * 1-5"); // At 12:00 PM, Monday through Friday
     }
 
     private void ConfigureOptions(IServiceCollection services)
@@ -250,5 +258,7 @@ public class Startup
         services.AddTransient<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
         services.AddTransient<IOzonProductCorrelator, SimpleOzonProductCorrelator>();
     }
+
+
 }
 

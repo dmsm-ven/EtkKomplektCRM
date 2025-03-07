@@ -111,7 +111,7 @@
                 toasts.ShowInfo($"{DateTime.Now} {msg}");
             });
 
-            await wbUpdateService.UpdateWildberriesProducts(forced: true, toastsIndicator);
+            await wbUpdateService.UpdateWildberriesProducts(toastsIndicator);
 
             toasts.ShowSuccess("Обновление товаров на Wildberries выполнено");
         }
