@@ -1,4 +1,5 @@
-﻿using EtkBlazorApp.BL.Data;
+﻿using EtkBlazorApp.BL;
+using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.BL.Loggers;
 using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.BL.Managers.ReportFormatters.VseInstrumenti;
@@ -23,14 +24,17 @@ public class VseInstrumentiPricatUploaderCronJon : ICronJob
     private readonly ISettingStorageReader settingsReader;
     private readonly SystemEventsLogger logger;
     private readonly ReportManager reportManager;
+    private readonly EncryptHelper encryptHelper;
 
     public VseInstrumentiPricatUploaderCronJon(ISettingStorageReader settingsReader,
         SystemEventsLogger logger,
-        ReportManager reportManager)
+        ReportManager reportManager,
+        EncryptHelper encryptHelper)
     {
         this.settingsReader = settingsReader;
         this.logger = logger;
         this.reportManager = reportManager;
+        this.encryptHelper = encryptHelper;
     }
 
     public async Task Run(CancellationToken token = default)
@@ -68,9 +72,11 @@ public class VseInstrumentiPricatUploaderCronJon : ICronJob
 
     private async Task UploadFileToFtpServer(string filePath)
     {
-        string host = await settingsReader.GetValue("vse_instrumenti_ftp_uploader_host");
-        string user = await settingsReader.GetValue("vse_instrumenti_ftp_uploader_user");
-        string password = await settingsReader.GetValue("vse_instrumenti_ftp_uploader_password");
+        string section = "vse_instrumenti_ftp_uploader";
+
+        string host = await settingsReader.GetValue($"{section}_host");
+        string user = await settingsReader.GetValue($"{section}_user");
+        string password = encryptHelper.Decrypt(await settingsReader.GetValue($"{section}_password"));
 
         if (new[] { host, user, password }.Any(s => string.IsNullOrWhiteSpace(s)))
         {

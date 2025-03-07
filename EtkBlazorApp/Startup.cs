@@ -44,11 +44,13 @@ public class Startup
 {
     private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
 
+    public IWebHostEnvironment WebHostEnvironment { get; }
     public IConfiguration Configuration { get; }
 
-    public Startup(IConfiguration configuration)
+    public Startup(IConfiguration configuration, IWebHostEnvironment env)
     {
         Configuration = configuration;
+        WebHostEnvironment = env;
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime hostApplicationLifetime)
@@ -91,6 +93,7 @@ public class Startup
             app.ApplicationServices.GetRequiredService<NewOrdersNotificationService>().Start();
             app.ApplicationServices.GetRequiredService<EmailPriceListCheckingService>().Start();
         }
+
         await sysLogger.WriteSystemEvent(LogEntryGroupName.Auth, "Запуск", "Запуск приложения личного кабинета");
     });
         hostApplicationLifetime.ApplicationStopping.Register(async () =>
@@ -141,25 +144,25 @@ public class Startup
         services.AddSingleton<PriceListManager>();
         services.AddSingleton<CronTaskService>();
         services.AddSingleton<EmailPriceListCheckingService>();
-
         services.AddTransient<IUserService, BCryptUserService>();
         services.AddScoped<AuthenticationStateProvider, CustomAuthProvider>();
         services.AddScoped<UserLogger>();
-
         services.AddSingleton<VseInstrumentiReportGenerator>();
         services.AddSingleton<EtkKomplektReportGenerator>();
         services.AddSingleton<ReportManager>();
         services.AddScoped<ChartDataExtractor>();
-
         services.AddSingleton<WildberriesUpdateService>();
 
-        ConfigureCronJobs(services);
+        if (WebHostEnvironment.IsProduction())
+        {
+            ConfigureCronJobs(services);
+        }
     }
 
     private void ConfigureCronJobs(IServiceCollection services)
     {
-        services.AddCronJob<WildberriesSyncCronJob>("0 */4 * * *"); // At 0 minutes past the hour, every 4 hours
-        services.AddCronJob<VseInstrumentiPricatUploaderCronJon>("0 12 * * 1-5"); // At 12:00 PM, Monday through Friday
+        services.AddCronJob<WildberriesSyncCronJob>("0 */6 * * *"); // At 0 minutes past the hour, every 6 hours, Monday through Friday
+        services.AddCronJob<VseInstrumentiPricatUploaderCronJon>("0 12 * * *"); // At 12:00 PM, Monday through Friday
     }
 
     private void ConfigureOptions(IServiceCollection services)
