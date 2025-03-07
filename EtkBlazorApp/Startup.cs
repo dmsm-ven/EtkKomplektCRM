@@ -261,7 +261,5 @@ public class Startup
         services.AddTransient<IPriceLineLoadCorrelator, SimplePriceLineLoadCorrelator>();
         services.AddTransient<IOzonProductCorrelator, SimpleOzonProductCorrelator>();
     }
-
-
 }
 
