@@ -85,14 +85,14 @@ public class Startup
 
         hostApplicationLifetime.ApplicationStarted.Register(async () =>
     {
+        await sysLogger.WriteSystemEvent(LogEntryGroupName.Auth, "Запуск", "Запуск приложения личного кабинета");
+
         if (env.IsProduction())
         {
             app.ApplicationServices.GetRequiredService<CronTaskService>().Start();
             app.ApplicationServices.GetRequiredService<NewOrdersNotificationService>().Start();
             app.ApplicationServices.GetRequiredService<EmailPriceListCheckingService>().Start();
         }
-
-        await sysLogger.WriteSystemEvent(LogEntryGroupName.Auth, "Запуск", "Запуск приложения личного кабинета");
     });
         hostApplicationLifetime.ApplicationStopping.Register(async () =>
         {

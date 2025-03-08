@@ -896,8 +896,11 @@ app {
     color: red;
 }
 
-.task-tool-items-box input[@type='checkbox'] {
-    margin-right: 12px;
+.task-tool-items-box {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    justify-content: start;
 }
 
 @media (max-width: 767.98px) {
@@ -951,11 +954,15 @@ app {
     }
 }
 
+.cron-queue-active {
+    background: #7cfc004f;
+}
 
 .disabled-cron-task {
     opacity: 0.25;
 }
 
-.cron-queue-active {
-    background: #7cfc004f;
+.cron-task-row img {
+    width: 30px;
+    height: 30px;
 }

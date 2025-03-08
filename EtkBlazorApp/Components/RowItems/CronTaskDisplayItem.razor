@@ -1,8 +1,8 @@
 ﻿@using EtkBlazorApp.Model
-<tr class=@(!Item.IsEnabled ? "disabled-cron-task" : "active-cron-task")>
+<tr class=@(!Item.IsEnabled ? "cron-task-row disabled-cron-task" : "cron-task-row active-cron-task")>
     <td>
         <div class="task-tool-items-box">
-            <input type="checkbox" style="margin-right: 12px;" checked="@Item.IsEnabled" onclick="return false;" />
+            <img src="@($"/image/cron-task-types/{Item.TypeId.ToString()}.svg")" />
             <a href="@("/cron-task/edit/" + @Item.Id)">
                 <span class="oi oi-cog cog-icon" style="font-size: 1.2em;" aria-hidden="true"></span>
             </a>
@@ -53,7 +53,6 @@
         @Item.Description
     </td>
 </tr>
-
 @code {
 
     [Parameter] public CronTaskViewModel Item { get; set; }

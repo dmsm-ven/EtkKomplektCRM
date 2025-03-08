@@ -54,25 +54,36 @@ public class EmailPriceListCheckingService
     /// <param name="e"></param>
     private async void Timer_Elapsed(object sender, ElapsedEventArgs e)
     {
+        int stepNumber = 1;
+        nlog.Trace("Timer_Elapsed TICK|STEP:" + stepNumber++);
+
         await cronTaskService.RefreshTaskList();
 
+        nlog.Trace("Timer_Elapsed TICK|STEP:" + stepNumber++);
+
         var tasks = cronTaskService.GetLoadedTasks();
+
+        nlog.Trace("Timer_Elapsed TICK|STEP:" + stepNumber++);
         var templates = await templatesRepository.GetPriceListTemplates();
+
+        nlog.Trace("Timer_Elapsed TICK|STEP:" + stepNumber++);
 
         var emailTemplates = templates
             .Where(pl => cronTaskService.EmailOnlyPriceListsIds.Contains(pl.id))
             .Where(pl => tasks.FirstOrDefault(t => t.linked_price_list_guid == pl.id) != null)
             .ToDictionary(pl => tasks.FirstOrDefault(t => t.linked_price_list_guid == pl.id), pl => pl);
-
+        nlog.Trace("Timer_Elapsed TICK|STEP:" + stepNumber++);
         var args = await BuildSearchArgs(emailTemplates);
+        nlog.Trace("Timer_Elapsed TICK|STEP:" + stepNumber++);
         if (args.Count == 0)
         {
             return;
         }
-
+        nlog.Trace("Timer_Elapsed TICK|STEP:" + stepNumber++);
         var extractor = await emailExtractor.GetExtractor();
-
+        nlog.Trace("Timer_Elapsed TICK|STEP:" + stepNumber++);
         var foundEmailsData = await extractor.GetPriceListIdsWithNewEmail(args, LastEmailDateTime, TimerInterval);
+        nlog.Trace("Timer_Elapsed TICK|STEP:" + stepNumber++);
         LastEmailDateTime = foundEmailsData.CurrentLastMessageDateTime;
 
         nlog.Trace("Проверка почтового ящика на новые письма - найдено: {total}", foundEmailsData.PriceListIds.Length);
@@ -85,6 +96,7 @@ public class EmailPriceListCheckingService
             }
         }
 
+        nlog.Trace("Timer_Elapsed END TICK");
     }
 
     private async Task<IReadOnlyDictionary<string, ImapEmailSearchCriteria>> BuildSearchArgs(
@@ -121,12 +133,12 @@ public class EmailPriceListCheckingService
                 Sender = fullTemplateInfo.email_criteria_sender
             });
         }
-
         return args;
     }
 
     public void Start()
     {
+        nlog.Info("STARTED");
         timer.Interval = TimerInterval.TotalMilliseconds;
         timer.Elapsed += Timer_Elapsed;
         timer.Start();

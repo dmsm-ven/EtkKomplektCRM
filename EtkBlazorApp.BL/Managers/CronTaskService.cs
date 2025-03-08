@@ -222,8 +222,6 @@ namespace EtkBlazorApp.BL.Managers
         /// <returns></returns>
         public async Task RefreshTaskList(bool force = false)
         {
-            await semaphore.WaitAsync();
-
             if (force || tasksQueue.Count == 0)
             {
                 taskDefinitions.Clear();
@@ -243,8 +241,6 @@ namespace EtkBlazorApp.BL.Managers
                     .Select(pl => pl.id)
                     .ToArray();
             }
-
-            semaphore.Release();
         }
 
         //TODO: разбить метод на более мелкие части

@@ -1,6 +1,6 @@
 ﻿@using System.Threading
 
-@if(taskManager.ActiveTasksInQueue.Any())
+@if(taskManager.ActiveTasksInQueue != null && taskManager.ActiveTasksInQueue.Count() > 0)
 {
     <h4>Список задач которые уже добавлены в очередь и ждут выполнения</h4>
     <div class="row py-2">
@@ -21,7 +21,7 @@
                     }
                     @foreach (var t in taskManager.ActiveTasksInQueue)
                     {
-                        <tr class="@(t.task_id == taskManager.TaskInProgress.task_id ? "cron-queue-active" : "cron-queue-preparing")">
+                        <tr class="@(IsActiveTask(t) ? "cron-queue-active" : "cron-queue-preparing")">
                             <td>@(index++)</td>
                             <td>@t.task_type_name</td>
                             <td>@t.name</td>
@@ -41,9 +41,16 @@
 
     protected override async Task OnInitializedAsync()
     {
+        taskManager.OnTaskExecutionStart += (e) => InvokeAsync(() => StateHasChanged());
         while(await timer.WaitForNextTickAsync(CancellationToken.None))
         {
             InvokeAsync(() => StateHasChanged());
         }
     }
+
+    private bool IsActiveTask(CronTaskEntity t)
+    {
+        return taskManager.TaskInProgress != null && t.task_id == taskManager.TaskInProgress.task_id;
+    }
+
 }
