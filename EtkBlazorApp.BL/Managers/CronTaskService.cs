@@ -27,11 +27,14 @@ namespace EtkBlazorApp.BL.Managers
     public class CronTaskService
     {
         // event'ы для привязки на страницах, что бы можно было в любом месте приложения получить уведомление, например через Toasts
-        // TODO: переделать из event в какой-то другой вариант
         private static readonly Logger nlog = LogManager.GetCurrentClassLogger();
+
+        //В каждый момент может выполняться только 1 задание, что бы ло проблем когда разные задачи пытаются обновить одни и теже товары
         private static readonly SemaphoreSlim semaphore = new(1, 1);
 
+        //Таймер который проверяет нужно ли добавить задачу в очередь
         private readonly System.Timers.Timer checkTimer;
+        //Таймер в котом выполняются текущие задачи которые уже добавлены в очередь
         private readonly System.Timers.Timer queueWorkerTimer;
 
         public event Action<CronTaskEntity> OnTaskExecutionStart;
@@ -39,8 +42,8 @@ namespace EtkBlazorApp.BL.Managers
         public event Action<CronTaskEntity> OnTaskExecutionSuccess;
         public event Action<CronTaskEntity> OnTaskExecutionError;
 
+        //Текущее задание которое находится в процессе выполнения
         public CronTaskEntity TaskInProgress { get; private set; }
-
         //Минимальное время через которое выполняется следующая задача из очереди
         public TimeSpan QueueWorkerInterval { get; } = TimeSpan.FromMinutes(3);
         //Время через которое проверяется не нужно ли добавить задание в список на выполнение
@@ -66,7 +69,6 @@ namespace EtkBlazorApp.BL.Managers
         public IEnumerable<CronTaskEntity> TasksQueue => tasksQueue
             .Select(i => tasks.FirstOrDefault(t => t.Key.TaskId == i.TaskId).Value)
             .ToArray();
-
 
         public CronTaskService(
             ICronTaskStorage cronTaskStorage,
@@ -95,15 +97,11 @@ namespace EtkBlazorApp.BL.Managers
 
         public void Start()
         {
-            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
-            {
-                checkTimer.Elapsed += CheckTimer_Elapsed;
-                checkTimer.Start();
+            checkTimer.Elapsed += CheckTimer_Elapsed;
+            checkTimer.Start();
 
-                queueWorkerTimer.Elapsed += QueueWorker_Elapsed;
-                queueWorkerTimer.Start();
-            }
-
+            queueWorkerTimer.Elapsed += QueueWorker_Elapsed;
+            queueWorkerTimer.Start();
         }
 
         /// <summary>
@@ -350,14 +348,7 @@ namespace EtkBlazorApp.BL.Managers
         }
 
         //TODO: возможно стоит добавить добавить кроме загрузки из удаленного источника, например парсинг сайтов - отдельный тип задачи
-        /// <summary>
-        /// Фабрика задач
-        /// </summary>
-        /// <param name="taskType"></param>
-        /// <param name="parameter"></param>
-        /// <param name="taskId"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
+        //и стоит переделать класс и CronTaskBase так, что бы пробрасывались зависимости без конструктора
         private CronTaskBase CreateTask(CronTaskType taskType, string parameter, int taskId)
         {
             Type linkedPriceListType = parameter != null ? parameter.GetPriceListTypeByGuid() : null;

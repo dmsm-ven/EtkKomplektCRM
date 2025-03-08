@@ -9,8 +9,7 @@ using System.Threading.Tasks;
 namespace EtkBlazorApp.Services.CronTaskScheduler;
 
 /// <summary>
-/// Новая версия планировщика
-/// Первая версия (класс CronTaskService) не связана с этим класом
+/// Новая версия планировщика. В первой версии которая была сделана (CronTaskService) загружаются только прай-листы
 /// </summary>
 public sealed class CronScheduler : BackgroundService
 {
