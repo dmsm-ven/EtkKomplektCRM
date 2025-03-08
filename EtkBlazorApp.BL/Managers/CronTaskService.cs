@@ -19,10 +19,8 @@ using System.Timers;
 
 namespace EtkBlazorApp.BL.Managers
 {
-    //TODO: Переделать - заместо ручного выполнения по таймеру на библиотеку Hangfire
-
     /// <summary>
-    /// Выполняет переодический опрос удаленных поставщиков для загрузки их прайс-листов
+    /// Выполняет переодический опрос удаленных поставщиков для загрузки их прайс-листов и др. задачи унаследованных от CronTask
     /// </summary>
     public class CronTaskService
     {
@@ -31,6 +29,8 @@ namespace EtkBlazorApp.BL.Managers
 
         //В каждый момент может выполняться только 1 задание, что бы ло проблем когда разные задачи пытаются обновить одни и теже товары
         private static readonly SemaphoreSlim semaphore = new(1, 1);
+
+        private static readonly SemaphoreSlim queueAddSemaphore = new(1, 1);
 
         //Таймер который проверяет нужно ли добавить задачу в очередь
         private readonly System.Timers.Timer checkTimer;
@@ -60,15 +60,14 @@ namespace EtkBlazorApp.BL.Managers
         internal readonly PriceListManager priceListManager;
         internal readonly RemoteTemplateFileLoaderFactory remoteTemplateLoaderFactory;
 
-        private readonly Dictionary<CronTaskBase, CronTaskEntity> tasks;
-        private readonly List<CronTaskBase> tasksQueue;
+        private readonly WildberriesUpdateService wbUpdateService;
+        private readonly ReportManager reportManager;
+        private readonly EncryptHelper encryptHelper;
+        private readonly List<CronTaskEntity> taskDefinitions;
+        private readonly List<CronTaskQueueEntry> tasksQueue;
 
-
-        public IEnumerable<CronTaskEntity> GetLoadedTasks() => tasks
-            .Select(kvp => kvp.Value).ToArray();
-        public IEnumerable<CronTaskEntity> TasksQueue => tasksQueue
-            .Select(i => tasks.FirstOrDefault(t => t.Key.TaskId == i.TaskId).Value)
-            .ToArray();
+        public IEnumerable<CronTaskEntity> GetLoadedTasks() => taskDefinitions;
+        public IEnumerable<CronTaskEntity> ActiveTasksInQueue => tasksQueue.Select(i => i.TaskDefinition);
 
         public CronTaskService(
             ICronTaskStorage cronTaskStorage,
@@ -78,7 +77,10 @@ namespace EtkBlazorApp.BL.Managers
             SystemEventsLogger logger,
             ProductsPriceAndStockUpdateManager updateManager,
             PriceListManager priceListManager,
-            RemoteTemplateFileLoaderFactory remoteTemplateLoaderFactory)
+            RemoteTemplateFileLoaderFactory remoteTemplateLoaderFactory,
+            WildberriesUpdateService wbUpdateService,
+            ReportManager reportManager,
+            EncryptHelper encryptHelper)
         {
             this.cronTaskStorage = cronTaskStorage;
             this.templates = templates;
@@ -88,8 +90,12 @@ namespace EtkBlazorApp.BL.Managers
             this.updateManager = updateManager;
             this.priceListManager = priceListManager;
             this.remoteTemplateLoaderFactory = remoteTemplateLoaderFactory;
-            tasks = new Dictionary<CronTaskBase, CronTaskEntity>();
-            tasksQueue = new List<CronTaskBase>();
+            this.wbUpdateService = wbUpdateService;
+            this.reportManager = reportManager;
+            this.encryptHelper = encryptHelper;
+
+            taskDefinitions = new List<CronTaskEntity>();
+            tasksQueue = new List<CronTaskQueueEntry>();
 
             checkTimer = new System.Timers.Timer(CheckTimerInterval.TotalMilliseconds);
             queueWorkerTimer = new System.Timers.Timer(QueueWorkerInterval.TotalMilliseconds);
@@ -118,76 +124,63 @@ namespace EtkBlazorApp.BL.Managers
 
         public void AddTaskToQueue(int taskId, bool forced = false)
         {
-            var task = tasks.FirstOrDefault(t => t.Value.task_id == taskId).Key;
-            if (task != null)
+            CronTaskEntity taskDefinition = taskDefinitions.FirstOrDefault(t => t.task_id == taskId);
+
+            if (taskDefinition == null)
             {
-                AddTaskToQueue(task, forced);
-            }
-        }
-
-        /// <summary>
-        /// Задача пустышка, которая не дает выполнятся в отведелнное время другим задачам
-        /// Метод нужен, что бы другие сервисы могли выполнить задачу с товарами без ошибок. Т.к. задачи могут обновлять товары
-        /// В общем это что то типа транзакции, только менее надежное
-        /// </summary>
-        /// <param name="pauseTime"></param>
-        public void PauseQueueUntilCancellationNotRequested(CancellationToken cancelToken)
-        {
-            TimeSpan maxPauseTime = TimeSpan.FromMinutes(10);
-
-            Stopwatch sw = Stopwatch.StartNew();
-            nlog.Trace("Queue worker таймер остановлен на {interval}", maxPauseTime.Humanize());
-
-            queueWorkerTimer.Enabled = false;
-            var t = Task.Delay(maxPauseTime, cancelToken)
-                .ContinueWith(t =>
-                {
-                    queueWorkerTimer.Enabled = true;
-                    nlog.Trace("Queue worker таймер восстановлен. Статус задачи: {status}. Заняло времени: {elapsed}",
-                        t.Status,
-                        sw.Elapsed.Humanize());
-                });
-
-            Task.WhenAll(t);
-        }
-
-        public void AddTaskToQueue(CronTaskBase task, bool forced = false)
-        {
-            if (tasksQueue.FirstOrDefault(t => t.TaskId == task.TaskId) != null)
-            {
+                nlog.Warn("Не найден определить шаблона задачи с ID{taskId}", taskDefinition.task_id);
                 return;
             }
 
+            CronTask task = CreateTask((CronTaskType)taskDefinition.task_type_id, taskDefinition.linked_price_list_guid, taskId);
+            bool isTaskAlreadyInQueue = tasksQueue.FirstOrDefault(t => t.Task.GetType() == task.GetType()) != null;
+
+            if (isTaskAlreadyInQueue)
+            {
+                nlog.Warn("Попытка добавить в очередь задачу, которая уже в списке на выполнение ID{taskId}", taskDefinition.task_id);
+                return;
+            }
+
+            var entry = new CronTaskQueueEntry(taskDefinition, task);
             if (forced)
             {
-                tasksQueue.Insert(0, task);
+                tasksQueue.Insert(0, entry);
             }
             else
             {
-                tasksQueue.Add(task);
+                tasksQueue.Add(entry);
             }
 
-            nlog.Trace("Задача ID{taskId} добавлена в очередь. Теперь в очереди: {total} задач", task.TaskId, tasksQueue.Count);
+            nlog.Trace("Задача ID{taskId} добавлена в очередь. Теперь в очереди: {total} задач", entry.TaskDefinition.task_id, tasksQueue.Count);
+        }
+
+        public bool IsTaskInQueue(int taskId)
+        {
+            return ActiveTasksInQueue.FirstOrDefault(t => t.task_id == taskId) != null;
         }
 
         private async void CheckTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
+            await queueAddSemaphore.WaitAsync();
+
             await RefreshTaskList();
 
             TimeSpan currentTime = DateTime.Now.TimeOfDay;
 
-            var source = tasks.Where(t => t.Value.enabled);
+            var enabledTasks = taskDefinitions.Where(t => t.enabled);
 
-            foreach (var kvp in source)
+            foreach (var task in enabledTasks)
             {
-                bool isEmailTask = EmailOnlyPriceListsIds.Contains(kvp.Value.linked_price_list_guid);
+                bool isEmailTask = EmailOnlyPriceListsIds.Contains(task.linked_price_list_guid);
 
-                //Email Task добавляет в очередь отдельный worker класс
-                if (IsTimeToRun(kvp.Value, currentTime) && !isEmailTask)
+                //Email Task задачи пропускаем (их обрабатывает отдельный worker) 
+                if (IsTimeToRun(task, currentTime) && !isEmailTask)
                 {
-                    AddTaskToQueue(kvp.Key.TaskId);
+                    AddTaskToQueue(task.task_id);
                 }
             }
+
+            queueAddSemaphore.Release();
         }
 
         private async void QueueWorker_Elapsed(object sender, ElapsedEventArgs e)
@@ -199,53 +192,59 @@ namespace EtkBlazorApp.BL.Managers
 
             await semaphore.WaitAsync();
 
-            var headTask = tasksQueue[0];
-            var taskInfo = await cronTaskStorage.GetCronTaskById(headTask.TaskId);
-            var taskEntity = tasks.FirstOrDefault(t => t.Value.task_id == headTask.TaskId).Value;
+            CronTaskQueueEntry headTaskEntry = tasksQueue[0];
+            //Получаем свежую версия описания задачи из БД (а не из списка в поле класса) т.к. состояние могло изменится извне
+            CronTaskEntity headTaskDefinition = await cronTaskStorage.GetCronTaskById(headTaskEntry.TaskDefinition.task_id);
 
             try
             {
-                await ExecuteTask(headTask, taskEntity, false);
+                await ExecuteTask(headTaskEntry.Task, headTaskDefinition, forced: false);
             }
             catch (Exception ex)
             {
                 nlog.Warn("Ошибка выполнения задачи '{taskName}'. {errorMessage}",
-                    taskInfo.name, ex.Message);
+                    headTaskDefinition.name, ex.Message);
                 //Ничего не делаем, просто пропускаем задачу
             }
             finally
             {
-                tasksQueue.Remove(headTask);
+                tasksQueue.Remove(headTaskEntry);
                 semaphore.Release();
                 nlog.Trace("Задача {taskName} удалена из очереди. Теперь в очереди: {count} задач",
-                    taskInfo.name, tasksQueue.Count);
+                    headTaskDefinition.name, tasksQueue.Count);
             }
         }
 
         /// <summary>
-        /// Обновляем список задач для корректной отработки после добавления новой задачи или при запуске программы
+        /// Обновляем список задач для корректной отработки после добавления новой задачи и при первом запуске
         /// </summary>
         /// <param name="force"></param>
         /// <returns></returns>
         public async Task RefreshTaskList(bool force = false)
         {
-            if (force || tasks.Count == 0)
+            await semaphore.WaitAsync();
+
+            if (force || tasksQueue.Count == 0)
             {
-                tasks.Clear();
+                taskDefinitions.Clear();
+
                 var items = await cronTaskStorage.GetCronTasks();
                 foreach (var entity in items)
                 {
                     var taskObject = CreateTask((CronTaskType)entity.task_type_id, entity.linked_price_list_guid, entity.task_id);
-                    tasks.Add(taskObject, entity);
+                    taskDefinitions.Add(entity);
                 }
 
                 var allPriceLists = await templates.GetPriceListTemplates();
 
+                //Получаем список задач по загрузке прайс-листов которые приходят на почтовый ящик, что бы на странице списка задач отметить их в таблице
                 EmailOnlyPriceListsIds = allPriceLists
                     .Where(pl => pl?.remote_uri_method_name == "EmailAttachment")
                     .Select(pl => pl.id)
                     .ToArray();
             }
+
+            semaphore.Release();
         }
 
         //TODO: разбить метод на более мелкие части
@@ -253,13 +252,13 @@ namespace EtkBlazorApp.BL.Managers
         /// Запускаем задачу
         /// </summary>
         /// <param name="task"></param>
-        /// <param name="taskInfo"></param>
+        /// <param name="taskDefinition"></param>
         /// <param name="forced"></param>
         /// <returns></returns>
-        private async Task ExecuteTask(CronTaskBase task, CronTaskEntity taskInfo, bool forced = false)
+        private async Task ExecuteTask(CronTask task, CronTaskEntity taskDefinition, bool forced = false)
         {
-            OnTaskExecutionStart?.Invoke(taskInfo);
-            TaskInProgress = taskInfo;
+            OnTaskExecutionStart?.Invoke(taskDefinition);
+            TaskInProgress = taskDefinition;
 
             var sw = Stopwatch.StartNew();
             CronTaskExecResult exec_result = CronTaskExecResult.Failed;
@@ -268,45 +267,45 @@ namespace EtkBlazorApp.BL.Managers
             {
                 //Очищаем размер последнего загруженного файла для этого задания
                 //в следствии чего, задание выполнится, даже если загружаем этот же самый файл
-                taskInfo.last_exec_file_size = null;
+                taskDefinition.last_exec_file_size = null;
             }
 
             try
             {
-                nlog.Trace("Запуск выполнения задачи {taskName}", taskInfo?.name);
+                nlog.Trace("Запуск выполнения задачи {taskName}", taskDefinition?.name);
 
-                await task.Run(taskInfo, forced);
+                await task.Run(taskDefinition, forced);
                 exec_result = CronTaskExecResult.Success;
 
-                await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {taskInfo.name} выполнено. Длительность выполнения {sw.Elapsed.Humanize()}");
+                await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Выполнено", $"Задание {taskDefinition.name} выполнено. Длительность выполнения {sw.Elapsed.Humanize()}");
             }
             catch (CronTaskSkipException)
             {
-                await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Пропуск", $"Задание '{taskInfo.name}' пропущено т.к. файл уже был загружен прежде");
+                await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Пропуск", $"Задание '{taskDefinition.name}' пропущено т.к. файл уже был загружен прежде");
                 exec_result = CronTaskExecResult.Skipped;
             }
             catch (Exception ex)
             {
-                await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Ошибка", $"Ошибка выполнения задания '{taskInfo.name}'. {ex.Message} {ex.StackTrace ?? ""}".Trim());
+                await logger.WriteSystemEvent(LogEntryGroupName.CronTask, "Ошибка", $"Ошибка выполнения задания '{taskDefinition.name}'. {ex.Message} {ex.StackTrace ?? ""}".Trim());
                 exec_result = CronTaskExecResult.Failed;
             }
             finally
             {
-                taskInfo.last_exec_date_time = DateTime.Now;
-                taskInfo.last_exec_result = exec_result;
-                await cronTaskStorage.SaveCronTaskExecResult(taskInfo);
+                taskDefinition.last_exec_date_time = DateTime.Now;
+                taskDefinition.last_exec_result = exec_result;
+                await cronTaskStorage.SaveCronTaskExecResult(taskDefinition);
                 TaskInProgress = null;
 
-                OnTaskExecutionEnd?.Invoke(taskInfo);
+                OnTaskExecutionEnd?.Invoke(taskDefinition);
 
                 if (exec_result == CronTaskExecResult.Success)
                 {
-                    OnTaskExecutionSuccess?.Invoke(taskInfo);
+                    OnTaskExecutionSuccess?.Invoke(taskDefinition);
                 }
                 else if (exec_result == CronTaskExecResult.Failed)
                 {
-                    OnTaskExecutionError?.Invoke(taskInfo);
-                    notifier.NotifyPriceListLoadingError(taskInfo.name);
+                    OnTaskExecutionError?.Invoke(taskDefinition);
+                    notifier.NotifyPriceListLoadingError(taskDefinition.name);
                 }
 
             }
@@ -320,6 +319,16 @@ namespace EtkBlazorApp.BL.Managers
         /// <returns></returns>
         private bool IsTimeToRun(CronTaskEntity task, TimeSpan now)
         {
+            var day = DateTime.Now.DayOfWeek;
+
+            //В выходные выполнение не производится.
+            //EMAIL задачи выполняются все равно, т.к. запускаются при получении письма
+            //TODO: Вообще в идеале все значение в будущем стоит перенести на CRON Expression 
+            //if ((day == DayOfWeek.Saturday) || (day == DayOfWeek.Sunday))
+            //{
+            //    return false;
+            //}
+
             if (now >= task.exec_time && Math.Abs((task.exec_time - now).TotalMilliseconds) <= checkTimer.Interval)
             {
                 return true;
@@ -347,17 +356,30 @@ namespace EtkBlazorApp.BL.Managers
             return false;
         }
 
-        //TODO: возможно стоит добавить добавить кроме загрузки из удаленного источника, например парсинг сайтов - отдельный тип задачи
-        //и стоит переделать класс и CronTaskBase так, что бы пробрасывались зависимости без конструктора
-        private CronTaskBase CreateTask(CronTaskType taskType, string parameter, int taskId)
+        /// <summary>
+        /// Создаем задачу указанного типа. 
+        /// </summary>
+        /// <param name="taskType"></param>
+        /// <param name="parameter"></param>
+        /// <param name="taskId"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        private CronTask CreateTask(CronTaskType taskType, string parameter, int taskId)
         {
             Type linkedPriceListType = parameter != null ? parameter.GetPriceListTypeByGuid() : null;
 
+
             //Таблица etk_app_cron_task_type
+            //TODO: доделать DI проброс конструктора подклассов
             switch (taskType)
             {
                 case CronTaskType.RemotePriceList:
-                    return new LoadRemotePriceListCronTask(linkedPriceListType, this, taskId);
+                    return new LoadRemotePriceListCronTask(
+                        linkedPriceListType, templates, remoteTemplateLoaderFactory, priceListManager, updateManager);
+                case CronTaskType.WildberriesSync:
+                    return new WildberriesCronTask(wbUpdateService);
+                case CronTaskType.ViPricatUpload:
+                    return new VseInstrumentiPricatUploaderCronTask(settings, logger, reportManager, encryptHelper);
             }
 
             throw new ArgumentException(taskType + " не реализован");

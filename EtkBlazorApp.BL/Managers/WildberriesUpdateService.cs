@@ -6,7 +6,6 @@ using EtkBlazorApp.DataAccess.Repositories;
 using EtkBlazorApp.DataAccess.Repositories.Wildberries;
 using EtkBlazorApp.WildberriesApi;
 using Humanizer;
-using Microsoft.AspNetCore.Hosting;
 using NLog;
 using System;
 using System.Collections.Generic;
@@ -14,7 +13,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.Services;
+namespace EtkBlazorApp.BL.Managers;
 
 public class WildberriesUpdateService
 {
@@ -25,7 +24,6 @@ public class WildberriesUpdateService
     private readonly IMarketplaceExportService marketplaceExportService;
     private readonly ISettingStorageReader settingStorageReader;
     private readonly ISettingStorageWriter settingStorageWriter;
-    private readonly IWebHostEnvironment env;
     private readonly SystemEventsLogger sysLogger;
 
     public WildberriesUpdateService(WildberriesApiClient wbApiClient,
@@ -33,7 +31,6 @@ public class WildberriesUpdateService
         IMarketplaceExportService marketplaceExportService,
         ISettingStorageReader settingStorageReader,
         ISettingStorageWriter settingStorageWriter,
-        IWebHostEnvironment env,
         SystemEventsLogger sysLogger)
     {
         this.wbApiClient = wbApiClient;
@@ -41,7 +38,6 @@ public class WildberriesUpdateService
         this.settingStorageReader = settingStorageReader;
         this.settingStorageWriter = settingStorageWriter;
         this.marketplaceExportService = marketplaceExportService;
-        this.env = env;
         this.sysLogger = sysLogger;
     }
 

@@ -1,4 +1,4 @@
-﻿using EtkBlazorApp.BL;
+﻿using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.DataAccess;
 using System;
 using System.Collections.Generic;

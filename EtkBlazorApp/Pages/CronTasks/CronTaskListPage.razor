@@ -14,7 +14,7 @@
         <LoadingSpinner />
     }
     else
-    {
+    {        
         <div class="row py-2">
             <div class="btn-group">
                 <button class="btn btn-info" @onclick="@(e => addNewDialog.Show())">
@@ -30,7 +30,9 @@
                 <p>Время на сервере: <span style="color: Highlight">@DateTime.Now.ToShortTimeString()</span></p>
             </div>
         </div>
-        
+
+    <CronTaskQueueDisplayer></CronTaskQueueDisplayer>
+
         <ActiveCronTaskInProgressDisplayer />
               
         <div class="row py-2">
@@ -68,7 +70,7 @@
     {
         get
         {
-            string mainClass = $"col-md-{(taskManager.TasksQueue.Count() > 0 ? "8" : "12")}";
+            string mainClass = $"col-md-{(taskManager.ActiveTasksInQueue.Any() ? "8" : "12")}";
             return mainClass + " px-0";
         }
     }

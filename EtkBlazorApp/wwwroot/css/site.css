@@ -950,3 +950,12 @@ app {
         width: 210mm;
     }
 }
+
+
+.disabled-cron-task {
+    opacity: 0.25;
+}
+
+.cron-queue-active {
+    background: #7cfc004f;
+}

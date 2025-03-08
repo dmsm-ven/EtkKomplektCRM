@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace EtkBlazorApp.Pages.Marketplaces;
@@ -101,10 +100,6 @@ public partial class VseInstrumentiExport : ComponentBase
 
     private async Task GetReport()
     {
-        using var cts = new CancellationTokenSource();
-
-        await WaitUntilActiveTaskCompleted(cts.Token);
-
         inProgress = true;
         StateHasChanged();
         string filePath = null;
@@ -133,28 +128,6 @@ public partial class VseInstrumentiExport : ComponentBase
                 File.Delete(filePath);
             }
             inProgress = false;
-            cts.Cancel();
-        }
-    }
-
-    /// <summary>
-    /// Запускаем задачу, которая запрещает выполнение других задач пока будет выполняет генерация файла - это нужно что бы не получилось, что во время генерации обновятся товары
-    /// </summary>
-    /// <param name="cancelToken"></param>
-    /// <returns></returns>
-    private async Task WaitUntilActiveTaskCompleted(CancellationToken cancelToken)
-    {
-        try
-        {
-            while (cronTaskService.TaskInProgress != null)
-            {
-                await Task.Delay(TimeSpan.FromSeconds(3));
-            }
-            cronTaskService.PauseQueueUntilCancellationNotRequested(cancelToken);
-        }
-        catch
-        {
-            //ignore
         }
     }
 

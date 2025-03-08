@@ -1,5 +1,5 @@
 ﻿@using EtkBlazorApp.Model
-<tr>
+<tr class=@(!Item.IsEnabled ? "disabled-cron-task" : "active-cron-task")>
     <td>
         <div class="task-tool-items-box">
             <input type="checkbox" style="margin-right: 12px;" checked="@Item.IsEnabled" onclick="return false;" />
@@ -53,6 +53,7 @@
         @Item.Description
     </td>
 </tr>
+
 @code {
 
     [Parameter] public CronTaskViewModel Item { get; set; }

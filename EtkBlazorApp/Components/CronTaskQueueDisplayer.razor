@@ -1,39 +1,49 @@
-﻿@inject CronTaskService taskManager
+﻿@using System.Threading
 
-<div class="table-responsive cron-task-table">
-    <table class="table">
-        <thead class="thead-etk">
-            <tr>
-                <th style="width: 80%">Задача</th>
-                <th style="width: 20%">Номер в списке</th>
-            </tr>
-        </thead>
-        <tbody>
-            @{
-                int index = 1;
-            }
-            @foreach (var t in taskManager.TasksQueue)
-            {
-                <tr>
-                    <td>@t.name</td>
-                    <td>@(index++).ToString()</td>
-                </tr>
-                
-            }
-        </tbody>
-    </table>
-</div>
+@if(taskManager.ActiveTasksInQueue.Any())
+{
+    <h4>Список задач которые уже добавлены в очередь и ждут выполнения</h4>
+    <div class="row py-2">
+        
+        <div class="table-responsive cron-task-table table-sm table-bordered">
+            <table class="table">
+                <thead class="thead-etk">
+                    <tr>
+                        <th style="width: 20%">Позиция в очереди</th>
+                        <th style="width: 20%">Тип задачи</th>
+                        <th style="width: 40%">Задача</th>
+                        <th style="width: 20%">Время запуска</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int index = 1;
+                    }
+                    @foreach (var t in taskManager.ActiveTasksInQueue)
+                    {
+                        <tr class="@(t.task_id == taskManager.TaskInProgress.task_id ? "cron-queue-active" : "cron-queue-preparing")">
+                            <td>@(index++)</td>
+                            <td>@t.task_type_name</td>
+                            <td>@t.name</td>
+                            <td>@($"{t.exec_time}{(!string.IsNullOrWhiteSpace(t.additional_exec_time) ? $", {t.additional_exec_time}":"")}")</td>                
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
 
 @code {
-    private System.Threading.Timer timer;
+    private readonly PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
 
-    protected override void OnInitialized()
+    [Inject] public CronTaskService taskManager { get; set; }
+
+    protected override async Task OnInitializedAsync()
     {
-        timer = new System.Threading.Timer((object stateInfo) =>
+        while(await timer.WaitForNextTickAsync(CancellationToken.None))
         {
-            StateHasChanged(); 
-        }, new System.Threading.AutoResetEvent(false), 
-        (int)TimeSpan.FromSeconds(10).TotalMilliseconds, 
-        (int)TimeSpan.FromSeconds(10).TotalMilliseconds);
+            InvokeAsync(() => StateHasChanged());
+        }
     }
 }

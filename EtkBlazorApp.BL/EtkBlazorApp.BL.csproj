@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\EtkBlazorApp.DataAccess\EtkBlazorApp.DataAccess.csproj" />
     <ProjectReference Include="..\EtkBlazorApp.Interfaces\EtkBlazorApp.Core.csproj" />
+    <ProjectReference Include="..\EtkBlazorApp.WildberriesApi\EtkBlazorApp.WildberriesApi.csproj" />
   </ItemGroup>
 
   <ItemGroup>

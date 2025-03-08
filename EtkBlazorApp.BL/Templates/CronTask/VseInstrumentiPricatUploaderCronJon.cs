@@ -1,32 +1,27 @@
-﻿using EtkBlazorApp.BL;
-using EtkBlazorApp.BL.Data;
+﻿using EtkBlazorApp.BL.Data;
 using EtkBlazorApp.BL.Loggers;
 using EtkBlazorApp.BL.Managers;
 using EtkBlazorApp.BL.Managers.ReportFormatters.VseInstrumenti;
 using EtkBlazorApp.DataAccess;
-using EtkBlazorApp.DataAccess.Repositories;
+using EtkBlazorApp.DataAccess.Entity;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 using System;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Tasks;
 
-namespace EtkBlazorApp.Services.CronTaskScheduler.CronJobs;
+namespace EtkBlazorApp.BL.Templates.CronTask;
 
-public class VseInstrumentiPricatUploaderCronJon : ICronJob
+public class VseInstrumentiPricatUploaderCronTask : CronTask
 {
-    private IPrikatTemplateStorage templateStorage { get; set; }
-    private ISettingStorageWriter settingsWriter { get; set; }
-
     private readonly ISettingStorageReader settingsReader;
     private readonly SystemEventsLogger logger;
     private readonly ReportManager reportManager;
     private readonly EncryptHelper encryptHelper;
 
-    public VseInstrumentiPricatUploaderCronJon(ISettingStorageReader settingsReader,
+    public VseInstrumentiPricatUploaderCronTask(ISettingStorageReader settingsReader,
         SystemEventsLogger logger,
         ReportManager reportManager,
         EncryptHelper encryptHelper)
@@ -37,7 +32,7 @@ public class VseInstrumentiPricatUploaderCronJon : ICronJob
         this.encryptHelper = encryptHelper;
     }
 
-    public async Task Run(CancellationToken token = default)
+    public async Task Run(CronTaskEntity taskInfo, bool forced)
     {
         string filePath = null;
 
@@ -45,7 +40,6 @@ public class VseInstrumentiPricatUploaderCronJon : ICronJob
         {
             var options = await GetReportOptions();
             filePath = await reportManager.Prikat.Create(options);
-            await logger.WriteSystemEvent(LogEntryGroupName.Prikat, "Успех", "Выгрузка PRICAT для ВсеИнструменты создана по таймеру");
         }
         catch (Exception ex)
         {
@@ -55,7 +49,6 @@ public class VseInstrumentiPricatUploaderCronJon : ICronJob
         try
         {
             await UploadFileToFtpServer(filePath);
-            await logger.WriteSystemEvent(LogEntryGroupName.Prikat, "Успех", "Выгрузка PRICAT для ВсеИнструменты отправлена на FTP сервер doclink");
         }
         catch (Exception ex)
         {

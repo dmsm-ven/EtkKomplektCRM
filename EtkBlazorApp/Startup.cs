@@ -18,8 +18,6 @@ using EtkBlazorApp.DellinApi;
 using EtkBlazorApp.Model.Chart;
 using EtkBlazorApp.Model.IOptionProfiles;
 using EtkBlazorApp.Services;
-using EtkBlazorApp.Services.CronTaskScheduler;
-using EtkBlazorApp.Services.CronTaskScheduler.CronJobs;
 using EtkBlazorApp.Services.CurrencyChecker;
 using EtkBlazorApp.TelegramBotLib;
 using EtkBlazorApp.WildberriesApi;
@@ -152,17 +150,6 @@ public class Startup
         services.AddSingleton<ReportManager>();
         services.AddScoped<ChartDataExtractor>();
         services.AddSingleton<WildberriesUpdateService>();
-
-        if (WebHostEnvironment.IsProduction())
-        {
-            ConfigureCronJobs(services);
-        }
-    }
-
-    private void ConfigureCronJobs(IServiceCollection services)
-    {
-        services.AddCronJob<WildberriesSyncCronJob>("0 */6 * * *"); // At 0 minutes past the hour, every 6 hours, Monday through Friday
-        services.AddCronJob<VseInstrumentiPricatUploaderCronJon>("0 12 * * *"); // At 12:00 PM, Monday through Friday
     }
 
     private void ConfigureOptions(IServiceCollection services)

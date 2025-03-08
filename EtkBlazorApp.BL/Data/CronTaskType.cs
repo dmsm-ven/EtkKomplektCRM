@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EtkBlazorApp.BL
+﻿namespace EtkBlazorApp.BL.Data
 {
     public enum CronTaskType
     {
         RemotePriceList = 1,
-        OzonSellerUpdate = 2
+        WildberriesSync = 2,
+        ViPricatUpload = 3
     }
 }

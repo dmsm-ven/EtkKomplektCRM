@@ -58,7 +58,7 @@ namespace EtkBlazorApp.BL.Managers.ReportFormatters
             string extension = options.PricatFormat.ToString().ToLower();
             string document_id = PricatFormatterBase.GenerateDocumentNumber(generationDateTime);
             string fileName = $"pricat_{document_id}_{DateTime.Now.ToString("yyyyMMdd")}.{extension}";
-            string filePath = Path.GetTempPath() + fileName;
+            string filePath = Path.Combine(Path.GetTempPath(), fileName);
 
             try
             {

@@ -95,7 +95,7 @@ public class EmailPriceListCheckingService
         foreach (var i in emailTemplates)
         {
             var fullTemplateInfo = await templatesRepository.GetPriceListTemplateById(i.Value.id);
-            if (cronTaskService.TasksQueue.FirstOrDefault(t => t.task_id == i.Key.task_id) != null)
+            if (cronTaskService.IsTaskInQueue(i.Key.task_id))
             {
                 //Пропускаем, т.к. задача уже в очереди на выполнение
                 continue;
